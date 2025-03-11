@@ -5,54 +5,56 @@ import template from './template.json';
 
 class HeartTabs {
     constructor({ navSelector, contentSelector, initial }) {
-      this.navSelector = navSelector;
-      this.contentSelector = contentSelector;
-      this.activeTab = initial;
+        this.navSelector = navSelector;
+        this.contentSelector = contentSelector;
+        this.activeTab = initial;
     }
-  
+
     init() {
-      // Attach click event handlers using jQuery
-      this.navItems.each((index, nav) => {
-        $(nav).on("click", (event) => {
-          event.preventDefault();
-          const tab = $(nav).data("tab");
-          this.showTab(tab);
+        // Attach click event handlers using jQuery
+        this.navItems.each((index, nav) => {
+            $(nav).on("click", (event) => {
+                event.preventDefault();
+                const tab = $(nav).data("tab");
+                this.showTab(tab);
+            });
         });
-      });
-      this.showTab(this.activeTab);
+        this.showTab(this.activeTab);
     }
-  
+
     showTab(tab) {
-      // Toggle active class for navigation
-      this.navItems.each((index, nav) => {
-        $(nav).toggleClass("active", $(nav).data("tab") === tab);
-      });
-      // Show or hide content based on the active tab
-      this.contents.each((index, content) => {
-        if ($(content).data("tab") === tab) {
-          $(content).show();
-        } else {
-          $(content).hide();
-        }
-      });
-      this.activeTab = tab;
+        // Toggle active class for navigation
+        this.navItems.each((index, nav) => {
+            $(nav).toggleClass("active", $(nav).data("tab") === tab);
+        });
+        // Show or hide content based on the active tab
+        this.contents.each((index, content) => {
+            if ($(content).data("tab") === tab) {
+                $(content).show();
+            } else {
+                $(content).hide();
+            }
+        });
+        this.activeTab = tab;
     }
-  
+
     bind(html) {
-      if (!html) return;
-      // Use jQuery's find method to locate elements within the provided html object
-      this.navItems = html.find(this.navSelector);
-      this.contents = html.find(this.contentSelector);
-      this.init();
+        if (!html) return;
+        // Use jQuery's find method to locate elements within the provided html object
+        this.navItems = html.find(this.navSelector);
+        this.contents = html.find(this.contentSelector);
+        this.init();
     }
-  }
-  
+}
+
 
 export default class CharacterSheet extends HeartActorSheet {
     static get defaultOptions() {
         const defaultOptions = super.defaultOptions;
         return foundry.utils.mergeObject(defaultOptions, {
-            dragDrop: [{dragSelector: '.item', dropSelector: null}]
+            width: 1250,
+            height: 1000,
+            dragDrop: [{ dragSelector: '.item', dropSelector: null }]
         })
     }
 
@@ -66,14 +68,14 @@ export default class CharacterSheet extends HeartActorSheet {
     }
 
     async _onDropItemCreate(itemData) {
-        if(this.actor.type === 'character') {
-            if(itemData.type === 'calling' ) {
+        if (this.actor.type === 'character') {
+            if (itemData.type === 'calling') {
                 this.actor.itemTypes.calling.forEach(item => {
                     item.delete();
                 });
             }
 
-            if(itemData.type === 'class') {
+            if (itemData.type === 'class') {
                 this.actor.itemTypes.class.forEach(item => {
                     item.delete();
                 });
@@ -100,6 +102,8 @@ export default class CharacterSheet extends HeartActorSheet {
         const callingItem = this.actor.proxy.calling;
         const classItem = this.actor.proxy.class;
         data.user = game.user;
+        data.pronouns = this.actor.system.pronouns || "";
+        data.ancestry = this.actor.system.ancestry || "";
         data.callingItem = callingItem;
         data.classItem = classItem;
         data.showTextboxesBelowItems = game.settings.get('heart', 'showTextboxesBelowItems');
@@ -111,13 +115,10 @@ export default class CharacterSheet extends HeartActorSheet {
     activateListeners(html) {
         super.activateListeners(html);
 
-        console.log("TAAAABS");
-        console.log(html.find(".character-sheet-tabs a"));
-
         this.heartTabs = new HeartTabs({
-        navSelector: ".character-sheet-tabs a",
-        contentSelector: ".tab-content .tab",
-        initial: "main"
+            navSelector: ".character-nav-tabs a",
+            contentSelector: ".tab-content .tab",
+            initial: "main"
         });
         this.heartTabs.bind(html);
 
@@ -149,7 +150,7 @@ export default class CharacterSheet extends HeartActorSheet {
             this.actor.update(data);
         });
 
-        html.find('.resistance-input').change(ev =>{
+        html.find('.resistance-input').change(ev => {
             ev.preventDefault();
             const element = ev.currentTarget;
             const parent = element.parentElement;
@@ -171,8 +172,22 @@ export default class CharacterSheet extends HeartActorSheet {
             });
 
             roll.toMessage({
-                speaker: {actor: this.actor.id}
+                speaker: { actor: this.actor.id }
             });
+        });
+
+        html.find('.pronouns-input').change(ev => {
+            ev.preventDefault();
+            const newPronouns = ev.currentTarget.value;
+            // Update the actor data (adjust the data path as needed)
+            this.actor.update({ 'system.pronouns': newPronouns });
+        });
+
+        html.find('.ancestry-input').change(ev => {
+            ev.preventDefault();
+            const newAncestry = ev.currentTarget.value;
+            // Update the actor data (adjust the data path as needed)
+            this.actor.update({ 'system.ancestry': newAncestry });
         });
     }
 }
