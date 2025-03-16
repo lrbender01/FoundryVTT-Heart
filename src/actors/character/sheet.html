@@ -137,17 +137,14 @@
     <!-- END HEADER -->
 
     <nav class="character-nav-tabs tabs" data-group="primary">
-      <a class="item active" data-tab="character">{{localizeHeart "character" "label-single"}}</a>
+      <a class="item" data-tab="character">{{localizeHeart "character" "label-single"}}</a>
       <a class="item" data-tab="biography">{{localizeHeart "biography" "label-single"}}</a>
-      <a class="item active" data-tab="character-backup">Character Backup</a>
-      <a class="item" data-tab="abilities-backup">Ability Backup</a>
-      <a class="item" data-tab="equipment">Equipment Backup</a>
     </nav>
 
     <!-- 2) TAB CONTENT WRAPPER -->
     <section class="tab-content">
       <!-- ===== CHARACTER TAB ===== -->
-      <section class="tab active" data-tab="character">
+      <section class="tab" data-tab="character">
         <div class="character-tab">
           <!-- LEFT COLUMN -->
           <div class="column left-column">
@@ -156,12 +153,15 @@
               <div class="container-title">Resistances</div>
               <div class="container-content">
                 <!-- TODO: Add Stress, Resistances & Protection content -->
-                
+
                 <div>
                   <div class="resistance-row">
                     <span class="resistance-name"></span>
-                    <span class="resistance-stress red">Stress {{#if showTotalStress}}(Total: {{actor.proxy.totalStress}}){{/if}}</span>
-                    <span class="resistance-protection" title="Reduce stress taken by the amount of protection.">Protection<i class="fas fa-info-circle info"></i></span>
+                    <span class="resistance-stress red">Stress {{#if showTotalStress}}(Total:
+                      {{actor.proxy.totalStress}}){{/if}}</span>
+                    <span class="resistance-protection"
+                      title="Reduce stress taken by the amount of protection.">Protection<i
+                        class="fas fa-info-circle info"></i></span>
                   </div>
                   {{#each actor.system.resistances as |resistance name|}}
                   <div class="resistance-row" data-resistance="{{name}}">
@@ -279,68 +279,56 @@
       </section>
       <!-- ===== BIOGRAPHY TAB ===== -->
       <section class="tab" data-tab="biography">
-        <!-- Biography content -->
-      </section>
-
-
-
-
-
-
-
-
-
-
-      <!-- ===== Character Backup TAB ===== -->
-      <section class="tab active" data-tab="character-backup">
-        <div class="section skills grid-2 auto-first-col">
-          <h3 class="center">{{localizeHeart "skill" "label-multiple"}}</h3>
-          <h3 class="faded">{{localizeHeart "skill" "knack" "label-multiple"}}</h3>
-          {{#each actor.system.skills as |skill name|}}
-          <div class="flexrow">
-            <input type="checkbox" name="system.skills.{{name}}.value" {{checked skill.value}} />
-            <span class="bold">{{localizeHeart "skill" name}}</span>
-          </div>
-          <input name="system.skills.{{name}}.knack" value="{{skill.knack}}" />
-          {{/each}}
-        </div>
-
-        <div class="section domains grid-2 auto-first-col">
-          <h3 class="center">{{localizeHeart "domain" "label-multiple"}}</h3>
-          <h3 class="faded">{{localizeHeart "domain" "knack" "label-multiple"}}</h3>
-          {{#each actor.system.domains as |domain name|}}
-          <div class="flexrow">
-            <input type="checkbox" name="system.domains.{{name}}.value" {{checked domain.value}} />
-            <span class="bold">{{localizeHeart "domain" name}}</span>
-          </div>
-          <input name="system.domains.{{name}}.knack" value="{{domain.knack}}" />
-          {{/each}}
-        </div>
-      </section>
-      <!-- ===== ABILITIES TAB ===== -->
-      <section class="tab" data-tab="abilities-backup">
-        {{> itemListSection type="beat" list=actor.proxy.beats description_path="active_beats" overrideTitle="Active
-        Beats"}}
-        {{> itemListSection type="ability" list=actor.proxy.abilities description_path="abilities" hideInactive=true}}
-        {{> itemListSection type="fallout" list=(lookup actor.itemTypes "fallout") description_path="fallout"}}
-      </section>
-      <!-- ===== EQUIPMENT TAB ===== -->
-      <section class="tab" data-tab="equipment-backup">
-        {{> itemListSection type="equipment" list=actor.proxy.equipment description_path="equipment" showActivate=true}}
-        {{> itemListSection type="resource" list=actor.proxy.resources description_path="resources"}}
-        <div class="section center wide inactive-items">
-          <h3>Inactive Items</h3>
-          <div>Your help text here</div>
-          <div class="item-list">
+        <div class="biography-tab">
+          <!-- Biography Content -->
+          <div class="character-tab-container questions-container">
+            <!-- Iterate over actor items -->
             {{#each actor.items as |item|}}
-            {{#if (and (not (undef item.system.active)) (not item.system.active)) }}
-            {{> (join "/" "heart:items" item.type "preview.html") item=item dataPath="???" showActivate=../user.isOwner
-            showDelete=../user.isOwner}}
-            {{/if}}
+              {{#if (eq item.type "calling")}}
+                <div class="container-title">Your Calling: {{item.name}}</div>
+                <div class="section calling-items">
+                  <!-- Iterate over questions in the calling item -->
+                   <div class="calling-description">
+                    {{#if (and editable (not item.isOwned))}}
+                    {{editor (localizeHeart item.description) target="item.description" button=true editable=editable owner=owner}}
+                    {{else}}
+                    {{{localizeHeart item.description}}}
+                    {{/if}}
+                   </div>
+                  {{#each item.system.questions as |question id|}}
+                  <div class="question">
+                    <strong>{{localizeHeart question.question}}</strong>
+                    <div class="answer">
+                      {{#if question.answer}}
+                        {{#if ../editable}}
+                          {{editor question.answer button=true editable=../editable owner=owner}}
+                        {{else}}
+                          <div>{{{localizeHeart question.answer}}}</div>
+                        {{/if}}
+                      {{else}}
+                        <div class="no-answer">No answer provided</div>
+                      {{/if}}
+                    </div>
+                  </div>
+                  {{/each}}
+            
+                </div>
+              {{/if}}
             {{/each}}
           </div>
         </div>
       </section>
+
+
+
+
+
+
+
+
+
+
+
 
     </section>
   </form>

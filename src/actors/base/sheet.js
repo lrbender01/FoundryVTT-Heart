@@ -158,6 +158,21 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
         html.find('[data-action=open-compendium]').click(async ev => {
             console.log("Open Compendium");
         });
+
+        // This is taken from the Calling, in the actor it will not get the correct data
+        html.find('[data-action=add-question]').click(ev => {
+            const id = foundry.utils.randomID();
+            this.item.update({[`system.questions.${id}`]: { // the question is in the calling item, not in the actor
+                question: '',
+                answer: ''
+            }});
+        });
+
+        html.find('[data-action=delete-question]').click(ev => {
+            const target = $(ev.currentTarget);
+            const id = target.closest ('[data-id]').data('id');
+            this.item.update({[`system.questions.-=${id}`]: null});
+        });
     }
 
     async _onDragStart(event) {

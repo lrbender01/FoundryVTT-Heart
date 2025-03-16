@@ -29,11 +29,9 @@ class HeartTabs {
         });
         // Show or hide content based on the active tab
         this.contents.each((index, content) => {
-            if ($(content).data("tab") === tab) {
-                $(content).show();
-            } else {
-                $(content).hide();
-            }
+            const isActive = $(content).data("tab") === tab;
+            $(content).toggleClass("active", isActive); // Add or remove the 'active' class
+            $(content).toggle(isActive); // Show or hide the content
         });
         this.activeTab = tab;
     }

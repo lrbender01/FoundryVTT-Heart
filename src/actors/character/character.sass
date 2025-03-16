@@ -87,8 +87,7 @@ $container-title-bg: white
   color: $text-color
   background-color: $bg-color
   text-shadow: 0 0 transparent !important
-  padding-left: 25px
-  padding-right: 25px
+  padding: 5px 50px
   mask: radial-gradient(8px at 20px 20px, transparent 98%, black) -20px -20px
 
 // ============================================================================
@@ -103,6 +102,13 @@ $container-title-bg: white
 .character-tab
   display: grid
   grid-template-columns: 400px 1fr
+  gap: 1rem
+  width: 100%
+  padding: 25px
+
+.biography-tab
+  display: grid
+  grid-template-columns: 1fr
   gap: 1rem
   width: 100%
   padding: 25px
@@ -287,6 +293,7 @@ $container-title-bg: white
     font-family: $label-font
     font-size: 26px
     color: white
+    
   a:active, a.active
     @include active-tab(util.$red, white)
 
