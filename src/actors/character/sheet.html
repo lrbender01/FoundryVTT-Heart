@@ -25,6 +25,30 @@
 </div>
 {{/inline}}
 
+{{#*inline "newListSection"}}
+<div class="new-item-list">
+  {{#each list as |item|}}
+  {{> (join "/" "heart:items" type "preview.html") item=item dataPath="???" hideInactive=../hideInactive
+  showActivate=../showActivate showDelete=(or (not item.isChild) user.isGM )}}
+  {{/each}}
+</div>
+{{/inline}}
+
+{{#*inline "inactiveItemsSection"}}
+<div class="section center wide inactive-items">
+  {{#each actor.items as |item|}}
+  {{#if (and (not (undef item.system.active)) (not item.system.active)) }}
+  {{> (join "/" "heart:items" item.type "preview.html") item=item dataPath="???" showActivate=../user.isOwner
+  showDelete=../user.isOwner}}
+  {{/if}}
+  {{/each}}
+</div>
+{{/inline}}
+
+
+
+
+
 <div>
   <!-- Use a single form that wraps the entire sheet -->
   <form class="heart sheet actor character {{cssClass}}" autocomplete="off">
@@ -66,6 +90,11 @@
           </div>
         </div>
         {{else}}
+        {{#if classItem.isOwner}}
+        <a data-action="open-compendium">
+          <span class="fas fa-plus"></span>
+        </a>
+        {{/if}}
         <input class="class-content" name="system.class" value="{{actor.system.class}}" />
         {{/if}}
 
@@ -91,33 +120,179 @@
       </div>
 
       <!-- Column 4: Roll Buttons -->
-      <div class="header-col roll-buttons">
-        <div class="heart flexrow buttons sticky">
-          <button data-action="roll">
-            <span class="fas fa-dice"></span> {{localizeHeart "perform" "roll"}}
-          </button>
-          <button data-action="stress-roll">
-            <span class="fas fa-dice"></span> {{localizeHeart "perform" "roll-stress"}}
-          </button>
-          <button data-action="fallout-roll">
-            <span class="fas fa-dice"></span> {{localizeHeart "perform" "roll-fallout"}}
-          </button>
-        </div>
+      <div class="header-col heart roll-buttons roll-buttons-container">
+        <!-- Row 1: Default & Stress Roll -->
+        <button data-action="roll" class="default-roll">
+          {{localizeHeart "perform" "roll"}} <span class="sheetD10 white"></span>
+        </button>
+        <button data-action="stress-roll" class="stress-roll">
+          {{localizeHeart "perform" "roll-stress"}} <span class="sheetD10 white"></span>
+        </button>
+        <!-- Row 2: Fallout Roll -->
+        <button data-action="fallout-roll" class="fallout-roll">
+          {{localizeHeart "perform" "roll-fallout"}} <span class="sheetD10 white"></span>
+        </button>
       </div>
     </div>
     <!-- END HEADER -->
 
     <nav class="character-nav-tabs tabs" data-group="primary">
-      <a class="item active" data-tab="main">{{localizeHeart "character" "label-single"}}</a>
-      <a class="item" data-tab="abilities">{{localizeHeart "ability" "label-multiple"}}</a>
-      <a class="item" data-tab="equipment">{{localizeHeart "equipment" "label-multiple"}}</a>
-      <a class="item" data-tab="biography">{{localizeHeart "biography" "label-multiple"}}</a>
+      <a class="item active" data-tab="character">{{localizeHeart "character" "label-single"}}</a>
+      <a class="item" data-tab="biography">{{localizeHeart "biography" "label-single"}}</a>
+      <a class="item active" data-tab="character-backup">Character Backup</a>
+      <a class="item" data-tab="abilities-backup">Ability Backup</a>
+      <a class="item" data-tab="equipment">Equipment Backup</a>
     </nav>
 
     <!-- 2) TAB CONTENT WRAPPER -->
     <section class="tab-content">
-      <!-- ===== MAIN TAB ===== -->
-      <section class="tab active" data-tab="main">
+      <!-- ===== CHARACTER TAB ===== -->
+      <section class="tab active" data-tab="character">
+        <div class="character-tab">
+          <!-- LEFT COLUMN -->
+          <div class="column left-column">
+            <!-- Stress & Resistances & Protection -->
+            <div class="character-tab-container stress-container">
+              <div class="container-title">Resistances</div>
+              <div class="container-content">
+                <!-- TODO: Add Stress, Resistances & Protection content -->
+                
+                <div>
+                  <div class="resistance-row">
+                    <span class="resistance-name"></span>
+                    <span class="resistance-stress red">Stress {{#if showTotalStress}}(Total: {{actor.proxy.totalStress}}){{/if}}</span>
+                    <span class="resistance-protection" title="Reduce stress taken by the amount of protection.">Protection<i class="fas fa-info-circle info"></i></span>
+                  </div>
+                  {{#each actor.system.resistances as |resistance name|}}
+                  <div class="resistance-row" data-resistance="{{name}}">
+                    <!-- Resistance Name -->
+                    <span class="resistance-name clickable" data-action="stress-roll" data-resistance="{{name}}">
+                      {{localizeHeart "resistance" name}}
+                    </span>
+
+                    <!-- Stress Checkboxes -->
+                    <span class="resistance-stress red" data-target="system.resistances.{{name}}.value">
+                      {{{ordered-checkable resistance.value 10}}}
+                    </span>
+
+                    <!-- Protection Checkboxes -->
+                    <span class="resistance-protection protection" data-target="system.resistances.{{name}}.protection">
+                      {{{ordered-checkable resistance.protection 5}}}
+                    </span>
+                  </div>
+                  {{/each}}
+                </div>
+              </div>
+            </div>
+
+            <!-- Skills & Knacks / Domains (subcolumns) -->
+            <div class="skills-domains-container">
+              <div class="container-content">
+                <div class="subcolumns">
+                  <div class="subcolumn character-tab-container skills-container">
+                    <div class="container-title">Skills &amp; Knacks</div>
+                    <div class="container-content">
+                      <!-- TODO: Add Skills &amp; Knacks content -->
+                    </div>
+                  </div>
+                  <div class="subcolumn character-tab-container domains-container">
+                    <div class="container-title">Domains</div>
+                    <div class="container-content">
+                      <!-- TODO: Add Domains content -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Equipment -->
+            <div class="character-tab-container equipment-container">
+              <div class="container-title">Equipment {{#if actor.isOwner}}<a data-action="add" data-type="equipment"
+                  data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}
+              </div>
+
+              <div class="container-content">
+                <!-- TODO: Add Equipment content -->
+                {{> newListSection type="equipment" list=actor.proxy.equipment description_path="equipment"
+                showActivate=true hideInactive="false"}}
+              </div>
+            </div>
+
+            <!-- Resources -->
+            <div class="character-tab-container resources-container">
+              <div class="container-title">Resources {{#if actor.isOwner}}<a data-action="add" data-type="resource"
+                  data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}
+              </div>
+              <div class="container-content">
+                <!-- TODO: Add Resources content -->
+                {{> newListSection type="resource" list=actor.proxy.resources description_path="resources"}}
+              </div>
+            </div>
+
+            <!-- Inactive Items -->
+            <div class="character-tab-container inactive-items-container">
+              <div class="container-title">Inactive Items</div>
+              <div class="container-content">
+                <!-- TODO: Add Equipment content -->
+                {{> inactiveItemsSection}}
+              </div>
+            </div>
+
+          </div>
+
+
+          <!-- RIGHT COLUMN -->
+          <div class="column right-column">
+            <!-- Active Beats -->
+            <div class="character-tab-container active-beats-container">
+              <div class="container-title">Active Beats {{#if actor.isOwner}}<a data-action="add" data-type="beat"
+                  data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}</div>
+              <div class="container-content">
+                <!-- TODO: Add Active Beats content -->
+                {{> newListSection type="beat" list=actor.proxy.beats description_path="active_beats"}}
+              </div>
+            </div>
+
+            <!-- Abilities -->
+            <div class="character-tab-container abilities-container">
+              <div class="container-title">Abilities {{#if actor.isOwner}}<a data-action="add" data-type="ability"
+                  data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}</div>
+              <div class="container-content">
+                <!-- TODO: Add Abilities content -->
+                {{> newListSection type="ability" list=actor.proxy.abilities description_path="abilities"
+                hideInactive=false}}
+              </div>
+            </div>
+
+            <!-- Fallout -->
+            <div class="character-tab-container fallout-container">
+              <div class="container-title">Fallout {{#if actor.isOwner}}<a data-action="add" data-type="fallout"
+                  data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}</div>
+              <div class="container-content">
+                <!-- TODO: Add Fallout content -->
+                {{> newListSection type="fallout" list=(lookup actor.itemTypes "fallout") description_path="fallout"}}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+      <!-- ===== BIOGRAPHY TAB ===== -->
+      <section class="tab" data-tab="biography">
+        <!-- Biography content -->
+      </section>
+
+
+
+
+
+
+
+
+
+
+      <!-- ===== Character Backup TAB ===== -->
+      <section class="tab active" data-tab="character-backup">
         <div class="section skills grid-2 auto-first-col">
           <h3 class="center">{{localizeHeart "skill" "label-multiple"}}</h3>
           <h3 class="faded">{{localizeHeart "skill" "knack" "label-multiple"}}</h3>
@@ -143,14 +318,14 @@
         </div>
       </section>
       <!-- ===== ABILITIES TAB ===== -->
-      <section class="tab" data-tab="abilities">
+      <section class="tab" data-tab="abilities-backup">
         {{> itemListSection type="beat" list=actor.proxy.beats description_path="active_beats" overrideTitle="Active
         Beats"}}
         {{> itemListSection type="ability" list=actor.proxy.abilities description_path="abilities" hideInactive=true}}
         {{> itemListSection type="fallout" list=(lookup actor.itemTypes "fallout") description_path="fallout"}}
       </section>
       <!-- ===== EQUIPMENT TAB ===== -->
-      <section class="tab" data-tab="equipment">
+      <section class="tab" data-tab="equipment-backup">
         {{> itemListSection type="equipment" list=actor.proxy.equipment description_path="equipment" showActivate=true}}
         {{> itemListSection type="resource" list=actor.proxy.resources description_path="resources"}}
         <div class="section center wide inactive-items">
@@ -166,10 +341,7 @@
           </div>
         </div>
       </section>
-      <!-- ===== BIOGRAPHY TAB ===== -->
-      <section class="tab" data-tab="biography">
-        <!-- Biography content -->
-      </section>
+
     </section>
   </form>
 </div>

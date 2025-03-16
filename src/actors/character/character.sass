@@ -1,11 +1,24 @@
 @use '../../util'
 
-// Define common variables
-$input-bg: #fff
-$input-padding: 0.25rem 0.5rem
-$label-color: rgb(148, 4, 4)
+// ============================================================================
+// VARIABLES
+// ============================================================================
+
+// Colors
 $header-label-color: white
+
+// Fonts
 $label-font: 'Mosherif'
+
+// Sheet Containers
+$container-border-width: 2px
+$container-radius: 8px
+$container-padding: 1.5rem
+$container-title-bg: white
+
+// ============================================================================
+// PLACEHOLDERS
+// ============================================================================
 
 %header-container-style
   border: 2px solid white
@@ -15,7 +28,6 @@ $label-font: 'Mosherif'
   height: 90px
   max-height: 90px
 
-// Create a reusable placeholder for inputs
 %header-input-style
   background-color: rgba(0,0,0,0.25)
   border: 1px solid white
@@ -33,18 +45,43 @@ $label-font: 'Mosherif'
   &::placeholder
     color: white
 
-// Create a reusable placeholder for labels
 %header-label-style
   font-family: $label-font
   font-size: 24px
+  font-weight: normal
   color: $header-label-color
   align-self: center
-
 
 %item-input
   > .flexrow
     > :last-child
       flex: 0 0 auto
+
+%dynamic-container
+  border: $container-border-width solid util.$red
+  border-radius: $container-radius
+  padding: $container-padding
+  position: relative
+  margin-bottom: 1rem
+
+  // Container Title: inlayed on top of the container border
+  .container-title
+    position: absolute
+    top: -0.8rem
+    left: 1rem
+    background-color: $container-title-bg
+    padding: 0 0.5rem
+    font-family: 'Mosherif'
+    font-size: 30px
+    color: util.$red
+
+  // Container Content Placeholder
+  .container-content
+    margin-top: 1rem
+
+// ============================================================================
+// MIXINS
+// ============================================================================
 
 @mixin active-tab($text-color, $bg-color, $radius: 5px)
   color: $text-color
@@ -54,11 +91,74 @@ $label-font: 'Mosherif'
   padding-right: 25px
   mask: radial-gradient(8px at 20px 20px, transparent 98%, black) -20px -20px
 
-// Reset Window
-[id^="CharacterSheet-Actor-"] > .window-app .window-content
-  padding: 0
+// ============================================================================
+// GLOBAL LAYOUT
+// ============================================================================
 
-// Character header container
+[id^="CharacterSheet-Actor-"] .window-content > *
+  padding: 0
+  background-color: white
+
+
+.character-tab
+  display: grid
+  grid-template-columns: 400px 1fr
+  gap: 1rem
+  width: 100%
+  padding: 25px
+
+.column
+  display: flex
+  flex-direction: column
+  gap: 1rem
+
+// Subcolumns
+.subcolumns
+  display: grid
+  grid-template-columns: 1fr 1fr
+  gap: 1rem
+
+.subcolumn
+  position: relative
+  padding: 1rem
+  border: $container-border-width solid util.$red
+  border-radius: $container-radius
+
+// ============================================================================
+// ICONS
+// ============================================================================
+
+// Dice Icons
+.heart .sheetD10
+  display: inline-block
+  width: 0.7em
+  height: 0.7em
+  margin-left: 5px
+
+.heart .sheetD10
+  mask-image: url('../../../static/assets/ui/dice-d10.svg')
+  mask-size: 0.7em
+  mask-repeat: no-repeat
+
+.heart .sheetD10.red
+  background-color: util.$red
+.heart .sheetD10.black
+  background-color: black
+.heart .sheetD10.white
+  background-color: white
+
+.heart .addItem
+  font-size: 36px
+  line-height: 0
+  color: black
+  display: inline-block
+  vertical-align: middle
+
+// ============================================================================
+// HEADER
+// ============================================================================
+
+// Character Header
 .character-header
   z-index: 1
   display: flex
@@ -67,25 +167,21 @@ $label-font: 'Mosherif'
   padding: 30px
   background-color: transparent
   background-image: url('../../../static/assets/ui/header_background.webp')
-  -webkit-mask-image: url('../../../static/assets/ui/header_nav.svg')
   mask-image: url('../../../static/assets/ui/header_nav.svg')
-  -webkit-mask-size: auto 150px
-  mask-size: auto 150px
-  -webkit-mask-repeat: repeat-x
+  mask-size: auto 180px
   mask-repeat: repeat-x
-  -webkit-mask-position: -0.5px top
   mask-position: -0.5px top
   margin-bottom: 1rem
-  min-height: 150px
-  max-height: 150px
+  min-height: 180px
+  max-height: 180px
 
-// Each column
+// Header Columns
 .header-col
   flex: 1
   &:not(:last-child)
     margin-right: 2rem
 
-// Portrait container
+// Portrait Container
 .portrait
   min-width: 90px
   max-width: 90px
@@ -98,7 +194,7 @@ $label-font: 'Mosherif'
     border-radius: 50%
     border: 2px solid white
 
-// Identity container
+// Identity Container
 .identity-container
   @extend %header-container-style
   display: grid
@@ -107,7 +203,7 @@ $label-font: 'Mosherif'
   width: 400px
   max-width: 400px
 
-  // Row 1: Name label, Name input, Pronouns input
+  // Row 1: Name, Name Input, Pronouns Input
   .name-label
     grid-column: 1
     grid-row: 1
@@ -122,7 +218,7 @@ $label-font: 'Mosherif'
     @extend %header-input-style
     min-width: 70px
 
-  // Row 2: Ancestry label, Ancestry input (spans two columns)
+  // Row 2: Ancestry Label & Input
   .ancestry-label
     grid-column: 1
     grid-row: 2
@@ -132,7 +228,7 @@ $label-font: 'Mosherif'
     grid-row: 2
     @extend %header-input-style
 
-// Class & Calling container
+// Class & Calling Container
 .class-calling-container
   @extend %header-container-style
   display: grid
@@ -142,12 +238,11 @@ $label-font: 'Mosherif'
   max-width: 300px
   @extend %item-input
 
-  // Row 1: Class label & content
+  // Row 1: Class Label & Content
   .class-label
     grid-column: 1
     grid-row: 1
     @extend %header-label-style
-
   .class-content
     grid-column: 2
     grid-row: 1
@@ -156,12 +251,11 @@ $label-font: 'Mosherif'
     align-items: center
     gap: 0.5rem
 
-  // Row 2: Calling label & content
+  // Row 2: Calling Label & Content
   .calling-label
     grid-column: 1
     grid-row: 2
     @extend %header-label-style
-
   .calling-content
     grid-column: 2
     grid-row: 2
@@ -174,31 +268,148 @@ $label-font: 'Mosherif'
 .character-nav-tabs
   z-index: 0
   margin-top: -60px
-  padding-left: 30px
-  padding-right: 30px
+  padding: 5px 25px
   display: flex
   justify-content: flex-start
   gap: 3rem
-  background-color: rgb(147, 0, 0)
-  -webkit-mask-image: url('../../../static/assets/ui/header_nav.svg')
+  background-color: util.$red
   mask-image: url('../../../static/assets/ui/header_nav.svg')
-  -webkit-mask-size: auto 90px
   mask-size: auto 90px
-  -webkit-mask-repeat: repeat-x
   mask-repeat: repeat-x
-  -webkit-mask-position: -0.5px top
   mask-position: -0.5px top
   margin-bottom: 1rem
   min-height: 90px
   max-height: 90px
 
   a
+    padding: 5px 50px
     margin-top: 15px
-    padding: 5px 10px
     font-family: $label-font
     font-size: 26px
     color: white
-
   a:active, a.active
-    @include active-tab(rgb(147, 0, 0), white)
-    
+    @include active-tab(util.$red, white)
+
+// Roll Buttons Container
+.roll-buttons-container
+  @extend %header-container-style
+  display: grid
+  grid-template-columns: auto 1fr
+  gap: 0.5rem 1rem
+  width: 400px
+  max-width: 400px
+
+// Heart Button Styles
+.header-col.heart
+  button
+    @extend %header-input-style
+    border: 1px solid white
+    @extend %header-label-style
+  
+  button.default-roll
+    grid-column: 1
+    grid-row: 1
+  button.stress-roll
+    grid-column: 2
+    grid-row: 1
+  button.fallout-roll
+    grid-column: 1 / span 2
+    grid-row: 2
+
+// ============================================================================
+// MAIN-TAB
+// ============================================================================
+
+// Reusable Character Container Pattern
+.character-tab-container
+  @extend %dynamic-container
+
+.resistance-row
+  display: grid
+  grid-template-columns: 4em 12em 6em
+  gap: 1em
+  align-items: center
+  margin-bottom: 0.5rem
+
+  .resistance-name
+    font-weight: bold
+    margin-right: 1rem
+    min-width: 4rem
+
+  .resistance-stress
+    font-weight: bold
+    display: inline-flex
+    align-items: center
+    gap: 0.2rem
+
+  .resistance-protection
+    font-weight: bold
+    display: inline-flex
+    align-items: center
+    gap: 0.2rem
+
+.protection input[type=checkbox]
+  $size: 12px
+  flex: $size 0 0
+  appearance: none
+  display: inline-block
+  width: $size
+  height: $size
+  background-color: util.$black
+  border: none
+  margin: 0 2px
+  box-sizing: content-box
+
+  &:disabled:checked
+    background-color: util.$disabled-and-checked
+
+  &:checked
+    background-color: util.$red
+    width: $size
+    height: $size
+    border: none
+
+  &:disabled
+    background-color: util.$disabled
+    cursor: not-allowed
+
+  &.invert
+    border-color: util.$white
+    &:checked
+      background-color: util.$white
+
+.protection .ordered-checkable-box
+  $size: 12px
+  flex: $size 0 0
+
+  &::after
+    content: '' // Ensure the pseudo-element is rendered
+    display: block
+    width: $size
+    height: $size
+    background-color: util.$grey
+    mask-image: url('../../../static/assets/ui/shield_fill.svg')
+    mask-repeat: no-repeat
+    mask-size: contain
+    border: none
+
+  &.checked::after
+    background-color: util.$red
+    mask-image: url('../../../static/assets/ui/shield_fill.svg')
+    mask-repeat: no-repeat
+    mask-size: contain
+    border: none
+    width: $size
+    height: $size
+
+.info
+  font-size: 0.8em
+
+.clickable
+  cursor: pointer
+  color: util.$black
+
+  &:hover
+    color: util.$red
+
+

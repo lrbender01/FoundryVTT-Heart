@@ -44,4 +44,20 @@ export default class RequirementApplication extends HeartApplication {
             this.close()
         });
     }
+
+
+    get title() {
+        if (this.constructor.formType !== "base") {
+            console.log(this.options.type);
+            if (this.options.type.includes('-stress-roll')) {
+                return game.i18n.localize(`heart.applications.${this.options.type}.title`);
+            }
+            else
+            {
+                return game.i18n.localize(`heart.applications.${this.constructor.formType}.title`);
+            }
+          } else {
+            return super.title;
+          }
+      }
 }

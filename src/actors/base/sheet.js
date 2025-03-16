@@ -63,6 +63,10 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
         html.find('[data-action=item-roll]').click(async ev => {
           const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
           const item = await fromUuid(uuid);
+
+          console.log("ITem: ");
+          console.log(item);
+
           let rollOptions = {'stepIncrease': false, 'stepDecrease': false};
 
           if (ev.shiftKey) {
@@ -76,7 +80,13 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
           }
 
           const roll = game.heart.rolls.ItemRoll.build({item}, {}, rollOptions);
-          roll.evaluateSync();
+
+          console.log("ROLL: " + roll);
+
+          await roll.evaluate();
+
+          console.log(roll.result);
+          console.log(roll.total);
 
           roll.toMessage({
               flavor: `${localizeHeart(item.name)} (<span class="item-type">${item.type}</span>)`,
@@ -95,12 +105,25 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
         });
 
         html.find('[data-action=stress-roll]').click(async ev => {
+            // const roll = await game.heart.rolls.StressRoll.build({
+            //     character: this.actor.id
+            // });
+
+            // roll.toMessage({
+            //     speaker: {actor: this.actor.id}
+            // });
+
+            const target = $(ev.currentTarget); // The clicked element
+            const resistance = target.data('resistance'); // Get the resistance from the data attribute
+
             const roll = await game.heart.rolls.StressRoll.build({
-                character: this.actor.id
+                character: this.actor.id,
+                resistance: resistance // Pass the resistance to the roll
             });
 
             roll.toMessage({
-                speaker: {actor: this.actor.id}
+                speaker: { actor: this.actor.id },
+                flavor: resistance ? `Resistance: ${resistance}` : undefined // Optional: Add resistance info to the message
             });
         });
 
@@ -131,9 +154,15 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
             const item = await fromUuid(uuid);
             item.update({'system.complete': false});
         });
+
+        html.find('[data-action=open-compendium]').click(async ev => {
+            console.log("Open Compendium");
+        });
     }
 
     async _onDragStart(event) {
+        console.log("Char ondragstart");
+        
         const li = event.currentTarget;
         if (event.target.classList.contains("content-link")) return;
 

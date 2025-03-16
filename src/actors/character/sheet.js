@@ -60,7 +60,19 @@ export default class CharacterSheet extends HeartActorSheet {
 
     // workaround for nested-children uuids not dragging properly
     async _onDragStart(event) {
+        console.log("character onDragStart");
+
         const target = event.currentTarget;
+
+        // prevent drag and drop of embedded items from callings or classes
+        if (target.dataset.documentId && target.dataset.documentId.includes("@"))
+        {
+            console.warn("target contains @");
+            return;
+        }
+
+        console.log("target:", target);
+
         const uuid = target.dataset.itemId;
         const document = await fromUuid(uuid);
         const dragData = document.toDragData();
@@ -68,13 +80,53 @@ export default class CharacterSheet extends HeartActorSheet {
     }
 
     async _onDropItemCreate(itemData) {
+        console.log("character _onDropItemCreate");
+
         if (this.actor.type === 'character') {
+
+            console.log("actor is a character");
+            console.log("Dropped item data:", itemData);
+            console.log("Actor items:", this.actor.items);
+
+            // Validate itemData to ensure it has the required structure
+            if (!itemData.name || !itemData.type || !itemData.system) {
+                console.error("Invalid item data detected. Skipping creation.", itemData);
+                return;
+            }
+
+            // Prevent duplication of items embedded in class or calling
+            // This is not really a good way to do this, but it works for now
+            if (
+                    (   itemData.type == "equipment" ||
+                        itemData.type == "resource" ||
+                        itemData.type == "ability" ||
+                        itemData.type == "beat"
+                    )
+                    &&
+                    (
+                        itemData.name.startsWith('class.') ||
+                        itemData.name.startsWith('calling.')
+                    )
+                ) {
+                console.warn(`Invalid item detected: ${itemData.name}. Skipping creation.`);
+                return;
+            }
+
+            // Sanity check: Prevent duplication of items
+            const existingItem = this.actor.items.find(i => i.name === itemData.name && i.type === itemData.type);
+            if (existingItem) {
+                console.warn(`Duplicate item detected: ${itemData.name}. Skipping creation.`);
+                return;
+            }
+
+            // This essentially overwrites pre-existing callings and removes all associated items
             if (itemData.type === 'calling') {
                 this.actor.itemTypes.calling.forEach(item => {
                     item.delete();
                 });
             }
 
+            // This essentially overwrites pre-existing classes and removes all associated items
             if (itemData.type === 'class') {
                 this.actor.itemTypes.class.forEach(item => {
                     item.delete();
@@ -83,6 +135,8 @@ export default class CharacterSheet extends HeartActorSheet {
 
             itemData.system.active = true;
         }
+
+        
 
         return super._onDropItemCreate(itemData);
     }
@@ -118,7 +172,7 @@ export default class CharacterSheet extends HeartActorSheet {
         this.heartTabs = new HeartTabs({
             navSelector: ".character-nav-tabs a",
             contentSelector: ".tab-content .tab",
-            initial: "main"
+            initial: "character"
         });
         this.heartTabs.bind(html);
 
