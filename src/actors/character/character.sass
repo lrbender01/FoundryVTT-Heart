@@ -262,6 +262,7 @@ $container-title-bg: white
     grid-column: 1
     grid-row: 2
     @extend %header-label-style
+
   .calling-content
     grid-column: 2
     grid-row: 2
@@ -269,6 +270,12 @@ $container-title-bg: white
     display: flex
     align-items: center
     gap: 0.5rem
+    
+    .name
+      overflow: hidden
+      text-overflow: ellipsis
+      white-space: nowrap
+      min-width: 0
 
 // Tab Navigation
 .character-nav-tabs
@@ -418,5 +425,37 @@ $container-title-bg: white
 
   &:hover
     color: util.$red
+
+.clickable.section-button
+  font-size: 16px
+  margin: 0 10px
+  display: inline-block
+  transform: translateY(-2px)
+
+.calling-description
+  text-align: center
+  font-size: 24px
+  width: 70%
+  margin: 0 auto 25px auto
+  padding: 0 10% 25px
+  border-bottom: 3px solid util.$red
+
+.calling-items .question strong
+  font-size: 16px
+  font-weight: 900
+  color: util.$red
+  display: inline-block
+  width: 70%
+
+.calling-items .question .answer-prompt
+  padding: 10px 0 30px 0
+  font-size: 16px
+
+.calling-items .editor-content
+  background-image: none !important
+  font-size: 16px !important
+  padding: 10px 0 30px 0 !important
+  min-height: 0 !important
+
 
 

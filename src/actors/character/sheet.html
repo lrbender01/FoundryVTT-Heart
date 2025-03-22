@@ -25,8 +25,8 @@
 </div>
 {{/inline}}
 
-{{#*inline "newListSection"}}
-<div class="new-item-list">
+{{#*inline "characterTabItemList"}}
+<div class="tab-item-list">
   {{#each list as |item|}}
   {{> (join "/" "heart:items" type "preview.html") item=item dataPath="???" hideInactive=../hideInactive
   showActivate=../showActivate showDelete=(or (not item.isChild) user.isGM )}}
@@ -65,9 +65,9 @@
         <!-- Row 1: Name + Pronouns -->
         <label class="name-label">{{localizeHeart "character" "name"}}</label>
         <input class="name-input" name="name" value="{{actor.name}}" />
-        <input class="pronouns-input" name="pronouns" value="{{actor.system.pronouns}}" placeholder="Pronouns" />
+        <input class="pronouns-input" name="pronouns" value="{{actor.system.pronouns}}" placeholder="{{localizeHeart 'character' 'pronouns'}}" />
         <!-- Row 2: Ancestry -->
-        <label class="ancestry-label">Ancestry</label>
+        <label class="ancestry-label">{{localizeHeart "character" "ancestry"}}</label>
         <input class="ancestry-input" name="ancestry" placeholder="Ancestry" value="{{actor.system.ancestry}}" />
       </div>
 
@@ -76,32 +76,36 @@
         <!-- Row 1: Class -->
         <label class="class-label">{{localizeHeart "character" "class"}}</label>
         {{#if classItem}}
-        <div data-item-id="{{classItem.uuid}}" class="class-content flexrow item">
-          <div class="name">{{localizeHeart classItem.name}}</div>
-          <div class="right">
-            <a data-action="view" title="{{localizeHeart 'base' 'view'}}">
-              <span class="fas fa-eye"></span>
-            </a>
-            {{#if classItem.isOwner}}
-            <a data-action="delete" title="{{localizeHeart 'base' 'delete'}}">
-              <span class="fas fa-trash"></span>
-            </a>
-            {{/if}}
+          <div data-item-id="{{classItem.uuid}}" class="class-content flexrow item non-draggable">
+            <div class="name">{{localizeHeart classItem.name}}</div>
+            <div class="right">
+              <a data-action="view" title="{{localizeHeart 'base' 'view'}}">
+                <span class="fas fa-eye"></span>
+              </a>
+              {{#if classItem.isOwner}}
+              <a data-action="delete" title="{{localizeHeart 'base' 'delete'}}">
+                <span class="fas fa-trash"></span>
+              </a>
+              {{/if}}
+            </div>
           </div>
-        </div>
         {{else}}
-        {{#if classItem.isOwner}}
-        <a data-action="open-compendium">
-          <span class="fas fa-plus"></span>
-        </a>
+        {{#if actor.isOwner}}
+          <div class="class-content flexrow item non-draggable">
+            <div class="name">{{localizeHeart classItem.name}}</div>
+            <div class="right">
+              <a data-action="open-compendium" data-compendium="heart.classes">
+                <span class="fas fa-plus white"></span>
+              </a>
+            </div>
+          </div>
         {{/if}}
-        <input class="class-content" name="system.class" value="{{actor.system.class}}" />
         {{/if}}
 
         <!-- Row 2: Calling -->
         <label class="calling-label">{{localizeHeart "character" "calling"}}</label>
         {{#if callingItem}}
-        <div data-item-id="{{callingItem.uuid}}" class="calling-content flexrow item">
+        <div data-item-id="{{callingItem.uuid}}" class="calling-content flexrow item non-draggable">
           <div class="name">{{localizeHeart callingItem.name}}</div>
           <div class="right">
             <a data-action="view" title="{{localizeHeart 'base' 'view'}}">
@@ -115,7 +119,16 @@
           </div>
         </div>
         {{else}}
-        <input class="calling-content" name="system.calling" value="{{actor.system.calling}}" />
+        {{#if actor.isOwner}}
+          <div class="calling-content flexrow item non-draggable">
+            <div class="name">{{localizeHeart callingItem.name}}</div>
+            <div class="right">
+              <a data-action="open-compendium" data-compendium="heart.callings">
+                <span class="fas fa-plus white"></span>
+              </a>
+            </div>
+          </div>
+        {{/if}}
         {{/if}}
       </div>
 
@@ -213,8 +226,8 @@
 
               <div class="container-content">
                 <!-- TODO: Add Equipment content -->
-                {{> newListSection type="equipment" list=actor.proxy.equipment description_path="equipment"
-                showActivate=true hideInactive="false"}}
+                {{> characterTabItemList type="equipment" list=actor.proxy.equipment description_path="equipment"
+                showActivate=true}}
               </div>
             </div>
 
@@ -225,7 +238,7 @@
               </div>
               <div class="container-content">
                 <!-- TODO: Add Resources content -->
-                {{> newListSection type="resource" list=actor.proxy.resources description_path="resources"}}
+                {{> characterTabItemList type="resource" list=actor.proxy.resources description_path="resources"}}
               </div>
             </div>
 
@@ -249,7 +262,7 @@
                   data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}</div>
               <div class="container-content">
                 <!-- TODO: Add Active Beats content -->
-                {{> newListSection type="beat" list=actor.proxy.beats description_path="active_beats"}}
+                {{> characterTabItemList type="beat" list=actor.proxy.beats description_path="active_beats"}}
               </div>
             </div>
 
@@ -259,8 +272,7 @@
                   data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}</div>
               <div class="container-content">
                 <!-- TODO: Add Abilities content -->
-                {{> newListSection type="ability" list=actor.proxy.abilities description_path="abilities"
-                hideInactive=false}}
+                {{> characterTabItemList type="ability" list=actor.proxy.abilities description_path="abilities"}}
               </div>
             </div>
 
@@ -270,7 +282,8 @@
                   data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}</div>
               <div class="container-content">
                 <!-- TODO: Add Fallout content -->
-                {{> newListSection type="fallout" list=(lookup actor.itemTypes "fallout") description_path="fallout"}}
+                {{> characterTabItemList type="fallout" list=(lookup actor.itemTypes "fallout")
+                description_path="fallout"}}
               </div>
             </div>
           </div>
@@ -282,39 +295,56 @@
         <div class="biography-tab">
           <!-- Biography Content -->
           <div class="character-tab-container questions-container">
-            <!-- Iterate over actor items -->
-            {{#each actor.items as |item|}}
-              {{#if (eq item.type "calling")}}
-                <div class="container-title">Your Calling: {{item.name}}</div>
-                <div class="section calling-items">
-                  <!-- Iterate over questions in the calling item -->
-                   <div class="calling-description">
-                    {{#if (and editable (not item.isOwned))}}
-                    {{editor (localizeHeart item.description) target="item.description" button=true editable=editable owner=owner}}
-                    {{else}}
-                    {{{localizeHeart item.description}}}
-                    {{/if}}
-                   </div>
-                  {{#each item.system.questions as |question id|}}
-                  <div class="question">
-                    <strong>{{localizeHeart question.question}}</strong>
-                    <div class="answer">
-                      {{#if question.answer}}
-                        {{#if ../editable}}
-                          {{editor question.answer button=true editable=../editable owner=owner}}
-                        {{else}}
-                          <div>{{{localizeHeart question.answer}}}</div>
-                        {{/if}}
-                      {{else}}
-                        <div class="no-answer">No answer provided</div>
-                      {{/if}}
-                    </div>
+            <!-- Check if there are any items of type "calling" -->
+            {{#if (some actor.items "type calling")}}
+              <!-- Iterate over actor items -->
+              {{#each actor.items as |item|}}
+                {{#if (eq item.type "calling")}}
+                  <div data-item-id="{{item.uuid}}" data-document-id="{{item.uuid}}">
+                    <form class="heart sheet base Item calling {{cssClass}} editable" autocomplete="off">
+                      <div class="container-title">
+                        {{localizeHeart "character" "calling"}}: {{item.name}}
+                        <a data-action="view">
+                          <span class="fas fa-edit clickable section-button"></span>
+                        </a>
+                      </div>
+                      <div class="section calling-items">
+                        <!-- Iterate over questions in the calling item -->
+                        <div class="calling-description">
+                          {{{localizeHeart item.system.description}}}
+                        </div>
+                        {{#each item.system.questions as |question id|}}
+                          <div class="question editable">
+                            {{#if question.answer}}
+                              <strong>{{{localizeHeart question.question}}}</strong>
+                              {{editor question.answer button=false editable=false}}
+                            {{else}}
+                              <strong>{{{localizeHeart question.question}}}</strong>
+                              <div class="answer-prompt">
+                                {{localizeHeart "calling" "questions" "sheet-prompt"}}
+                              </div>
+                            {{/if}}
+                          </div>
+                        {{/each}}
+                      </div>
+                    </form>
                   </div>
-                  {{/each}}
-            
-                </div>
-              {{/if}}
-            {{/each}}
+                {{/if}}
+              {{/each}}
+            {{else}}
+              <!-- Show this only if no item of type "calling" exists -->
+              <div class="container-title">
+                <a data-action="open-compendium" data-compendium="heart.callings">
+                  {{localizeHeart "character" "calling-prompt"}} <span class="fas fa-plus clickable section-button"></span>
+                </a>
+              </div>
+            {{/if}}
+          </div>
+          <div class="character-tab-container notes-container">
+            <div class="container-title">{{localizeHeart "character" "notes"}}</div>
+            <div class="container-content">
+              {{editor actor.system.notes target="system.notes" button=true editable=true owner=true}}
+            </div>
           </div>
         </div>
       </section>

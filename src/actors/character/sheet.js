@@ -52,7 +52,7 @@ export default class CharacterSheet extends HeartActorSheet {
         return foundry.utils.mergeObject(defaultOptions, {
             width: 1250,
             height: 1000,
-            dragDrop: [{ dragSelector: '.item', dropSelector: null }]
+            dragDrop: [{ dragSelector: '.item:not(.non-draggable)', dropSelector: null }]
         })
     }
 
@@ -153,6 +153,7 @@ export default class CharacterSheet extends HeartActorSheet {
         const data = super.getData();
         const callingItem = this.actor.proxy.calling;
         const classItem = this.actor.proxy.class;
+        data.editable = this.actor.isOwner || game.user.isGM;
         data.user = game.user;
         data.pronouns = this.actor.system.pronouns || "";
         data.ancestry = this.actor.system.ancestry || "";

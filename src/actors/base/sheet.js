@@ -64,9 +64,6 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
           const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
           const item = await fromUuid(uuid);
 
-          console.log("ITem: ");
-          console.log(item);
-
           let rollOptions = {'stepIncrease': false, 'stepDecrease': false};
 
           if (ev.shiftKey) {
@@ -81,12 +78,7 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
 
           const roll = game.heart.rolls.ItemRoll.build({item}, {}, rollOptions);
 
-          console.log("ROLL: " + roll);
-
           await roll.evaluate();
-
-          console.log(roll.result);
-          console.log(roll.total);
 
           roll.toMessage({
               flavor: `${localizeHeart(item.name)} (<span class="item-type">${item.type}</span>)`,
@@ -156,22 +148,27 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
         });
 
         html.find('[data-action=open-compendium]').click(async ev => {
-            console.log("Open Compendium");
-        });
-
-        // This is taken from the Calling, in the actor it will not get the correct data
-        html.find('[data-action=add-question]').click(ev => {
-            const id = foundry.utils.randomID();
-            this.item.update({[`system.questions.${id}`]: { // the question is in the calling item, not in the actor
-                question: '',
-                answer: ''
-            }});
-        });
-
-        html.find('[data-action=delete-question]').click(ev => {
+            // Get the compendium name from the data-compendium attribute
             const target = $(ev.currentTarget);
-            const id = target.closest ('[data-id]').data('id');
-            this.item.update({[`system.questions.-=${id}`]: null});
+
+            console.log("Open compendium", target);
+            const compendiumName = target.data('compendium'); // e.g., "heart.items"
+        
+            if (!compendiumName) {
+                console.error("No compendium name specified in the data-compendium attribute.");
+                return;
+            }
+        
+            // Retrieve the compendium
+            const pack = game.packs.get(compendiumName);
+        
+            if (!pack) {
+                console.error(`Compendium '${compendiumName}' not found.`);
+                return;
+            }
+        
+            // Render the compendium
+            pack.render(true);
         });
     }
 

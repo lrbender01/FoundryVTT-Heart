@@ -40,9 +40,7 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
     }
 
     activateListeners(html) {
-        console.log("Activate Listeners called");
-
-        
+       
         super.activateListeners(html);
 
         html.find('[data-action=add-child][data-type]').click(ev => {
@@ -51,7 +49,6 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
             const type = target.data('type');
             let itemData = target.data('data') || {};
 
-            console.log("Adding child item:", { documentName, type, itemData });
             const data = { documentName, type: type, name: `New ${type}`, system: itemData };
             this.item.addChildren([data]);
         });
@@ -59,7 +56,6 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         html.find('[data-item-id] [data-action=view]').click(async ev => {
             const target = $(ev.currentTarget);
             const uuid = target.closest('[data-item-id]').data('itemId');
-            console.log("Viewing item with UUID:", uuid);
             const item = await fromUuid(uuid);
             item.sheet.render(true);
         });
@@ -67,7 +63,6 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         html.find('[data-item-id] [data-action=delete]').click(async ev => {
             const target = $(ev.currentTarget);
             const uuid = target.closest('[data-item-id]').data('itemId');
-            console.log("Requesting delete for item UUID:", uuid);
             const item = await fromUuid(uuid);
             if(item === null) return;
             await item.deleteDialog();
@@ -76,7 +71,6 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         html.find('[data-item-id] [data-action=activate]').click(async ev => {
             const target = $(ev.currentTarget);
             const uuid = target.closest('[data-item-id]').data('itemId');
-            console.log("Activating item UUID:", uuid);
             const item = await fromUuid(uuid);
             await item.update({ 'system.active': true });
             this.render(true);
@@ -85,7 +79,6 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         html.find('[data-item-id] [data-action=deactivate]').click(async ev => {
             const target = $(ev.currentTarget);
             const uuid = target.closest('[data-item-id]').data('itemId');
-            console.log("Deactivating item UUID:", uuid);
             const item = await fromUuid(uuid);
             await item.update({ 'system.active': false });
             this.render(true);
@@ -94,7 +87,6 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         html.find('[data-item-id] [data-action=complete]').click(async ev => {
             const target = $(ev.currentTarget);
             const uuid = target.closest('[data-item-id]').data('itemId');
-            console.log("Completing item UUID:", uuid);
             const item = await fromUuid(uuid);
             await item.update({ 'system.complete': true });
             this.render(true);
@@ -103,7 +95,6 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         html.find('[data-item-id] [data-action=uncomplete]').click(async ev => {
             const target = $(ev.currentTarget);
             const uuid = target.closest('[data-item-id]').data('itemId');
-            console.log("Uncompleting item UUID:", uuid);
             const item = await fromUuid(uuid);
             await item.update({ 'system.complete': false });
             this.render(true);

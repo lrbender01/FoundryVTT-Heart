@@ -23,7 +23,7 @@ module.exports = (env, argv) => {
             publicPath: publicPath,
         },
         optimization: {
-            minimize: true,
+            minimize: false, //true,
             minimizer: [new TerserPlugin({
                 terserOptions: {
                     keep_classnames: true
