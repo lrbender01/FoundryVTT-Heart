@@ -82,6 +82,7 @@
     "heart.character.calling": "Llamada",
     "heart.character.calling-prompt": "Seleccione una llamada",
     "heart.character.class": "Clase",
+    "heart.character.class-prompt": "Seleccione una clase",
     "heart.character.inactive-items-description": "Aquí encontrarás objetos que han sido añadidos a tu ficha pero que fueron marcados como inactivos (los esconde de la vista normal en la ficha)",
     "heart.character.inactive-items": "Objetos no activos",
     "heart.character.label-helpers": "Ayudantes",

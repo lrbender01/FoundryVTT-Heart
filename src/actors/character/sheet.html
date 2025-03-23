@@ -92,7 +92,7 @@
         {{else}}
         {{#if actor.isOwner}}
           <div class="class-content flexrow item non-draggable">
-            <div class="name">{{localizeHeart classItem.name}}</div>
+            <div class="name placeholder">{{localizeHeart "character" "class-prompt"}}</div>
             <div class="right">
               <a data-action="open-compendium" data-compendium="heart.classes">
                 <span class="fas fa-plus white"></span>
@@ -121,7 +121,7 @@
         {{else}}
         {{#if actor.isOwner}}
           <div class="calling-content flexrow item non-draggable">
-            <div class="name">{{localizeHeart callingItem.name}}</div>
+            <div class="name placeholder">{{localizeHeart "character" "calling-prompt"}}</div>
             <div class="right">
               <a data-action="open-compendium" data-compendium="heart.callings">
                 <span class="fas fa-plus white"></span>

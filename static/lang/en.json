@@ -289,6 +289,7 @@
     "heart.character.calling": "Calling",
     "heart.character.calling-prompt": "Choose a Calling",
     "heart.character.class": "Class",
+    "heart.character.class-prompt": "Choose a Class",
     "heart.character.inactive-items-description": "Here you'll find items that were directly added to the character sheet, but were marked inactive (which hides them from the normal layout).",
     "heart.character.inactive-items": "Inactive Items",
     "heart.character.label-helpers": "Helping Characters",

@@ -214,25 +214,45 @@ $container-title-bg: white
     grid-column: 1
     grid-row: 1
     @extend %header-label-style
+
   .name-input
     grid-column: 2
     grid-row: 1
     @extend %header-input-style
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+    min-width: 0
+
   .pronouns-input
     grid-column: 3
     grid-row: 1
     @extend %header-input-style
-    min-width: 70px
+    min-width: 80px
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+
+    &::placeholder
+      color: rgba(255, 255, 255, 0.5)
 
   // Row 2: Ancestry Label & Input
   .ancestry-label
     grid-column: 1
     grid-row: 2
     @extend %header-label-style
+
   .ancestry-input
     grid-column: 2 / span 2
     grid-row: 2
     @extend %header-input-style
+    min-width: 80px
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+
+    &::placeholder
+      color: rgba(255, 255, 255, 0.5)
 
 // Class & Calling Container
 .class-calling-container
@@ -249,6 +269,7 @@ $container-title-bg: white
     grid-column: 1
     grid-row: 1
     @extend %header-label-style
+
   .class-content
     grid-column: 2
     grid-row: 1
@@ -256,6 +277,15 @@ $container-title-bg: white
     display: flex
     align-items: center
     gap: 0.5rem
+
+    .name
+      overflow: hidden
+      text-overflow: ellipsis
+      white-space: nowrap
+      min-width: 0
+
+    .name.placeholder
+      color: rgba(255, 255, 255 , 0.5)
 
   // Row 2: Calling Label & Content
   .calling-label
@@ -276,6 +306,9 @@ $container-title-bg: white
       text-overflow: ellipsis
       white-space: nowrap
       min-width: 0
+
+    .name.placeholder
+      color: rgba(255, 255, 255 , 0.5)
 
 // Tab Navigation
 .character-nav-tabs

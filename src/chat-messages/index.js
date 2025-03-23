@@ -221,28 +221,78 @@ function activateListeners(html) {
 
 // overridden to allow replacing "content anchors" with previews
 class HeartTextEditor extends TextEditor {
-    static async _createContentLink(match, {
-        relativeTo
-    } = {}) {
-        const [type, target, hash, name] = match.slice(1, 5);
-        const doc = await fromUuid(target);
-        if (doc && doc.documentName === "Item") {
-            const data = await doc.sheet.getData();
-            const innerHTML = Handlebars.partials[`heart:items/${doc.type}/preview.html`](data, {
-                allowedProtoProperties: {
-                    uuid: true,
-                    childrenTypes: true,
-                    isOwner: true
-                }
-            });
-            const div = document.createElement('div');
-            div.innerHTML = innerHTML;
-            div.classList.add('heart', 'sheet');
-            return div;
-        }
-        return super._createContentLink(match, {
-            relativeTo
-        });
+    static async _createContentLink(match, { relativeTo } = {}) {
+
+        /// THIS IS WIP
+        /// For now it defaults to the base behaviour
+
+
+
+        // console.log("Match array:", match);
+        // const [type, target, hash, name] = match.slice(1, 5);
+
+        // console.log("Target UUID:", target); // Debugging
+
+        // let uuid = target;
+
+        // let doc;
+
+        // // Check if the target is a compendium reference
+        // switch (type)
+        // {
+        //     case "Compendium":
+        //         uuid = `Compendium.`.concat(uuid);
+        //         doc = fromUuidSync(uuid);
+        //         break;
+        //     case "Item":
+        //         uuid = `Item.`.concat(uuid);
+        //         doc = await fromUuid(uuid);
+        //         // If the target is a UUID, return it directly
+        //         break;
+        // }
+
+        // console.log("Constructed UUID:", uuid);
+
+        // console.log("Document:", doc);
+        // console.log("Document Name:", doc.documentName);
+
+        // if (doc && doc.documentName === "Item") {
+        //     const data = await doc.sheet.getData();
+        //     const innerHTML = Handlebars.partials[`heart:items/${doc.type}/preview.html`](data, {
+        //         allowedProtoProperties: {
+        //             uuid: true,
+        //             childrenTypes: true,
+        //             isOwner: true
+        //         }
+        //     });
+        //     const div = document.createElement('div');
+        //     div.innerHTML = innerHTML;
+        //     div.classList.add('heart', 'sheet');
+        //     return div;
+        // }
+    
+        // Fallback to the default behavior if the document cannot be resolved
+        return super._createContentLink(match, { relativeTo });
+        
+
+        // const doc = await fromUuid(target);
+        // if (doc && doc.documentName === "Item") {
+        //     const data = await doc.sheet.getData();
+        //     const innerHTML = Handlebars.partials[`heart:items/${doc.type}/preview.html`](data, {
+        //         allowedProtoProperties: {
+        //             uuid: true,
+        //             childrenTypes: true,
+        //             isOwner: true
+        //         }
+        //     });
+        //     const div = document.createElement('div');
+        //     div.innerHTML = innerHTML;
+        //     div.classList.add('heart', 'sheet');
+        //     return div;
+        // }
+        // return super._createContentLink(match, {
+        //     relativeTo
+        // });
     }
 }
 
