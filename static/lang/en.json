@@ -24,6 +24,7 @@
     "heart.applications.prepare-roll-request.description": "Pick a difficulty, which characters can roll and help, and what skills and domains they can use. Then send a chat message asking players to roll.",
     "heart.applications.prepare-roll-request.title": "Prepare Roll Request",
     "heart.applications.prepare-roll.description": "Pick a difficulty, character to roll with and various dice pool modifiers, then roll.",
+    "heart.applications.prepare-roll.custom-description": " {description}",
     "heart.applications.prepare-roll.title": "Prepare Roll",
     "heart.applications.prepare-stress-roll.description": "Pick a character, a stress-inducing result type, a die size and the resistance to roll stress with.",
     "heart.applications.prepare-stress-roll.title": "Prepare Stress Roll",

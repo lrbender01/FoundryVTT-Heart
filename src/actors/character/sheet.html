@@ -49,6 +49,7 @@
 
 
 
+
 <div>
   <!-- Use a single form that wraps the entire sheet -->
   <form class="heart sheet actor character {{cssClass}}" autocomplete="off">
@@ -65,7 +66,8 @@
         <!-- Row 1: Name + Pronouns -->
         <label class="name-label">{{localizeHeart "character" "name"}}</label>
         <input class="name-input" name="name" value="{{actor.name}}" />
-        <input class="pronouns-input" name="pronouns" value="{{actor.system.pronouns}}" placeholder="{{localizeHeart 'character' 'pronouns'}}" />
+        <input class="pronouns-input" name="pronouns" value="{{actor.system.pronouns}}"
+          placeholder="{{localizeHeart 'character' 'pronouns'}}" />
         <!-- Row 2: Ancestry -->
         <label class="ancestry-label">{{localizeHeart "character" "ancestry"}}</label>
         <input class="ancestry-input" name="ancestry" placeholder="Ancestry" value="{{actor.system.ancestry}}" />
@@ -76,29 +78,29 @@
         <!-- Row 1: Class -->
         <label class="class-label">{{localizeHeart "character" "class"}}</label>
         {{#if classItem}}
-          <div data-item-id="{{classItem.uuid}}" class="class-content flexrow item non-draggable">
-            <div class="name">{{localizeHeart classItem.name}}</div>
-            <div class="right">
-              <a data-action="view" title="{{localizeHeart 'base' 'view'}}">
-                <span class="fas fa-eye"></span>
-              </a>
-              {{#if classItem.isOwner}}
-              <a data-action="delete" title="{{localizeHeart 'base' 'delete'}}">
-                <span class="fas fa-trash"></span>
-              </a>
-              {{/if}}
-            </div>
+        <div data-item-id="{{classItem.uuid}}" class="class-content flexrow item non-draggable">
+          <div class="name">{{localizeHeart classItem.name}}</div>
+          <div class="right">
+            <a data-action="view" title="{{localizeHeart 'base' 'view'}}">
+              <span class="fas fa-eye"></span>
+            </a>
+            {{#if classItem.isOwner}}
+            <a data-action="delete" title="{{localizeHeart 'base' 'delete'}}">
+              <span class="fas fa-trash"></span>
+            </a>
+            {{/if}}
           </div>
+        </div>
         {{else}}
         {{#if actor.isOwner}}
-          <div class="class-content flexrow item non-draggable">
-            <div class="name placeholder">{{localizeHeart "character" "class-prompt"}}</div>
-            <div class="right">
-              <a data-action="open-compendium" data-compendium="heart.classes">
-                <span class="fas fa-plus white"></span>
-              </a>
-            </div>
+        <div class="class-content flexrow item non-draggable">
+          <div class="name placeholder">{{localizeHeart "character" "class-prompt"}}</div>
+          <div class="right">
+            <a data-action="open-compendium" data-compendium="heart.classes">
+              <span class="fas fa-plus white"></span>
+            </a>
           </div>
+        </div>
         {{/if}}
         {{/if}}
 
@@ -120,14 +122,14 @@
         </div>
         {{else}}
         {{#if actor.isOwner}}
-          <div class="calling-content flexrow item non-draggable">
-            <div class="name placeholder">{{localizeHeart "character" "calling-prompt"}}</div>
-            <div class="right">
-              <a data-action="open-compendium" data-compendium="heart.callings">
-                <span class="fas fa-plus white"></span>
-              </a>
-            </div>
+        <div class="calling-content flexrow item non-draggable">
+          <div class="name placeholder">{{localizeHeart "character" "calling-prompt"}}</div>
+          <div class="right">
+            <a data-action="open-compendium" data-compendium="heart.callings">
+              <span class="fas fa-plus white"></span>
+            </a>
           </div>
+        </div>
         {{/if}}
         {{/if}}
       </div>
@@ -152,6 +154,7 @@
     <nav class="character-nav-tabs tabs" data-group="primary">
       <a class="item" data-tab="character">{{localizeHeart "character" "label-single"}}</a>
       <a class="item" data-tab="biography">{{localizeHeart "biography" "label-single"}}</a>
+      <a class="item" data-tab="skills-temp">Skills Temp</a>
     </nav>
 
     <!-- 2) TAB CONTENT WRAPPER -->
@@ -198,20 +201,62 @@
               </div>
             </div>
 
-            <!-- Skills & Knacks / Domains (subcolumns) -->
+            <!-- Skills & Domains (subcolumns) -->
             <div class="skills-domains-container">
               <div class="container-content">
                 <div class="subcolumns">
                   <div class="subcolumn character-tab-container skills-container">
-                    <div class="container-title">Skills &amp; Knacks</div>
+                    <div class="container-title">{{localizeHeart "skill" "label-multiple"}}
+                      <a data-action="edit-skills">
+                        <span class="fas fa-edit section-button"></span>
+                      </a>
+                  </div>
                     <div class="container-content">
-                      <!-- TODO: Add Skills &amp; Knacks content -->
+                        <!-- TODO: Add Skills content -->
+                        {{#each actor.system.skills as |skill name|}}
+                          {{#if skill.value}}
+                            <div class="skill-row">
+                              <div class="skill-name"><span class="clickable" data-action="skill-roll" data-skill="{{localizeHeart name}}" data-knack="{{skill.knack}}">{{localizeHeart "skill" name}}</span></div>
+                              <div class="skill-bonus-dice">
+                                <span class="fas fa-plus skill-plus"></span>
+                                <span class="sheetD10 black skills-dice"></span>
+                                {{#if skill.knack}}
+                                  <span class="sheetD10 red knack-dice"></span>
+                                {{/if}}
+                              </div>
+                            </div>
+                            {{#if skill.knack}}
+                                <div class="knack-label">{{localizeHeart "skill" "knack" "label-single"}} {{skill.knack}}</div>
+                            {{/if}}
+                          {{/if}}
+                        {{/each}}
                     </div>
                   </div>
                   <div class="subcolumn character-tab-container domains-container">
-                    <div class="container-title">Domains</div>
+                    <div class="container-title">{{localizeHeart "domain" "label-multiple"}}
+                      <a data-action="edit-domains">
+                        <span class="fas fa-edit section-button"></span>
+                      </a>
+                    </div>
                     <div class="container-content">
                       <!-- TODO: Add Domains content -->
+                      {{#each actor.system.domains as |domain name|}}
+                      {{#if domain.value}}
+                        <div class="domain-row">
+                          <div class="domain-name"><span class="clickable" data-action="domain-roll" data-domain="{{localizeHeart name}}" data-knack="{{domain.knack}}">{{localizeHeart "domain" name}}</span></div>
+                          <div class="domain-bonus-dice">
+                            <span class="fas fa-plus domain-plus"></span>
+                            <span class="sheetD10 black domain-dice"></span>
+                            {{#if domain.knack}}
+                              <span class="sheetD10 red knack-dice"></span>
+                            {{/if}}
+                          </div>
+                        </div>
+                        {{#if domain.knack}}
+                            <div class="knack-label">{{localizeHeart "domain" "knack" "label-single"}} {{domain.knack}}</div>
+                        {{/if}}
+                      {{/if}}
+                    {{/each}}
                     </div>
                   </div>
                 </div>
@@ -297,47 +342,48 @@
           <div class="character-tab-container questions-container">
             <!-- Check if there are any items of type "calling" -->
             {{#if (some actor.items "type calling")}}
-              <!-- Iterate over actor items -->
-              {{#each actor.items as |item|}}
-                {{#if (eq item.type "calling")}}
-                  <div data-item-id="{{item.uuid}}" data-document-id="{{item.uuid}}">
-                    <form class="heart sheet base Item calling {{cssClass}} editable" autocomplete="off">
-                      <div class="container-title">
-                        {{localizeHeart "character" "calling"}}: {{item.name}}
-                        <a data-action="view">
-                          <span class="fas fa-edit clickable section-button"></span>
-                        </a>
-                      </div>
-                      <div class="section calling-items">
-                        <!-- Iterate over questions in the calling item -->
-                        <div class="calling-description">
-                          {{{localizeHeart item.system.description}}}
-                        </div>
-                        {{#each item.system.questions as |question id|}}
-                          <div class="question editable">
-                            {{#if question.answer}}
-                              <strong>{{{localizeHeart question.question}}}</strong>
-                              {{editor question.answer button=false editable=false}}
-                            {{else}}
-                              <strong>{{{localizeHeart question.question}}}</strong>
-                              <div class="answer-prompt">
-                                {{localizeHeart "calling" "questions" "sheet-prompt"}}
-                              </div>
-                            {{/if}}
-                          </div>
-                        {{/each}}
-                      </div>
-                    </form>
+            <!-- Iterate over actor items -->
+            {{#each actor.items as |item|}}
+            {{#if (eq item.type "calling")}}
+            <div data-item-id="{{item.uuid}}" data-document-id="{{item.uuid}}">
+              <form class="heart sheet base Item calling {{cssClass}} editable" autocomplete="off">
+                <div class="container-title">
+                  {{localizeHeart "character" "calling"}}: {{item.name}}
+                  <a data-action="view">
+                    <span class="fas fa-edit clickable section-button"></span>
+                  </a>
+                </div>
+                <div class="section calling-items">
+                  <!-- Iterate over questions in the calling item -->
+                  <div class="calling-description">
+                    {{{localizeHeart item.system.description}}}
                   </div>
-                {{/if}}
-              {{/each}}
+                  {{#each item.system.questions as |question id|}}
+                  <div class="question editable">
+                    {{#if question.answer}}
+                    <strong>{{{localizeHeart question.question}}}</strong>
+                    {{editor question.answer button=false editable=false}}
+                    {{else}}
+                    <strong>{{{localizeHeart question.question}}}</strong>
+                    <div class="answer-prompt">
+                      {{localizeHeart "calling" "questions" "sheet-prompt"}}
+                    </div>
+                    {{/if}}
+                  </div>
+                  {{/each}}
+                </div>
+              </form>
+            </div>
+            {{/if}}
+            {{/each}}
             {{else}}
-              <!-- Show this only if no item of type "calling" exists -->
-              <div class="container-title">
-                <a data-action="open-compendium" data-compendium="heart.callings">
-                  {{localizeHeart "character" "calling-prompt"}} <span class="fas fa-plus clickable section-button"></span>
-                </a>
-              </div>
+            <!-- Show this only if no item of type "calling" exists -->
+            <div class="container-title">
+              <a data-action="open-compendium" data-compendium="heart.callings">
+                {{localizeHeart "character" "calling-prompt"}} <span
+                  class="fas fa-plus clickable section-button"></span>
+              </a>
+            </div>
             {{/if}}
           </div>
           <div class="character-tab-container notes-container">
@@ -349,6 +395,35 @@
         </div>
       </section>
 
+      <section class="tab" data-tab="skills-temp">
+        <div class="skills-tab">
+          <!-- Temp Content -->
+          <div class="character-tab-container questions-container">
+            <div class="section skills grid-2 auto-first-col">
+              <h3 class="center">{{localizeHeart "skill" "label-multiple"}}</h3>
+              <h3 class="faded">{{localizeHeart "skill" "knack" "label-multiple"}}</h3>
+              {{#each actor.system.skills as |skill name|}}
+              <div class="flexrow">
+                <input type="checkbox" name="system.skills.{{name}}.value" {{checked skill.value}} />
+                <span class="bold">{{localizeHeart "skill" name}}</span>
+              </div>
+              <input name="system.skills.{{name}}.knack" value="{{skill.knack}}" />
+              {{/each}}
+            </div>
+
+            <div class="section domains grid-2 auto-first-col">
+              <h3 class="center">{{localizeHeart "domain" "label-multiple"}}</h3>
+              <h3 class="faded">{{localizeHeart "domain" "knack" "label-multiple"}}</h3>
+              {{#each actor.system.domains as |domain name|}}
+              <div class="flexrow">
+                <input type="checkbox" name="system.domains.{{name}}.value" {{checked domain.value}} />
+                <span class="bold">{{localizeHeart "domain" name}}</span>
+              </div>
+              <input name="system.domains.{{name}}.knack" value="{{domain.knack}}" />
+              {{/each}}
+            </div>
+          </div>
+        </div>
 
 
 
@@ -360,6 +435,6 @@
 
 
 
-    </section>
+      </section>
   </form>
 </div>

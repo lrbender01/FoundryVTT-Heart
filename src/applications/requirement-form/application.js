@@ -12,11 +12,12 @@ export default class RequirementApplication extends HeartApplication {
         return 'requirement'
     }
 
-    static build({requirements, callback, type}) {
+    static build({requirements, callback, type, description}) {
         new this({}, {
             type,
             requirements,
-            callback
+            callback,
+            description
         }).render(this);
     }
     
@@ -48,7 +49,7 @@ export default class RequirementApplication extends HeartApplication {
 
     get title() {
         if (this.constructor.formType !== "base") {
-            console.log(this.options.type);
+            console.log("Requirement Type: " + this.options.type);
             if (this.options.type.includes('-stress-roll')) {
                 return game.i18n.localize(`heart.applications.${this.options.type}.title`);
             }

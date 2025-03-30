@@ -90,6 +90,14 @@ $container-title-bg: white
   padding: 5px 50px
   mask: radial-gradient(8px at 20px 20px, transparent 98%, black) -20px -20px
 
+@mixin hover-clickable($text-color, $bg-color, $radius: 5px)
+  color: $text-color
+  background-color: $bg-color
+  margin: -2px 0 -2px -10px
+  text-shadow: 0 0 transparent !important
+  padding: 2px 12px 2px 10px
+  mask: radial-gradient(5px at 8px 8px, transparent 98%, black) -8px -8px
+
 // ============================================================================
 // GLOBAL LAYOUT
 // ============================================================================
@@ -129,6 +137,7 @@ $container-title-bg: white
   padding: 1rem
   border: $container-border-width solid util.$red
   border-radius: $container-radius
+  min-width: 0
 
 // ============================================================================
 // ICONS
@@ -153,7 +162,7 @@ $container-title-bg: white
 .heart .sheetD10.white
   background-color: white
 
-.heart .addItem
+.heart .addItem, .heart .edit-skills, .heart .edit-domains
   font-size: 36px
   line-height: 0
   color: black
@@ -199,6 +208,7 @@ $container-title-bg: white
     max-height: 90px
     border-radius: 50%
     border: 2px solid white
+    object-fit: cover
 
 // Identity Container
 .identity-container
@@ -373,7 +383,7 @@ $container-title-bg: white
 
 .resistance-row
   display: grid
-  grid-template-columns: 4em 12em 6em
+  grid-template-columns: 5em 12em 6em
   gap: 1em
   align-items: center
   margin-bottom: 0.5rem
@@ -449,6 +459,40 @@ $container-title-bg: white
     width: $size
     height: $size
 
+.skill-row, .domain-row
+  display: grid
+  grid-template-columns: 1fr 0.5fr
+  align-items: center
+  gap: 1rem
+  margin-top: 0.75rem
+
+  .skill-name, .domain-name
+    text-align: left
+    font-weight: 900
+    cursor: pointer
+
+  .skill-bonus-dice, .domain-bonus-dice
+    gap: 0.25rem
+
+  .skill-plus, .domain-plus
+    font-size: 0.7em
+  
+  .skills-dice, .domain-dice
+    margin: 0
+
+  .knack-dice
+    margin: 0
+
+.knack-label
+  font-weight: 300
+  display: inline-block
+  max-width: 75%
+  overflow: hidden
+  white-space: nowrap
+  text-overflow: ellipsis
+  vertical-align: middle
+  padding: -10px 0 10px 0
+
 .info
   font-size: 0.8em
 
@@ -457,7 +501,7 @@ $container-title-bg: white
   color: util.$black
 
   &:hover
-    color: util.$red
+    @include hover-clickable(white, util.$red)
 
 .clickable.section-button
   font-size: 16px
