@@ -201,7 +201,7 @@ function initialise() {
             console.debug("Options passed to localizeHeart:", options);
             return key; // Return the key if localization is missing
         } else {
-            console.debug(`Localized value for key '${value}':`, response);
+            //console.debug(`Localized value for key '${value}':`, response);
             return response;
         }
     }

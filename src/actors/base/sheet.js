@@ -169,13 +169,7 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
             });
         });
         
-        html.find('[data-action=edit-skills]').click(async ev => {
-            console.log("Edit Skills clicked");
-        });
-
-        html.find('[data-action=edit-domains]').click(async ev => {
-            console.log("Edit Domains clicked");
-        });
+        
 
         html.find('[data-item-id] [data-action=activate]').click(async ev => {
             const target = $(ev.currentTarget);

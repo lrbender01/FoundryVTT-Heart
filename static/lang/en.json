@@ -40,6 +40,8 @@
     "heart.applications.supplies-stress-roll.description": "Loss of resources, damaged equipment, and debt.<br>Pick the result of the stress-inducing event, the die size, and whether the stress ignores protection.",
     "heart.applications.requirement.title": "More Information",
     "heart.applications.take-stress.description": "Pick a resistance to take stress in.",
+    "heart.applications.domains-management.title": "Pick your Domains and Knacks",
+    "heart.applications.skills-management.title": "Pick your Skills and Knacks",
     "heart.base.activate": "Activate",
     "heart.base.complete": "Complete",
     "heart.base.deactivate": "Deactivate",

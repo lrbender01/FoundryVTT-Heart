@@ -207,9 +207,11 @@
                 <div class="subcolumns">
                   <div class="subcolumn character-tab-container skills-container">
                     <div class="container-title">{{localizeHeart "skill" "label-multiple"}}
-                      <a data-action="edit-skills">
-                        <span class="fas fa-edit section-button"></span>
-                      </a>
+                      {{#if actor.isOwner}}
+                        <a data-action="edit" data-type="skills" data-data='{"active": true}'>
+                          <span class="fas fa-edit editItem"></span>
+                        </a>
+                      {{/if}}
                   </div>
                     <div class="container-content">
                         <!-- TODO: Add Skills content -->
@@ -234,9 +236,11 @@
                   </div>
                   <div class="subcolumn character-tab-container domains-container">
                     <div class="container-title">{{localizeHeart "domain" "label-multiple"}}
-                      <a data-action="edit-domains">
-                        <span class="fas fa-edit section-button"></span>
-                      </a>
+                      {{#if actor.isOwner}}
+                        <a data-action="edit" data-type="domains" data-data='{"active": true}'>
+                          <span class="fas fa-edit editItem"></span>
+                        </a>
+                      {{/if}}
                     </div>
                     <div class="container-content">
                       <!-- TODO: Add Domains content -->
@@ -303,7 +307,7 @@
           <div class="column right-column">
             <!-- Active Beats -->
             <div class="character-tab-container active-beats-container">
-              <div class="container-title">Active Beats {{#if actor.isOwner}}<a data-action="add" data-type="beat"
+              <div class="container-title">{{localizeHeart "applications" "beat-tracker" "title"}} {{#if actor.isOwner}}<a data-action="add" data-type="beat"
                   data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}</div>
               <div class="container-content">
                 <!-- TODO: Add Active Beats content -->

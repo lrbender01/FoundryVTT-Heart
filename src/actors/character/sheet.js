@@ -4,18 +4,29 @@ import HeartActorSheet from '../base/sheet';
 import template from './template.json';
 
 class HeartTabs {
-    constructor({ navSelector, contentSelector, initial }) {
+    constructor({ navSelector, contentSelector, initial, sheet }) {
         this.navSelector = navSelector;
         this.contentSelector = contentSelector;
         this.activeTab = initial;
+        this.sheet = sheet;
+    }
+
+    async _render(force = false, options = {}) {
+        // Preserve tab state across renders
+        if (this.heartTabs) {
+            this._savedActiveTab = this.heartTabs.activeTab;
+        }
+        await super._render(force, options);
     }
 
     init() {
         // Attach click event handlers using jQuery
         this.navItems.each((index, nav) => {
             $(nav).on("click", (event) => {
+                console.log("nav clicked", nav);
                 event.preventDefault();
                 const tab = $(nav).data("tab");
+                this._activeTab = tab;
                 this.showTab(tab);
             });
         });
@@ -23,17 +34,19 @@ class HeartTabs {
     }
 
     showTab(tab) {
-        // Toggle active class for navigation
-        this.navItems.each((index, nav) => {
+        // Save the tab state to sheet options
+        this.activeTab = tab;
+        if (this.sheet) this.sheet.options.activeTab = tab;
+
+        // Toggle nav and content visibility
+        this.navItems.each((i, nav) => {
             $(nav).toggleClass("active", $(nav).data("tab") === tab);
         });
-        // Show or hide content based on the active tab
-        this.contents.each((index, content) => {
+        this.contents.each((i, content) => {
             const isActive = $(content).data("tab") === tab;
-            $(content).toggleClass("active", isActive); // Add or remove the 'active' class
-            $(content).toggle(isActive); // Show or hide the content
+            $(content).toggleClass("active", isActive);
+            $(content).toggle(isActive);
         });
-        this.activeTab = tab;
     }
 
     bind(html) {
@@ -58,18 +71,13 @@ export default class CharacterSheet extends HeartActorSheet {
 
     // workaround for nested-children uuids not dragging properly
     async _onDragStart(event) {
-        console.log("character onDragStart");
-
         const target = event.currentTarget;
 
         // prevent drag and drop of embedded items from callings or classes
-        if (target.dataset.documentId && target.dataset.documentId.includes("@"))
-        {
+        if (target.dataset.documentId && target.dataset.documentId.includes("@")) {
             console.warn("target contains @");
             return;
         }
-
-        console.log("target:", target);
 
         const uuid = target.dataset.itemId;
         const document = await fromUuid(uuid);
@@ -78,13 +86,7 @@ export default class CharacterSheet extends HeartActorSheet {
     }
 
     async _onDropItemCreate(itemData) {
-        console.log("character _onDropItemCreate");
-
         if (this.actor.type === 'character') {
-
-            console.log("actor is a character");
-            console.log("Dropped item data:", itemData);
-            console.log("Actor items:", this.actor.items);
 
             // Validate itemData to ensure it has the required structure
             if (!itemData.name || !itemData.type || !itemData.system) {
@@ -95,17 +97,17 @@ export default class CharacterSheet extends HeartActorSheet {
             // Prevent duplication of items embedded in class or calling
             // This is not really a good way to do this, but it works for now
             if (
-                    (   itemData.type == "equipment" ||
-                        itemData.type == "resource" ||
-                        itemData.type == "ability" ||
-                        itemData.type == "beat"
-                    )
-                    &&
-                    (
-                        itemData.name.startsWith('class.') ||
-                        itemData.name.startsWith('calling.')
-                    )
-                ) {
+                (itemData.type == "equipment" ||
+                    itemData.type == "resource" ||
+                    itemData.type == "ability" ||
+                    itemData.type == "beat"
+                )
+                &&
+                (
+                    itemData.name.startsWith('class.') ||
+                    itemData.name.startsWith('calling.')
+                )
+            ) {
                 console.warn(`Invalid item detected: ${itemData.name}. Skipping creation.`);
                 return;
             }
@@ -133,8 +135,6 @@ export default class CharacterSheet extends HeartActorSheet {
 
             itemData.system.active = true;
         }
-
-        
 
         return super._onDropItemCreate(itemData);
     }
@@ -171,7 +171,8 @@ export default class CharacterSheet extends HeartActorSheet {
         this.heartTabs = new HeartTabs({
             navSelector: ".character-nav-tabs a",
             contentSelector: ".tab-content .tab",
-            initial: "character"
+            initial: this.options.activeTab || "character",
+            sheet: this
         });
         this.heartTabs.bind(html);
 
@@ -214,6 +215,29 @@ export default class CharacterSheet extends HeartActorSheet {
             this.actor.update(data);
 
         })
+
+        html.find('[data-action=edit]').click(async ev => {
+            ev.preventDefault();
+
+            const target = $(ev.currentTarget); // or $(ev.currentTarget).closest('[data-action=edit]')
+
+            const type = target.data('type'); // returns "skills"
+
+            if (type == "skills") {
+                new game.heart.applications.SkillsManagementApplication(this.actor).render(true);
+                return;
+            }
+
+            if (type == "domains") {
+                new game.heart.applications.DomainsManagementApplication(this.actor).render(true);
+                return;
+            }
+
+            console.log("heart | no matching ManagementApplication for this edit-action found");
+
+
+        });
+
 
         html.find('[data-action=prepare-request-roll]').click(ev => {
             new game.heart.applications.PrepareRollRequestApplication({}).render(true);
