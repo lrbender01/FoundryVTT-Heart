@@ -22,7 +22,7 @@ jobs:
       - run: npm run build
       - run: npm run update-system -- 0.X.Y
       - name: Zip files
-        run: zip -r ./heart.zip ./* -x node_modules -x src -x package*.json
+        run: zip -r ./heart.zip ./* -x node_modules/\* -x src/\* -x package\*.json -x packs/\*/_source/\*
       - name: Create Release
         uses: ncipollo/release-action@v1
         with: 
