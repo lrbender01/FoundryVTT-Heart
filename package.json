@@ -5,7 +5,8 @@
   "scripts": {
     "build": "sass src/scss/heart.scss css/heart.css --style=expanded --no-source-map",
     "watch": "sass src/scss/heart.scss css/heart.css --style=expanded --source-map --watch",
-    "grammar": "node src/build_parsers.js"
+    "grammar": "node src/build_parsers.js",
+    "update-system": "node src/update-system-manifest.js"
   },
   "browserslist": [
     "last 3 versions"
