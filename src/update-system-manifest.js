@@ -8,5 +8,5 @@ manifest.download = `https://github.com/hitcherland/FoundryVTT-Heart/releases/do
 
 // Return as nicely parsed string
 const output = JSON.stringify(manifest, null, 4);
-console.log(`Writing manifest to ${config.type}.json`);
-fs.writeFileSync(`./dist/${config.type}.json`, output);
+console.log(`Writing manifest to system.json`);
+fs.writeFileSync(`./system.json`, output);
