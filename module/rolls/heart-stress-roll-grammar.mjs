@@ -120,7 +120,7 @@ function peg$parse(input, options) {
     Expression: peg$parseExpression
   },
       peg$startRuleFunction = peg$parseExpression,
-      peg$c0 = function (critical, resistance, dice) {
+      peg$c0 = function (critical, dice, resistance) {
     return parser._onExpression(critical, resistance, dice, text(), error);
   },
       peg$c1 = "stress",
@@ -354,26 +354,26 @@ function peg$parse(input, options) {
         s3 = peg$parse_();
 
         if (s3 !== peg$FAILED) {
-          s4 = peg$parseResistanceTerm();
+          s4 = peg$parseDiceTerm();
 
           if (s4 !== peg$FAILED) {
             s5 = peg$parse_();
 
             if (s5 !== peg$FAILED) {
-              s6 = peg$parseStressTerm();
+              s6 = peg$parseResistanceTerm();
 
               if (s6 !== peg$FAILED) {
                 s7 = peg$parse_();
 
                 if (s7 !== peg$FAILED) {
-                  s8 = peg$parseDiceTerm();
+                  s8 = peg$parseStressTerm();
 
                   if (s8 !== peg$FAILED) {
                     s9 = peg$parse_();
 
                     if (s9 !== peg$FAILED) {
                       peg$savedPos = s0;
-                      s1 = peg$c0(s2, s4, s8);
+                      s1 = peg$c0(s2, s4, s6);
                       s0 = s1;
                     } else {
                       peg$currPos = s0;

@@ -16,15 +16,15 @@ export class HeartStressRollHelperApplication extends HeartBaseRollHelperApplica
           boolean: true,
         },
         {
-          name: "resistance",
-          label: game.i18n.localize("HEART.Resistance.label"),
-          map: CONFIG.HEART.resistances,
-          required: true,
-        },
-        {
           name: "dice",
           label: game.i18n.localize("HEART.StressRoll.dice"),
           map: CONFIG.HEART.die_sizes,
+          required: true,
+        },
+        {
+          name: "resistance",
+          label: game.i18n.localize("HEART.Resistance.label"),
+          map: CONFIG.HEART.resistances,
           required: true,
         },
       ],
@@ -39,6 +39,11 @@ export class HeartStressRollHelperApplication extends HeartBaseRollHelperApplica
       formula += game.i18n.localize("HEART.StressRoll.critical") + " ";
     }
 
+    if (this.options.dice) {
+      formula +=
+        " " + game.i18n.localize(CONFIG.HEART.die_sizes[this.options.dice]);
+    }
+
     if (this.options.resistance) {
       formula +=
         " " +
@@ -46,11 +51,6 @@ export class HeartStressRollHelperApplication extends HeartBaseRollHelperApplica
     }
 
     formula += " stress"
-
-    if (this.options.dice) {
-      formula +=
-        " " + game.i18n.localize(CONFIG.HEART.die_sizes[this.options.dice]);
-    }
 
     return formula;
   }

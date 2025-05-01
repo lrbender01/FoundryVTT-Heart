@@ -3,7 +3,7 @@
   const parser = new Parser(input);
 }
 
-Expression = _ critical:CriticalTerm? _ resistance:ResistanceTerm _ StressTerm _ dice:DiceTerm _ {
+Expression = _ critical:CriticalTerm? _ dice:DiceTerm _ resistance:ResistanceTerm _ StressTerm _ {
   return parser._onExpression(critical, resistance, dice, text(), error);
 }
 
