@@ -16,17 +16,13 @@ jobs:
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
       - run: npm ci
-      - run: npm run build-prod
-      - run: npm run build-manifest -- ${{ inputs.version}}
-      - run: npm run build-packs
-      - run: npm run build-template
-      - name: Copy static files
-        run: cp -r LICENSE ./static/* ./dist
+      - run: npm run grammar
+      - run: npm run build
+      - run: npm run update-system -- 0.X.Y
       - name: Zip files
-        working-directory: ./dist
-        run: zip -r ./heart.zip ./*
+        run: zip -r ./heart.zip ./* -x node_modules -x src -x package*.json
       - name: Create Release
         uses: ncipollo/release-action@v1
         with: 
-          artifacts: "./dist/system.json,./dist/heart.zip"
+          artifacts: "./system.json,./heart.zip"
           tag: ${{ inputs.version }}
