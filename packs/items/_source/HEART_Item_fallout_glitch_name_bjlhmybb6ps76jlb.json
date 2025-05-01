@@ -1,0 +1,20 @@
+{
+    "_id": "bjlhmybb6ps76jlb",
+    "name": "HEART.Item.fallout.glitch.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.glitch.description",
+        "resistance": "echo",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!bjlhmybb6ps76jlb",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "_id": "2kt6sryxr8ryvk9c",
+    "name": "HEART.Item.fallout.broken.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.broken.description",
+        "resistance": "fortune",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!2kt6sryxr8ryvk9c",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

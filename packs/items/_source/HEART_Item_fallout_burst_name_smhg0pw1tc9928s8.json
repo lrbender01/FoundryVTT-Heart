@@ -1,0 +1,20 @@
+{
+    "_id": "smhg0pw1tc9928s8",
+    "name": "HEART.Item.fallout.burst.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.burst.description",
+        "resistance": "echo",
+        "type": "critical",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!smhg0pw1tc9928s8",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

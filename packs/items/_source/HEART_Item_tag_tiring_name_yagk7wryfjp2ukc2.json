@@ -1,0 +1,18 @@
+{
+    "_id": "yagk7wryfjp2ukc2",
+    "name": "HEART.Item.tag.tiring.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.tiring.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!yagk7wryfjp2ukc2",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

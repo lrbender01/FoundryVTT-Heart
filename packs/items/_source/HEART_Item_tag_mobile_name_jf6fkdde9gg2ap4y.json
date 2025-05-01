@@ -1,0 +1,18 @@
+{
+    "_id": "jf6fkdde9gg2ap4y",
+    "name": "HEART.Item.tag.mobile.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.mobile.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!jf6fkdde9gg2ap4y",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

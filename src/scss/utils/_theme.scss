@@ -1,0 +1,18 @@
+$heart-red: #630000 !default;
+$heart-white: #fff !default;
+$heart-black: #000 !default;
+$primary-font: "Melma Line", sans-serif;
+$secondary-font: "Alegreya", sans-serif;
+
+$color: $heart-black !default;
+$title-color: $heart-red !default;
+$background-color: $heart-white !default;
+$title-font-family: $primary-font !default;
+$paragraph-font-family: $secondary-font !default;
+
+$title-color-invert: $background-color;
+$background-color-invert: $title-color;
+
+$padding-small: 0.25em;
+$padding-medium: 0.5em;
+$padding-large: 1em;

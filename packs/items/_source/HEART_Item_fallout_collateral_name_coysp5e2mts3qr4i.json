@@ -1,0 +1,20 @@
+{
+    "_id": "coysp5e2mts3qr4i",
+    "name": "HEART.Item.fallout.collateral.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.collateral.description",
+        "resistance": "fortune",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!coysp5e2mts3qr4i",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

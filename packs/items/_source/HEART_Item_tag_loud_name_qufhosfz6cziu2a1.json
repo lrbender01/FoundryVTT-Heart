@@ -1,0 +1,18 @@
+{
+    "_id": "qufhosfz6cziu2a1",
+    "name": "HEART.Item.tag.loud.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.loud.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!qufhosfz6cziu2a1",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

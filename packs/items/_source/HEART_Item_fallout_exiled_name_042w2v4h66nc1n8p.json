@@ -1,0 +1,20 @@
+{
+    "_id": "042w2v4h66nc1n8p",
+    "name": "HEART.Item.fallout.exiled.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.exiled.description",
+        "resistance": "fortune",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!042w2v4h66nc1n8p",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

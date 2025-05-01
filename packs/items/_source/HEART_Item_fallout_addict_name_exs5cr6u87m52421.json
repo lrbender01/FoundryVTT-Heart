@@ -1,0 +1,20 @@
+{
+    "_id": "exs5cr6u87m52421",
+    "name": "HEART.Item.fallout.addict.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.addict.description",
+        "resistance": "mind",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!exs5cr6u87m52421",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

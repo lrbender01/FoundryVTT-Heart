@@ -1,0 +1,18 @@
+{
+    "_id": "9qzgdl29zolx6dsn",
+    "name": "HEART.Item.tag.taboo.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.taboo.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!9qzgdl29zolx6dsn",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

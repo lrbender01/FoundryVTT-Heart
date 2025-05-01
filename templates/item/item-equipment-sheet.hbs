@@ -1,0 +1,23 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Name"/></h1>
+    </div>
+  </header>
+
+  {{#if editable}}
+  <div class="toolbar">
+    {{> "systems/heart/templates/parts/view-mode.hbs" viewMode=viewMode}}
+  </div>
+  {{/if}}
+
+  <div class="fields">
+    {{> "systems/heart/templates/parts/field-string.hbs" field=fields.type editable=editable}}
+    {{> "systems/heart/templates/parts/field-number.hbs" field=fields.die_size editable=editable}}
+    {{> "systems/heart/templates/parts/field-string-array.hbs" field=fields.resistances editable=editable}}
+    {{> "systems/heart/templates/parts/field-editor.hbs" field=fields.description editable=editable}}
+  </div>
+
+  {{> "systems/heart/templates/parts/items.hbs" items=items editable=editable}}
+</form>

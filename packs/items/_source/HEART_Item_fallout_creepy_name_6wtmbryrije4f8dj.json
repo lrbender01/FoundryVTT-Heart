@@ -1,0 +1,20 @@
+{
+    "_id": "6wtmbryrije4f8dj",
+    "name": "HEART.Item.fallout.creepy.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.creepy.description",
+        "resistance": "mind",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!6wtmbryrije4f8dj",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "_id": "gij4oo7ywlmeimhw",
+    "name": "HEART.Item.fallout.foreboding.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.foreboding.description",
+        "resistance": "fortune",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!gij4oo7ywlmeimhw",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

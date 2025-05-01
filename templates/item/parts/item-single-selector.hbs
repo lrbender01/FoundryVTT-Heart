@@ -1,0 +1,9 @@
+
+{{#if item }}
+<div class="item" data-item-id="{{item._id}}">
+<button class="item-delete" title="{{localize "HEART.delete"}}"><i class="fas fa-trash"></i></button>
+{{> (concat "systems/heart/templates/item/parts/item-" type ".hbs") item=item}}
+</div>
+{{else}}
+<button class="item-find" data-type="{{type}}" title=""{{localize "HEART.find"}}><i class="fas fa-search"></i></button>
+{{/if}}

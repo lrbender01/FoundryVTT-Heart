@@ -1,0 +1,20 @@
+{
+    "_id": "gj59qejy1ckywqjb",
+    "name": "HEART.Item.fallout.services_rendered.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.services_rendered.description",
+        "resistance": "supplies",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!gj59qejy1ckywqjb",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

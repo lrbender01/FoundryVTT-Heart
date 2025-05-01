@@ -1,0 +1,18 @@
+{
+    "_id": "gdzlud5y9c7i2vi9",
+    "name": "HEART.Item.tag.point_blank.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.point_blank.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!gdzlud5y9c7i2vi9",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

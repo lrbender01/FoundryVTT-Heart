@@ -1,0 +1,20 @@
+{
+    "_id": "47lnofldhu62bhd9",
+    "name": "HEART.Item.fallout.starvation.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.starvation.description",
+        "resistance": "supplies",
+        "type": "critical",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!47lnofldhu62bhd9",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

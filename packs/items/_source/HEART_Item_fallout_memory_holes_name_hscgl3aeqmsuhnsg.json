@@ -1,0 +1,20 @@
+{
+    "_id": "hscgl3aeqmsuhnsg",
+    "name": "HEART.Item.fallout.memory_holes.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.memory_holes.description",
+        "resistance": "mind",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!hscgl3aeqmsuhnsg",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

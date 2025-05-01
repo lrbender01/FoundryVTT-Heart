@@ -1,0 +1,22 @@
+{{#> "systems/heart/templates/parts/base-field.hbs" field=field editable=editable}}
+    <div class="string-array">
+    {{#each field.value as |value index|}}
+        <div>
+            <select name="{{../field.schema.fieldPath}}.{{index}}">
+                {{selectOptions ../field.schema.element.choiceLabels localize=true selected=value}}
+            </select>
+
+            <a class="remove" data-target="{{../field.schema.fieldPath}}" data-index="{{index}}">
+                <i class="fas fa-square-minus"></i>
+            </a>
+        </div>
+    {{/each}}
+    {{#if editable}}
+      <div>
+        <a class="add" data-target="{{field.schema.fieldPath}}">
+            <i class="fas fa-square-plus"></i>
+        </a>
+      </div>
+    {{/if}}
+    </div>
+{{/ "systems/heart/templates/parts/base-field.hbs"}}

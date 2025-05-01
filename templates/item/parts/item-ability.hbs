@@ -1,0 +1,15 @@
+{{#> "systems/heart/templates/item/parts/base-item.hbs" item=item}}
+<div class="badges">
+    <span class="badge">{{item.system.type}}</span>
+</div>
+<div>
+<span class="title">{{item.name}}</span>
+{{item.system.description}}
+</div>
+
+<div>
+    {{#each item.system.abilities as |ability|}}
+    {{> "systems/heart/templates/item/parts/item-ability.hbs" item=ability}}
+    {{/each}}
+</div>
+{{/ "systems/heart/templates/item/parts/base-item.hbs"}}

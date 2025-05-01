@@ -1,0 +1,20 @@
+{
+    "_id": "wrcbqo1ryjqu8h8t",
+    "name": "HEART.Item.fallout.in_trouble.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.in_trouble.description",
+        "resistance": "fortune",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!wrcbqo1ryjqu8h8t",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

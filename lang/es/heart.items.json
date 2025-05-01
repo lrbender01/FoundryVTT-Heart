@@ -1,0 +1,2722 @@
+{
+    "label": "Items",
+    "folders": {
+        "HEART.Item.calling.label-plural": "Callings",
+        "HEART.Item.class.label-plural": "Classes",
+        "HEART.Item.fallout.label-plural": "Fallouts",
+        "HEART.Item.tag.label-plural": "Tags"
+    },
+    "mapping": {
+        "system": {
+            "path": "system",
+            "converter": "convertSystem"
+        },
+        "description": "system.description"
+    },
+    "entries": {
+        "HEART.Item.calling.adventure.name": {
+            "system": {
+                "questions": [
+                    {},
+                    {},
+                    {},
+                    {}
+                ],
+                "items": [
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    }
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.calling.enlightenment.name": {
+            "system": {
+                "questions": [
+                    {},
+                    {},
+                    {},
+                    {}
+                ],
+                "items": [
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    }
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.calling.forced.name": {
+            "system": {
+                "questions": [
+                    {},
+                    {},
+                    {},
+                    {},
+                    {}
+                ],
+                "items": [
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    }
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.calling.heartsong.name": {
+            "system": {
+                "questions": [
+                    {},
+                    {},
+                    {},
+                    {}
+                ],
+                "items": [
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    }
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.calling.penitent.name": {
+            "system": {
+                "questions": [
+                    {},
+                    {},
+                    {},
+                    {}
+                ],
+                "items": [
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    }
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.class.cleaver.name": {
+            "system": {
+                "items": [
+                    {},
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {},
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {},
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.class.deadwalker.name": {
+            "system": {
+                "items": [
+                    {},
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {}
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.class.deep_apiarist.name": {
+            "system": {
+                "items": [
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {},
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.class.heretic.name": {
+            "system": {
+                "items": [
+                    {},
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {},
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {},
+                    {}
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.class.hound.name": {
+            "system": {
+                "items": [
+                    {},
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {},
+                    {},
+                    {}
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.class.incarnadine.name": {
+            "system": {
+                "items": [
+                    {},
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {},
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.class.junk_mage.name": {
+            "system": {
+                "items": [
+                    {},
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {},
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.class.vermissian_knight.name": {
+            "system": {
+                "items": [
+                    {},
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    null,
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {},
+                    {},
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.class.witch.name": {
+            "system": {
+                "items": [
+                    {},
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {}
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "system": {
+                            "items": [
+                                {
+                                    "system": {}
+                                },
+                                {
+                                    "system": {}
+                                }
+                            ]
+                        }
+                    },
+                    {}
+                ]
+            },
+            "_stats": {}
+        },
+        "HEART.Item.fallout.bleeding_out.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.chosen.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.ghost.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.beast.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.burst.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.descent.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.messiah.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.petrified.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.stranded.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.the_ravening.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.a_slow_and_insidious_killer.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.fools_gold.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.heavy_hangs_the_head.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.wrong_place.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.abandon.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.break.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.obsessed.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.defenceless.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.pitch_black.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.plummet.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.starvation.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.arterial_wound.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.blinded.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.broken_arm.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.broken_leg.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.critical_injury.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.downed.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.exhausted.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.blooded.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.cult.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.darkcravings.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.eyes.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.meat.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.mirage.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.reconfigured_physiology.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.the_life_not_lived.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.the_ravening_beast.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.vanished.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.crisis.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.destroyed.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.exiled.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.grievance.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.hell_for_weather.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.lost_map.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.lost_property.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.no_way_out.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.reputation.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.the_road_less_travelled.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.unwilling_leader.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.addict.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.aetheric_resonance.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.delusion.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.despair.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.memory_holes.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.phantasm.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.scarred.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.unsettling.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.in_the_dark.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.no_rations.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.services_rendered.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.sold.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.spoiled.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.battered.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.bleeding.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.disarmed.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.furious.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.limping.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.ringing_head.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.shattered.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.spitting_teeth.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.tired.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.winded.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.aetheric_scourge.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.buboes.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.conduit.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.dejavu.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.exodus.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.follower.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.glitch.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.hex-eye.name": {
+            "_stats": {}
+        },
+        "HEART.Item.fallout.siren_song.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.strange_appetite.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.the_ravening_call.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.broken.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.collateral.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.foreboding.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.in_trouble.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.long_way_round.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.separated.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.the_hard_way.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.unlucky.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.word_of_mouth.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.clouded.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.collateral_magic.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.creepy.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.fascination.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.figment.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.shaken.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.take_the_edge_off.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.vulnerable.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.weird.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.damaged.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.darkness.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.debtor.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.empty.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.half_rations.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.out_of_ammo.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.fallout.used_up.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.awkward.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.beacon.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.block.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.bloodbound.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.brutal.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.conduit.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.dangerous.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.debilitating.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.degenerating.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.deteriorating.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.distressing.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.double_barreled.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.expensive.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.extreme_range.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.fragile.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.harmful.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.limited(X).name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.loud.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.mobile.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.niche.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.obscuring.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.one_shot.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.piercing.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.point_blank.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.potent.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.ranged.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.reload.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.smoke.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.spread.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.taboo.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.tiring.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.trusty.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.unreliable.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.volatile.name": {
+            "system": {},
+            "_stats": {}
+        },
+        "HEART.Item.tag.wyrd.name": {
+            "system": {},
+            "_stats": {}
+        }
+    }
+}

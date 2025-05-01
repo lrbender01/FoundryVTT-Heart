@@ -1,0 +1,20 @@
+{
+    "_id": "113lmxirz6roj0mh",
+    "name": "HEART.Item.fallout.shattered.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.shattered.description",
+        "resistance": "blood",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!113lmxirz6roj0mh",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

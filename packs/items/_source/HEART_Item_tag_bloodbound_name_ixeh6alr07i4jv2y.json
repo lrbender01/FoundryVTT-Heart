@@ -1,0 +1,18 @@
+{
+    "_id": "ixeh6alr07i4jv2y",
+    "name": "HEART.Item.tag.bloodbound.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.bloodbound.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!ixeh6alr07i4jv2y",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

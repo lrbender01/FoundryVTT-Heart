@@ -1,0 +1,21 @@
+<div class="dice-roll" data-index="{{index}}">
+    {{#if flavor}}
+    <div class="dice-flavor">{{flavor}}</div>
+    {{/if}}
+    <div class="dice-result">
+        <div class="dice-formula">{{formula}}</div>
+        {{{tooltip}}}
+        <div class="flex">
+            <h4 class="dice-total">{{total}}</h4>
+            {{#if needs_to_apply}}
+            <button class="flexshrink" data-action="apply"><i class="fas fa-arrow-circle-right"></i></button>
+            {{/if}}
+            {{#if needs_stress_roll}}
+            <button class="flexshrink" data-action="roll-stress"><i class="fas fa-person-harassing"></i></button>
+            {{/if}}
+            {{#if needs_fallout_roll}}
+            <button class="flexshrink" data-action="roll-fallout"><i class="fas fa-radiation"></i></button>
+            {{/if}}
+        </div>
+    </div>
+</div>

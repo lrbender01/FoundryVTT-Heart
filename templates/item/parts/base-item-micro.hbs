@@ -1,0 +1,14 @@
+<div class="item part" data-item-id="{{item._id}}">
+    <div class="item-controls">
+        {{#if editable}}
+        <a class="item-control item-delete" title="Delete Item"><i class="fas fa-trash"></i></a>
+        {{/if}}
+    </div>
+
+    <div class="badges">
+        <span class="badge" title="{{localize (concat "TYPES.Item." item.type)}}">
+            <i class="fas {{itemIcon item.type}}"></i>
+        </span>
+    </div>
+    <span class="title">{{item.name}}</span>
+</div>

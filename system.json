@@ -1,0 +1,65 @@
+{
+  "id": "heart",
+  "title": "Heart - The City Beneath",
+  "description": "A red wet heaven slumbers fitful under the city of Spire. Purchase at https://rowanrookanddecard.com/product/heart-the-city-beneath-rpg/",
+  "authors": [
+    {
+      "name": "hitcherland",
+      "discord": "hitcherland"
+    }
+  ],
+  "url": "https://github.com/hitcherland/FoundryVTT-Heart",
+  "license": "LICENSE.txt",
+  "readme": "README.md",
+  "bugs": "https://github.com/hitcherland/FoundryVTT-Heart/issues",
+  "changelog": "CHANGELOG.md",
+  "media": [
+    {
+      "type": "setup",
+      "url": "systems/heart/assets/heartburn.png",
+      "thumbnail": "systems/heart/assets/heartburn.png"
+    }
+  ],
+  "version": "2.0.0",
+  "compatibility": {
+    "minimum": 12,
+    "verified": "12.325"
+  },
+  "esmodules": [
+    "module/heart.mjs"
+  ],
+  "styles": [
+    "css/heart.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en/heart.json"
+    }
+  ],
+  "packs": [
+    {
+      "name": "items",
+      "label": "HEART.Pack.items",
+      "type": "Item"
+    }
+  ],
+  "packFolders": [],
+  "socket": false,
+  "manifest": "https://github.com/hitcherland/FoundryVTT-Heart/releases/latest/download/system.json",
+  "download": "https://github.com/hitcherland/FoundryVTT-Heart/releases/download/2.0.0/heart.zip",
+  "background": "systems/heart/assets/heartburn.png",
+  "relationships": {
+    "requires": [
+      {
+        "id": "babele",
+        "type": "module",
+        "manifest": "https://gitlab.com/riccisi/foundryvtt-babele/raw/2.6.2/module/module.json",
+        "compatibility": {
+          "verified": "2.6.2"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+    "_id": "2e6qq2s0usp4cf00",
+    "name": "HEART.Item.fallout.ringing_head.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.ringing_head.description",
+        "resistance": "blood",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!2e6qq2s0usp4cf00",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

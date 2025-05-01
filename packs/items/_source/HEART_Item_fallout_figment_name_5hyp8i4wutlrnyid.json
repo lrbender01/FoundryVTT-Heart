@@ -1,0 +1,20 @@
+{
+    "_id": "5hyp8i4wutlrnyid",
+    "name": "HEART.Item.fallout.figment.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.figment.description",
+        "resistance": "mind",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!5hyp8i4wutlrnyid",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

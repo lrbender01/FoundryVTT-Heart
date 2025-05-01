@@ -1,0 +1,698 @@
+{
+    "_id": "ei3g8ufhll9fvc7c",
+    "name": "HEART.Item.class.vermissian_knight.name",
+    "type": "class",
+    "system": {
+        "domain": "technology",
+        "skill": "delve",
+        "description": "HEART.Item.class.vermissian_knight.description",
+        "items": [
+            {
+                "_id": "m5awy5uhlzbdsqnt",
+                "type": "resource",
+                "name": "HEART.Item.resource.spare_capacitors_and_wires.name",
+                "system": {
+                    "die_size": 6,
+                    "domain": "technology",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "59oatnkdp6b0iqx9",
+                "name": "HEART.Item.ability.vermissian_plate.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.vermissian_plate.description",
+                    "type": "core",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "zl4q1cq0hacx1c35",
+                "name": "HEART.Item.ability.arcane_rebreather.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.arcane_rebreather.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "vsq8jb5cyzlsgahf",
+                "name": "HEART.Item.ability.armour_plating.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.armour_plating.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "ha9ml5fypubhf3n6",
+                "name": "HEART.Item.ability.black_knight.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.black_knight.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "rv1x5anlse5db0ok",
+                "name": "HEART.Item.ability.knight_protector.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.knight_protector.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "iz81rn0mywti67an",
+                "name": "HEART.Item.ability.hellwalker.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.hellwalker.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "ykm20gr8jm62gm55",
+                "name": "HEART.Item.ability.phantom_lens.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.phantom_lens.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "vjdkv1atn2iujfnw",
+                "name": "HEART.Item.ability.protector's_gauntlet.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.protector's_gauntlet.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "ykml9mfpqnvczrh0",
+                "name": "HEART.Item.ability.sanguinary_array.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.sanguinary_array.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "k6t8bwrxfeecbp7z",
+                "name": "HEART.Item.ability.stalwart.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.stalwart.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "fpag8sof93jjkdfn",
+                "name": "HEART.Item.ability.steelbones.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.steelbones.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "n1cv2z9o44r1b9p9",
+                "name": "HEART.Item.ability.student_of_the_sages.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.student_of_the_sages.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "3mzxz9tgoptsgzr2",
+                "name": "HEART.Item.ability.tunnel_rat.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.tunnel_rat.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "glac01va8vhx5t3o",
+                "name": "HEART.Item.ability.well_travelled.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.well_travelled.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "ixrhklp2325bjaqi",
+                "name": "HEART.Item.ability.aetheric_field.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.aetheric_field.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "9bba3grv8idl8pgr",
+                            "name": "HEART.Item.ability.helixican_burst.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.helixican_burst.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "w0axsq6k3wnou7fn",
+                            "name": "HEART.Item.ability.recharge.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.recharge.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "ko65iz6ql18z6p8c",
+                            "name": "HEART.Item.ability.anathema.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.anathema.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "q4awmpzqsie2i5lp",
+                "name": "HEART.Item.ability.dragon_killer.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.dragon_killer.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "7bgrhx7c3g21p87c",
+                            "name": "HEART.Item.ability.hunted.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.hunted.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "guqmqyyooh66hb9r",
+                            "name": "HEART.Item.ability.endurance_training.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.endurance_training.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "ct5kosofuguuvowq",
+                            "name": "HEART.Item.ability.applied_research.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.applied_research.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "u73jwrvt61g8csux",
+                "name": "HEART.Item.ability.get_behind_me.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.get_behind_me.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "jidyzbx8qzl6nbex",
+                            "name": "HEART.Item.ability.last_minute_intervention.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.last_minute_intervention.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "snqshxyvukbpgk0x",
+                            "name": "HEART.Item.ability.steam_vent.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.steam_vent.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "bnl65p5d0eeh4a19",
+                            "name": "HEART.Item.ability.back_to_back.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.back_to_back.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "8g68mi5c2vcz2cuy",
+                "name": "HEART.Item.ability.overclock.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.overclock.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "u8kazz1e9bn4h1rg",
+                            "name": "HEART.Item.ability.puncture.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.puncture.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "730fjy20o3gikf0r",
+                            "name": "HEART.Item.ability.momentum.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.momentum.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "ahb5bkzxjsgzy14c",
+                            "name": "HEART.Item.ability.galvanic_crucible.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.galvanic_crucible.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "xwkym2an1nqzllfc",
+                "name": "HEART.Item.ability.trailblazer.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.trailblazer.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "mi3pa9792zla2s5k",
+                            "name": "HEART.Item.ability.first_to_the_front.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.first_to_the_front.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "q4ks6h8bbaf0x4mu",
+                            "name": "HEART.Item.ability.pathfinder.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.pathfinder.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "nmn4trc2mlnol24p",
+                            "name": "HEART.Item.ability.keep_your_heads_down.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.keep_your_heads_down.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "rigsqwor9s8v3nwk",
+                "name": "HEART.Item.ability.end_of_the_line.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.end_of_the_line.description",
+                    "type": "zenith",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "wqmy2amhiutmvshw",
+                "name": "HEART.Item.ability.perpetual_motion_engine.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.perpetual_motion_engine.description",
+                    "type": "zenith",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "68ssm35meucu9ihe",
+                "name": "HEART.Item.ability.the_last_train.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.the_last_train.description",
+                    "type": "zenith",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "uufdrnheijp9fmhp",
+                "name": "HEART.Item.equipment.pneumatic_hammer.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 8,
+                    "type": "kill",
+                    "resistances": [],
+                    "items": [
+                        {
+                            "_id": "f828wq4s16sokhtz",
+                            "name": "HEART.Item.tag.brutal.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.brutal.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!xucjrfv4d6c7b07t",
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "2hgkj56i3tc7gpdh",
+                            "name": "HEART.Item.tag.loud.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.loud.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!qufhosfz6cziu2a1",
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "aflhb1hcq845w8ma",
+                            "name": "HEART.Item.tag.tiring.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.tiring.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!yagk7wryfjp2ukc2",
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_1"
+                    }
+                }
+            },
+            {
+                "_id": "a6b19vz7u5s4n4fc",
+                "name": "HEART.Item.equipment.scrapsword.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 6,
+                    "type": "kill",
+                    "resistances": [],
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_2"
+                    }
+                }
+            },
+            {
+                "_id": "9biage4xyc86md5c",
+                "name": "HEART.Item.equipment.magelight_rig.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 6,
+                    "type": "delve",
+                    "resistances": [],
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_2"
+                    }
+                }
+            },
+            {
+                "_id": "16c1sv7k8v5qj644",
+                "name": "HEART.Item.equipment.steel_door_shield.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 6,
+                    "type": "kill",
+                    "resistances": [],
+                    "items": [
+                        {
+                            "_id": "3ujk1slqp4i28f7h",
+                            "name": "HEART.Item.tag.block.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.block.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!qlpw68612eiloddk",
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_3"
+                    }
+                }
+            }
+        ],
+        "effects": [],
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!ei3g8ufhll9fvc7c",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PuDcAMGqYcI8YivV",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

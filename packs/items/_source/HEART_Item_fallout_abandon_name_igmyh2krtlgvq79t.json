@@ -1,0 +1,20 @@
+{
+    "_id": "igmyh2krtlgvq79t",
+    "name": "HEART.Item.fallout.abandon.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.abandon.description",
+        "resistance": "mind",
+        "type": "critical",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!igmyh2krtlgvq79t",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

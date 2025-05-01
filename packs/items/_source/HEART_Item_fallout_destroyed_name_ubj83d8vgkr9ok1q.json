@@ -1,0 +1,20 @@
+{
+    "_id": "ubj83d8vgkr9ok1q",
+    "name": "HEART.Item.fallout.destroyed.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.destroyed.description",
+        "resistance": "fortune",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!ubj83d8vgkr9ok1q",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

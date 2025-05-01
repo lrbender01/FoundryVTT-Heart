@@ -1,0 +1,20 @@
+{
+    "_id": "0o48byisaq2qwbbx",
+    "name": "HEART.Item.fallout.wrong_place.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.wrong_place.description",
+        "resistance": "fortune",
+        "type": "critical",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!0o48byisaq2qwbbx",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

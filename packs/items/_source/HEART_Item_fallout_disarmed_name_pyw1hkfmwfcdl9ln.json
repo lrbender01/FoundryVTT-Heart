@@ -1,0 +1,20 @@
+{
+    "_id": "pyw1hkfmwfcdl9ln",
+    "name": "HEART.Item.fallout.disarmed.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.disarmed.description",
+        "resistance": "blood",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!pyw1hkfmwfcdl9ln",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

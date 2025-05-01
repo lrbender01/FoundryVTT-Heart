@@ -1,0 +1,218 @@
+{
+  "TYPES": {
+    "Actor": {
+      "adversary": "Adversary",
+      "character": "Character",
+      "delve": "Delve",
+      "landmark": "Landmark"
+    },
+    "Item": {
+      "ability": "Ability",
+      "sub_abilities": "Sub-Abilities",
+      "beat": "Beat",
+      "calling": "Calling",
+      "class": "Class",
+      "equipment": "Equipment",
+      "fallout": "Fallout",
+      "haunt": "Haunt",
+      "resource": "Resource",
+      "tag": "Tag"
+    }
+  },
+  "HEART": {
+    "common": {
+      "base": "Base",
+      "minor": "Minor",
+      "major": "Major",
+      "zenith": "Zenith",
+      "kill": "Kill",
+      "overview": "Overview",
+      "stress": "Stress",
+      "notes": "Notes",
+      "core": "Core",
+      "toggle-view-mode": "Toggle View",
+      "type": "Type"
+    },
+    "description": "Description",
+    "delete": "Delete",
+    "SheetLabels": {
+      "Actor": "Heart Actor Sheet",
+      "Item": "Heart Item Sheet"
+    },
+    "Application": {
+      "roll-helper": {
+        "title": "Roll Helper"
+      },
+      "stress-roll-helper": {
+        "title": "Stress Roll Helper"
+      },
+      "fallout-roll-helper": {
+        "title": "Fallout Roll Helper"
+      }
+    },
+    "DieSize": {
+      "label": "Die Size",
+      "types": {
+        "4": "d4",
+        "6": "d6",
+        "8": "d8",
+        "10": "d10",
+        "12": "d12"
+      }
+    },
+    "Domain": {
+      "label": "Domain",
+      "label-plural": "Domains",
+      "types": {
+        "cursed": "Cursed",
+        "desolate": "Desolate",
+        "haven": "Haven",
+        "occult": "Occult",
+        "religion": "Religion",
+        "technology": "Technology",
+        "warren": "Warren",
+        "wild": "Wild"
+      }
+    },
+    "Skill": {
+      "label": "Skill",
+      "label-plural": "Skills",
+      "types": {
+        "compel": "Compel",
+        "delve": "Delve",
+        "discern": "Discern",
+        "endure": "Endure",
+        "kill": "Kill",
+        "evade": "Evade",
+        "hunt": "Hunt",
+        "mend": "Mend",
+        "sneak": "Sneak"
+      }
+    },
+    "Resistance": {
+      "label": "Resistance",
+      "label-plural": "Resistances",
+      "max": "Max",
+      "protection": "Protection",
+      "total": "Total",
+      "types": {
+        "blood": "Blood",
+        "echo": "Echo",
+        "fortune": "Fortune",
+        "mind": "Mind",
+        "supplies": "Supplies"
+      }
+    },
+    "Actor": {
+      "adversary": {
+        "names": "Names",
+        "descriptors": "Descriptors",
+        "motivation": "Motivation",
+        "protection": "Protection",
+        "special": "Special"
+      },
+      "character": {
+
+      },
+      "delve": {
+        "route": "Route",
+        "events": "Events",
+        "connection": "Connection"
+      },
+      "landmark": {
+        "special_rules": "Special Rules",
+        "potential_plots": "Potential Plots"
+      }
+    },
+    "Item": {
+      "ability": {
+        "label-plural": "abilities",
+        "type-label": "Type",
+        "subabilities": "Sub-Abilities"
+      },
+      "beat": {
+        "label-plural": "beats",
+        "types": {
+          "core": "Core",
+          "minor": "Minor",
+          "major": "Major",
+          "zenith": "Zenith"
+        }
+      },
+      "calling": {
+        "core-ability": "Core Ability",
+        "questions": "Questions"
+      },
+      "equipment": {
+        "label-plural": "Equipment",
+        "types": {
+          "delve": "Delve",
+          "kill": "Kill",
+          "mend": "Mend",
+          "miscellaneous": "Misc"
+        }
+      },
+      "fallout": {
+        "label-plural": "Fallouts",
+        "types": {
+          "none": "No Fallout",
+          "minor": "Minor",
+          "major": "Major",
+          "critical": "Critical"
+        }
+      },
+      "resource": {
+        "label-plural": "Resources"
+      },
+      "tag": {
+        "label-plural": "Tags",
+        "uses": "Uses"
+      }
+    },
+    "Roll": {
+      "label": "Roll",
+      "request-roll": "Request Roll",
+      "mastery": "Mastery",
+      "has-mastery": "Has Mastery?",
+      "warning-apply": "Cannot apply to actor without a default charater or a selected token",
+      "difficulty": {
+        "label": "Difficulty",
+        "types": {
+          "standard": "Standard",
+          "risky": "Risky",
+          "dangerous": "Dangerous"
+        }
+      },
+      "types": {
+        "critical_failure": "Critical Failure",
+        "failure": "Failure",
+        "success_at_a_cost": "Success At A Cost",
+        "success": "Success",
+        "critical_success": "Critical Success"
+      }
+    },
+    "FalloutRoll": {
+      "label": "Fallout Roll",
+      "formula": "fallout",
+      "roll": "Roll Fallout",
+      "request-roll": "Request Fallout Roll"
+    },
+    "StressRoll": {
+      "label": "Stress Roll",
+      "formula": "stress",
+      "dice": "Dice",
+      "roll": "Roll Stress",
+      "request-roll": "Request Stress Roll",
+      "critical": "Critical"
+    },
+    "CONTROLS": {
+      "Group": "Heart Helpers"
+    },
+    "Tier": {
+      "label": "Tier",
+      "label-plural": "Tiers",
+      "fracture": "Fracture",
+      "rogue": "Rogue"
+    }
+  }
+}

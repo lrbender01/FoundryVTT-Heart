@@ -1,0 +1,5 @@
+<div class="items-list">
+    {{#each items as |item|}}
+        {{> "systems/heart/templates/item/parts/base-item-micro.hbs" item=item  editable=../editable}}
+    {{/each}}
+</div>

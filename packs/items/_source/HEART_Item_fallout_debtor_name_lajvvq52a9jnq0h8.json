@@ -1,0 +1,20 @@
+{
+    "_id": "lajvvq52a9jnq0h8",
+    "name": "HEART.Item.fallout.debtor.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.debtor.description",
+        "resistance": "supplies",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!lajvvq52a9jnq0h8",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

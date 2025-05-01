@@ -1,0 +1,53 @@
+@use '../utils/theme';
+
+.chat-message {
+    background-image: none;
+    background-color: theme.$background-color;
+
+    .message-sender {
+        font-family: theme.$primary-font;
+    }
+
+    .message-content {
+        font-family: theme.$secondary-font;
+    }
+}
+
+@mixin invert {
+    color: theme.$title-color-invert;
+    background-color: theme.$background-color-invert;
+}
+
+.dice-formula {
+    @include invert;
+    font-family: theme.$primary-font;
+}
+
+
+.dice-tooltip .part-header .part-flavor {
+    font-family: theme.$primary-font;
+}
+
+.dice-tooltip .part-header .part-flavor {
+    font-family: theme.$primary-font;
+}
+
+.dice-total, .dice-tooltip .part-header .part-total {
+    @include invert;
+    font-family: theme.$secondary-font;
+}
+
+.dice-total {
+    flex: 1;
+}
+
+.message-content .inline-roll {
+    @include invert;
+    font-family: theme.$primary-font;
+    padding: theme.$padding-medium;
+    display: inline-block;
+
+    i {
+        color: inherit;
+    }
+}

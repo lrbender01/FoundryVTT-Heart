@@ -1,0 +1,20 @@
+{
+    "_id": "y3zl76zy4woafjx6",
+    "name": "HEART.Item.fallout.sold.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.sold.description",
+        "resistance": "supplies",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!y3zl76zy4woafjx6",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

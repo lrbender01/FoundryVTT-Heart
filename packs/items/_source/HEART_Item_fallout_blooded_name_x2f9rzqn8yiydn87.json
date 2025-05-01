@@ -1,0 +1,20 @@
+{
+    "_id": "x2f9rzqn8yiydn87",
+    "name": "HEART.Item.fallout.blooded.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.blooded.description",
+        "resistance": "echo",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!x2f9rzqn8yiydn87",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

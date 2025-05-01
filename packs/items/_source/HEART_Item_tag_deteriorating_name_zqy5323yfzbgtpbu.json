@@ -1,0 +1,18 @@
+{
+    "_id": "zqy5323yfzbgtpbu",
+    "name": "HEART.Item.tag.deteriorating.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.deteriorating.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!zqy5323yfzbgtpbu",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

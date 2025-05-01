@@ -1,0 +1,20 @@
+{
+    "_id": "ng5hvd83u3mem390",
+    "name": "HEART.Item.fallout.downed.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.downed.description",
+        "resistance": "blood",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!ng5hvd83u3mem390",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

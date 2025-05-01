@@ -1,0 +1,20 @@
+{
+    "_id": "sxd9rzk10254ct6z",
+    "name": "HEART.Item.fallout.vulnerable.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.vulnerable.description",
+        "resistance": "mind",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!sxd9rzk10254ct6z",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

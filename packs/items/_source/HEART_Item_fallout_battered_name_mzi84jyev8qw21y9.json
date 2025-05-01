@@ -1,0 +1,20 @@
+{
+    "_id": "mzi84jyev8qw21y9",
+    "name": "HEART.Item.fallout.battered.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.battered.description",
+        "resistance": "blood",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!mzi84jyev8qw21y9",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

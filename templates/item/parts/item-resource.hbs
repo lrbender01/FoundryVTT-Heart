@@ -1,0 +1,8 @@
+<div class="equipment item" data-type="resource" data-pseudo-item-target="{{target}}">
+<span class="title">{{item.name}}</span>
+{{> "systems/heart/templates/item/parts/item-die.hbs" die_size=item.system.die_size}}
+<span class="badge">{{localize (concat "HEART.." item.system.domain)}}</span>
+{{#each item.system.resistances as |tag|}}
+{{> "systems/heart/templates/item/parts/item-resistance.hbs" item=tag}}
+{{/each}}
+</div>

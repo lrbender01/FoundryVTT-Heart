@@ -1,0 +1,514 @@
+{
+    "_id": "h07v79z6isj6ijuy",
+    "name": "HEART.Item.calling.adventure.name",
+    "type": "calling",
+    "system": {
+        "description": "HEART.Item.calling.adventure.description",
+        "questions": [
+            {
+                "question": "HEART.Item.calling.adventure.questions.0",
+                "answer": ""
+            },
+            {
+                "question": "HEART.Item.calling.adventure.questions.1",
+                "answer": ""
+            },
+            {
+                "question": "HEART.Item.calling.adventure.questions.2",
+                "answer": ""
+            },
+            {
+                "question": "HEART.Item.calling.adventure.questions.3",
+                "answer": ""
+            }
+        ],
+        "items": [
+            {
+                "_id": "b1o8ox9f1koetlq8",
+                "name": "HEART.Item.ability.legendary.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.legendary.description",
+                    "type": "core",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "4er6att76j7byqog",
+                "name": "HEART.Item.beat.adventure_minor_0.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_0.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "ztyy4lsx2qmplk8e",
+                "name": "HEART.Item.beat.adventure_minor_1.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_1.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "l5lf6ngkv9ldl538",
+                "name": "HEART.Item.beat.adventure_minor_2.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_2.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "w1fbet3ly40yjw7l",
+                "name": "HEART.Item.beat.adventure_minor_3.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_3.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "50e3fsh3d7rnoxjg",
+                "name": "HEART.Item.beat.adventure_minor_4.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_4.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "xvu5yui2o2fsg4y5",
+                "name": "HEART.Item.beat.adventure_minor_5.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_5.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "mwkqqeba0blilj8y",
+                "name": "HEART.Item.beat.adventure_minor_6.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_6.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "4wsgtn5mgzch8haj",
+                "name": "HEART.Item.beat.adventure_minor_7.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_7.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "6wmgi3qgg0lo6qxz",
+                "name": "HEART.Item.beat.adventure_minor_8.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_8.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "7da4pelqc2b2eql3",
+                "name": "HEART.Item.beat.adventure_minor_9.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_9.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "rk7diiimczs8knnr",
+                "name": "HEART.Item.beat.adventure_minor_10.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_10.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "b043y6wqggij9ihb",
+                "name": "HEART.Item.beat.adventure_minor_11.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_11.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "raxi6jajutzq6adn",
+                "name": "HEART.Item.beat.adventure_minor_12.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_12.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "ds2p77ibocshzj23",
+                "name": "HEART.Item.beat.adventure_minor_13.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_13.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "spebwtcxhojat9as",
+                "name": "HEART.Item.beat.adventure_minor_14.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_14.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "vhe6zlndsieqoozw",
+                "name": "HEART.Item.beat.adventure_minor_15.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_15.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "koui5i14p5bynggm",
+                "name": "HEART.Item.beat.adventure_minor_16.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_16.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "cplq538nlhglfpk9",
+                "name": "HEART.Item.beat.adventure_minor_17.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_17.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "c1xg06d48m83hcl6",
+                "name": "HEART.Item.beat.adventure_minor_18.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_18.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "rqgs6xz3zorzhyln",
+                "name": "HEART.Item.beat.adventure_minor_19.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_19.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "lzple8ibbco8au5h",
+                "name": "HEART.Item.beat.adventure_minor_20.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_minor_20.name",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "hkhyigyak4uihyl0",
+                "name": "HEART.Item.beat.adventure_major_0.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_major_0.name",
+                    "type": "major",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "zf02b5omsdbzbcwh",
+                "name": "HEART.Item.beat.adventure_major_1.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_major_1.name",
+                    "type": "major",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "h95uv78sdi5ek6ck",
+                "name": "HEART.Item.beat.adventure_major_2.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_major_2.name",
+                    "type": "major",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "7pqe05w3m3jvq9qf",
+                "name": "HEART.Item.beat.adventure_major_3.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_major_3.name",
+                    "type": "major",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "14vzcbkjo9xr9f97",
+                "name": "HEART.Item.beat.adventure_major_4.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_major_4.name",
+                    "type": "major",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "ejifkh71e9s5ffg5",
+                "name": "HEART.Item.beat.adventure_major_5.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_major_5.name",
+                    "type": "major",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "6onyvh5ex3kiq6hz",
+                "name": "HEART.Item.beat.adventure_major_6.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_major_6.name",
+                    "type": "major",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "5jbvh6801yjtxjfr",
+                "name": "HEART.Item.beat.adventure_major_7.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_major_7.name",
+                    "type": "major",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "55wgi7krlfvapuwy",
+                "name": "HEART.Item.beat.adventure_major_8.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_major_8.name",
+                    "type": "major",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "cvzn2fafippy12np",
+                "name": "HEART.Item.beat.adventure_major_9.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_major_9.name",
+                    "type": "major",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "vuhm41kwmk82xrtm",
+                "name": "HEART.Item.beat.adventure_zenith_0.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_zenith_0.name",
+                    "type": "zenith",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "ht0q3qaza7dehgsg",
+                "name": "HEART.Item.beat.adventure_zenith_1.name",
+                "type": "beat",
+                "system": {
+                    "description": "HEART.Item.beat.adventure_zenith_1.name",
+                    "type": "zenith",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            }
+        ],
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!h07v79z6isj6ijuy",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "dxatdOCQXcKJ7Fla",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

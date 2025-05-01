@@ -1,0 +1,20 @@
+{
+    "_id": "o5df5za9pzg0s7wr",
+    "name": "HEART.Item.fallout.pitch_black.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.pitch_black.description",
+        "resistance": "supplies",
+        "type": "critical",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!o5df5za9pzg0s7wr",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

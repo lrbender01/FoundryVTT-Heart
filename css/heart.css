@@ -1,0 +1,654 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,600;1,400&display=swap");
+@font-face {
+  font-family: "MelmaCracked";
+  src: url("../assets/fonts/melma/MelmaCracked.ttf");
+}
+@font-face {
+  font-family: "Melma";
+  src: url("../assets/fonts/melma/Melma.ttf");
+}
+@font-face {
+  font-family: "Melma Line";
+  src: url("../assets/fonts/melma/Melma Line.ttf");
+}
+/* Global styles */
+.window-app {
+  font-family: "Alegreya", sans-serif;
+}
+
+.rollable:hover, .rollable:focus {
+  color: #000;
+  text-shadow: 0 0 10px red;
+  cursor: pointer;
+}
+
+.window-app.heart .window-content {
+  background: #fff;
+}
+
+.grid,
+.grid-2col {
+  display: grid;
+  grid-column: span 2/span 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+  padding: 0;
+}
+
+.grid-1col {
+  display: grid;
+  grid-column: span 1;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  margin: 10px 0;
+  padding: 0;
+}
+
+.grid-3col {
+  grid-column: span 3/span 3;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid-4col {
+  grid-column: span 4/span 4;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid-5col {
+  grid-column: span 5/span 5;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.grid-6col {
+  grid-column: span 6/span 6;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.grid-7col {
+  grid-column: span 7/span 7;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.grid-8col {
+  grid-column: span 8/span 8;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.grid-9col {
+  grid-column: span 9/span 9;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+}
+
+.grid-10col {
+  grid-column: span 10/span 10;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.grid-11col {
+  grid-column: span 11/span 11;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+}
+
+.grid-12col {
+  grid-column: span 12/span 12;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.grid-start-2 {
+  grid-column-start: 2;
+}
+
+.grid-start-3 {
+  grid-column-start: 3;
+}
+
+.grid-start-4 {
+  grid-column-start: 4;
+}
+
+.grid-start-5 {
+  grid-column-start: 5;
+}
+
+.grid-start-6 {
+  grid-column-start: 6;
+}
+
+.grid-start-7 {
+  grid-column-start: 7;
+}
+
+.grid-start-8 {
+  grid-column-start: 8;
+}
+
+.grid-start-9 {
+  grid-column-start: 9;
+}
+
+.grid-start-10 {
+  grid-column-start: 10;
+}
+
+.grid-start-11 {
+  grid-column-start: 11;
+}
+
+.grid-start-12 {
+  grid-column-start: 12;
+}
+
+.grid-span-2 {
+  grid-column-end: span 2;
+}
+
+.grid-span-3 {
+  grid-column-end: span 3;
+}
+
+.grid-span-4 {
+  grid-column-end: span 4;
+}
+
+.grid-span-5 {
+  grid-column-end: span 5;
+}
+
+.grid-span-6 {
+  grid-column-end: span 6;
+}
+
+.grid-span-7 {
+  grid-column-end: span 7;
+}
+
+.grid-span-8 {
+  grid-column-end: span 8;
+}
+
+.grid-span-9 {
+  grid-column-end: span 9;
+}
+
+.grid-span-10 {
+  grid-column-end: span 10;
+}
+
+.grid-span-11 {
+  grid-column-end: span 11;
+}
+
+.grid-span-12 {
+  grid-column-end: span 12;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-group-center,
+.flex-group-left,
+.flex-group-right {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.flex-group-left {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.flex-group-right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.flexshrink {
+  flex: 0;
+}
+
+.flex-between {
+  justify-content: space-between;
+}
+
+.flexlarge {
+  flex: 2;
+}
+
+.align-left {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.align-right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.align-center {
+  justify-content: center;
+  text-align: center;
+}
+
+.chat-sidebar .chat-message {
+  background-image: none;
+  background-color: #fff;
+}
+.chat-sidebar .chat-message .message-sender {
+  font-family: "Melma Line", sans-serif;
+}
+.chat-sidebar .chat-message .message-content {
+  font-family: "Alegreya", sans-serif;
+}
+.chat-sidebar .dice-formula {
+  color: #fff;
+  background-color: #630000;
+  font-family: "Melma Line", sans-serif;
+}
+.chat-sidebar .dice-tooltip .part-header .part-flavor {
+  font-family: "Melma Line", sans-serif;
+}
+.chat-sidebar .dice-tooltip .part-header .part-flavor {
+  font-family: "Melma Line", sans-serif;
+}
+.chat-sidebar .dice-total, .chat-sidebar .dice-tooltip .part-header .part-total {
+  color: #fff;
+  background-color: #630000;
+  font-family: "Alegreya", sans-serif;
+}
+.chat-sidebar .dice-total {
+  flex: 1;
+}
+.chat-sidebar .message-content .inline-roll {
+  color: #fff;
+  background-color: #630000;
+  font-family: "Melma Line", sans-serif;
+  padding: 0.5em;
+  display: inline-block;
+}
+.chat-sidebar .message-content .inline-roll i {
+  color: inherit;
+}
+
+.roll-helper .grid {
+  gap: 0 1em;
+}
+.roll-helper .preview {
+  text-align: center;
+  font-family: "Melma Line", sans-serif;
+  background: #fff;
+  font-size: 1.5em;
+  min-height: 2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.roll-helper label, .roll-helper select, .roll-helper input, .roll-helper .checkbox, .roll-helper .preview {
+  border: 2px solid #000;
+}
+.roll-helper label {
+  background: #630000;
+  color: #fff;
+  font-family: "Melma Line", sans-serif;
+  font-size: 1.2em;
+  border-radius: 0.25em 0.25em 0 0;
+  padding: 0.25em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.roll-helper select, .roll-helper .checkbox {
+  background: #fff;
+  color: #000;
+  font-family: "Melma Line", sans-serif;
+  border-radius: 0 0 0.25em 0.25em;
+  border-top: 0;
+  text-align: center;
+}
+.roll-helper .checkbox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.roll-helper *:has(.fas.fa-triangle-exclamation) {
+  position: relative;
+}
+.roll-helper .fas.fa-triangle-exclamation {
+  position: absolute;
+  left: 0.25em;
+}
+.roll-helper button {
+  background-color: #630000;
+  color: #fff;
+  padding: 0.25em;
+  border: 2px solid #000;
+  font-family: "Melma Line", sans-serif;
+}
+.roll-helper .window-title {
+  font-family: "Melma Line", sans-serif;
+}
+
+/* Styles limited to heart sheets */
+.heart .item-form {
+  font-family: "Alegreya", sans-serif;
+}
+.heart .sheet-header {
+  flex: 0 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  color: #fff;
+  background: #630000;
+  padding: 0.5em;
+  border-radius: 0.5em;
+}
+.heart .sheet-header .profile-img {
+  flex: 0 0 100px;
+  height: 100px;
+  margin-right: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 0;
+  border-radius: 0.25em;
+}
+.heart .sheet-header .header-fields {
+  flex: 1;
+  padding-left: 0.5em;
+}
+.heart .sheet-header h1.charname {
+  height: 50px;
+  padding: 0px;
+  margin: 5px 0;
+  border-bottom: 0;
+  font-family: "Melma Line", sans-serif;
+}
+.heart .sheet-header h1.charname input {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  color: inherit;
+  border: 0;
+  background: none;
+}
+.heart .sheet-tabs {
+  flex: 0;
+}
+.heart .sheet-body,
+.heart .sheet-body .tab,
+.heart .sheet-body .editor,
+.heart .sheet-body .tab .editor {
+  height: 100%;
+}
+.heart .tox .tox-editor-container {
+  background: #fff;
+}
+.heart .tox .tox-edit-area {
+  padding: 0 8px;
+}
+.heart .skill [data-action=roll], .heart .domain [data-action=roll] {
+  float: right;
+}
+.heart .fields {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 0.5em;
+  flex: 0 0 auto;
+}
+.heart .toolbar {
+  flex: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+.heart .fields, .heart .toolbar {
+  padding: 0.5em;
+}
+.heart .field {
+  display: flex;
+  flex-flow: column;
+  flex: 1 1 auto;
+}
+.heart .field.full-width {
+  flex: 0 0 100%;
+}
+.heart .field > label {
+  font-family: "Melma Line", sans-serif;
+  display: block;
+  background: #630000;
+  color: #fff;
+  border-radius: 0.5em 0.5em 0 0;
+  border-bottom: 1px solid #000;
+  padding: 0.5em;
+}
+.heart .field > label + * {
+  padding: 0.5em;
+  border: 1px solid #000;
+  border-top: 0;
+  border-radius: 0 0 0.5em 0.5em;
+  min-height: 3em;
+}
+.heart .field > label + .editor {
+  min-height: 15em;
+}
+.heart .field > label + input {
+  width: 100%;
+  background: none;
+}
+.heart .field > label + select {
+  background: none;
+}
+.heart .field > .string-array {
+  display: flex;
+  flex-flow: row wrap;
+}
+.heart .items-list {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 0.5em;
+  align-content: flex-start;
+}
+.heart .items-list .item.part {
+  height: 2.5em;
+  flex-grow: 1;
+  min-width: 24%;
+}
+.heart .resource-label {
+  font-weight: bold;
+}
+.heart .items-header {
+  height: 28px;
+  margin: 2px 0;
+  padding: 0;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  border: 2px groove #eeede0;
+  font-weight: bold;
+}
+.heart .items-header > * {
+  font-size: 14px;
+  text-align: center;
+}
+.heart .items-header .item-name {
+  font-weight: bold;
+  padding-left: 5px;
+  text-align: left;
+  display: flex;
+}
+.heart .items-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.heart .items-list .item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.heart .items-list .item-name {
+  color: #630000;
+  flex: 2;
+  margin: 0;
+  overflow: hidden;
+  font-size: 13px;
+  text-align: left;
+  align-items: center;
+  display: flex;
+}
+.heart .items-list .item-name h3, .heart .items-list .item-name h4 {
+  margin: 0;
+  white-space: nowrap;
+  overflow-x: hidden;
+}
+.heart .items-list .item-controls {
+  order: -1;
+  display: inline-flex;
+  float: right;
+  justify-content: flex-end;
+}
+.heart .items-list .item-controls a {
+  font-size: 12px;
+  text-align: center;
+  margin: 0 6px;
+}
+.heart .items-list .item {
+  flex-flow: wrap;
+  align-items: center;
+  background: #fff;
+  padding: 0.5em;
+}
+.heart .items-list .item:hover {
+  background: #FFF0F0;
+}
+.heart .items-list .item .title {
+  color: #630000;
+  font-family: "Melma Line", sans-serif;
+}
+.heart .items-list .item .item-name {
+  color: var(--heart-black);
+}
+.heart .items-list .item .item-name .item-image {
+  flex: 0 0 30px;
+  height: 30px;
+  background-size: 30px;
+  border: none;
+  margin-right: 5px;
+}
+.heart .items-list .item .badges {
+  float: right;
+  display: inline-flex;
+  order: -2;
+  justify-content: flex-end;
+}
+.heart .items-list .item .badges .badge {
+  background: #630000;
+  color: #fff;
+  font-family: "Melma Line", sans-serif;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.heart .items-list .item.part {
+  border: 2px solid #630000;
+  border-radius: 4px;
+}
+.heart .items-list .item-prop {
+  text-align: center;
+  border-left: 1px solid #c9c7b8;
+  border-right: 1px solid #c9c7b8;
+  font-size: 12px;
+}
+.heart .items-list .items-header {
+  height: 28px;
+  margin: 2px 0;
+  padding: 0;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  border: 2px groove #eeede0;
+  font-weight: bold;
+}
+.heart .items-list .items-header > * {
+  font-size: 12px;
+  text-align: center;
+}
+.heart .items-list .items-header .item-name {
+  padding-left: 5px;
+  text-align: left;
+}
+.heart .item-formula {
+  flex: 0 0 200px;
+  padding: 0 8px;
+}
+.heart .item-placeholder {
+  color: #000;
+  font-family: "Melma Line", sans-serif;
+  border: 2px dotted;
+  padding: 0.5em;
+  border-radius: 0.25em;
+  display: flex;
+  justify-content: center;
+  gap: 2em;
+}
+.heart .item-placeholder:hover {
+  cursor: pointer;
+  border-color: #630000;
+  color: #630000;
+  background: #FFF0F0;
+}
+.heart h2 {
+  font-family: "Melma Line", sans-serif;
+  color: #630000;
+}
+.heart .attribute-list {
+  padding: 0.5em;
+  border: 2px solid #630000;
+  border-radius: 4px;
+  background: #630000;
+  color: #fff;
+}
+.heart .attribute-list h2 {
+  color: inherit;
+  border: 0;
+}
+.heart .resistance-list {
+  background: #000;
+  color: #fff;
+  gap: 0;
+  padding: 0.5em;
+  border-radius: 0.25em;
+  margin: 0;
+}
+.heart .resistance-list .tally {
+  float: right;
+}
+.heart .resistance-list .protection {
+  padding: 0 0.5em;
+}
+.heart .resistance-list .stress-total {
+  background: #fff;
+  color: #000;
+}
+.heart .resistance-list .stress-total, .heart .resistance-list .stress {
+  padding: 0.25em 0.5em;
+  border-radius: 0.5em;
+}
+.heart .resistance-list .title {
+  font-family: "Melma Line", sans-serif;
+}
+.heart .effects .item .effect-source,
+.heart .effects .item .effect-duration,
+.heart .effects .item .effect-controls {
+  text-align: center;
+  border-left: 1px solid #c9c7b8;
+  border-right: 1px solid #c9c7b8;
+  font-size: 12px;
+}
+.heart .effects .item .effect-controls {
+  border: none;
+}
+
+/*# sourceMappingURL=heart.css.map */

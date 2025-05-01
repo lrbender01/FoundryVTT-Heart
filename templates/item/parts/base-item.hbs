@@ -1,0 +1,10 @@
+<div class="item part" data-item-id="{{item._id}}">
+    <div class="item-controls">
+        {{#if ../editable}}
+        <a class="item-control item-edit" title="Edit Item"><i class="fas fa-edit"></i></a>
+        <a class="item-control item-delete" title="Delete Item"><i class="fas fa-trash"></i></a>
+        {{/if}}
+    </div>
+
+    {{> @partial-block}}
+</div>

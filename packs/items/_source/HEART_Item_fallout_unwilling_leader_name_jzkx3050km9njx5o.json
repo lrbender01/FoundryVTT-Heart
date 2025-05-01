@@ -1,0 +1,20 @@
+{
+    "_id": "jzkx3050km9njx5o",
+    "name": "HEART.Item.fallout.unwilling_leader.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.unwilling_leader.description",
+        "resistance": "fortune",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!jzkx3050km9njx5o",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

@@ -1,0 +1,216 @@
+<form class="{{cssClass}} {{actor.type}} flexcol" autocomplete="off">
+
+  {{!-- Sheet Header --}}
+  <header class="sheet-header">
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name"/></h1>
+    </div>
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
+  </header>
+
+
+
+  <div>
+    <div class="grid grid-2col">
+      <div class="items-list grid-2col">
+        {{#each itemTypes.class as |class|}}
+          {{> "systems/heart/templates/item/parts/base-item-micro.hbs" item=class  editable=../editable}}
+        {{/each}}
+
+        {{#if (and (eq itemTypes.class.length 0) editable)}}
+          {{> "systems/heart/templates/item/parts/item-placeholder.hbs" type="class"}}
+        {{/if}}
+
+        {{#each itemTypes.calling as |calling|}}
+          {{> "systems/heart/templates/item/parts/base-item-micro.hbs" item=calling  editable=../editable}}
+        {{/each}}
+
+        {{#if (and (eq itemTypes.calling.length 0) editable)}}
+          {{> "systems/heart/templates/item/parts/item-placeholder.hbs" type="calling"}}
+        {{/if}}
+      </div>
+
+      <div class="resistance-list grid-2col">
+        <div class="stress-total">
+          <span class="title"> {{localize "HEART.Resistance.total"}}</span>
+            <span class="tally" title="{{actor.system.total_stress}}">
+            {{#each tally.total as |v|}}
+            <i class="fas fa-tally-{{v}}"></i>
+            {{/each}}
+            </span>
+        </div>
+        {{#each actor.system.resistances as |resistance name|}}
+          <div class="stress">
+            <span class="title">{{localize (concat "HEART.Resistance.types." name)}}</span>
+            <span class="protection" title="{{resistance.protection}}">
+            {{#each (lookup ../protection name)}}
+            <i class="fas fa-shield"></i>
+            {{/each}}
+            </span>
+            <span class="tally" title="{{resistance.value}}">
+            {{#each (lookup ../tally name) as |v|}}
+            <i class="fas fa-tally-{{v}}"></i>
+            {{/each}}
+            </span>
+          </div>
+        {{/each}}
+      </div>
+
+      <div class="attribute-list">
+        <h2>{{localize "HEART.Domain.label-plural"}}</h2>
+        <div class="domains-list">
+          {{#each actor.system.domains as |domain name|}}
+          {{#if (gt domain.value 0)}}
+          <div class="domain">
+            <span>{{localize (concat "HEART.Domain.types." name)}}</span>
+            {{#if (gt domain.value 1)}}
+              <span>({{domain.knack}})</span>
+            {{/if}}
+            <a data-action="roll" data-domain="{{name}}">
+              <i class="fas fa-dice-d10"></i>
+              {{#if (gt domain.value 1)}}
+              <i class="fas fa-dice-d10"></i>
+              {{/if}}
+            </a>
+          </div>
+          {{/if}}
+          {{/each}}
+        </div>
+      </div>
+
+      <div class="attribute-list">
+        <h2>{{localize "HEART.Skill.label-plural"}}</h2>
+        <div class="skills-list">
+          {{#each actor.system.skills as |skill name|}}
+          {{#if (gt skill.value 0)}}
+          <div class="skill">
+            {{localize (concat "HEART.Skill.types." name)}}
+            {{#if (gt skill.value 1)}}
+              <span>({{skill.knack}})</span>
+            {{/if}}
+            <a data-action="roll" data-skill="{{name}}">
+              <i class="fas fa-dice-d10"></i>
+              {{#if (gt domain.value 1)}}
+              <i class="fas fa-dice-d10"></i>
+              {{/if}}
+            </a>
+          </div>
+          {{/if}}
+          {{/each}}
+        </div>
+      </div>
+
+      <div class="items-list grid-2col">
+        {{#each itemTypes.ability as |ability|}}
+          {{> "systems/heart/templates/item/parts/base-item-micro.hbs" item=ability  editable=../editable}}
+        {{/each}}
+
+        {{#each itemTypes.equipment as |equipment|}}
+          {{> "systems/heart/templates/item/parts/base-item-micro.hbs" item=equipment  editable=../editable}}
+        {{/each}}
+
+        {{#each itemTypes.resource as |resource|}}
+          {{> "systems/heart/templates/item/parts/base-item-micro.hbs" item=resource  editable=../editable}}
+        {{/each}}
+
+        {{#each itemTypes.fallout as |fallout|}}
+          {{> "systems/heart/templates/item/parts/base-item-micro.hbs" item=fallout  editable=../editable}}
+        {{/each}}
+      </div>
+    </div>
+  </div>
+
+  {{!-- Sheet Tab Navigation --}}
+  <nav class="sheet-tabs tabs" data-group="primary">
+    {{!-- Default tab is specified in actor-sheet.mjs --}}
+    <a class="item" data-tab="stress">{{localize "HEART.Resistance.label-plural"}}</a>
+    <a class="item" data-tab="domains">{{localize "HEART.Domain.label-plural"}}</a>
+    <a class="item" data-tab="skills">{{localize "HEART.Skill.label-plural"}}</a>
+    <a class="item" data-tab="abilities">{{localize "HEART.Item.ability.label-plural"}}</a>
+    <a class="item" data-tab="beats">{{localize "HEART.Item.beat.label-plural"}}</a>
+    <a class="item" data-tab="fallouts">{{localize "HEART.Item.fallout.label-plural"}}</a>
+    <a class="item" data-tab="effects">Effects</a>
+  </nav>
+
+  {{!-- Sheet Body --}}
+  <section class="sheet-body">
+
+
+    <div class="tab stress" data-group="primary" data-tab="stress">
+      {{#each actor.system.schema.fields.resistances.fields as |field key| }}
+        <div class="grid grid-2col">
+          {{#each field.fields as |field key|}}
+          {{formGroupDocument field document=../../actor localize=true}}
+          {{/each}}
+        </div>
+      {{/each}}
+    </div>
+
+    <div class="tab domains" data-group="primary" data-tab="domains">
+      {{#each actor.system.schema.fields.domains.fields as |field key| }}
+        {{formGroupDocument field.fields.value document=../actor localize=true}}
+      {{/each}}
+    </div>
+
+    <div class="tab skills" data-group="primary" data-tab="skills">
+      {{#each actor.system.schema.fields.skills.fields as |field key| }}
+        {{formGroupDocument field.fields.value document=../actor localize=true}}
+      {{/each}}
+    </div>
+
+    {{!-- Abilities Tab --}}
+    <div class="tab abilities flexcol" data-group="primary" data-tab="abilities">
+      {{#each itemTypes.ability as |ability|}}
+      {{> "systems/heart/templates/item/parts/item-ability.hbs" item=ability}}
+      {{/each}}
+    </div>
+
+    {{!-- Beats Tab --}}
+    <div class="tab beats flexcol" data-group="primary" data-tab="beats">
+      
+      {{!-- Sheet Tab Navigation --}}
+      <nav class="sheet-tabs tabs" data-group="beats-inner">
+        {{#each ["minor", "major", "zenith"] as |type|}}
+        <div>{{type}}</div>
+        {{/each}}
+
+        <a class="item" data-tab="minor">{{localize "HEART.Item.beat.types.minor"}}</a>
+        <a class="item" data-tab="major">{{localize "HEART.Item.beat.types.major"}}</a>
+        <a class="item" data-tab="zenith">{{localize "HEART.Item.beat.types.zenith"}}</a>
+      </nav>
+
+      {{!-- Minor Tab --}}
+      <div class="tab minor flexcol" data-group="beats-inner" data-tab="minor">
+        {{#each itemTypes.beat as |beat| }}
+        {{#if (eq beat.system.type "minor") }}
+          {{> "systems/heart/templates/item/parts/item-beat.hbs" item=beat}}
+        {{/if}}
+        {{/each}}
+      </div>
+
+      {{!-- Major Tab --}}
+      <div class="tab major flexcol" data-group="beats-inner" data-tab="major">
+        {{#each itemTypes.beat as |beat| }}
+        {{#if (eq beat.system.type "major") }}
+          {{> "systems/heart/templates/item/parts/item-beat.hbs" item=beat}}
+        {{/if}}
+        {{/each}}
+      </div>
+
+      {{!-- Zenith Tab --}}
+      <div class="tab zenith flexcol" data-group="beats-inner" data-tab="zenith">
+        {{#each itemTypes.beat as |beat| }}
+        {{#if (eq beat.system.type "zenith") }}
+          {{> "systems/heart/templates/item/parts/item-beat.hbs" item=beat}}
+        {{/if}}
+        {{/each}}
+      </div>
+    </div>
+
+    {{!-- Active Effects Tab --}}
+    <div class="tab effects flexcol" data-group="primary" data-tab="effects">
+      {{> "systems/heart/templates/item/parts/item-effects.hbs" effects=effects}}
+    </div>
+
+  </section>
+</form>

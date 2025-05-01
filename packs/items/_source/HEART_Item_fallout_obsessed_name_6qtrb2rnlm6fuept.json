@@ -1,0 +1,20 @@
+{
+    "_id": "6qtrb2rnlm6fuept",
+    "name": "HEART.Item.fallout.obsessed.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.obsessed.description",
+        "resistance": "mind",
+        "type": "critical",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!6qtrb2rnlm6fuept",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

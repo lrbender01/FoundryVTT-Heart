@@ -1,0 +1,18 @@
+{
+    "_id": "5g3u095ctspwxmgu",
+    "name": "HEART.Item.tag.unreliable.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.unreliable.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!5g3u095ctspwxmgu",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

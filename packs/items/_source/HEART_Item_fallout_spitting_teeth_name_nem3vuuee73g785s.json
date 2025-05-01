@@ -1,0 +1,20 @@
+{
+    "_id": "nem3vuuee73g785s",
+    "name": "HEART.Item.fallout.spitting_teeth.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.spitting_teeth.description",
+        "resistance": "blood",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!nem3vuuee73g785s",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

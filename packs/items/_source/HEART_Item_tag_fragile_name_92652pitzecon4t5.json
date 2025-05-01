@@ -1,0 +1,18 @@
+{
+    "_id": "92652pitzecon4t5",
+    "name": "HEART.Item.tag.fragile.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.fragile.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!92652pitzecon4t5",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

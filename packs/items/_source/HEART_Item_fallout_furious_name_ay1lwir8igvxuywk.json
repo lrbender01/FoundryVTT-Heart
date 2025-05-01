@@ -1,0 +1,20 @@
+{
+    "_id": "ay1lwir8igvxuywk",
+    "name": "HEART.Item.fallout.furious.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.furious.description",
+        "resistance": "blood",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!ay1lwir8igvxuywk",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

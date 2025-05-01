@@ -1,0 +1,20 @@
+{
+    "_id": "l8urnbv55tozpn3f",
+    "name": "HEART.Item.fallout.lost_map.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.lost_map.description",
+        "resistance": "fortune",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!l8urnbv55tozpn3f",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

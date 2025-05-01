@@ -1,0 +1,39 @@
+<form class="{{cssClass}} roll-helper" autocomplete="off">
+    <div class="grid grid-{{num_inputs}}col">
+        {{#each inputs as |input target|}}
+            {{log input target}}
+            <label for="{{target}}">
+                {{localize input.label}}
+                {{#if (and input.required (not input.value)) }}
+                <i class="fas fa-triangle-exclamation"></i>
+                {{/if}}
+            </label>
+        {{/each}}
+        {{#each inputs as |input target|}}
+            {{#if input.boolean}}
+            <div class="checkbox" name="{{target}}">
+                {{#if input.value}}
+                X
+                {{/if}}
+            </div>
+            {{else}}
+            <select id="{{target}}" name="{{target}}">
+            {{selectOptions input.choices localize=true selected=input.value}}
+            </select>
+            {{/if}}
+        {{/each}}
+    </div>
+    <div class="preview">
+        /roll 
+        {{ formula }}
+        {{#unless (and inputs.skill.value inputs.domain.value)}}
+        <i class="fas fa-triangle-exclamation"></i>
+        {{/unless}}
+    </div>
+
+    <div class="grid-2col">
+    <button data-action="roll"><i class="fas fa-dice-d20"></i>{{localize "HEART.Roll.label"}}</button>
+    <button data-action="request-roll"><i class="fas fa-comment"></i>{{localize "HEART.Roll.request-roll"}}</button>
+    </div>
+</form>
+

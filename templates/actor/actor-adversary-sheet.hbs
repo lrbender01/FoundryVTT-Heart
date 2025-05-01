@@ -1,0 +1,29 @@
+<form class="{{cssClass}} {{actor.type}} flexcol" autocomplete="off">
+
+  {{!-- Sheet Header --}}
+  <header class="sheet-header">
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name"/></h1>
+    </div>
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
+  </header>
+
+  {{#if editable}}
+  <div class="toolbar">
+    {{> "systems/heart/templates/parts/view-mode.hbs" viewMode=viewMode}}
+  </div>
+  {{/if}}
+
+  <div class="fields">
+    {{> "systems/heart/templates/parts/field-string.hbs" field=fields.difficulty editable=editable}}
+    {{> "systems/heart/templates/parts/field-number.hbs" field=fields.resistance editable=editable}}
+    {{> "systems/heart/templates/parts/field-number.hbs" field=fields.protection editable=editable}}
+    {{> "systems/heart/templates/parts/field-string-array.hbs" field=fields.domains editable=editable}}
+    {{> "systems/heart/templates/parts/field-editor.hbs" field=fields.names editable=editable}}
+    {{> "systems/heart/templates/parts/field-editor.hbs" field=fields.descriptors editable=editable}}
+    {{> "systems/heart/templates/parts/field-editor.hbs" field=fields.motivation editable=editable}}
+    {{> "systems/heart/templates/parts/field-editor.hbs" field=fields.special editable=editable}}
+  </div>
+
+  {{> "systems/heart/templates/parts/items.hbs" items=items editable=editable}}
+</form>

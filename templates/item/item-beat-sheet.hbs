@@ -1,0 +1,17 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Name"/></h1>
+    </div>
+  </header>
+
+  {{#if editable}}
+  <div class="toolbar">
+    {{> "systems/heart/templates/parts/view-mode.hbs" viewMode=viewMode}}
+  </div>
+  {{/if}}
+
+  <div class="fields">
+    {{> "systems/heart/templates/parts/field-string.hbs" field=fields.type editable=editable}}
+  </div>
+</form>

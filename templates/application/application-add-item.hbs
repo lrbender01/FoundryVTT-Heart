@@ -1,0 +1,11 @@
+<form class="{{cssClass}} add-item flexcol" autocomplete="off">
+    {{#each matches as |item|}}
+        <div class="item" data-item-id="{{item._id}}" style="display: grid; grid-template-columns: 1fr 3em">
+            <div>
+                {{> (concat "systems/heart/templates/item/parts/item-" item.type ".hbs") item=item}}
+            </div>
+            <button class="item-add"><i class="fas fa-plus"></i></button>
+        </div>
+    {{/each}}
+</form>
+

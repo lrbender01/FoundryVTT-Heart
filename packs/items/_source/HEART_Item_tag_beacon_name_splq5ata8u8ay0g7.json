@@ -1,0 +1,18 @@
+{
+    "_id": "splq5ata8u8ay0g7",
+    "name": "HEART.Item.tag.beacon.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.beacon.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!splq5ata8u8ay0g7",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "_id": "mrfa40r7ueg1ob8n",
+    "name": "HEART.Item.fallout.chosen.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.chosen.description",
+        "resistance": "blood",
+        "type": "critical",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!mrfa40r7ueg1ob8n",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

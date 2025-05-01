@@ -1,0 +1,20 @@
+{
+    "_id": "2jfph1ggwlxbuhbv",
+    "name": "HEART.Item.fallout.broken_leg.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.broken_leg.description",
+        "resistance": "blood",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!2jfph1ggwlxbuhbv",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

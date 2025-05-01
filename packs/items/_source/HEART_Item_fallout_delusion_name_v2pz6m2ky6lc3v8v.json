@@ -1,0 +1,20 @@
+{
+    "_id": "v2pz6m2ky6lc3v8v",
+    "name": "HEART.Item.fallout.delusion.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.delusion.description",
+        "resistance": "mind",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!v2pz6m2ky6lc3v8v",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

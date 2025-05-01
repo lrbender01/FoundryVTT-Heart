@@ -1,0 +1,23 @@
+{
+  "Actor": {
+    "types": [
+      "adversary",
+      "character",
+      "delve",
+      "landmark"
+    ]
+  },
+  "Item": {
+    "types": [
+      "ability",
+      "beat",
+      "calling",
+      "class",
+      "equipment",
+      "fallout",
+      "haunt",
+      "resource",
+      "tag"
+    ]
+  }
+}

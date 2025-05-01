@@ -1,0 +1,54 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Name"/></h1>
+    </div>
+  </header>
+
+  {{!-- Sheet Tab Navigation --}}
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="description">{{localize "HEART.description"}}</a>
+    <a class="item" data-tab="ability">{{localize "HEART.Item.ability.label-plural" }}</a>
+    <a class="item" data-tab="beats">{{localize "HEART.Item.beat.label-plural" }}</a>
+    <a class="item" data-tab="questions">{{localize "HEART.Item.calling.questions" }}</a>
+  </nav>
+
+  {{!-- Sheet Body --}}
+  <section class="sheet-body">
+
+    {{!-- Description Tab --}}
+    <div class="tab" data-group="primary" data-tab="description">
+      {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
+      {{editor enrichedDescription target="system.description" engine="prosemirror" button=true editable=editable}}
+    </div>
+
+    {{!-- Ability Tab --}}
+    <div class="tab" data-group="primary" data-tab="ability">
+      <div class="items-list">
+        {{#each itemTypes.ability as |item|}}
+        {{> "systems/heart/templates/item/parts/item-ability.hbs" item=item}}
+        {{/each}}
+      </div>
+    </div>
+
+    {{!-- Questions Tab --}}
+    <div class="tab" data-group="primary" data-tab="questions">
+      <ul>
+      {{#each item.system.questions as |question|}}
+      <li><div class="question">{{question}}</div></li>
+      {{/each}}
+      </ul>
+    </div>
+
+    {{!-- Beats Tab --}}
+    <div class="tab beats" data-group="primary" data-tab="beats">
+      <div class="items-list">
+      {{#each itemTypes.beat as |item| }}
+        {{> "systems/heart/templates/item/parts/item-beat.hbs" item=item}}
+      {{/each}}
+      </div>
+    </div>
+  </section>
+
+</form>

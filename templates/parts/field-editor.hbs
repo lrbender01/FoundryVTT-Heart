@@ -1,0 +1,4 @@
+{{#> "systems/heart/templates/parts/base-field.hbs" field=field editable=editable css="full-width"}}
+    {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
+    {{editor field.enriched target=field.schema.fieldPath engine="prosemirror" button=true editable=editable}}
+{{/ "systems/heart/templates/parts/base-field.hbs"}}

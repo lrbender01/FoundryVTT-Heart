@@ -1,0 +1,20 @@
+{
+    "_id": "mefw0aooy8yhut3g",
+    "name": "HEART.Item.fallout.eyes.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.eyes.description",
+        "resistance": "echo",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!mefw0aooy8yhut3g",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

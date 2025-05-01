@@ -1,0 +1,18 @@
+{
+    "_id": "4lfvkedyg9ir4cng",
+    "name": "HEART.Item.tag.double_barreled.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.double_barreled.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!4lfvkedyg9ir4cng",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

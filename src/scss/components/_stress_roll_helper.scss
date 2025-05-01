@@ -1,0 +1,70 @@
+@use '../utils/theme';
+
+.grid.grid-2col {
+    gap: 0 1em;
+}
+
+label, select, input, .checkbox, .preview {
+    border: 2px solid theme.$color;
+}
+
+.preview {
+    text-align: center;
+    font-family: theme.$primary-font;
+    background: theme.$background-color;
+    font-size: 1.5em;
+    min-height: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+label {
+    background: theme.$background-color-invert;
+    color: theme.$title-color-invert;
+    font-family: theme.$primary-font;
+    font-size: 1.2em;
+    border-radius: theme.$padding-small theme.$padding-small 0 0;
+    padding: theme.$padding-small;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+select, .checkbox {
+    background: theme.$background-color;
+    color: theme.$color;
+    font-family: theme.$primary-font;
+    border-radius: 0 0 theme.$padding-small theme.$padding-small;
+    border-top: 0;
+    text-align: center;
+}
+
+.checkbox {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+*:has(.fas.fa-triangle-exclamation) {
+    position: relative;
+}
+
+.fas.fa-triangle-exclamation {
+    position: absolute;
+    left: theme.$padding-small;
+}
+
+button {
+    background-color: theme.$background-color-invert;
+    color: theme.$title-color-invert;
+    padding: theme.$padding-small;
+    border: 2px solid theme.$color;
+    font-family: theme.$primary-font;
+}
+
+.window-title {
+    font-family: theme.$primary-font;
+}

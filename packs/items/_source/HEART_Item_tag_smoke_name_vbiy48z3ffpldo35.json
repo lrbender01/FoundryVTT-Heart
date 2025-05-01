@@ -1,0 +1,18 @@
+{
+    "_id": "vbiy48z3ffpldo35",
+    "name": "HEART.Item.tag.smoke.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.smoke.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!vbiy48z3ffpldo35",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

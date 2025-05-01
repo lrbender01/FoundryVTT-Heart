@@ -1,0 +1,20 @@
+{
+    "_id": "6j1ec2k3btrr6z9t",
+    "name": "HEART.Item.fallout.follower.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.follower.description",
+        "resistance": "echo",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!6j1ec2k3btrr6z9t",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

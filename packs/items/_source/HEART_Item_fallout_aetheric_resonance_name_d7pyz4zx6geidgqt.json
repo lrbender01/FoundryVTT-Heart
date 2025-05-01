@@ -1,0 +1,20 @@
+{
+    "_id": "d7pyz4zx6geidgqt",
+    "name": "HEART.Item.fallout.aetheric_resonance.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.aetheric_resonance.description",
+        "resistance": "mind",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!d7pyz4zx6geidgqt",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

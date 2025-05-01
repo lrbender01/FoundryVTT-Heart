@@ -1,0 +1,20 @@
+{
+    "_id": "o9zngfeja9dy9usw",
+    "name": "HEART.Item.fallout.the_road_less_travelled.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.the_road_less_travelled.description",
+        "resistance": "fortune",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!o9zngfeja9dy9usw",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

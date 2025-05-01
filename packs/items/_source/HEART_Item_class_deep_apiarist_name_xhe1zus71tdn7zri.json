@@ -1,0 +1,740 @@
+{
+    "_id": "xhe1zus71tdn7zri",
+    "name": "HEART.Item.class.deep_apiarist.name",
+    "type": "class",
+    "system": {
+        "domain": "occult",
+        "skill": "mend",
+        "description": "HEART.Item.class.deep_apiarist.description",
+        "items": [
+            {
+                "_id": "qx3nr5kqi7fmr6xz",
+                "type": "resource",
+                "name": "HEART.Item.resource.heartsbloom_rose_in_a_glass_jar.name",
+                "system": {
+                    "die_size": 6,
+                    "domain": "occult",
+                    "items": [
+                        {
+                            "_id": "sdk7tatr338cfx12",
+                            "name": "HEART.Item.tag.fragile.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.fragile.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!92652pitzecon4t5",
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "iocevluzfsl21e37",
+                "name": "HEART.Item.ability.the_hive.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.the_hive.description",
+                    "type": "core",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "quauwtaqh6m37r2w",
+                "name": "HEART.Item.ability.release_the_swarm.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.release_the_swarm.description",
+                    "type": "core",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "kh3mnc2rj0gnvi3z",
+                "name": "HEART.Item.ability.perfect_machine.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.perfect_machine.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "m5tt4y2zlh7qyoiz",
+                "name": "HEART.Item.ability.apisambulation.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.apisambulation.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "4nsxooweu8ggfrsl",
+                "name": "HEART.Item.ability.hiveborn.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.hiveborn.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "x6mukvst8nxfcqgr",
+                "name": "HEART.Item.ability.hunter_of_the_damned.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.hunter_of_the_damned.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "e8mqeldauxi0m5oa",
+                "name": "HEART.Item.ability.intoxicant.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.intoxicant.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "tagn9y0jaw36n0q1",
+                "name": "HEART.Item.ability.intrusion.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.intrusion.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "ac73yoydtc8qlqmq",
+                "name": "HEART.Item.ability.many_eyes.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.many_eyes.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "q3xo6unrhbnb74vx",
+                "name": "HEART.Item.ability.perfect_structure.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.perfect_structure.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "d5d9vc77q56gvtcj",
+                "name": "HEART.Item.ability.thrice_warded.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.thrice_warded.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "wtofuqd5iarxvwku",
+                "name": "HEART.Item.ability.uncanny_biology.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.uncanny_biology.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "aaar50eve07jxhkt",
+                "name": "HEART.Item.ability.waxen_sigils.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.waxen_sigils.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "zss1hn6k5vfvtq21",
+                "name": "HEART.Item.ability.whispers_of_the_hive.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.whispers_of_the_hive.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "rkkcfhbt5aeoy0qk",
+                "name": "HEART.Item.ability.wisdom_flows_so_sweet.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.wisdom_flows_so_sweet.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "y0d872fqjpbdnmon",
+                "name": "HEART.Item.ability.annihilation.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.annihilation.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "tc15vrzh4empxelz",
+                            "name": "HEART.Item.ability.blossom_within_the_skull.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.blossom_within_the_skull.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "zvxp6f125nkbzl5v",
+                            "name": "HEART.Item.ability.dark_flowers.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.dark_flowers.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "2mn635hepx22lvja",
+                            "name": "HEART.Item.ability.that_which_is_golden.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.that_which_is_golden.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "tvlp06613p9lre8z",
+                "name": "HEART.Item.ability.blessed_toxin.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.blessed_toxin.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "kav6p9njm2mfj36i",
+                            "name": "HEART.Item.ability.fearless.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.fearless.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "cu6wxffccr4nv8eh",
+                            "name": "HEART.Item.ability.painless.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.painless.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "le4d6wfabprmro9u",
+                            "name": "HEART.Item.ability.bloodless.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.bloodless.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "fz0wyt4furgqljeg",
+                "name": "HEART.Item.ability.delirium_spike.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.delirium_spike.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "p3dmlcnh4qghgw6p",
+                            "name": "HEART.Item.ability.imperfect_balance.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.imperfect_balance.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "dy41a2t5njd7o52o",
+                            "name": "HEART.Item.ability.venomous_hex.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.venomous_hex.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "j4p3ntcqcff0if62",
+                            "name": "HEART.Item.ability.inquisitive_burrowers.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.inquisitive_burrowers.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "6b6glsrc6ytnkjan",
+                "name": "HEART.Item.ability.sacred_geometry.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.sacred_geometry.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "a1gfhuo7b2wjwdad",
+                            "name": "HEART.Item.ability.majestic.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.majestic.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "iux0f6tw5vl6blxk",
+                            "name": "HEART.Item.ability.pristine.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.pristine.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "87apyhwh38eja7xv",
+                            "name": "HEART.Item.ability.regal.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.regal.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "gcqcpzpna986zjxn",
+                "name": "HEART.Item.ability.unchaos.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.unchaos.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "lq3vlqdy1td8uf7k",
+                            "name": "HEART.Item.ability.stabilisation.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.stabilisation.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "4xvjzkfgb5ss3a3a",
+                            "name": "HEART.Item.ability.perfection.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.perfection.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "rwkmlvdf94o5v1mv",
+                            "name": "HEART.Item.ability.filed_away.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.filed_away.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "fpg7jb1tns4gt8su",
+                "name": "HEART.Item.ability.absolute_stasis.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.absolute_stasis.description",
+                    "type": "zenith",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "lq6ungwwtjbdz3y4",
+                "name": "HEART.Item.ability.dimensional_bastion.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.dimensional_bastion.description",
+                    "type": "zenith",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "aumgizanig6lh23j",
+                "name": "HEART.Item.ability.surrender_to_chaos.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.surrender_to_chaos.description",
+                    "type": "zenith",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "fi94yn2nq4mdahsk",
+                "name": "HEART.Item.equipment.hive_tool.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 4,
+                    "type": "kill",
+                    "resistances": [],
+                    "items": [
+                        {
+                            "_id": "ypn1l7lj3l9yzwpb",
+                            "name": "HEART.Item.tag.brutal.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.brutal.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!xucjrfv4d6c7b07t",
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "core"
+                    }
+                }
+            },
+            {
+                "_id": "vosqq2ui5tn3m3qz",
+                "name": "HEART.Item.equipment.dimensional_barometer.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 6,
+                    "type": "delve",
+                    "resistances": [],
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_1"
+                    }
+                }
+            },
+            {
+                "_id": "u3pnqal8cuaatrjx",
+                "name": "HEART.Item.equipment.hunting_rifle.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 6,
+                    "type": "kill",
+                    "resistances": [],
+                    "items": [
+                        {
+                            "_id": "3ygujvamgt5exttt",
+                            "name": "HEART.Item.tag.reload.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.reload.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!7mtkpatwitt26yfg",
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "r2pjpblvmi26w7g9",
+                            "name": "HEART.Item.tag.extreme_range.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.extreme_range.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!u612gqk05ir32bai",
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_2"
+                    }
+                }
+            },
+            {
+                "_id": "s778r5mk5leb0ypy",
+                "name": "HEART.Item.equipment.smoker.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 4,
+                    "type": "kill",
+                    "resistances": [],
+                    "items": [
+                        {
+                            "_id": "trbwglns7l9cypkc",
+                            "name": "HEART.Item.tag.debilitating.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.debilitating.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!x1oj01fb3ncmgdtj",
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "4fg0dlxn70ll50nd",
+                            "name": "HEART.Item.tag.smoke.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.smoke.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!vbiy48z3ffpldo35",
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_3"
+                    }
+                }
+            }
+        ],
+        "effects": [],
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!xhe1zus71tdn7zri",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PuDcAMGqYcI8YivV",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

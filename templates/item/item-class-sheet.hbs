@@ -1,0 +1,86 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}"/>
+    <div class="header-fields">
+      <div class="badge-list">
+        <div class="badge">
+          <label for="system.domain">{{localize "HEART.Domain.label"}}</label>
+          {{#if editable}}
+          <select name="system.domain">
+            {{selectOptions domains localize=true selected=item.system.domain}}
+          </select>
+          {{else}}
+          <span class="badge-invert">{{domain_label}}</span>
+          {{/if}}
+        </div>
+        <div class="badge">
+          <label for="system.type">{{localize "HEART.Skill.label"}}</label>
+          {{#if editable}}
+          <select name="system.type">
+            {{selectOptions skills localize=true selected=item.system.skill}}
+          </select>
+          {{else}}
+          <span class="badge-invert">{{skill_label}}</span>
+          {{/if}}
+        </div>
+      </div>
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Name"/></h1>
+    </div>
+  </header>
+
+  {{!-- Sheet Tab Navigation --}}
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="description">{{localize "HEART.description"}}</a>
+    <a class="item" data-tab="equipment">{{localize "HEART.Item.equipment.label-plural"}}</a>
+    <a class="item" data-tab="resources">{{localize "HEART.Item.resource.label-plural"}}</a>
+    <a class="item" data-tab="abilities">{{localize "HEART.Item.ability.label-plural"}}</a>
+    <a class="item" data-tab="effects">effects</a>
+  </nav>
+
+  {{!-- Sheet Body --}}
+  <section class="sheet-body">
+
+    {{!-- Description Tab --}}
+    <div class="tab" data-group="primary" data-tab="description">
+      {{!-- Editors must receive enriched text data from getData to properly handle rolls --}}
+      {{editor enrichedDescription target="system.description" engine="prosemirror" button=true editable=editable}}
+    </div>
+
+    {{!-- Equipment Tab --}}
+    <div class="tab" data-group="primary" data-tab="equipment">
+      <div>
+        {{#each core_equipment as |equipment i|}}
+        {{> "systems/heart/templates/item/parts/item-equipment.hbs" item=equipment target=(concat "system.core_equipment." i)}}
+        {{/each}}
+      </div>
+      <div>
+        {{#each equipment_groups as |group i|}}
+          <div>
+          {{#each group as |equipment j|}}
+          {{> "systems/heart/templates/item/parts/item-equipment.hbs" item=equipment target=(concat "system.equipment_groups." i "." j)}}
+          {{/each}}
+          </div>
+        {{/each}}
+      </div>
+    </div>
+
+    {{!-- Resource Tab --}}
+    <div class="tab" data-group="primary" data-tab="resources">
+      {{#each resources as |resource key|}}
+      {{> "systems/heart/templates/item/parts/item-resource.hbs" item=resource target=(concat "system.items." key )}}
+      {{/each}}
+    </div>
+
+    {{!-- Abilities Tab --}}
+    <div class="tab" data-group="primary" data-tab="abilities">
+        {{#each abilities as |ability key|}}
+        {{> "systems/heart/templates/item/parts/item-ability.hbs" item=ability target=(concat "system.items." key )}}
+        {{/each}}
+    </div>
+
+    {{!-- Active Effects Tab --}}
+    <div class="tab effects flexcol" data-group="primary" data-tab="effects">
+      {{> "systems/heart/templates/item/parts/item-effects.hbs" effects=effects}}
+    </div>
+  </section>
+</form>

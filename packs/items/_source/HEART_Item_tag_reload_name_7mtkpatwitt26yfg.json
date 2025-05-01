@@ -1,0 +1,18 @@
+{
+    "_id": "7mtkpatwitt26yfg",
+    "name": "HEART.Item.tag.reload.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.reload.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!7mtkpatwitt26yfg",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

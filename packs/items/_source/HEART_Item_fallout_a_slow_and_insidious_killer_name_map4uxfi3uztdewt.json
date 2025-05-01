@@ -1,0 +1,20 @@
+{
+    "_id": "map4uxfi3uztdewt",
+    "name": "HEART.Item.fallout.a_slow_and_insidious_killer.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.a_slow_and_insidious_killer.description",
+        "resistance": "fortune",
+        "type": "critical",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!map4uxfi3uztdewt",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

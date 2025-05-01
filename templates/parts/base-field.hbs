@@ -1,0 +1,6 @@
+{{#if (or viewMode field.value) }}
+<div class="field {{css}}" data-field="{{field.schema.name}}">
+    <label>{{localize field.schema.label}}</label>
+    {{> @partial-block}}
+</div>
+{{/if}}

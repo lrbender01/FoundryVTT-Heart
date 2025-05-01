@@ -1,0 +1,18 @@
+{
+    "_id": "h0321jiq5f67x6u7",
+    "name": "HEART.Item.tag.volatile.name",
+    "type": "tag",
+    "system": {
+        "description": "HEART.Item.tag.volatile.description",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!h0321jiq5f67x6u7",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PTk4NMDzwQq2Ydrp",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

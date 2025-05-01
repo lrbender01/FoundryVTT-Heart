@@ -1,0 +1,20 @@
+{
+    "_id": "b80t3mjxsdhyrou9",
+    "name": "HEART.Item.fallout.the_hard_way.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.the_hard_way.description",
+        "resistance": "fortune",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!b80t3mjxsdhyrou9",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

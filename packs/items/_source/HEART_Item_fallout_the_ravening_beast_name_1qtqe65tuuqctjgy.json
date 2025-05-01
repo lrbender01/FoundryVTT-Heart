@@ -1,0 +1,20 @@
+{
+    "_id": "1qtqe65tuuqctjgy",
+    "name": "HEART.Item.fallout.the_ravening_beast.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.the_ravening_beast.description",
+        "resistance": "echo",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!1qtqe65tuuqctjgy",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

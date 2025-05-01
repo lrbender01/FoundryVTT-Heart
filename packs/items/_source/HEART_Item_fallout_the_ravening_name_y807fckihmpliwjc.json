@@ -1,0 +1,20 @@
+{
+    "_id": "y807fckihmpliwjc",
+    "name": "HEART.Item.fallout.the_ravening.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.the_ravening.description",
+        "resistance": "echo",
+        "type": "critical",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!y807fckihmpliwjc",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

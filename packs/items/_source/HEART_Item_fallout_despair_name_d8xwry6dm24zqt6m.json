@@ -1,0 +1,20 @@
+{
+    "_id": "d8xwry6dm24zqt6m",
+    "name": "HEART.Item.fallout.despair.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.despair.description",
+        "resistance": "mind",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!d8xwry6dm24zqt6m",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

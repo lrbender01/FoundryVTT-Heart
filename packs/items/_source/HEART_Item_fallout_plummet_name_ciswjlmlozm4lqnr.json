@@ -1,0 +1,20 @@
+{
+    "_id": "ciswjlmlozm4lqnr",
+    "name": "HEART.Item.fallout.plummet.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.plummet.description",
+        "resistance": "supplies",
+        "type": "critical",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!ciswjlmlozm4lqnr",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

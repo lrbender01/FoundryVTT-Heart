@@ -1,0 +1,9 @@
+{{#> "systems/heart/templates/parts/base-field.hbs" field=field editable=editable}}
+    {{#if field.schema.choices}}
+        <select name="{{field.schema.fieldPath}}">
+            {{selectOptions field.schema.choiceLabels localize=true selected=field.value}}
+        </select>
+    {{else}}
+        <input type="number" name="{{field.schema.fieldPath}}" value="{{field.value}}">
+    {{/if}}
+{{/ "systems/heart/templates/parts/base-field.hbs"}}

@@ -1,0 +1,20 @@
+{
+    "_id": "4lmddg8va7v81qid",
+    "name": "HEART.Item.fallout.critical_injury.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.critical_injury.description",
+        "resistance": "blood",
+        "type": "major",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!4lmddg8va7v81qid",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

@@ -1,0 +1,220 @@
+@use "../utils/theme";
+
+// Section Header
+.items-header {
+  height: 28px;
+  margin: 2px 0;
+  padding: 0;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  border: 2px groove #eeede0;
+  font-weight: bold;
+  > * {
+    font-size: 14px;
+    text-align: center;
+  }
+  .item-name {
+    font-weight: bold;
+    padding-left: 5px;
+    text-align: left;
+    display: flex;
+    // font-size: 16px;
+  }
+}
+
+// -----------------------------------------
+// Items Lists
+// -----------------------------------------
+
+.items-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+
+  // Child lists
+  .item-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  // Item Name
+  .item-name {
+    color: theme.$title-color;
+    flex: 2;
+    margin: 0;
+    overflow: hidden;
+    font-size: 13px;
+    text-align: left;
+    align-items: center;
+    display: flex;
+    h3, h4 {
+      margin: 0;
+      white-space: nowrap;
+      overflow-x: hidden;
+    }
+  }
+
+  // Control Buttons
+  .item-controls {
+    order: -1;
+    display: inline-flex;
+    float: right;
+    justify-content: flex-end;
+    a {
+      font-size: 12px;
+      text-align: center;
+      margin: 0 6px;
+    }
+  }
+
+  // Individual Item
+  .item {
+    &:hover {
+      background: #FFF0F0;
+    }
+
+    .title {
+      color: theme.$title-color;
+      font-family: theme.$primary-font;
+    }
+
+    flex-flow: wrap;
+    align-items: center;
+    background: theme.$background-color;
+    padding: 0.5em; 
+    .item-name {
+      color: var(--heart-black);
+      .item-image {
+        flex: 0 0 30px;
+        height: 30px;
+        background-size: 30px;
+        border: none;
+        margin-right: 5px;
+      }
+    }
+
+    .badges {
+      float: right;
+      display: inline-flex;
+      order: -2;
+      justify-content: flex-end;
+
+      .badge {
+        background: theme.$background-color-invert;
+        color: theme.$title-color-invert;
+        font-family: theme.$primary-font;
+        padding: 2px 5px;
+        border-radius: 3px;
+      }
+    }
+
+    &.part {
+      border: 2px solid theme.$title-color;
+      border-radius: 4px;
+    }
+  }
+
+  .item-prop {
+    text-align: center;
+    border-left: 1px solid #c9c7b8;
+    border-right: 1px solid #c9c7b8;
+    font-size: 12px;
+  }
+
+  // Section Header
+  .items-header {
+    height: 28px;
+    margin: 2px 0;
+    padding: 0;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.05);
+    border: 2px groove #eeede0;
+    font-weight: bold;
+    > * {
+      font-size: 12px;
+      text-align: center;
+    }
+    .item-name {
+      padding-left: 5px;
+      text-align: left;
+      // font-size: 16px;
+    }
+  }
+}
+
+// Example style for Heart (can be removed if not needed).
+.item-formula {
+  
+  flex: 0 0 200px;
+  padding: 0 8px;
+}
+
+.item-placeholder {
+  color: theme.$color;
+  font-family: theme.$primary-font;
+  border: 2px dotted;
+  padding: 0.5em;
+  border-radius: 0.25em;
+  display: flex;
+  justify-content: center;
+  gap: 2em;
+
+  &:hover {
+    cursor: pointer;
+    border-color: theme.$title-color;
+    color: theme.$title-color;
+    background: #FFF0F0;
+  }
+}
+
+h2 {
+  font-family: theme.$primary-font;
+  color: theme.$title-color;
+}
+
+.attribute-list {
+  padding: 0.5em;
+  border: 2px solid theme.$title-color;
+  border-radius: 4px;
+  background: theme.$background-color-invert;
+  color: theme.$title-color-invert;
+
+  h2 {
+    color: inherit;
+    border: 0;
+  }
+}
+
+.resistance-list {
+  background: theme.$color;
+  color: theme.$title-color-invert;
+  gap: 0;
+  padding: theme.$padding-medium;
+  border-radius: theme.$padding-small;
+  margin: 0;
+
+  .tally {
+    float: right;
+  }
+
+  .protection {
+    padding: 0 theme.$padding-medium;
+  }
+
+  .stress-total {
+    background: theme.$background-color;
+    color: theme.$color;
+  }
+
+  .stress-total, .stress {
+    padding: theme.$padding-small theme.$padding-medium;
+    border-radius: theme.$padding-medium;
+  }
+
+  .title {
+    font-family: theme.$primary-font;
+  }
+}

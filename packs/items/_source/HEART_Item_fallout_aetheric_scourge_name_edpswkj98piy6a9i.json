@@ -1,0 +1,20 @@
+{
+    "_id": "edpswkj98piy6a9i",
+    "name": "HEART.Item.fallout.aetheric_scourge.name",
+    "type": "fallout",
+    "system": {
+        "description": "HEART.Item.fallout.aetheric_scourge.description",
+        "resistance": "echo",
+        "type": "minor",
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!edpswkj98piy6a9i",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "HICGVPy1oOIhaNsF",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}

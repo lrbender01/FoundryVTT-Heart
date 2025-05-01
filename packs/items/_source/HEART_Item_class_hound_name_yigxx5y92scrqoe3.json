@@ -1,0 +1,733 @@
+{
+    "_id": "yigxx5y92scrqoe3",
+    "name": "HEART.Item.class.hound.name",
+    "type": "class",
+    "system": {
+        "domain": "haven",
+        "skill": "hunt",
+        "description": "HEART.Item.class.hound.description",
+        "items": [
+            {
+                "_id": "lgpu0yedh7jj3vnq",
+                "type": "resource",
+                "name": "HEART.Item.resource.bottle_of_rotgut_liquor.name",
+                "system": {
+                    "die_size": 6,
+                    "domain": "haven",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "fp8sis6akbm2nlzj",
+                "name": "HEART.Item.ability.in_the_thick_of_it.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.in_the_thick_of_it.description",
+                    "type": "core",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "3qw3nmfkmq13z7lr",
+                "name": "HEART.Item.ability.advanced_training.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.advanced_training.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "huapyio4xjehpnja",
+                "name": "HEART.Item.ability.the_better_part_of_valour.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.the_better_part_of_valour.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "9l37hcp0z5q3meqg",
+                "name": "HEART.Item.ability.close_quarters.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.close_quarters.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "93at8w8tlpielgjj",
+                "name": "HEART.Item.ability.custodian.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.custodian.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "q6bzk2w4v1d9ap6j",
+                "name": "HEART.Item.ability.echoes_of_the_33rd.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.echoes_of_the_33rd.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "g6ba3ohidb9tlnea",
+                "name": "HEART.Item.ability.kill_count.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.kill_count.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "dvs83ngp2pcu6qi6",
+                "name": "HEART.Item.ability.liquid_courage.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.liquid_courage.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "vgnpiu8m41kd3d3q",
+                "name": "HEART.Item.ability.marshal.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.marshal.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "oiaa8keu1feo9ig2",
+                "name": "HEART.Item.ability.our_glorious_lady.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.our_glorious_lady.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "k0hs0tjzrf2j50t8",
+                "name": "HEART.Item.ability.quartermaster_training.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.quartermaster_training.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "3brl6b2rbxxty0cx",
+                "name": "HEART.Item.ability.round_the_next_corner.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.round_the_next_corner.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "23yme7zut7xh3hle",
+                "name": "HEART.Item.ability.sergeant.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.sergeant.description",
+                    "type": "minor",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "gc3xxn0ia8z9jiuc",
+                "name": "HEART.Item.ability.condemn.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.condemn.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "9pu7buaopf4xoal3",
+                            "name": "HEART.Item.ability.judge.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.judge.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "13k85x392zemjx8x",
+                            "name": "HEART.Item.ability.jury.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.jury.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "u5clrbqrgsc86af8",
+                            "name": "HEART.Item.ability.executioner.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.executioner.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "aptbvqopg8q7ccy9",
+                "name": "HEART.Item.ability.forewarned_and_forearmed.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.forewarned_and_forearmed.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "3siumylk90t96gdq",
+                            "name": "HEART.Item.ability.double_duty.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.double_duty.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "6792860clo46reqv",
+                            "name": "HEART.Item.ability.encampment.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.encampment.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "7tjiddzkw8nsv2ez",
+                            "name": "HEART.Item.ability.emergency_supplies.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.emergency_supplies.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "xtazs0p3p8u6nn6j",
+                "name": "HEART.Item.ability.stare_down.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.stare_down.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "iu610v7p9zce3rai",
+                            "name": "HEART.Item.ability.legendary.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.legendary.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "0fg05e9js5iremf8",
+                            "name": "HEART.Item.ability.nose_to_nose.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.nose_to_nose.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "so88kp6n2ws3p7s2",
+                            "name": "HEART.Item.ability.no_sympathy.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.no_sympathy.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "et5auzsmb4l2fplw",
+                "name": "HEART.Item.ability.trench_fighter.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.trench_fighter.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "s7se8xg9cobrvqbw",
+                            "name": "HEART.Item.ability.over_the_top.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.over_the_top.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "zpcl7zr72b9c9muf",
+                            "name": "HEART.Item.ability.keep_smiling.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.keep_smiling.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "t4ug7gsb8iw4603k",
+                            "name": "HEART.Item.ability.homecoming.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.homecoming.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "k7uvgig8pislbqx5",
+                "name": "HEART.Item.ability.unstoppable.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.unstoppable.description",
+                    "type": "major",
+                    "items": [
+                        {
+                            "_id": "g6k56qn7dle274o4",
+                            "name": "HEART.Item.ability.limping_onward.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.limping_onward.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "8utt6m7v3np3ugc7",
+                            "name": "HEART.Item.ability.scars_like_medals.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.scars_like_medals.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "q12va0uhnys9achp",
+                            "name": "HEART.Item.ability.on_your_feet.name",
+                            "type": "ability",
+                            "system": {
+                                "description": "HEART.Item.ability.on_your_feet.description",
+                                "type": "minor",
+                                "items": [],
+                                "model_version": "000"
+                            },
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "cmw7gjn2cvr43928",
+                "name": "HEART.Item.ability.everlasting_stand.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.everlasting_stand.description",
+                    "type": "zenith",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "4ttnrhgk7bogsq80",
+                "name": "HEART.Item.ability.fulcrum.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.fulcrum.description",
+                    "type": "zenith",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "sl86z3kppfgb2uhl",
+                "name": "HEART.Item.ability.incursion.name",
+                "type": "ability",
+                "system": {
+                    "description": "HEART.Item.ability.incursion.description",
+                    "type": "zenith",
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                }
+            },
+            {
+                "_id": "v0al6s4nwdo6qy9o",
+                "name": "HEART.Item.equipment.standard_issue_legrande_rifle.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 8,
+                    "type": "kill",
+                    "resistances": [],
+                    "items": [
+                        {
+                            "_id": "md29o20hlmk8shcp",
+                            "name": "HEART.Item.tag.ranged.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.ranged.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!sro4gij0p1nm6g4g",
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "hlgwbz0oykpu024g",
+                            "name": "HEART.Item.tag.piercing.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.piercing.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!jpu1ft5s7jmsgtd5",
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "4otd2ie6vkk1xjka",
+                            "name": "HEART.Item.tag.expensive.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.expensive.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!mqphzaum0slt2x65",
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_1"
+                    }
+                }
+            },
+            {
+                "_id": "j7qw6di5b8ne8ptq",
+                "name": "HEART.Item.equipment.repeater_sidearm.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 6,
+                    "type": "kill",
+                    "resistances": [],
+                    "items": [
+                        {
+                            "_id": "zmuslke530ajgngd",
+                            "name": "HEART.Item.tag.ranged.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.ranged.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!sro4gij0p1nm6g4g",
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "mxwgeqozdvfruj8t",
+                            "name": "HEART.Item.tag.brutal.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.brutal.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!xucjrfv4d6c7b07t",
+                            "ownership": {
+                                "default": 1
+                            }
+                        },
+                        {
+                            "_id": "bkms1p5izzcd4s01",
+                            "name": "HEART.Item.tag.reload.name",
+                            "type": "tag",
+                            "system": {
+                                "description": "HEART.Item.tag.reload.description",
+                                "model_version": "000"
+                            },
+                            "_key": "!items!7mtkpatwitt26yfg",
+                            "ownership": {
+                                "default": 1
+                            }
+                        }
+                    ],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_2"
+                    }
+                }
+            },
+            {
+                "_id": "y60my7d4a3uw4w4q",
+                "name": "HEART.Item.equipment.knife.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 6,
+                    "type": "kill",
+                    "resistances": [],
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_2"
+                    }
+                }
+            },
+            {
+                "_id": "oniily606ucfgn83",
+                "name": "HEART.Item.equipment.well_stocked_haversack.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 6,
+                    "type": "mend",
+                    "resistances": [
+                        "supplies"
+                    ],
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_3"
+                    }
+                }
+            },
+            {
+                "_id": "fc07tix9u9ndd6x1",
+                "name": "HEART.Item.equipment.cudgel.name",
+                "type": "equipment",
+                "system": {
+                    "description": "",
+                    "die_size": 6,
+                    "type": "kill",
+                    "resistances": [],
+                    "items": [],
+                    "model_version": "000"
+                },
+                "ownership": {
+                    "default": 1
+                },
+                "flags": {
+                    "heart": {
+                        "equipment_group": "group_3"
+                    }
+                }
+            }
+        ],
+        "effects": [],
+        "model_version": "000"
+    },
+    "effects": [],
+    "_key": "!items!yigxx5y92scrqoe3",
+    "ownership": {
+        "default": 1
+    },
+    "folder": "PuDcAMGqYcI8YivV",
+    "_stats": {
+        "coreVersion": "12.325"
+    }
+}
