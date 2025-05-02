@@ -26,6 +26,7 @@ export default class HeartActorBase extends HeartDataModel {
         .reduce((source, [version, migrator]) => {
           const out = migrator(source);
           out.model_version = version;
+          Object.assign(source, out);
           return out;
         }, source)
     );

@@ -1,4 +1,4 @@
-import Parser from "./heart-stress-roll-grammar.mjs";
+import Parser from "../grammars/heart-stress-roll-grammar.mjs";
 import HeartBaseRoll from "./roll-base.mjs";
 
 export default class HeartStressRoll extends HeartBaseRoll {

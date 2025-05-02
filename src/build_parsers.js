@@ -42,7 +42,7 @@ globSync("src/grammars/*.pegjs").forEach((path) => {
     Object.values(translations).forEach((translation) => {
       const tr = translation[key];
       if (tr !== undefined) {
-        output.push(`"${tr}"`);
+        output.push(`"${tr}"i`);
       }
     });
     const replacement = output.join(" / ");
@@ -55,7 +55,7 @@ globSync("src/grammars/*.pegjs").forEach((path) => {
     output: "source",
   });
 
-  const output_path = path.replace('src/grammars', 'module/rolls').replace('.pegjs', '.mjs');
+  const output_path = path.replace('src/grammars', 'module/grammars').replace('.pegjs', '.mjs');
 
   const { esm } = build(
     { buildESM: true },

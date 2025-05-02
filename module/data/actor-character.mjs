@@ -75,7 +75,7 @@ export default class HeartCharacter extends HeartActorBase {
     return schema;
   }
 
-  get migrations() {
+  static get migrations() {
     return migrations;
   }
 

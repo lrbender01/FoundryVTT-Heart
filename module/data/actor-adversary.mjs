@@ -39,7 +39,7 @@ export default class HeartAdversary extends HeartActorBase {
     return schema;
   }
 
-  get migrations() {
+  static get migrations() {
     return migrations;
   }
 }

@@ -37,7 +37,7 @@ export default class HeartDelve extends HeartActorBase {
     return schema;
   }
 
-  get migrations() {
+  static get migrations() {
     return migrations;
   }
 }

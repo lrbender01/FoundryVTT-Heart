@@ -33,6 +33,7 @@ export default class HeartItemBase extends PseudoDataModelMixin(HeartDataModel) 
         .reduce((source, [version, migrator]) => {
           const out = migrator(source);
           out.model_version = version;
+          Object.assign(source, out);
           return out;
         }, source)
     );

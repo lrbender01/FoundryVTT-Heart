@@ -7,15 +7,15 @@ Expression = _ critical:CriticalTerm? _ dice:DiceTerm _ resistance:ResistanceTer
   return parser._onExpression(critical, resistance, dice, text(), error);
 }
 
-StressTerm = "stress" ${HEART.StressRoll.formula}
-CriticalTerm = "critical" ${HEART.StressRoll.critical}
+StressTerm = "stress"i ${HEART.StressRoll.formula}
+CriticalTerm = "critical"i ${HEART.StressRoll.critical}
 
 ResistanceTerm = BloodTerm / EchoTerm / FortuneTerm / MindTerm / SuppliesTerm
-BloodTerm = ("blood" ${HEART.Resistance.types.blood}) { return { key: "blood", value: text() } }
-EchoTerm = ("echo" ${HEART.Resistance.types.echo}) { return { key: "echo", value: text() } }
-FortuneTerm = ("fortune" ${HEART.Resistance.types.fortune}) { return { key: "echo", value: text() } }
-MindTerm = ("mind" ${HEART.Resistance.types.mind}) { return { key: "mind", value: text() } }
-SuppliesTerm = ("supplies" ${HEART.Resistance.types.supplies}) { return { key: "supplies", value: text() } }
+BloodTerm = ("blood"i ${HEART.Resistance.types.blood}) { return { key: "blood", value: text() } }
+EchoTerm = ("echo"i ${HEART.Resistance.types.echo}) { return { key: "echo", value: text() } }
+FortuneTerm = ("fortune"i ${HEART.Resistance.types.fortune}) { return { key: "echo", value: text() } }
+MindTerm = ("mind"i ${HEART.Resistance.types.mind}) { return { key: "mind", value: text() } }
+SuppliesTerm = ("supplies"i ${HEART.Resistance.types.supplies}) { return { key: "supplies", value: text() } }
 
 DiceTerm = number:Constant? [dD] faces:Constant flavor:Flavor? {
   return parser._onDiceTerm(number, faces, flavor, text());

@@ -1,5 +1,5 @@
 import HeartActorBase from "./base-actor.mjs";
-import { DomainsField, RollDifficultyField, TierField, ResistanceValueField } from "./common.mjs";
+import { DomainsField, DieSizeField, TierField, ResistanceValueField } from "./common.mjs";
 import migrations from "./migrations/actor-landmark-migrations.mjs";
 
 export default class HeartLandmark extends HeartActorBase {
@@ -17,7 +17,7 @@ export default class HeartLandmark extends HeartActorBase {
     schema.special_rules = new fields.StringField({
       label: "HEART.Actor.landmark.special_rules",
     });
-    schema.base_stress = new RollDifficultyField();
+    schema.base_stress = new DieSizeField();
     schema.potential_plots = new fields.StringField({
       label: "HEART.Actor.landmark.potential_plots",
     });
@@ -25,7 +25,7 @@ export default class HeartLandmark extends HeartActorBase {
     return schema;
   }
 
-  get migrations() {
+  static get migrations() {
     return migrations;
   }
 }

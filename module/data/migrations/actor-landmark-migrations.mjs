@@ -1,11 +1,21 @@
+import DomainParser from "../../grammars/heart-domain.mjs";
+
 function migration000(source) {
-  const domains = [];
+  const domains = source.domains.split(/[, ]+/).map((domain) => {
+    try {
+      return DomainParser.parse(domain).domain.key;
+    } catch (err) {
+      return null
+    }
+  }).filter(x => x !== null);
   const tier = parseInt(source.tier) || 1;
   const resistance = source.resistance || 10;
   const description = source.description;
   const special_rules = source.specialRules;
-  const base_stress = source.stress;
+
+  const base_stress = parseInt(source.stress.replace(/[dD]/, ''));
   const potential_plots = source.potentialPlots;
+  
   return {
     domains,
     tier,
