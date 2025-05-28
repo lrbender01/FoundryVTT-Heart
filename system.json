@@ -22,8 +22,8 @@
   ],
   "version": "2.0.0",
   "compatibility": {
-    "minimum": 12,
-    "verified": "12.325"
+    "minimum": 13,
+    "verified": "13.344"
   },
   "esmodules": [
     "module/heart.mjs"
@@ -55,9 +55,9 @@
       {
         "id": "babele",
         "type": "module",
-        "manifest": "https://gitlab.com/riccisi/foundryvtt-babele/raw/2.6.2/module/module.json",
+        "manifest": "https://gitlab.com/riccisi/foundryvtt-babele/raw/2.7.3/module/module.json",
         "compatibility": {
-          "verified": "2.6.2"
+          "verified": "2.7.3"
         }
       }
     ]

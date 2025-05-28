@@ -9,7 +9,8 @@ import { HeartAddItemApplication } from "./applications/application-add-item.mjs
 import { HeartRollHelperApplication } from "./applications/application-roll-helper.mjs";
 import { HeartStressRollHelperApplication } from "./applications/application-stress-roll-helper.mjs";
 import { HeartFalloutRollHelperApplication } from "./applications/application-fallout-roll-helper.mjs";
-import { HeartSceneControls } from "./applications/application-scene-controls.mjs";
+// Import hooks
+import { getSceneControlButtons } from "./hooks/extra-scene-controls.mjs";
 // Import helper/utility classes and constants.
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { HEART } from "./helpers/config.mjs";
@@ -31,8 +32,6 @@ import {
 /* -------------------------------------------- */
 
 Hooks.once("init", function () {
-  // Add utility classes to the global game object so that they're more easily
-  // accessible in global contexts.
   game.heart = {
     HeartActor,
     HeartItem,
@@ -53,9 +52,6 @@ Hooks.once("init", function () {
   CONFIG.HEART.heart_roll_parser = HeartRollParser;
   CONFIG.HEART.heart_fallout_roll_parser = HeartFalloutRollParser;
   CONFIG.HEART.heart_stress_roll_parser = HeartStressRollParser;
-
-  canvas.heart = new PlaceablesLayer();
-  CONFIG.ui.controls = HeartSceneControls;
 
   // Define custom Document and DataModel classes
   CONFIG.Actor.documentClass = HeartActor;
@@ -143,16 +139,16 @@ Hooks.once("init", function () {
   CONFIG.ActiveEffect.legacyTransferral = false;
 
   CONFIG.Dice.rolls.push(HeartRoll, HeartStressRoll, HeartFalloutRoll);
-  CONFIG.ChatMessage.documentClass = HeartChatMessage;
+  // CONFIG.ChatMessage.documentClass = HeartChatMessage;
 
   // Register sheet application classes
-  Actors.unregisterSheet("core", ActorSheet);
-  Actors.registerSheet("heart", HeartActorSheet, {
+  foundry.documents.collections.Actors.unregisterSheet("core", foundry.appv1.sheets.ActorSheet);
+  foundry.documents.collections.Actors.registerSheet("heart", HeartActorSheet, {
     makeDefault: true,
     label: "HEART.SheetLabels.Actor",
   });
-  Items.unregisterSheet("core", ItemSheet);
-  Items.registerSheet("heart", HeartItemSheet, {
+  foundry.documents.collections.Items.unregisterSheet("core", foundry.appv1.sheets.ItemSheet);
+  foundry.documents.collections.Items.registerSheet("heart", HeartItemSheet, {
     makeDefault: true,
     label: "HEART.SheetLabels.Item",
   });
@@ -182,6 +178,8 @@ Handlebars.registerHelper("formGroupDocument", function (field, options = {}) {
 Handlebars.registerHelper("itemIcon", function (type) {
   return CONFIG.Item.typeIcons[type];
 });
+
+Hooks.on("getSceneControlButtons", getSceneControlButtons);
 
 /* -------------------------------------------- */
 /*  Ready Hook                                  */

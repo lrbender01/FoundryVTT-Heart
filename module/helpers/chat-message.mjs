@@ -1,7 +1,83 @@
 export class HeartChatMessage extends ChatMessage {
-  async getHTML() {
-    const html = await super.getHTML();
-    await this.activateListeners(html);
+  static get ACTIONS() {
+    const ACTIONS = super.ACTIONS;
+    ACTIONS["roll-stress"] = HeartChatMessage.rollStress;
+    ACTIONS["roll-fallout"] = HeartChatMessage.rollFallout;
+    ACTIONS["apply"] = HeartChatMessage.apply;
+    return ACTIONS;
+  }
+
+  static async rollStress(context) {
+    const ev = context.event;
+    const sheet = context.application;
+
+    const div = $(ev.currentTarget).parents(".dice-roll");
+    const roll_index = div.data("index");
+    const roll = sheet.rolls[roll_index];
+    if (roll) {
+      const app = new game.heart.HeartStressRollHelperApplication(
+        {},
+        {
+          critical:
+            roll.outcome == "critical_success" ||
+            roll.outcome === "critical_failure",
+        }
+      );
+      app.render(true);
+      roll.options.needs_stress_roll = false;
+      await this.update({
+        [`rolls.${roll_index}`]: await roll.toJSON(),
+      });
+      ui.chat.render();
+    }
+  }
+
+  static async rollFallout(context) {
+    const ev = context.event;
+    const sheet = context.application;
+
+    const div = $(ev.currentTarget).parents(".dice-roll");
+    const roll_index = div.data("index");
+    const roll = sheet.rolls[roll_index];
+    if (roll) {
+      const fallout_roll = new game.heart.HeartFalloutRoll(
+        `${roll.resistance.value} fallout`
+      );
+      await fallout_roll.toMessage();
+      roll.options.needs_fallout_roll = false;
+      await this.update({
+        [`rolls.${roll_index}`]: await roll.toJSON(),
+      });
+      ui.chat.render();
+    }
+  }
+
+  static async apply(context) {
+    const ev = context.event;
+    const sheet = context.application;
+
+    const div = $(ev.currentTarget).parents(".dice-roll");
+    const speaker = sheet.constructor.getSpeaker();
+    const actor = speaker.actor;
+    if (actor == null) {
+      ui.notifications.warn("HEART.Roll.warning-apply");
+      return;
+    }
+
+    const roll_index = div.data("index");
+    const roll = sheet.rolls[roll_index];
+    if (roll) {
+      await roll.applyToActor(actor);
+      await sheet.update({
+        [`rolls.${roll_index}`]: await roll.toJSON(),
+      });
+      ui.chat.render();
+    }
+  }
+
+  async renderHTML() {
+    const html = await super.renderHTML();
+    await this._onRender(html);
     return html;
   }
 
@@ -13,73 +89,13 @@ export class HeartChatMessage extends ChatMessage {
     return html;
   }
 
-  async activateListeners(html) {
-    html.find("button.data-action").click((ev) => {
-      ev.preventDefault();
-    });
-
-    html.find("[data-action=roll-stress]").click(async (ev) => {
-      ev.stopPropagation();
-
-      const div = $(ev.currentTarget).parents(".dice-roll");
-      const roll_index = div.data("index");
-      const roll = this.rolls[roll_index];
-      if (roll) {
-        const app = new game.heart.HeartStressRollHelperApplication(
-          {},
-          {
-            critical:
-              roll.outcome == "critical_success" ||
-              roll.outcome === "critical_failure",
-          }
-        );
-        app.render(true);
-        roll.options.needs_stress_roll = false;
-        await this.update({
-          [`rolls.${roll_index}`]: await roll.toJSON(),
-        });
-        ui.chat.render();
-      }
-    });
-
-    html.find("[data-action=roll-fallout]").click(async (ev) => {
-      ev.stopPropagation();
-
-      const div = $(ev.currentTarget).parents(".dice-roll");
-      const roll_index = div.data("index");
-      const roll = this.rolls[roll_index];
-      if (roll) {
-        const fallout_roll = new game.heart.HeartFalloutRoll(
-          `${roll.resistance.value} fallout`
-        );
-        await fallout_roll.toMessage();
-        roll.options.needs_fallout_roll = false;
-        await this.update({
-          [`rolls.${roll_index}`]: await roll.toJSON(),
-        });
-        ui.chat.render();
-      }
-    });
-
-    html.find("[data-action=apply]").click(async (ev) => {
-      ev.stopPropagation();
-      const div = $(ev.currentTarget).parents(".dice-roll");
-      const speaker = this.constructor.getSpeaker();
-      const actor = speaker.actor;
-      if (actor == null) {
-        ui.notifications.warn('HEART.Roll.warning-apply');
-        return;
-      }
-
-      const roll_index = div.data("index");
-      const roll = this.rolls[roll_index];
-      if (roll) {
-        await roll.applyToActor(actor);
-        await this.update({
-          [`rolls.${roll_index}`]: await roll.toJSON(),
-        });
-        ui.chat.render();
-      }
+  async _onRender(html) {
+    html.querySelectorAll(".data-action").forEach((element) => {
+      const action = element.dataset.action;
+      element.addEventListener("click", (event) => {
+        event.stopPropagation();
+        this.constructor.ACTIONS[action]({ event, application: this });
+      });
     });
   }
 }
