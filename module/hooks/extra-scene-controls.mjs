@@ -1,12 +1,14 @@
 export function getSceneControlButtons(controls) {
-  canvas.heart = new foundry.canvas.layers.PlaceablesLayer();
+  // canvas.heart = new foundry.canvas.layers.PlaceablesLayer();
 
   controls.heart = {
     active: false,
-    activeTool: "roll",
+    activeTool: "",
     icon: "fa-solid fa-heart-crack",
     layer: "heart",
     name: "heart",
+    onChange: (event, active) => {
+    },
     order: 0,
     title: "HEART.CONTROLS.Group",
     tools: {
@@ -16,8 +18,9 @@ export function getSceneControlButtons(controls) {
         title: "HEART.Application.roll-helper.title",
         icon: "fa-solid fa-dice-d20",
         // visible: isGM,
-        onClick: () =>
-          new game.heart.HeartRollHelperApplication().render(true),
+        onChange: (event, active) => {
+          if (active) new game.heart.HeartRollHelperApplication().render(true);
+        },
         button: true,
         visible: true,
       },
@@ -27,8 +30,10 @@ export function getSceneControlButtons(controls) {
         title: "HEART.Application.stress-roll-helper.title",
         icon: "fa-solid fa-person-harassing",
         // visible: isGM,
-        onClick: () =>
-          new game.heart.HeartStressRollHelperApplication().render(true),
+        onChange: (event, active) => {
+          if (active)
+            new game.heart.HeartStressRollHelperApplication().render(true);
+        },
         button: true,
         visible: true,
       },
@@ -37,8 +42,10 @@ export function getSceneControlButtons(controls) {
         name: "fallout",
         title: "HEART.Application.fallout-roll-helper.title",
         icon: "fa-solid fa-radiation",
-        onClick: () =>
-          new game.heart.HeartFalloutRollHelperApplication().render(true),
+        onChange: (event, active) => {
+          if (active)
+            new game.heart.HeartFalloutRollHelperApplication().render(true);
+        },
         button: true,
         visible: true,
       },

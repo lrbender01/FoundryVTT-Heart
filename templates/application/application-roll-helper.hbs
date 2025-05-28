@@ -1,7 +1,6 @@
 <form class="{{cssClass}} roll-helper" autocomplete="off">
     <div class="grid grid-{{num_inputs}}col">
         {{#each inputs as |input target|}}
-            {{log input target}}
             <label for="{{target}}">
                 {{localize input.label}}
                 {{#if (and input.required (not input.value)) }}
