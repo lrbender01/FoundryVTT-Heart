@@ -21,7 +21,8 @@
 }
 
 /* Styles limited to heart sheets */
-.heart {
+
+@layer applications {
   @include meta.load-css('components/forms');
   @include meta.load-css('components/resource');
   @include meta.load-css('components/items');

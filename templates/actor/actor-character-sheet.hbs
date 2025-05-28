@@ -1,14 +1,7 @@
 <form class="{{cssClass}} {{actor.type}} flexcol" autocomplete="off">
 
   {{!-- Sheet Header --}}
-  <header class="sheet-header">
-    <div class="header-fields">
-      <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name"/></h1>
-    </div>
-    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
-  </header>
-
-
+  {{> "systems/heart/templates/actor/parts/header.hbs" actor=actor}}
 
   <div>
     <div class="grid grid-2col">
@@ -206,11 +199,5 @@
         {{/each}}
       </div>
     </div>
-
-    {{!-- Active Effects Tab --}}
-    <div class="tab effects flexcol" data-group="primary" data-tab="effects">
-      {{> "systems/heart/templates/item/parts/item-effects.hbs" effects=effects}}
-    </div>
-
   </section>
 </form>

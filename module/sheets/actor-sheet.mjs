@@ -1,42 +1,149 @@
-import {
-  onManageActiveEffect,
-  prepareActiveEffectCategories,
-} from "../helpers/effects.mjs";
-
-/**
- * Extend the basic ActorSheet with some very simple modifications
- * @extends {ActorSheet}
- */
-export class HeartActorSheet extends ActorSheet {
-  /** @override */
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      classes: ["heart", "sheet", "actor"],
-      tabs: [
-        {
-          navSelector: ".sheet-tabs",
-          contentSelector: ".sheet-body",
-          initial: "features",
-        },
-      ],
-      viewMode: 0,
-    });
+export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicationMixin(
+  foundry.applications.sheets.ActorSheetV2
+) {
+  static get DEFAULT_OPTIONS() {
+    const DEFAULT_OPTIONS = super.DEFAULT_OPTIONS;
+    DEFAULT_OPTIONS.window.contentClasses= ["standard-form", "actor"];
+    return DEFAULT_OPTIONS;
   }
 
-  /** @override */
-  get template() {
-    return `systems/heart/templates/actor/actor-${this.actor.type}-sheet.hbs`;
+  static PARTS = {
+    header: {
+      template: "systems/heart/templates/actor/parts/header.hbs",
+    },
+    toolbar: {
+      template: "systems/heart/templates/actor/parts/toolbar.hbs",
+      templates: [
+        "systems/heart/templates/actor/parts/toolbar.hbs",
+        "systems/heart/templates/parts/view-mode.hbs",
+      ],
+    },
+    adversary_fields: {
+      template: "systems/heart/templates/actor/parts/adversary-fields.hbs",
+      templates: [
+        "systems/heart/templates/actor/parts/adversary-fields.hbs",
+        "systems/heart/templates/parts/field-number.hbs",
+        "systems/heart/templates/parts/field-string-array.hbs",
+        "systems/heart/templates/parts/field-string.hbs",
+      ],
+    },
+    delve_fields: {
+      template: "systems/heart/templates/actor/parts/delve-fields.hbs",
+      templates: [
+        "systems/heart/templates/parts/field-editor.hbs",
+        "systems/heart/templates/parts/field-number.hbs",
+        "systems/heart/templates/parts/field-string-array.hbs",
+      ],
+    },
+    landmark_fields: {
+      template: "systems/heart/templates/actor/parts/landmark-fields.hbs",
+      templates: [
+        "systems/heart/templates/parts/field-editor.hbs",
+        "systems/heart/templates/parts/field-number.hbs",
+        "systems/heart/templates/parts/field-string-array.hbs",
+        "systems/heart/templates/parts/field-string.hbs",
+      ],
+    },
+    items: {
+      template: "systems/heart/templates/parts/items.hbs",
+      templates: ["systems/heart/templates/item/parts/base-item-micro.hbs"],
+    },
+  };
+
+  static ACTIONS = {
+    "find-item": HeartActorSheet.findItem,
+    "create-item": HeartActorSheet.createItem,
+  };
+
+  static async findItem() {
+    event.preventDefault();
+    const header = event.currentTarget;
+    // Get the type of item to create.
+    const type = header.dataset.type;
+
+    game.heart.addItemMacro(this.actor, [type], []);
+  }
+  static async createItem() {}
+
+  _configureRenderParts(options) {
+    super._configureRenderParts(options);
+
+    const parts = ["header"];
+    if (this.isEditable) {
+      parts.push("toolbar");
+    }
+
+    switch (this.document.type) {
+      case "adversary":
+        parts.push("adversary_fields");
+        break;
+      case "delve":
+        parts.push("delve_fields");
+        break;
+      case "landmark":
+        parts.push("landmark_fields");
+        break;
+      default:
+        throw `Unexpected actor type ${this.document.type}`;
+    }
+
+    parts.push("items");
+    options.parts = parts;
+    return Object.fromEntries(parts.map((k) => [k, this.constructor.PARTS[k]]));
+  }
+
+  async _preparePartContext(partId, context) {
+    const actor = this.document;
+    async function updateFields() {
+      context.fields = {};
+      await Promise.all(
+        Object.values(actor.system.schema.fields).map(async (field) => {
+          const value = foundry.utils.getProperty(actor, field.fieldPath);
+          context.fields[field.name] = {
+            schema: field,
+            value: value,
+            enriched:
+              await foundry.applications.ux.TextEditor.implementation.enrichHTML(
+                value,
+                {
+                  // Whether to show secret blocks in the finished html
+                  secrets: actor.isOwner,
+                  // Data to fill in for inline rolls
+                  rollData: actor.getRollData(),
+                  // Relative UUID resolution
+                  relativeTo: actor,
+                }
+              ),
+          };
+        })
+      );
+    }
+
+    switch (partId) {
+      case "adversary_fields":
+        await updateFields();
+        break;
+      case "delve_fields":
+        await updateFields();
+        break;
+      case "landmark_fields":
+        await updateFields();
+        break;
+      case "items":
+        context.items = this.document.items;
+        break;
+      default:
+        break;
+    }
+
+    return context;
   }
 
   /* -------------------------------------------- */
 
   /** @override */
-  async getData() {
-    // Retrieve the data structure from the base sheet. You can inspect or log
-    // the context variable to see the structure, but some key properties for
-    // sheets are the actor object, the data object, whether or not it's
-    // editable, the items array, and the effects array.
-    const context = super.getData();
+  async _prepareContext(options) {
+    const context = super._prepareContext(options);
 
     // Use a safe clone of the actor data for further operations.
     const actorData = this.document.toPlainObject();
@@ -48,39 +155,12 @@ export class HeartActorSheet extends ActorSheet {
     // Adding a pointer to CONFIG.HEART
     context.config = CONFIG.HEART;
     context.viewMode = this.options.viewMode;
-
-    context.fields = {};
-    await Promise.all(Object.values(this.actor.system.schema.fields).map(async (field) => {
-      const value = foundry.utils.getProperty(this.actor, field.fieldPath);
-      context.fields[field.name] = {
-        schema: field,
-        value: value,
-        enriched: await TextEditor.enrichHTML(
-          value,
-          {
-            // Whether to show secret blocks in the finished html
-            secrets: this.document.isOwner,
-            // Data to fill in for inline rolls
-            rollData: this.actor.getRollData(),
-            // Relative UUID resolution
-            relativeTo: this.actor,
-          }
-        )
-      };
-    }));
+    context.actor = this.document;
 
     // Prepare character data and items.
     if (actorData.type == "character") {
-      this._prepareItems(context);
       this._prepareCharacterData(context);
     }
-
-    // Prepare active effects
-    context.effects = prepareActiveEffectCategories(
-      // A generator that returns all effects stored on the actor
-      // as well as any items
-      this.actor.allApplicableEffects()
-    );
 
     return context;
   }
@@ -143,124 +223,6 @@ export class HeartActorSheet extends ActorSheet {
       v -= 5;
     }
     context.tally.total.push(v);
-  }
-
-  /**
-   * Organize and classify Items for Actor sheets.
-   *
-   * @param {object} context The context object to mutate
-   */
-  _prepareItems(context) {}
-
-  /* -------------------------------------------- */
-
-  /** @override */
-  activateListeners(html) {
-    super.activateListeners(html);
-
-    // Render the item sheet for viewing/editing prior to the editable check.
-    html.on("click", ".item-edit", (ev) => {
-      const li = $(ev.currentTarget).parents(".item");
-      const item = this.actor.items.get(li.data("itemId"));
-      item.sheet.render(true);
-    });
-
-    // -------------------------------------------------------------
-    // Everything below here is only needed if the sheet is editable
-    if (!this.isEditable) return;
-
-    html.on("change", "input[name]", async (ev) => {
-      const input = $(ev.currentTarget);
-      let value = input.val();
-      if (input.attr("type") === "number") {
-        value = parseInt(value);
-      }
-
-      const output = await this.actor.update({ [input.attr("name")]: value });
-      return output;
-    });
-
-    // Add Inventory Item
-    html.on("click", ".item-create", this._onItemCreate.bind(this));
-
-    // Find and Add Item
-    html.on(
-      "click",
-      ".item-find,.item-placeholder",
-      this._onItemFind.bind(this)
-    );
-
-    html.on(
-      "click",
-      ".toggle-view-mode",
-      () => {
-        this.options.viewMode = 1 - this.options.viewMode;
-        this.render();
-      }
-    );
-
-    // Delete Inventory Item
-    html.on("click", ".item-delete", (ev) => {
-      const li = $(ev.currentTarget).parents(".item");
-      const item = this.actor.items.get(li.data("itemId"));
-      item.delete();
-      li.slideUp(200, () => this.render(false));
-    });
-
-    // Active Effect management
-    html.on("click", ".effect-control", (ev) => {
-      const row = ev.currentTarget.closest("li");
-      const document =
-        row.dataset.parentId === this.actor.id
-          ? this.actor
-          : this.actor.items.get(row.dataset.parentId);
-      onManageActiveEffect(ev, document);
-    });
-
-    // Rollable abilities.
-    html.on("click", ".rollable", this._onRoll.bind(this));
-
-    // Drag events for macros.
-    if (this.actor.isOwner) {
-      let handler = (ev) => this._onDragStart(ev);
-      html.find("li.item").each((i, li) => {
-        if (li.classList.contains("inventory-header")) return;
-        li.setAttribute("draggable", true);
-        li.addEventListener("dragstart", handler, false);
-      });
-    }
-
-    html.on("click", ".item", (ev) => {
-      const itemId = ev.currentTarget.dataset.itemId;
-
-      return this.actor.items.get(itemId)?.sheet.render(true);
-    });
-
-    html.on("click", ".field .add", async (ev) => {
-      const target = ev.currentTarget.dataset.target;
-      const field = this.actor.system.schema.getField(
-        target.replace(/^system\./, "")
-      );
-
-      const value = foundry.utils.getProperty(this.actor, target);
-      const new_value = [...value, field.element.options.initial];
-      await this.actor.update({
-        [target]: new_value,
-      });
-    });
-
-    html.on("click", ".field .remove", async (ev) => {
-      const target = ev.currentTarget.dataset.target;
-      const index = parseInt(ev.currentTarget.dataset.index);
-      
-      const value = foundry.utils.getProperty(this.actor, target);
-      let new_value = [...value];
-      new_value.splice(index, 1);
-
-      await this.actor.update({
-        [target]: new_value,
-      });
-    });
   }
 
   /**

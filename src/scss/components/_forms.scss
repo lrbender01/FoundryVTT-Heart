@@ -1,5 +1,9 @@
 @use "../utils/theme";
 
+.application {
+  background: rgba(255, 255, 255, 0.8);
+}
+
 .item-form {
   font-family: theme.$secondary-font;
 }
@@ -30,7 +34,7 @@
     padding-left: theme.$padding-medium;
   }
 
-  h1.charname {
+  h1.documentname {
     height: 50px;
     padding: 0px;
     margin: 5px 0;
@@ -81,6 +85,10 @@
    flex: 0 0 auto;
 }
 
+.field > * {
+   background: theme.$background-color;
+}
+
 .toolbar {
   flex: 0;
   display: flex;
@@ -98,6 +106,11 @@
 
   &.full-width {
     flex: 0 0 100%;
+  }
+
+  & > * {
+    color: theme.$color;
+    background: theme.$background-color;
   }
 
   &>label {
@@ -124,11 +137,6 @@
 
   &>label + input {
     width: 100%;
-    background: none;
-  }
-
-  &>label + select {
-    background: none;
   }
 
   &>.string-array {
