@@ -6,6 +6,18 @@ This is the source code the [Heart - The City Beneath](https://rowanrookanddecar
 
 This has been re-written from the ground up to work better for foundry v13.
 
+## WARNING
+
+This branch is NOT feature complete. 
+
+* [ ] Add reactivity to ActorSheets
+* [ ] Ensure that migration is fairly complete
+* [ ] Check that new roll grammars work as intended with V13
+* [ ] Add reactivity to ChatMessages
+* [ ] Cleanup old V11 + V12 code
+* [ ] Convert RollHelpers to ApplicationV2
+* [ ] Convert ItemSheet to ApplicationV2
+
 ## What's new?
 
 * [Custom Rolling Grammar](#custom-rolling-grammar) (e.g. `/roll delve + technology`)
@@ -35,7 +47,7 @@ New to this version is the ability to roll using a slightly more natural languag
   * `/roll [resistance] fallout`
     * e.g. `/roll blood fallout`
   
-# How do I make changes?
+## How do can I make my own changes to the system?
 
 Firstly, you'll need to clone the repo. If you aren't familiar with doing that, please [read the docs](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
 
