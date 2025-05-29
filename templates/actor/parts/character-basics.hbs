@@ -1,0 +1,17 @@
+<div class="items-list grid-2col">
+  {{#each itemTypes.class as |class|}}
+    {{> "systems/heart/templates/item/parts/base-item-micro.hbs" item=class  editable=../editable}}
+  {{/each}}
+  
+  {{#if (and (eq itemTypes.class.length 0) editable)}}
+    {{> "systems/heart/templates/item/parts/item-placeholder.hbs" type="class"}}
+  {{/if}}
+
+  {{#each itemTypes.calling as |calling|}}
+    {{> "systems/heart/templates/item/parts/base-item-micro.hbs" item=calling  editable=../editable}}
+  {{/each}}
+
+  {{#if (and (eq itemTypes.calling.length 0) editable)}}
+    {{> "systems/heart/templates/item/parts/item-placeholder.hbs" type="calling"}}
+  {{/if}}
+</div>

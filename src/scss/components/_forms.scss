@@ -19,6 +19,7 @@
   background: theme.$background-color-invert;
   padding: theme.$padding-medium;
   border-radius: theme.$padding-medium;
+  min-height: calc(100px + 2 * theme.$padding-medium);
 
   .profile-img {
     flex: 0 0 100px;
@@ -49,6 +50,10 @@
       background: none;
     }
   }
+}
+
+.actor {
+  overflow-y: auto;
 }
 
 .sheet-tabs {
@@ -93,6 +98,16 @@
   flex: 0;
   display: flex;
   justify-content: flex-end;
+  border-radius: theme.$padding-medium;
+  background: theme.$color;
+}
+
+.editor {
+  position: relative;
+  .editor-edit {
+    position: absolute;
+    right: theme.$padding-medium;
+  }
 }
 
 .fields, .toolbar {

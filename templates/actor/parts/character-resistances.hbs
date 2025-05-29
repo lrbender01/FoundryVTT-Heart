@@ -1,0 +1,26 @@
+<div class="resistance-list grid-2col">
+  <div class="stress-total">
+    <span class="title"> {{localize "HEART.Resistance.total"}}</span>
+      <span class="tally" title="{{actor.system.total_stress}}">
+      {{#each tally.total as |v|}}
+      <i class="fas fa-tally-{{v}}"></i>
+      {{/each}}
+      </span>
+  </div>
+  {{log "resistance" this}}
+  {{#each document.system.resistances as |resistance name|}}
+    <div class="stress">
+      <span class="title">{{localize (concat "HEART.Resistance.types." name)}}</span>
+      <span class="protection" title="{{resistance.protection}}">
+      {{#each (lookup ../protection name)}}
+      <i class="fas fa-shield"></i>
+      {{/each}}
+      </span>
+      <span class="tally" title="{{resistance.value}}">
+      {{#each (lookup ../tally name) as |v|}}
+      <i class="fas fa-tally-{{v}}"></i>
+      {{/each}}
+      </span>
+    </div>
+  {{/each}}
+</div>

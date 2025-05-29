@@ -18,6 +18,23 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
         "systems/heart/templates/parts/view-mode.hbs",
       ],
     },
+    character_basics: {
+      template: "systems/heart/templates/actor/parts/character-basics.hbs",
+      templates: [
+        "systems/heart/templates/actor/parts/character-basics.hbs",
+        "systems/heart/templates/item/parts/base-item-micro.hbs",
+        "systems/heart/templates/item/parts/item-placeholder.hbs",
+      ]
+    },
+    character_resistances: {
+      template: "systems/heart/templates/actor/parts/character-resistances.hbs",
+    },
+    character_domains: {
+      template: "systems/heart/templates/actor/parts/character-domains.hbs",
+    },
+    character_skills: {
+      template: "systems/heart/templates/actor/parts/character-skills.hbs",
+    },
     adversary_fields: {
       template: "systems/heart/templates/actor/parts/adversary-fields.hbs",
       templates: [
@@ -83,6 +100,9 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
       case "landmark":
         parts.push("landmark_fields");
         break;
+      case "character":
+        parts.push("character_basics", "character_resistances", "character_domains", "character_skills");
+        break;
       default:
         throw `Unexpected actor type ${this.document.type}`;
     }
@@ -132,6 +152,36 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
       case "items":
         context.items = this.document.items;
         break;
+      case "character_basics":
+        context.itemTypes = this.document.itemTypes;
+        break;
+      case "character_resistances":
+        context.tally = {};
+        context.protection = {};
+        Object.entries(this.document.system.resistances).forEach(([name, value]) => {
+          context.tally[name] = [];
+          context.protection[name] = [];
+
+          let v = value.value;
+          while (v > 5) {
+            context.tally[name].push(5);
+            v -= 5;
+          }
+          context.tally[name].push(v);
+
+          for (let i = 0; i < value.protection; i++) {
+            context.protection[name].push("shield");
+          }
+        });
+
+        context.tally.total = [];
+        let v = this.document.system.total_stress;
+        while (v > 5) {
+          context.tally.total.push(5);
+          v -= 5;
+        }
+        context.tally.total.push(v);
+        break;
       default:
         break;
     }
@@ -157,74 +207,8 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
     context.viewMode = this.options.viewMode;
     context.actor = this.document;
 
-    // Prepare character data and items.
-    if (actorData.type == "character") {
-      this._prepareCharacterData(context);
-    }
-
     return context;
   }
-
-  /**
-   * Character-specific context modifications
-   *
-   * @param {object} context The context object to mutate
-   */
-  _prepareCharacterData(context) {
-    // Initialize containers.
-    const beats = {
-      minor: [],
-      major: [],
-      zenith: [],
-    };
-
-    const abilities = [];
-
-    context.itemTypes = this.actor.itemTypes;
-
-    // Iterate through items, allocating to containers
-    for (let i of context.items) {
-      i.img = i.img || Item.DEFAULT_ICON;
-      if (i.type === "calling") {
-        context.calling = i;
-        // abilities.push(new CONFIG.Item.documentClass({type: "calling", ...i.system.ability}));
-      } else if (i.type === "beat") {
-        beats[i.system.type].push(i);
-      } else if (i.type === "ability") {
-        abilities.push(i);
-      }
-    }
-
-    context.beats = beats;
-    context.abilities = abilities;
-
-    context.tally = {};
-    context.protection = {};
-    Object.entries(this.actor.system.resistances).forEach(([name, value]) => {
-      context.tally[name] = [];
-      context.protection[name] = [];
-
-      let v = value.value;
-      while (v > 5) {
-        context.tally[name].push(5);
-        v -= 5;
-      }
-      context.tally[name].push(v);
-
-      for (let i = 0; i < value.protection; i++) {
-        context.protection[name].push("shield");
-      }
-    });
-
-    context.tally.total = [];
-    let v = this.actor.system.total_stress;
-    while (v > 5) {
-      context.tally.total.push(5);
-      v -= 5;
-    }
-    context.tally.total.push(v);
-  }
-
   /**
    * Handle creating a new Owned Item for the actor using initial data defined in the HTML dataset
    * @param {Event} event   The originating click event
