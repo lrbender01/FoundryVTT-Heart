@@ -1,3 +1,23 @@
-2025/04/27-21:04:36.539953 7e6a417fa6c0 Recovering log #764
-2025/04/27-21:04:36.633804 7e6a417fa6c0 Delete type=3 #763
-2025/04/27-21:04:36.633845 7e6a417fa6c0 Delete type=0 #764
+2025/05/27-19:29:27.740355 79d17ffff6c0 Recovering log #808
+2025/05/27-19:29:27.756638 79d17ffff6c0 Level-0 table #810: started
+2025/05/27-19:29:27.807649 79d17ffff6c0 Level-0 table #810: 53966 bytes OK
+2025/05/27-19:29:27.902608 79d17ffff6c0 Delete type=3 #807
+2025/05/27-19:29:27.902855 79d17ffff6c0 Delete type=0 #808
+2025/05/27-20:20:14.396665 79d17f7fe6c0 Level-0 table #813: started
+2025/05/27-20:20:14.396704 79d17f7fe6c0 Level-0 table #813: 0 bytes OK
+2025/05/27-20:20:14.436822 79d17f7fe6c0 Delete type=0 #811
+2025/05/27-20:20:14.541190 79d17f7fe6c0 Manual compaction at level-0 from '!folders!HICGVPy1oOIhaNsF' @ 72057594037927935 : 1 .. '!items!zqy5323yfzbgtpbu' @ 0 : 0; will stop at '!items!zqy5323yfzbgtpbu' @ 16700 : 1
+2025/05/27-20:20:14.541245 79d17f7fe6c0 Compacting 1@0 + 0@1 files
+2025/05/27-20:20:14.570897 79d17f7fe6c0 Generated table #814@0: 159 keys, 53966 bytes
+2025/05/27-20:20:14.570928 79d17f7fe6c0 Compacted 1@0 + 0@1 files => 53966 bytes
+2025/05/27-20:20:14.603474 79d17f7fe6c0 compacted to: files[ 0 1 1 0 0 0 0 ]
+2025/05/27-20:20:14.603638 79d17f7fe6c0 Delete type=2 #810
+2025/05/27-20:20:14.703437 79d17f7fe6c0 Manual compaction at level-0 from '!items!zqy5323yfzbgtpbu' @ 16700 : 1 .. '!items!zqy5323yfzbgtpbu' @ 0 : 0; will stop at (end)
+2025/05/27-20:20:14.833382 79d17f7fe6c0 Manual compaction at level-1 from '!folders!HICGVPy1oOIhaNsF' @ 72057594037927935 : 1 .. '!items!zqy5323yfzbgtpbu' @ 0 : 0; will stop at '!items!zqy5323yfzbgtpbu' @ 16700 : 1
+2025/05/27-20:20:14.833407 79d17f7fe6c0 Compacting 1@1 + 1@2 files
+2025/05/27-20:20:14.867557 79d17f7fe6c0 Generated table #815@1: 163 keys, 54470 bytes
+2025/05/27-20:20:14.867610 79d17f7fe6c0 Compacted 1@1 + 1@2 files => 54470 bytes
+2025/05/27-20:20:14.895156 79d17f7fe6c0 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/05/27-20:20:14.895504 79d17f7fe6c0 Delete type=2 #814
+2025/05/27-20:20:14.895812 79d17f7fe6c0 Delete type=2 #762
+2025/05/27-20:20:14.932734 79d17f7fe6c0 Manual compaction at level-1 from '!items!zqy5323yfzbgtpbu' @ 16700 : 1 .. '!items!zqy5323yfzbgtpbu' @ 0 : 0; will stop at (end)

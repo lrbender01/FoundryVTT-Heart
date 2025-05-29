@@ -1,6 +1,4 @@
 export function getSceneControlButtons(controls) {
-  // canvas.heart = new foundry.canvas.layers.PlaceablesLayer();
-
   controls.heart = {
     active: false,
     activeTool: "",
