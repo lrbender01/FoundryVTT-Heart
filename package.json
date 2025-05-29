@@ -3,9 +3,9 @@
   "version": "2.0.0",
   "description": "CSS compiler for the Heart system",
   "scripts": {
-    "build": "sass src/scss/heart.scss css/heart.css --style=expanded --no-source-map",
-    "watch": "sass src/scss/heart.scss css/heart.css --style=expanded --source-map --watch",
-    "grammar": "node src/build_parsers.js",
+    "build-css": "sass src/scss/heart.scss css/heart.css --style=expanded --no-source-map",
+    "watch-css": "sass src/scss/heart.scss css/heart.css --style=expanded --source-map --watch",
+    "build-grammar": "node src/build_parsers.js",
     "update-system": "node src/update-system-manifest.js"
   },
   "browserslist": [

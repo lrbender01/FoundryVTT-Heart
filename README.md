@@ -1,10 +1,10 @@
 # Heart System
 
-![Foundry v12](https://img.shields.io/badge/foundry-v12-green)
+![Foundry v13](https://img.shields.io/badge/foundry-v13-green)
 
 This is the source code the [Heart - The City Beneath](https://rowanrookanddecard.com/product/heart-the-city-beneath-rpg/) RPG written for [FoundryVTT](https://foundryvtt.com/).
 
-This has been written from the ground up to work better for foundry v12.
+This has been re-written from the ground up to work better for foundry v13.
 
 ## What's new?
 
@@ -34,3 +34,19 @@ New to this version is the ability to roll using a slightly more natural languag
 * Fallout rolls
   * `/roll [resistance] fallout`
     * e.g. `/roll blood fallout`
+  
+# How do I make changes?
+
+Firstly, you'll need to clone the repo. If you aren't familiar with doing that, please [read the docs](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
+
+Once you've got the repo available on your local machine, install the node assets and run the required build rules:
+
+```
+npm ci
+npm run build-grammar 
+npm run build-css 
+```
+
+If you're doing a lot of SCSS changes, it might be convenient to run `npm run watch-css`, which will rebuild all the CSS files whenever a change is saved.
+
+With that done, you should be able to modify whatever files you like, and (assuming you have placed/linked the system in the correct directory) changes will be available on a refresh.
