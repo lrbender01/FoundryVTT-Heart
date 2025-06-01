@@ -310,8 +310,6 @@ Hooks.once("babele.init", (babele) => {
         return result;
       }
 
-      // return foundry.utils.mergeObject(data, translation, {inplace: false});
-
       const flat_system = flattenObject(system);
       const flat_translation = flattenObject(translation);
       foundry.utils.mergeObject(flat_system, flat_translation);

@@ -7,7 +7,7 @@
       {{/each}}
       </span>
   </div>
-  {{log "resistance" this}}
+  
   {{#each document.system.resistances as |resistance name|}}
     <div class="stress">
       <span class="title">{{localize (concat "HEART.Resistance.types." name)}}</span>
