@@ -8,6 +8,10 @@
   font-family: theme.$secondary-font;
 }
 
+[data-action] {
+  cursor: pointer;
+}
+
 .sheet-header {
   flex: 0 auto;
   overflow: hidden;
