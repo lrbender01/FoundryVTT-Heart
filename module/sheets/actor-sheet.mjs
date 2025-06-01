@@ -4,6 +4,14 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
   static get DEFAULT_OPTIONS() {
     const DEFAULT_OPTIONS = super.DEFAULT_OPTIONS;
     DEFAULT_OPTIONS.window.contentClasses = ["standard-form", "actor"];
+    DEFAULT_OPTIONS.actions = {
+      "find-item": HeartActorSheet.findItem,
+      "create-item": HeartActorSheet.createItem,
+      "spawn-heart-roll-helper": HeartActorSheet.spawnHeartRollHelper,
+      "toggle-view-mode": HeartActorSheet.toggleViewMode,
+      "view-item": HeartActorSheet.viewItem,
+      "delete-item": HeartActorSheet.deleteItem,
+    };
     return DEFAULT_OPTIONS;
   }
 
@@ -24,7 +32,7 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
         "systems/heart/templates/actor/parts/character-basics.hbs",
         "systems/heart/templates/item/parts/base-item-micro.hbs",
         "systems/heart/templates/item/parts/item-placeholder.hbs",
-      ]
+      ],
     },
     character_resistances: {
       template: "systems/heart/templates/actor/parts/character-resistances.hbs",
@@ -67,20 +75,55 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
     },
   };
 
-  static ACTIONS = {
-    "find-item": HeartActorSheet.findItem,
-    "create-item": HeartActorSheet.createItem,
-  };
-
-  static async findItem() {
-    event.preventDefault();
-    const header = event.currentTarget;
-    // Get the type of item to create.
-    const type = header.dataset.type;
-
-    game.heart.addItemMacro(this.actor, [type], []);
+  static async findItem(_, target) {
+    const type = target.dataset.type;
+    game.heart.addItemMacro(this.document, [type], []);
   }
-  static async createItem() {}
+
+  static async createItem(_, target) {
+    const type = target.dataset.type;
+    const data = duplicate(target.dataset);
+    const name = `New ${type.capitalize()}`;
+    const itemData = {
+      name: name,
+      type: type,
+      system: data,
+    };
+    delete itemData.system["type"];
+    return await Item.create(itemData, { parent: this.document });
+  }
+
+  static async toggleViewMode() {
+    this._view_mode = !this._view_mode;
+    this.render();
+  }
+
+  static async spawnHeartRollHelper(_, target) {
+    const options = target.dataset.options.split(",").reduce((o, line) => {
+      let [k, v] = line.split("=", 2);
+      if (["domain", "skill", "difficulty", "has_mastery"].includes(k)) {
+        o[k] = v;
+      }
+      return o;
+    }, {});
+    new game.heart.HeartRollHelperApplication(this, options).render(true);
+  }
+
+  static async viewItem(_, target) {
+    const id = target.dataset.itemId;
+    this.document.items.get(id).sheet.render(true);
+  }
+
+  static async deleteItem(event, target) {
+    event.preventDefault();
+    event.stopPropagation();
+    ui.notifications.error("Deleting Items not yet implemented")
+  }
+
+  constructor() {
+    super(...arguments);
+    this._view_mode = true;
+  }
 
   _configureRenderParts(options) {
     super._configureRenderParts(options);
@@ -101,7 +144,12 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
         parts.push("landmark_fields");
         break;
       case "character":
-        parts.push("character_basics", "character_resistances", "character_domains", "character_skills");
+        parts.push(
+          "character_basics",
+          "character_resistances",
+          "character_domains",
+          "character_skills"
+        );
         break;
       default:
         throw `Unexpected actor type ${this.document.type}`;
@@ -149,6 +197,9 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
       case "landmark_fields":
         await updateFields();
         break;
+      case "toolbar":
+        context.viewMode = this._view_mode;
+        break;
       case "items":
         context.items = this.document.items;
         break;
@@ -158,21 +209,23 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
       case "character_resistances":
         context.tally = {};
         context.protection = {};
-        Object.entries(this.document.system.resistances).forEach(([name, value]) => {
-          context.tally[name] = [];
-          context.protection[name] = [];
+        Object.entries(this.document.system.resistances).forEach(
+          ([name, value]) => {
+            context.tally[name] = [];
+            context.protection[name] = [];
 
-          let v = value.value;
-          while (v > 5) {
-            context.tally[name].push(5);
-            v -= 5;
-          }
-          context.tally[name].push(v);
+            let v = value.value;
+            while (v > 5) {
+              context.tally[name].push(5);
+              v -= 5;
+            }
+            context.tally[name].push(v);
 
-          for (let i = 0; i < value.protection; i++) {
-            context.protection[name].push("shield");
+            for (let i = 0; i < value.protection; i++) {
+              context.protection[name].push("shield");
+            }
           }
-        });
+        );
 
         context.tally.total = [];
         let v = this.document.system.total_stress;
@@ -214,71 +267,5 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
    * @param {Event} event   The originating click event
    * @private
    */
-  async _onItemCreate(event) {
-    event.preventDefault();
-    const header = event.currentTarget;
-    // Get the type of item to create.
-    const type = header.dataset.type;
-    // Grab any data associated with this control.
-    const data = duplicate(header.dataset);
-    // Initialize a default name.
-    const name = `New ${type.capitalize()}`;
-    // Prepare the item object.
-    const itemData = {
-      name: name,
-      type: type,
-      system: data,
-    };
-    // Remove the type from the dataset since it's in the itemData.type prop.
-    delete itemData.system["type"];
-
-    // Finally, create the item!
-    return await Item.create(itemData, { parent: this.actor });
-  }
-
-  /**
-   * Handle creating a new Owned Item via an Application that searches for matching types
-   * @param {Event} event   The originating click event
-   * @private
-   */
-  async _onItemFind(event) {
-    event.preventDefault();
-    const header = event.currentTarget;
-    // Get the type of item to create.
-    const type = header.dataset.type;
-
-    game.heart.addItemMacro(this.actor, [type], []);
-  }
-
-  /**
-   * Handle clickable rolls.
-   * @param {Event} event   The originating click event
-   * @private
-   */
-  _onRoll(event) {
-    event.preventDefault();
-    const element = event.currentTarget;
-    const dataset = element.dataset;
-
-    // Handle item rolls.
-    if (dataset.rollType) {
-      if (dataset.rollType == "item") {
-        const itemId = element.closest(".item").dataset.itemId;
-        const item = this.actor.items.get(itemId);
-        if (item) return item.roll();
-      }
-    }
-
-    // Handle rolls that supply the formula directly.
-    if (dataset.roll) {
-      let label = dataset.label ? `[ability] ${dataset.label}` : "";
-      let roll = new Roll(dataset.roll, this.actor.getRollData());
-      roll.toMessage({
-        speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-        flavor: label,
-        rollMode: game.settings.get("core", "rollMode"),
-      });
-      return roll;
-    }
-  }
+  async _onItemCreate(event) {}
 }

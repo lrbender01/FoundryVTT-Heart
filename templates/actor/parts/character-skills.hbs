@@ -8,7 +8,7 @@
             {{#if (gt skill.value 1)}}
                 <span>({{skill.knack}})</span>
             {{/if}}
-            <a data-action="roll" data-skill="{{name}}">
+            <a data-action="spawn-heart-roll-helper" data-options="skill={{name}}">
                 <i class="fas fa-dice-d10"></i>
                 {{#if (gt domain.value 1)}}
                 <i class="fas fa-dice-d10"></i>
