@@ -3,7 +3,7 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
 ) {
   static get DEFAULT_OPTIONS() {
     const DEFAULT_OPTIONS = super.DEFAULT_OPTIONS;
-    DEFAULT_OPTIONS.window.contentClasses = ["standard-form", "actor"];
+    DEFAULT_OPTIONS.window.contentClasses = ["heart", "standard-form", "actor"];
     DEFAULT_OPTIONS.actions = {
       "find-item": HeartActorSheet.findItem,
       "create-item": HeartActorSheet.createItem,
