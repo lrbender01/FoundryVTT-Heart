@@ -59,6 +59,13 @@
         "compatibility": {
           "verified": "2.7.3"
         }
+      },
+      {
+        "id": "lib-wrapper",
+        "type": "module",
+        "compatibility": {
+          "verified": "1.13.2.0"
+        }
       }
     ]
   }
