@@ -16,11 +16,10 @@ function migration000(source) {
   });
 
   let die_size = die_size_conversions[source.die_size || "d4"];
-  let domain = source.domain;
+  let domain = source.domain || "haven";
 
   if (die_size === undefined) {
     die_size = 6;
-    domain = "haven";
     // console.warn(`Missing die size: ${source.die_size}, ${JSON.stringify(source)}`);
   }
 
