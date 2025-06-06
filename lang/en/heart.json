@@ -31,7 +31,9 @@
       "notes": "Notes",
       "core": "Core",
       "toggle-view-mode": "Toggle View",
-      "type": "Type"
+      "type": "Type",
+      "value": "Value",
+      "knack": "Knack"
     },
     "description": "Description",
     "delete": "Delete",

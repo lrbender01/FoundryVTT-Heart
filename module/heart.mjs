@@ -3,6 +3,7 @@ import { HeartActor } from "./documents/actor.mjs";
 import { HeartItem } from "./documents/item.mjs";
 // Import sheet classes.
 import { HeartActorSheet } from "./sheets/actor-sheet.mjs";
+import { HeartBasicActorSheet } from "./sheets/actor-sheet-basic.mjs";
 import { HeartItemSheet } from "./sheets/item-sheet.mjs";
 // Import application classes.
 import { HeartAddItemApplication } from "./applications/application-add-item.mjs";
@@ -146,6 +147,9 @@ Hooks.once("init", function () {
   foundry.documents.collections.Actors.registerSheet("heart", HeartActorSheet, {
     makeDefault: true,
     label: "HEART.SheetLabels.Actor",
+  });
+  foundry.documents.collections.Actors.registerSheet("heart", HeartBasicActorSheet, {
+    label: "HEART.SheetLabels.ActorBasic",
   });
   foundry.documents.collections.Items.unregisterSheet("core", foundry.appv1.sheets.ItemSheet);
   foundry.documents.collections.Items.registerSheet("heart", HeartItemSheet, {

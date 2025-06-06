@@ -3,42 +3,57 @@ import migrations from "./migrations/actor-character-migrations.mjs";
 
 class ResistanceField extends foundry.data.fields.SchemaField {
   constructor(options = {}) {
-    return super({
-      value: new foundry.data.fields.NumberField({
-        integer: true,
-        initial: 0,
-        ...options,
-      }),
-      protection: new foundry.data.fields.NumberField({
-        integer: true,
-        initial: 0,
-        label: "HEART.Resistance.protection",
-      }),
-    });
+    return super(
+      {
+        value: new foundry.data.fields.NumberField({
+          integer: true,
+          initial: 0,
+          label: "HEART.common.value",
+        }),
+        protection: new foundry.data.fields.NumberField({
+          integer: true,
+          initial: 0,
+          label: "HEART.Resistance.protection",
+        }),
+      },
+      options
+    );
   }
 }
 
 export class SkillField extends foundry.data.fields.SchemaField {
   constructor(options = {}) {
-    return super({
-      value: new foundry.data.fields.NumberField({
-        initial: 0,
-        ...options,
-      }),
-      knack: new foundry.data.fields.StringField({initial: ""}),
-    });
+    return super(
+      {
+        value: new foundry.data.fields.NumberField({
+          initial: 0,
+          label: "HEART.common.value",
+        }),
+        knack: new foundry.data.fields.StringField({
+          initial: "",
+          label: "HEART.common.knack",
+        }),
+      },
+      options
+    );
   }
 }
 
 export class DomainField extends foundry.data.fields.SchemaField {
   constructor(options = {}) {
-    return super({
-      value: new foundry.data.fields.NumberField({
-        initial: 0,
-        ...options,
-      }),
-      knack: new foundry.data.fields.StringField({initial: ""}),
-    });
+    return super(
+      {
+        value: new foundry.data.fields.NumberField({
+          initial: 0,
+          label: "HEART.common.value",
+        }),
+        knack: new foundry.data.fields.StringField({
+          initial: "",
+          label: "HEART.common.knack",
+        }),
+      },
+      options
+    );
   }
 }
 
@@ -46,8 +61,6 @@ export default class HeartCharacter extends HeartActorBase {
   static defineSchema() {
     const fields = foundry.data.fields;
     const schema = super.defineSchema();
-
-    schema.notes = new fields.StringField();
 
     schema.resistances = new fields.SchemaField(
       Object.keys(CONFIG.HEART.resistances).reduce((out, key) => {
@@ -71,6 +84,10 @@ export default class HeartCharacter extends HeartActorBase {
         return out;
       }, {})
     );
+
+    schema.notes = new fields.StringField({
+      label: `HEART.common.notes`,
+    });
 
     return schema;
   }

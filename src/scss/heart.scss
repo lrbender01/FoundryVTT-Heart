@@ -27,4 +27,5 @@
   @include meta.load-css('components/resource');
   @include meta.load-css('components/items');
   @include meta.load-css('components/effects');
+  @include meta.load-css('components/basic');
 }

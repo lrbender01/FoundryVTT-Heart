@@ -1,8 +1,9 @@
-export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicationMixin(
-  foundry.applications.sheets.ActorSheetV2
-) {
+import { HeartActorSheet } from "./actor-sheet.js"
+
+export class HeartConciseActorSheet extends HeartActorSheet {
   static get DEFAULT_OPTIONS() {
     const DEFAULT_OPTIONS = super.DEFAULT_OPTIONS;
+    DEFAULT_OPTIONS.window.contentClasses = ["standard-form", "actor"];
     DEFAULT_OPTIONS.actions = {
       "find-item": HeartActorSheet.findItem,
       "create-item": HeartActorSheet.createItem,
@@ -11,11 +12,6 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
       "view-item": HeartActorSheet.viewItem,
       "delete-item": HeartActorSheet.deleteItem,
     };
-    DEFAULT_OPTIONS.form = {
-      handler: this.onSubmitDocumentForm,
-      submitOnChange: true,
-      closeOnSubmit: false
-    }
     return DEFAULT_OPTIONS;
   }
 
@@ -79,13 +75,6 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
     },
   };
 
-  static async onSubmitDocumentForm(event, form, formData, options={}) {
-    if ( !this.isEditable ) return;
-    const {updateData, ...updateOptions} = options;
-    const submitData = this._prepareSubmitData(event, form, formData, updateData);
-    return await this._processSubmitData(event, form, submitData, updateOptions);
-  }
-
   static async findItem(_, target) {
     const type = target.dataset.type;
     game.heart.addItemMacro(this.document, [type], []);
@@ -121,18 +110,14 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
   }
 
   static async viewItem(_, target) {
-    const id = target.closest("[data-item-id]").dataset.itemId;
+    const id = target.dataset.itemId;
     this.document.items.get(id).sheet.render(true);
   }
 
   static async deleteItem(event, target) {
-
-    const id = target.closest("[data-item-id]").dataset.itemId;
-    const item = this.document.items.get(id);
-
-    if (item.parent instanceof Actor) {
-      item.delete();
-    }
+    event.preventDefault();
+    event.stopPropagation();
+    ui.notifications.error("Deleting Items not yet implemented")
   }
 
   constructor() {
@@ -277,4 +262,10 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
 
     return context;
   }
+  /**
+   * Handle creating a new Owned Item for the actor using initial data defined in the HTML dataset
+   * @param {Event} event   The originating click event
+   * @private
+   */
+  async _onItemCreate(event) {}
 }

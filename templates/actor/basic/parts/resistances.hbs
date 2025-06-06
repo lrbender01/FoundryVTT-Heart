@@ -1,0 +1,11 @@
+<div class="grid grid-3col resistances">
+    <div>{{localize "HEART.Resistance.label-plural"}}</div>
+    <div>{{localize "HEART.common.value"}}</div>
+    <div>{{localize "HEART.Resistance.protection"}}</div>
+
+    {{#each resistances}}
+        <div class="label">{{localize label}}</div>
+        <input class="value" type="number" min=0 step=1 name="{{fieldPath}}.value" value="{{value}}"/>
+        <input class="protection" type="number" min=0 step=1 name="{{fieldPath}}.protection" value="{{protection}}"/>
+    {{/each}}
+</div>

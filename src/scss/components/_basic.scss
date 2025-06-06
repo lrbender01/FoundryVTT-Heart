@@ -1,0 +1,32 @@
+.basic {
+    overflow: auto;
+
+    .editor {
+        min-height: 10em;
+    }
+
+    .items {
+        display: flex;
+        flex-flow: column wrap;
+        gap: 10px;
+
+        .item {
+            display: grid;
+            gap: 10px;
+            border-radius: 4px;
+            padding: 10px;
+            background: var(--color-cool-4);
+            justify-content: space-between;
+            grid-template-columns: 15px 1fr 15px 15px;
+
+            .type {
+                text-align: right;
+                color: var(--color-text-emphatic);
+            }
+
+            [data-action]:hover > i.fas{
+                color: var(--color-text-secondary);
+            }
+        }
+    }
+}
