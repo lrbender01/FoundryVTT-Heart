@@ -19,7 +19,7 @@ This branch is NOT feature complete.
 * [ ] Add reactivity to ChatMessages
 * [ ] Cleanup old V11 + V12 code
 * [ ] Cleanup weird SCSS
-* [ ] Convert RollHelpers to ApplicationV2
+* [x] Convert RollHelpers to ApplicationV2
 * [ ] Convert ItemSheet to ApplicationV2
 
 ## What's new?
