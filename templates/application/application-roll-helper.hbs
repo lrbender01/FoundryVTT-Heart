@@ -1,4 +1,4 @@
-<form class="{{cssClass}} roll-helper" autocomplete="off">
+<div class="roll-helper" autocomplete="off">
     <div class="grid grid-{{num_inputs}}col">
         {{#each inputs as |input target|}}
             <label for="{{target}}">
@@ -10,13 +10,13 @@
         {{/each}}
         {{#each inputs as |input target|}}
             {{#if input.boolean}}
-            <div class="checkbox" name="{{target}}">
+            <div data-action="check-box" class="checkbox" name="{{target}}">
                 {{#if input.value}}
                 X
                 {{/if}}
             </div>
             {{else}}
-            <select id="{{target}}" name="{{target}}">
+            <select data-action="select-option" id="{{target}}" name="{{target}}">
             {{selectOptions input.choices localize=true selected=input.value}}
             </select>
             {{/if}}
@@ -31,8 +31,8 @@
     </div>
 
     <div class="grid-2col">
-    <button data-action="roll"><i class="fas fa-dice-d20"></i>{{localize "HEART.Roll.label"}}</button>
-    <button data-action="request-roll"><i class="fas fa-comment"></i>{{localize "HEART.Roll.request-roll"}}</button>
+        <button data-action="roll-dice"><i class="fas fa-dice-d20"></i>{{localize "HEART.Roll.label"}}</button>
+        <button data-action="request-roll"><i class="fas fa-comment"></i>{{localize "HEART.Roll.request-roll"}}</button>
     </div>
-</form>
+</div>
 

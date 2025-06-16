@@ -17,7 +17,7 @@ export function getSceneControlButtons(controls) {
         icon: "fa-solid fa-dice-d20",
         // visible: isGM,
         onChange: (event, active) => {
-          if (active) new game.heart.HeartRollHelperApplication().render(true);
+          if (active) new game.heart.roll_helpers.RollHelper().render(true);
         },
         button: true,
         visible: true,
@@ -30,7 +30,7 @@ export function getSceneControlButtons(controls) {
         // visible: isGM,
         onChange: (event, active) => {
           if (active)
-            new game.heart.HeartStressRollHelperApplication().render(true);
+            new game.heart.roll_helpers.StressRollHelper().render(true);
         },
         button: true,
         visible: true,
@@ -42,7 +42,7 @@ export function getSceneControlButtons(controls) {
         icon: "fa-solid fa-radiation",
         onChange: (event, active) => {
           if (active)
-            new game.heart.HeartFalloutRollHelperApplication().render(true);
+            new game.heart.roll_helpers.FalloutRollHelper().render(true);
         },
         button: true,
         visible: true,

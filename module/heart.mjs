@@ -7,9 +7,7 @@ import { HeartBasicActorSheet } from "./sheets/actor-sheet-basic.mjs";
 import { HeartItemSheet } from "./sheets/item-sheet.mjs";
 // Import application classes.
 import { HeartAddItemApplication } from "./applications/application-add-item.mjs";
-import { HeartRollHelperApplication } from "./applications/application-roll-helper.mjs";
-import { HeartStressRollHelperApplication } from "./applications/application-stress-roll-helper.mjs";
-import { HeartFalloutRollHelperApplication } from "./applications/application-fallout-roll-helper.mjs";
+import { RollHelper, StressRollHelper, FalloutRollHelper } from "./applications/roll-helpers/_module.mjs";
 // Import hooks
 import { getSceneControlButtons } from "./hooks/extra-scene-controls.mjs";
 // Import helper/utility classes and constants.
@@ -41,9 +39,11 @@ Hooks.once("init", function () {
     HeartFalloutRoll,
     HeartChatMessage,
     HeartRollParser,
-    HeartRollHelperApplication,
-    HeartStressRollHelperApplication,
-    HeartFalloutRollHelperApplication,
+    roll_helpers: {
+      RollHelper,
+      StressRollHelper,
+      FalloutRollHelper
+    },
     rollItemMacro,
     addItemMacro,
   };

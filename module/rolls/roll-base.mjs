@@ -30,7 +30,7 @@ export default class HeartBaseRoll extends Roll {
   } = {}) {
     if (!this._evaluated) await this.evaluate();
     const chatData = await this.getData({flavor, isPrivate, index});
-    return renderTemplate(template, chatData);
+    return foundry.applications.handlebars.renderTemplate(template, chatData);
   }
 
   async getData({flavor, isPrivate = false, index}={}) {
