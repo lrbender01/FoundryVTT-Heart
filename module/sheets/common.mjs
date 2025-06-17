@@ -4,6 +4,7 @@ export function HeartApplicationMixin(BaseApplication) {
   ) {
     static get DEFAULT_OPTIONS() {
       const DEFAULT_OPTIONS = super.DEFAULT_OPTIONS;
+      DEFAULT_OPTIONS.window ??= {};
       DEFAULT_OPTIONS.window.contentClasses = ["basic"];
       DEFAULT_OPTIONS.actions = {
         "view-item": HeartApplication.viewItem,
@@ -18,8 +19,11 @@ export function HeartApplicationMixin(BaseApplication) {
     }
 
     static PARTS = {
+      header: {
+        template: "systems/heart/templates/document/basic/parts/header.hbs",
+      },
       items: {
-        template: "systems/heart/templates/actor/basic/parts/items.hbs",
+        template: "systems/heart/templates/document/basic/parts/items.hbs",
       },
     };
 
