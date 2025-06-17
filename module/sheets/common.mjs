@@ -76,10 +76,14 @@ export function HeartApplicationMixin(BaseApplication) {
     }
 
     async _preparePartContext(partId, context) {
-      context.document = this.document;
       switch (partId) {
+        case "header":
+          context = {};
+          context.document = this.document;
+          break;
         case "items":
           context = {};
+          context.document = this.document;
           context.items = this.document.items.map((item) => {
             return {
               _id: item._id,

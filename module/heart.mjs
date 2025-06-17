@@ -5,6 +5,7 @@ import { HeartItem } from "./documents/item.mjs";
 import { HeartActorSheet } from "./sheets/actor-sheet.mjs";
 import { HeartBasicActorSheet } from "./sheets/actor-sheet-basic.mjs";
 import { HeartItemSheet } from "./sheets/item-sheet.mjs";
+import { HeartBasicItemSheet } from "./sheets/item-sheet-basic.mjs";
 // Import application classes.
 import { HeartAddItemApplication } from "./applications/application-add-item.mjs";
 import { RollHelper, StressRollHelper, FalloutRollHelper } from "./applications/roll-helpers/_module.mjs";
@@ -155,6 +156,9 @@ Hooks.once("init", function () {
   foundry.documents.collections.Items.registerSheet("heart", HeartItemSheet, {
     makeDefault: true,
     label: "HEART.SheetLabels.Item",
+  });
+  foundry.documents.collections.Items.registerSheet("heart", HeartBasicItemSheet, {
+    label: "HEART.SheetLabels.ItemBasic",
   });
 
   // Preload Handlebars templates.

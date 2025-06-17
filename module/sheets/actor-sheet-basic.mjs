@@ -59,7 +59,7 @@ export class HeartBasicActorSheet extends HeartActorSheet {
   };
 
   async _preparePartContext(partId, context) {
-    context.document = this.document;
+    context = super._preparePartContext(partId, context);
     switch (partId) {
       case "resistances":
         context = {};
@@ -127,18 +127,6 @@ export class HeartBasicActorSheet extends HeartActorSheet {
             { secrets: this.document.isOwner }
           );
         context.fieldPath = "system.notes";
-        break;
-      case "items":
-        context = {};
-        context.items = this.document.items.map((item) => {
-          return {
-            _id: item._id,
-            type: item.type,
-            name: item.name,
-            editable: this.isEditable,
-            deletable: item.parent instanceof Actor,
-          };
-        });
         break;
     }
     return context;
