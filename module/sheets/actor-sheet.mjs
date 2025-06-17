@@ -15,63 +15,6 @@ export class HeartActorSheet extends HeartApplicationMixin(
     return DEFAULT_OPTIONS;
   }
 
-  static PARTS = {
-    header: {
-      template: "systems/heart/templates/actor/parts/header.hbs",
-    },
-    toolbar: {
-      template: "systems/heart/templates/actor/parts/toolbar.hbs",
-      templates: [
-        "systems/heart/templates/actor/parts/toolbar.hbs",
-        "systems/heart/templates/parts/view-mode.hbs",
-      ],
-    },
-    character_basics: {
-      template: "systems/heart/templates/actor/parts/character-basics.hbs",
-      templates: [
-        "systems/heart/templates/actor/parts/character-basics.hbs",
-        "systems/heart/templates/item/parts/base-item-micro.hbs",
-        "systems/heart/templates/item/parts/item-placeholder.hbs",
-      ],
-    },
-    character_resistances: {
-      template: "systems/heart/templates/actor/parts/character-resistances.hbs",
-    },
-    character_domains: {
-      template: "systems/heart/templates/actor/parts/character-domains.hbs",
-    },
-    character_skills: {
-      template: "systems/heart/templates/actor/parts/character-skills.hbs",
-    },
-    adversary_fields: {
-      template: "systems/heart/templates/actor/parts/adversary-fields.hbs",
-      templates: [
-        "systems/heart/templates/actor/parts/adversary-fields.hbs",
-        "systems/heart/templates/parts/field-number.hbs",
-        "systems/heart/templates/parts/field-string-array.hbs",
-        "systems/heart/templates/parts/field-string.hbs",
-      ],
-    },
-    delve_fields: {
-      template: "systems/heart/templates/actor/parts/delve-fields.hbs",
-      templates: [
-        "systems/heart/templates/parts/field-editor.hbs",
-        "systems/heart/templates/parts/field-number.hbs",
-        "systems/heart/templates/parts/field-string-array.hbs",
-      ],
-    },
-    landmark_fields: {
-      template: "systems/heart/templates/actor/parts/landmark-fields.hbs",
-      templates: [
-        "systems/heart/templates/parts/field-editor.hbs",
-        "systems/heart/templates/parts/field-number.hbs",
-        "systems/heart/templates/parts/field-string-array.hbs",
-        "systems/heart/templates/parts/field-string.hbs",
-      ],
-    },
-    items: super.PARTS.items,
-  };
-
   static async findItem(_, target) {
     const type = target.dataset.type;
     game.heart.addItemMacro(this.document, [type], []);
