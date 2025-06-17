@@ -8,6 +8,12 @@ export class HeartBasicItemSheet extends HeartApplicationMixin(
     description: {
       template: "systems/heart/templates/item/basic/parts/description.hbs",
     },
+    domain: {
+      template: "systems/heart/templates/item/basic/parts/domain.hbs",
+    },
+    skill: {
+      template: "systems/heart/templates/item/basic/parts/skill.hbs",
+    },
     items: super.PARTS.items,
   };
 
@@ -30,20 +36,29 @@ export class HeartBasicItemSheet extends HeartApplicationMixin(
     tag: ["header", "description", "uses"],
   };
 
-
   async _preparePartContext(partId, context) {
     context = super._prepareContext(partId, context);
 
     switch (partId) {
       case "description":
         context = {};
-        context.label = this.document.system.schema.fields.notes.label;
+        context.label = this.document.system.schema.fields.description.label;
         context.enrichedDescription =
           await foundry.applications.ux.TextEditor.implementation.enrichHTML(
             this.document.system.description,
             { secrets: this.document.isOwner }
           );
         context.fieldPath = "system.description";
+        break;
+      case "domain":
+        context = {};
+        context.domain = this.document.system.domain;
+        context.domains = CONFIG.HEART.domains;
+        break;
+      case "skill":
+        context = {};
+        context.skill = this.document.system.skill;
+        context.skills = CONFIG.HEART.skills;
         break;
     }
     return context;

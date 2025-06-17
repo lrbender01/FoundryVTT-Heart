@@ -14,7 +14,7 @@ export default class HeartItemBase extends PseudoDataModelMixin(HeartDataModel) 
       required: true,
       blank: true,
       initial: "",
-      label: "Description",
+      label: "HEART.description",
     });
     return schema;
   }
