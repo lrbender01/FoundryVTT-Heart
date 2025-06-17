@@ -28,18 +28,13 @@ export class HeartBasicActorSheet extends HeartActorSheet {
     }
   };
 
-  _configureRenderParts(options) {
-    super._configureRenderParts(options);
-    options.parts=["header", "resistances", "domains", "skills", "notes", "items"];
-    return Object.fromEntries(options.parts.map((k) => [k, this.constructor.PARTS[k]]));
+  static TYPE_PARTS = {
+    "adversary": ["header", "names", "descriptors", "motivation", "difficulty", "resistance", "protection", "special", "domains"],
+    "character": ["header", "resistances", "domains", "skills", "notes", "items"],
+    "delve": ["header", "route", "tiers", "domains", "stress", "resistance", "description"],
+    "landmark": ["header", "domains", "tier",  "resistance", "description", "special_rules", "base_stress", "potential_plots"]
   }
-
-  async _prepareContext(options) {
-    const context = super._prepareContext(options);
-    context.actor = this.document;
-    return context;
-  }
-
+  
   async _preparePartContext(partId, context) {
     context.document = this.document;
     switch(partId) {
@@ -79,7 +74,7 @@ export class HeartBasicActorSheet extends HeartActorSheet {
       case "notes":
         context = {};
         context.label = this.document.system.schema.fields.notes.label;
-        context.enrichedNotes = await TextEditor.enrichHTML(this.document.system.notes, {secrets: this.document.isOwner});
+        context.enrichedNotes = await foundry.applications.ux.TextEditor.implementation.enrichHTML(this.document.system.notes, {secrets: this.document.isOwner});
         context.fieldPath = "system.notes";
         break;
       case "items":

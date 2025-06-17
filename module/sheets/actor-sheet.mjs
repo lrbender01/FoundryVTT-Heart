@@ -1,21 +1,17 @@
-export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicationMixin(
+import { HeartApplicationMixin } from "./common.mjs";
+
+export class HeartActorSheet extends HeartApplicationMixin(
   foundry.applications.sheets.ActorSheetV2
 ) {
   static get DEFAULT_OPTIONS() {
     const DEFAULT_OPTIONS = super.DEFAULT_OPTIONS;
     DEFAULT_OPTIONS.actions = {
+      ...DEFAULT_OPTIONS.actions,
       "find-item": HeartActorSheet.findItem,
       "create-item": HeartActorSheet.createItem,
       "spawn-heart-roll-helper": HeartActorSheet.spawnHeartRollHelper,
       "toggle-view-mode": HeartActorSheet.toggleViewMode,
-      "view-item": HeartActorSheet.viewItem,
-      "delete-item": HeartActorSheet.deleteItem,
     };
-    DEFAULT_OPTIONS.form = {
-      handler: this.onSubmitDocumentForm,
-      submitOnChange: true,
-      closeOnSubmit: false
-    }
     return DEFAULT_OPTIONS;
   }
 
@@ -73,18 +69,8 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
         "systems/heart/templates/parts/field-string.hbs",
       ],
     },
-    items: {
-      template: "systems/heart/templates/parts/items.hbs",
-      templates: ["systems/heart/templates/item/parts/base-item-micro.hbs"],
-    },
+    items: super.PARTS.items,
   };
-
-  static async onSubmitDocumentForm(event, form, formData, options={}) {
-    if ( !this.isEditable ) return;
-    const {updateData, ...updateOptions} = options;
-    const submitData = this._prepareSubmitData(event, form, formData, updateData);
-    return await this._processSubmitData(event, form, submitData, updateOptions);
-  }
 
   static async findItem(_, target) {
     const type = target.dataset.type;
@@ -120,59 +106,9 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
     new game.heart.HeartRollHelperApplication(this, options).render(true);
   }
 
-  static async viewItem(_, target) {
-    const id = target.closest("[data-item-id]").dataset.itemId;
-    this.document.items.get(id).sheet.render(true);
-  }
-
-  static async deleteItem(event, target) {
-
-    const id = target.closest("[data-item-id]").dataset.itemId;
-    const item = this.document.items.get(id);
-
-    if (item.parent instanceof Actor) {
-      item.delete();
-    }
-  }
-
   constructor() {
     super(...arguments);
     this._view_mode = true;
-  }
-
-  _configureRenderParts(options) {
-    super._configureRenderParts(options);
-
-    const parts = ["header"];
-    if (this.isEditable) {
-      parts.push("toolbar");
-    }
-
-    switch (this.document.type) {
-      case "adversary":
-        parts.push("adversary_fields");
-        break;
-      case "delve":
-        parts.push("delve_fields");
-        break;
-      case "landmark":
-        parts.push("landmark_fields");
-        break;
-      case "character":
-        parts.push(
-          "character_basics",
-          "character_resistances",
-          "character_domains",
-          "character_skills"
-        );
-        break;
-      default:
-        throw `Unexpected actor type ${this.document.type}`;
-    }
-
-    parts.push("items");
-    options.parts = parts;
-    return Object.fromEntries(parts.map((k) => [k, this.constructor.PARTS[k]]));
   }
 
   async _preparePartContext(partId, context) {
@@ -270,8 +206,6 @@ export class HeartActorSheet extends foundry.applications.api.HandlebarsApplicat
     context.system = actorData.system;
     context.flags = actorData.flags;
 
-    // Adding a pointer to CONFIG.HEART
-    context.config = CONFIG.HEART;
     context.viewMode = this.options.viewMode;
     context.actor = this.document;
 
