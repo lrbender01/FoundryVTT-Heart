@@ -1,5 +1,8 @@
 <div class="questions">
-    {{#each questions as |question|}}
-    <div class="question">{{question}}</div>
+    {{#each questions }}
+    <prose-mirror name=(concat "system.questions." @index ".question") value="{{question}}" toggled="true">{{{question}}}</prose-mirror>
+    {{#if ../show_answers}}
+    <prose-mirror name=(concat "system.questions." @index ".answer") value="{{answer}}" toggled="true">{{{answer}}}</prose-mirror>
+    {{/if}}
     {{/each}}
 </div>

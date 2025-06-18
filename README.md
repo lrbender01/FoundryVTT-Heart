@@ -21,6 +21,15 @@ This branch is NOT feature complete.
 * [ ] Cleanup weird SCSS
 * [x] Convert RollHelpers to ApplicationV2
 * [ ] Convert ItemSheet to ApplicationV2
+  * [x] Create all parts for ability items
+  * [x] Create all parts for beat items
+  * [x] Create all parts for calling items 
+  * [x] Create all parts for class items 
+  * [x] Create all parts for equipment items 
+  * [ ] Create all parts for fallout items 
+  * [ ] Create all parts for haunt items 
+  * [ ] Create all parts for resource items 
+  * [ ] Create all parts for tag items
 
 ## What's new?
 

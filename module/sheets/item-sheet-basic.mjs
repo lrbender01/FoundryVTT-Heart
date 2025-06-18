@@ -18,7 +18,13 @@ export class HeartBasicItemSheet extends HeartApplicationMixin(
       template: "systems/heart/templates/item/basic/parts/type.hbs",
     },
     questions: {
-      template: "systems/heart/templates/item/basic/parts/type.hbs",
+      template: "systems/heart/templates/item/basic/parts/questions.hbs",
+    },
+    resistances: {
+      template: "systems/heart/templates/item/basic/parts/resistances.hbs",
+    },
+    die_size: {
+      template: "systems/heart/templates/item/basic/parts/die_size.hbs",
     },
     items: super.PARTS.items,
   };
@@ -43,7 +49,7 @@ export class HeartBasicItemSheet extends HeartApplicationMixin(
   };
 
   async _preparePartContext(partId, context) {
-    context = super._prepareContext(partId, context);
+    context = await super._preparePartContext(partId, context);
 
     switch (partId) {
       case "description":
@@ -71,16 +77,16 @@ export class HeartBasicItemSheet extends HeartApplicationMixin(
         context.type = this.document.system.type;
         switch (this.document.type) {
           case "ability":
-            context.types = HEART.ability_types;
+            context.types = CONFIG.HEART.ability_types;
             break;
           case "beat":
-            context.types = HEART.beat_types;
+            context.types = CONFIG.HEART.beat_types;
             break;
           case "equipment":
-            context.types = HEART.equipment_types;
+            context.types = CONFIG.HEART.equipment_types;
             break;
           case "fallout":
-            context.types = HEART.fallout_types;
+            context.types = CONFIG.HEART.fallout_types;
             break;
           default:
             throw `Unexpected document type "${this.document.type}" for getting context for system.type parts`;
@@ -89,6 +95,17 @@ export class HeartBasicItemSheet extends HeartApplicationMixin(
       case "questions":
         context = {};
         context.questions = this.document.system.questions;
+        context.show_answers = this.document.parent !== null;
+        break;
+      case "die_size":
+        context = {};
+        context.die_size = this.document.system.die_size;
+        context.die_sizes = CONFIG.HEART.die_sizes;
+        break;
+      case "resistances":
+        context = {};
+        context.selected = this.document.system.resistances;
+        context.choices = CONFIG.HEART.resistances;
         break;
     }
     return context;
