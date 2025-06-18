@@ -23,8 +23,14 @@ export class HeartBasicItemSheet extends HeartApplicationMixin(
     resistances: {
       template: "systems/heart/templates/item/basic/parts/resistances.hbs",
     },
+    resistance: {
+      template: "systems/heart/templates/item/basic/parts/resistance.hbs",
+    },
     die_size: {
       template: "systems/heart/templates/item/basic/parts/die_size.hbs",
+    },
+    uses: {
+      template: "systems/heart/templates/item/basic/parts/uses.hbs",
     },
     items: super.PARTS.items,
   };
@@ -106,6 +112,15 @@ export class HeartBasicItemSheet extends HeartApplicationMixin(
         context = {};
         context.selected = this.document.system.resistances;
         context.choices = CONFIG.HEART.resistances;
+        break;
+      case "resistance":
+        context = {};
+        context.selected = this.document.system.resistance;
+        context.choices = CONFIG.HEART.resistances;
+        break;
+      case "uses":
+        context = {};
+        context.uses = this.document.system.uses;
         break;
     }
     return context;
