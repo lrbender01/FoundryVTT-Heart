@@ -150,6 +150,7 @@ Hooks.once("init", function () {
     label: "HEART.SheetLabels.Actor",
   });
   foundry.documents.collections.Actors.registerSheet("heart", HeartBasicActorSheet, {
+    makeDefault: true,
     label: "HEART.SheetLabels.ActorBasic",
   });
   foundry.documents.collections.Items.unregisterSheet("core", foundry.appv1.sheets.ItemSheet);
@@ -158,6 +159,7 @@ Hooks.once("init", function () {
     label: "HEART.SheetLabels.Item",
   });
   foundry.documents.collections.Items.registerSheet("heart", HeartBasicItemSheet, {
+    makeDefault: true,
     label: "HEART.SheetLabels.ItemBasic",
   });
 
