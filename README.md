@@ -11,25 +11,21 @@ This has been re-written from the ground up to work better for foundry v13.
 This branch is NOT feature complete. 
 
 * [ ] Add reactivity to ActorSheets
-  * [ ] Need to implement item deletion that doesn't trigger items being opened (event propagation doesn't seem to work with actions)
+  * [x] Need to implement item deletion that doesn't trigger items being opened (event propagation doesn't seem to work with actions)
   * [ ] Implement stress increment/decrement with mouse click
-* [ ] Make a more legible difference between verbose edit mode and concise view mode
 * [ ] Ensure that migration is fairly complete
 * [ ] Check that new roll grammars work as intended with V13
+  * [x] rolls work without actor data attached 
+  * [ ] do they work with a token targeted?
+  * [ ] do they work with a user that has a default character?
 * [ ] Add reactivity to ChatMessages
+  * [ ] Ensure rolls expand
+  * [ ] Ensure follow up buttons do something 
 * [ ] Cleanup old V11 + V12 code
+  * [ ] surely this is implicitly true?
 * [ ] Cleanup weird SCSS
 * [x] Convert RollHelpers to ApplicationV2
-* [ ] Convert ItemSheet to ApplicationV2
-  * [x] Create all parts for ability items
-  * [x] Create all parts for beat items
-  * [x] Create all parts for calling items 
-  * [x] Create all parts for class items 
-  * [x] Create all parts for equipment items 
-  * [ ] Create all parts for fallout items 
-  * [ ] Create all parts for haunt items 
-  * [ ] Create all parts for resource items 
-  * [ ] Create all parts for tag items
+* [x] Convert ItemSheet to ApplicationV2
 
 ## What's new?
 
