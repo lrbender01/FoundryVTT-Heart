@@ -151,6 +151,10 @@ export function PseudoMixin(base) {
         )
       );
 
+      if (this.items !== undefined) {
+        this.items.forEach(item => item.prepareDerivedData());
+      }
+
       // make the collections by type available at the parent level (e.g. this.itemTypes)
       Object.defineProperties(
         this,
