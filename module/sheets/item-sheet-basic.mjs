@@ -14,6 +14,12 @@ export class HeartBasicItemSheet extends HeartApplicationMixin(
     skill: {
       template: "systems/heart/templates/item/basic/parts/skill.hbs",
     },
+    type: {
+      template: "systems/heart/templates/item/basic/parts/type.hbs",
+    },
+    questions: {
+      template: "systems/heart/templates/item/basic/parts/type.hbs",
+    },
     items: super.PARTS.items,
   };
 
@@ -59,6 +65,30 @@ export class HeartBasicItemSheet extends HeartApplicationMixin(
         context = {};
         context.skill = this.document.system.skill;
         context.skills = CONFIG.HEART.skills;
+        break;
+      case "type":
+        context = {};
+        context.type = this.document.system.type;
+        switch (this.document.type) {
+          case "ability":
+            context.types = HEART.ability_types;
+            break;
+          case "beat":
+            context.types = HEART.beat_types;
+            break;
+          case "equipment":
+            context.types = HEART.equipment_types;
+            break;
+          case "fallout":
+            context.types = HEART.fallout_types;
+            break;
+          default:
+            throw `Unexpected document type "${this.document.type}" for getting context for system.type parts`;
+        }
+        break;
+      case "questions":
+        context = {};
+        context.questions = this.document.system.questions;
         break;
     }
     return context;
