@@ -1,6 +1,19 @@
 .basic {
     overflow: auto;
 
+    input[type="number"] {
+        // disable right padding in order to place the up down buttons properly
+        padding-right: 0;
+
+        // re-enable the up/down buttons on number inputs
+        -moz-appearance: auto;
+        &::-webkit-inner-spin-button,
+        &::-webkit-outer-spin-button {
+            -webkit-appearance: auto;
+            appearance: auto;
+        }
+    }
+
     .editor {
         min-height: 10em;
     }
