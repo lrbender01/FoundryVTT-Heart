@@ -8,6 +8,11 @@ on:
         required: true
         type: string
         default: 0.X.Y
+      prerelease:
+        description: 'Whether or not this build is a prerelease'
+        required: false
+        type: boolean
+        default: false
 jobs:
   build:
     runs-on: ubuntu-latest
