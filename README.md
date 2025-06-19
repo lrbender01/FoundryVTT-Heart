@@ -14,6 +14,7 @@ This branch is NOT feature complete.
   * [x] Need to implement item deletion that doesn't trigger items being opened (event propagation doesn't seem to work with actions)
   * [ ] Implement stress increment/decrement with mouse click
 * [ ] Ensure that migration is fairly complete
+  * [x] Ensure that embedded items in Actors are migrated properly
 * [ ] Check that new roll grammars work as intended with V13
   * [x] rolls work without actor data attached 
   * [ ] do they work with a token targeted?
@@ -21,8 +22,7 @@ This branch is NOT feature complete.
 * [ ] Add reactivity to ChatMessages
   * [ ] Ensure rolls expand
   * [ ] Ensure follow up buttons do something 
-* [ ] Cleanup old V11 + V12 code
-  * [ ] surely this is implicitly true?
+* [ ] Cleanup old template code that we don't need
 * [ ] Cleanup weird SCSS
 * [x] Convert RollHelpers to ApplicationV2
 * [x] Convert ItemSheet to ApplicationV2
