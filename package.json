@@ -1,6 +1,6 @@
 {
   "name": "heart",
-  "version": "2.0.0",
+  "version": "0.10.0",
   "description": "CSS compiler for the Heart system",
   "scripts": {
     "build-css": "sass src/scss/heart.scss css/heart.css --style=expanded --no-source-map",

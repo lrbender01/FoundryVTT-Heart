@@ -1,21 +1,25 @@
+import migrations from "../data/migrations/actor-migrations.mjs";
+
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
  * @extends {Actor}
  */
 export class HeartActor extends Actor {
-  /** @override */
-  prepareData() {
-    // Prepare data for the actor. Calling the super version of this executes
-    // the following, in order: data reset (to clear active effects),
-    // prepareBaseData(), prepareEmbeddedDocuments() (including active effects),
-    // prepareDerivedData().
-    super.prepareData();
-  }
-
-  /** @override */
-  prepareBaseData() {
-    // Data modifications in this step occur before processing embedded
-    // documents or derived data.
+  static migrateData(source) {
+    return super.migrateData(
+      Object.entries(migrations)
+        .filter(([version, _]) => {
+          return foundry.utils.isNewerVersion(
+            version,
+            source._stats?.systemVersion ?? "0"
+          );
+        })
+        .reduce((source, [_, migrator]) => {
+          const out = migrator(source);
+          Object.assign(source, out);
+          return source;
+        }, source)
+    );
   }
 
   /**

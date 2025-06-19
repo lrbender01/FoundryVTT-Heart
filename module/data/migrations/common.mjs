@@ -11,6 +11,7 @@ import HeartAdversary from "../actor-adversary.mjs";
 import HeartCharacter from "../actor-character.mjs";
 import HeartDelve from "../actor-delve.mjs";
 import HeartLandmark from "../actor-landmark.mjs";
+import { localize } from "./legacy_lang.mjs";
 
 const name_regexes = [
   [
@@ -65,16 +66,18 @@ const name_regexes = [
 
 export const migrated_translations = {};
 export function maybeMigrateTranslation(value) {
-  let output = value;
-  name_regexes.forEach(([regexp, template]) => {
+  for (let [regexp, template] of name_regexes) {
     const match = regexp.exec(value);
     if (match) {
-      output = applyTemplate(template, match.groups);
+      let output = applyTemplate(template, match.groups);
       migrated_translations[value] = output;
+      if (game !== undefined && game.i18n.has(output)) {
+        return output;
+      }
     }
-  });
+  }
 
-  return output;
+  return localize(value);
 }
 
 function applyTemplate(template, variables = {}) {
@@ -115,6 +118,13 @@ export function migrateLegacyItem(item) {
 
   item.name = maybeMigrateTranslation(item.name);
 
+  if (item._stats === undefined) {
+    item._stats = {
+      systemVersion: game.system.version,
+      systemId: game.system.id,
+    };
+  }
+
   return item;
 }
 
@@ -144,4 +154,5 @@ export function migrateLegacyActor(actor) {
   }
 
   actor.name = maybeMigrateTranslation(actor.name);
+  actor.items = actor.items.map((item) => migrateLegacyItem(item));
 }

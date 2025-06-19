@@ -1,10 +1,28 @@
 import { PseudoMixin } from "../data/pseudo.mjs";
+import migrations from "../data/migrations/item-migrations.mjs";
 
 /**
  * Extend the basic Item with some very simple modifications.
  * @extends {Item}
  */
 export class HeartItem extends PseudoMixin(Item) {
+  static migrateData(source) {
+    return super.migrateData(
+      Object.entries(migrations)
+        .filter(([version, _]) => {
+          return foundry.utils.isNewerVersion(
+            version,
+            source._stats?.systemVersion ?? "0"
+          );
+        })
+        .reduce((source, [_, migrator]) => {
+          const out = migrator(source);
+          Object.assign(source, out);
+          return source;
+        }, source)
+    );
+  }
+
   /**
    * Augment the basic Item data model with additional dynamic data.
    */

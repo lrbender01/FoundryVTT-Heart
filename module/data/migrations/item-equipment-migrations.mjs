@@ -9,7 +9,7 @@ function migration000(source) {
     d12: 12,
   };
 
-  const die_size = die_size_conversions[source.die_size];
+  const die_size = die_size_conversions[source.die_size] || 4;
   const description = maybeMigrateTranslation(source.description || "");
   const type = source.type;
   const resistances = source.resistances || [];
