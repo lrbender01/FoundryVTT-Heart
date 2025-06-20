@@ -125,6 +125,41 @@ export function migrateLegacyItem(item) {
     };
   }
 
+  switch(item.type) {
+    case "class":
+      if (item.effects.find(x => x.name === "ClassDomain") === undefined) {
+        let effect = {
+          changes: [{
+            key: `system.domains.${item.system.domain}.value`,
+            value: 1,
+            mode: CONST.ACTIVE_EFFECT_MODES.ADD,
+          }],
+          description: `+1 ${item.system.domain} from ${item.name}`,
+          name: "ClassDomain",
+          _id: foundry.utils.randomID(),
+        };
+        console.warn(item.name, effect);
+        item.effects.push(effect);
+      }
+
+      if (item.effects.find(x => x.name === "ClassSkill") === undefined) {
+        let effect = {
+          changes: [{
+            key: `system.skills.${item.system.skill}.value`,
+            value: 1,
+            mode: CONST.ACTIVE_EFFECT_MODES.ADD,
+          }],
+          description: `+1 ${item.system.skill} from ${item.name}`,
+          name: "ClassSkill",
+          _id: foundry.utils.randomID(),
+        };
+        console.warn(item.name, effect);
+        item.effects.push(effect);
+      }
+
+      break
+  }
+
   return item;
 }
 
@@ -141,13 +176,9 @@ export function migrateLegacyActor(actor) {
     throw `Unexpected type "${actor.type}" while migrating actor`;
   }
 
-  actor.system = model.migrateData(actor.system);
-  if (!actor.ownership) {
-    actor.ownership = {};
-  }
-  if (!actor.ownership.default) {
-    actor.ownership.default = 1;
-  }
+  actor.system = model.migrateData(actor.system ?? {});
+  actor.ownership ??= {};
+  actor.ownership.default ??= 1;
 
   if (!actor.name.matchAll(/[a-zA-Z0-9_]+\.[a-zA-Z0-9_.]+/g)) {
     return actor;

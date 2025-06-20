@@ -42,6 +42,7 @@ export class HeartActor extends Actor {
 
     let overrides = this.system.overrides ?? {};
 
+    /*
     // Add one level of mastery to all domains & skills associated with a class.
     overrides = [
       `system.skills.${skill}.value`,
@@ -55,6 +56,7 @@ export class HeartActor extends Actor {
       Object.assign(output, changes);
       return output;
     }, overrides);
+    */
 
     Object.assign(this.overrides, foundry.utils.expandObject(overrides));
 

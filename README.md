@@ -13,6 +13,7 @@ This branch is NOT feature complete.
 * [ ] Add reactivity to ActorSheets
   * [x] Need to implement item deletion that doesn't trigger items being opened (event propagation doesn't seem to work with actions)
   * [ ] Implement stress increment/decrement with mouse click
+* [ ] Add ActiveEffects to items as appropriate
 * [ ] Ensure that migration is fairly complete
   * [x] Ensure that embedded items in Actors are migrated properly
 * [ ] Check that new roll grammars work as intended with V13
