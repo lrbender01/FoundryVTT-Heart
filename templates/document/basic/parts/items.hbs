@@ -4,7 +4,14 @@
         <div class="type" title="{{localize (concat "TYPES.Item." type)}}">
             <i class="fas {{itemIcon type}}"></i>
         </div>
-        <div class="name">{{name}}</div>
+        <div class="name">
+            {{#if subtype }}
+            <span class="subtype">
+                [{{localize (concat "HEART.Item." type ".types." subtype)}}]
+            </span>
+            {{/if}}
+            {{name}}
+        </div>
         {{#if (and editable deletable)}}
             <div data-action="view-item"><i class="fas fa-eye"></i></div>
             <div data-action="delete-item"><i class="fas fa-trash"></i></div>

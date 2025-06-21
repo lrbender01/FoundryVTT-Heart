@@ -88,6 +88,7 @@ export function HeartApplicationMixin(BaseApplication) {
             return {
               _id: item._id,
               type: item.type,
+              subtype: item.system.type,
               name: item.name,
               editable: this.isEditable,
               deletable: item.parent instanceof Actor,

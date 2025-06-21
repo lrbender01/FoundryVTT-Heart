@@ -130,7 +130,13 @@
       "ability": {
         "label-plural": "abilities",
         "type-label": "Type",
-        "subabilities": "Sub-Abilities"
+        "subabilities": "Sub-Abilities",
+        "types": {
+          "core": "Core",
+          "minor": "Minor",
+          "major": "Major",
+          "zenith": "Zenith"
+        }
       },
       "beat": {
         "label-plural": "beats",
