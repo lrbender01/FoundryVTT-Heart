@@ -117,4 +117,13 @@ export class HeartItem extends PseudoMixin(Item) {
       return roll;
     }
   }
+
+  getActiveItems() {
+    return this.items.reduce((out, item) => {
+      if(item.flags.heart.active) {
+        out.push(item, ...item.getActiveItems());
+      }
+      return out;
+    }, []);
+  }
 }

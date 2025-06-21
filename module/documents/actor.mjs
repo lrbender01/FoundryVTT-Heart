@@ -34,6 +34,11 @@ export class HeartActor extends Actor {
       this.itemTypes.class.forEach(this.prepareDerivedClassData.bind(this));
       this.itemTypes.calling.forEach(this.prepareDerivedCallingData.bind(this));
     }
+
+    const active_items = this.getActiveItems();
+    active_items.forEach(item => {
+      this.items.set(item._id, item, { modifySource: false });
+    })
   }
 
   prepareDerivedClassData(cls) {
@@ -42,36 +47,8 @@ export class HeartActor extends Actor {
 
     let overrides = this.system.overrides ?? {};
 
-    /*
-    // Add one level of mastery to all domains & skills associated with a class.
-    overrides = [
-      `system.skills.${skill}.value`,
-      `system.domains.${domain}.value`,
-    ].reduce((output, route) => {
-      const changes = ActiveEffect.prototype.apply(this, {
-        key: route,
-        value: 1,
-        mode: CONST.ACTIVE_EFFECT_MODES.ADD,
-      });
-      Object.assign(output, changes);
-      return output;
-    }, overrides);
-    */
-
     Object.assign(this.overrides, foundry.utils.expandObject(overrides));
 
-    // just set the item
-    cls.itemTypes.equipment.forEach((equipment) => {
-      if (equipment.flags.heart.equipment_group === "core") {
-        this.items.set(equipment._id, equipment, { modifySource: false });
-      }
-    });
-
-    cls.itemTypes.ability.forEach((ability) => {
-      if (ability.system.type === "core") {
-        this.items.set(ability._id, ability, { modifySource: false });
-      }
-    });
   }
 
   prepareDerivedCallingData(calling) {
@@ -141,5 +118,12 @@ export class HeartActor extends Actor {
         "system.pending_fallouts.major": this.system.pending_fallouts.major + 1,
       });
     }
+  }
+
+  getActiveItems() {
+    return this.items.reduce((out, item) => {
+      out.push(...item.getActiveItems());
+      return out;
+    }, []);
   }
 }

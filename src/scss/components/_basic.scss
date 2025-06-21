@@ -30,7 +30,7 @@
             padding: 10px;
             background: var(--color-cool-4);
             justify-content: space-between;
-            grid-template-columns: 35px 1fr 15px 15px;
+            grid-template-columns: auto 1fr auto;
 
             .type {
                 text-align: right;

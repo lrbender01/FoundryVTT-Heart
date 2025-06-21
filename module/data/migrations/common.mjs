@@ -104,6 +104,12 @@ export function migrateLegacyItem(item) {
     throw `Unexpected type "${item.type}" while migrating item`;
   }
 
+  item.flags ??= {};
+  item.flags.heart ??= {};
+  item.flags.heart.active ??= item.system.type !== undefined && item.system.type == "core";
+
+  if(item.type === "resource") item.flags.heart.active = true;
+
   item.system = model.migrateData(item.system);
   if (!item.ownership) {
     item.ownership = {};

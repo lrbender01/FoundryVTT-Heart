@@ -11,13 +11,20 @@
         <div class="name">
             {{name}}
         </div>
-        {{#if (and editable deletable)}}
-            <div data-action="view-item"><i class="fas fa-eye"></i></div>
-            <div data-action="delete-item"><i class="fas fa-trash"></i></div>
-        {{else}}
-            <div></div>
-            <div data-action="view-item"><i class="fas fa-eye"></i></div>
-        {{/if}}
+        <div>
+            <i class="fas fa-eye" data-action="view-item"></i>
+            {{#if editable}}
+                {{#if deletable}}
+                <i class="fas fa-trash" data-action="delete-item"></i>
+                {{else}}
+                    {{#if active}}
+                    <i class="fas fa-square-check" data-action="deactivate-item"></i>
+                    {{else}}
+                    <i class="fas fa-square-xmark" data-action="activate-item"></i>
+                    {{/if}}
+                {{/if}}
+            {{/if}}
+        </div>
     </div>
     {{/each}}
 </div>
