@@ -81,6 +81,8 @@ export class HeartActorSheet extends HeartApplicationMixin(
       );
     }
 
+    context = await super._preparePartContext(partId, context);
+
     switch (partId) {
       case "adversary_fields":
         await updateFields();
@@ -93,9 +95,6 @@ export class HeartActorSheet extends HeartApplicationMixin(
         break;
       case "toolbar":
         context.viewMode = this._view_mode;
-        break;
-      case "items":
-        context.items = this.document.items;
         break;
       case "character_basics":
         context.itemTypes = this.document.itemTypes;

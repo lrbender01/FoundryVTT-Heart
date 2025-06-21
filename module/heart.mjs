@@ -101,7 +101,28 @@ Hooks.once("init", function () {
     tag: "fa-tag",
   };
 
-  CONFIG.Actor.typeIcons = {
+  CONFIG.Item.subtypeIcons = {
+    ability: {
+      core: "fa-circle-quarter",
+      minor: "fa-circle-half",
+      major: "fa-circle-three-quarters",
+      zenith: "fa-circle",
+    },
+    equipment: {
+      miscellaneous: "fa-kitchen-set",
+      delve: "fa-tent",
+      kill: "fa-swords",
+      mend: "fa-suitcase-medical",
+    },
+    fallout: {
+      none: "fa-circle-dashed",
+      minor: "fa-circle",
+      major: "fa-circles-overlap",
+      critical: "fa-circles-overlap-3",
+    },
+  };
+
+  CONFIG.Actor.typeLabels = {
     adversary: "TYPES.Actor.adversary",
     character: "TYPES.Actor.character",
     delve: "TYPES.Actor.delve",
@@ -187,6 +208,11 @@ Handlebars.registerHelper("formGroupDocument", function (field, options = {}) {
 
 Handlebars.registerHelper("itemIcon", function (type) {
   return CONFIG.Item.typeIcons[type];
+});
+
+
+Handlebars.registerHelper("itemSubtypeIcon", function (type, subtype) {
+  return CONFIG.Item.subtypeIcons[type][subtype];
 });
 
 Hooks.on("getSceneControlButtons", getSceneControlButtons);

@@ -1,15 +1,14 @@
 <div class="items">
     {{#each items}}
     <div class="item" data-item-id="{{_id}}">
-        <div class="type" title="{{localize (concat "TYPES.Item." type)}}">
-            <i class="fas {{itemIcon type}}"></i>
+        <div class="type">
+            <i class="fas {{itemIcon type}}" title="{{localize (concat "TYPES.Item." type)}}"></i>
+
+            {{#if subtype }}
+            <i class="fas {{itemSubtypeIcon type subtype}}" title="{{localize (concat "HEART.Item." type ".types." subtype)}}"></i>
+            {{/if}}
         </div>
         <div class="name">
-            {{#if subtype }}
-            <span class="subtype">
-                [{{localize (concat "HEART.Item." type ".types." subtype)}}]
-            </span>
-            {{/if}}
             {{name}}
         </div>
         {{#if (and editable deletable)}}
