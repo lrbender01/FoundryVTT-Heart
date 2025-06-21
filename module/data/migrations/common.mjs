@@ -138,7 +138,6 @@ export function migrateLegacyItem(item) {
           name: "ClassDomain",
           _id: foundry.utils.randomID(),
         };
-        console.warn(item.name, effect);
         item.effects.push(effect);
       }
 
@@ -153,7 +152,6 @@ export function migrateLegacyItem(item) {
           name: "ClassSkill",
           _id: foundry.utils.randomID(),
         };
-        console.warn(item.name, effect);
         item.effects.push(effect);
       }
 
