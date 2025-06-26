@@ -118,7 +118,7 @@ export function migrateLegacyItem(item) {
     item.ownership.default = 1;
   }
 
-  if (!item.name.matchAll(/[a-zA-Z0-9_]+\.[a-zA-Z0-9_.]+/g)) {
+  if (item.name === undefined || !item.name.matchAll(/[a-zA-Z0-9_]+\.[a-zA-Z0-9_.]+/g)) {
     return item;
   }
 

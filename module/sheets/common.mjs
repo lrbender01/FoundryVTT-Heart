@@ -9,6 +9,8 @@ export function HeartApplicationMixin(BaseApplication) {
       DEFAULT_OPTIONS.actions = {
         "view-item": HeartApplication.viewItem,
         "delete-item": HeartApplication.deleteItem,
+        "activate-item": HeartApplication.activateItem,
+        "deactivate-item": HeartApplication.deactivateItem,
       };
       DEFAULT_OPTIONS.form = {
         handler: this.onSubmitDocumentForm,
@@ -24,6 +26,9 @@ export function HeartApplicationMixin(BaseApplication) {
       },
       items: {
         template: "systems/heart/templates/document/basic/parts/items.hbs",
+      },
+      equipment_groups: {
+        template: "systems/heart/templates/document/basic/parts/equipment_groups.hbs",
       },
     };
 
@@ -58,6 +63,55 @@ export function HeartApplicationMixin(BaseApplication) {
       if (item.parent instanceof Actor) {
         item.delete();
       }
+    }
+
+    static async activateItem(_, target) {
+      const id = target.closest("[data-item-id]").dataset.itemId;
+      const item = this.document.items.get(id);
+      console.warn(item);
+
+      await item.setFlag("heart", "active", true);
+      this.render();
+      return item;
+    }
+
+    static async deactivateItem(_, target) {
+      const id = target.closest("[data-item-id]").dataset.itemId;
+      const item = this.document.items.get(id);
+      console.warn(item);
+      await item.setFlag("heart", "active", false);
+      this.render();
+      return item;
+    }
+
+    static async activateEquipmentGroup(_, target) {
+      const classID = target.closest("[data-class]")?.dataset
+        ?.class;
+      const equipmentGroup = target.closest("[data-equipment-group]").dataset
+        .equipmentGroup;
+      if (classID === undefined) {
+        await this.document.activateEquipmentGroup(equipmentGroup);
+      } else {
+        await this.document.items.get(classID).activateEquipmentGroup(equipmentGroup);
+      }
+      this.render();
+      return item;
+    }
+
+    static async deactivateEquipmentGroup(_, target) {
+      const classID = target.closest("[data-class]")?.dataset
+        ?.class;
+      const equipmentGroup = target.closest("[data-equipment-group]").dataset
+        .equipmentGroup;
+
+      if (classID === undefined) {
+        await this.document.deactivateEquipmentGroup(equipmentGroup);
+      } else {
+        await this.document.items.get(classID).deactivateEquipmentGroup(equipmentGroup);
+      }
+
+      this.render();
+      return item;
     }
 
     _configureRenderParts(options) {
@@ -95,6 +149,26 @@ export function HeartApplicationMixin(BaseApplication) {
               deletable: item.parent instanceof Actor,
             };
           });
+          break;
+        case "equipment_groups":
+          context = {};
+          let documents;
+          if(this.document.documentName === "Item" && this.document.type === "class") {
+            documents = [this.document];
+          } else {
+            documents = this.document.itemTypes.class;
+          }
+
+          context.classes = documents.reduce((out, document) => {
+            const c = out[document.id] = {};
+            c.equipment_group = document.getFlag(
+              "heart",
+              "equipment_group"
+            );
+            c.equipment_groups = document.getEquipmentGroups();
+            return out;
+          }, {});
+          
           break;
       }
       return context;

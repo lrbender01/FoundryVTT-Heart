@@ -22,6 +22,7 @@ export class HeartBasicActorSheet extends HeartActorSheet {
       template: "systems/heart/templates/actor/basic/parts/notes.hbs",
     },
     items: super.PARTS.items,
+    equipment_groups: super.PARTS.equipment_groups,
   };
 
   static TYPE_PARTS = {
@@ -36,7 +37,7 @@ export class HeartBasicActorSheet extends HeartActorSheet {
       "special",
       "domains",
     ],
-    character: ["header", "resistances", "domains", "skills", "notes", "items"],
+    character: ["header", "resistances", "domains", "skills", "notes", "equipment_groups", "items"],
     delve: [
       "header",
       "route",
@@ -57,6 +58,20 @@ export class HeartBasicActorSheet extends HeartActorSheet {
       "potential_plots",
     ],
   };
+
+  static async activateItem(_, target) {
+    const item = super.activateItem(_, target);
+    this.document.delete(item._id, {modifySource: false});
+    this.render();
+    return item;
+  }
+
+  static async activateItem(_, target) {
+    const item = super.activateItem(_, target);
+    this.document.set(item._id, item, {modifySource: false});
+    this.render();
+    return item;
+  }
 
   async _preparePartContext(partId, context) {
     context = super._preparePartContext(partId, context);

@@ -1,11 +1,12 @@
 import { PseudoMixin } from "../data/pseudo.mjs";
+import { HeartDocumentMixin } from "./common.mjs";
 import migrations from "../data/migrations/item-migrations.mjs";
 
 /**
  * Extend the basic Item with some very simple modifications.
  * @extends {Item}
  */
-export class HeartItem extends PseudoMixin(Item) {
+export class HeartItem extends HeartDocumentMixin(PseudoMixin(Item)) {
   static migrateData(source) {
     return super.migrateData(
       Object.entries(migrations)
@@ -125,5 +126,18 @@ export class HeartItem extends PseudoMixin(Item) {
       }
       return out;
     }, []);
+  }
+
+  getEquipmentGroups() {
+    let output = {};
+    const equipment_group = this.getFlag("heart", "equipment_group");
+    if(equipment_group && equipment_group !== "core") {
+      output[equipment_group] ??= [];
+      output[equipment_group].push(this);
+    }
+    this.items?.reduce((out, item) => {
+      return Object.assign(out, item.getEquipmentGroups());
+    }, output);
+    return output;
   }
 }

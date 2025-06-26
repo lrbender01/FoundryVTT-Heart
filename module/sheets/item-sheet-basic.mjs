@@ -33,13 +33,14 @@ export class HeartBasicItemSheet extends HeartApplicationMixin(
       template: "systems/heart/templates/item/basic/parts/uses.hbs",
     },
     items: super.PARTS.items,
+    equipment_groups: super.PARTS.equipment_groups,
   };
 
   static TYPE_PARTS = {
     ability: ["header", "description", "type", "items"],
     beat: ["header", "type"],
     calling: ["header", "description", "questions", "items"],
-    class: ["header", "description", "domain", "skill", "items"],
+    class: ["header", "description", "domain", "skill", "equipment_groups", "items"],
     equipment: [
       "header",
       "description",

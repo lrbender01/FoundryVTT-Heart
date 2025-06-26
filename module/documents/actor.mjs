@@ -1,10 +1,11 @@
 import migrations from "../data/migrations/actor-migrations.mjs";
+import { HeartDocumentMixin } from "./common.mjs";
 
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
  * @extends {Actor}
  */
-export class HeartActor extends Actor {
+export class HeartActor extends HeartDocumentMixin(Actor) {
   static migrateData(source) {
     return super.migrateData(
       Object.entries(migrations)
@@ -125,5 +126,11 @@ export class HeartActor extends Actor {
       out.push(...item.getActiveItems());
       return out;
     }, []);
+  }
+
+  getEquipmentGroups() {
+    this.items.reduce((out, item) => {
+      return Object.assign(out, item.getEquipmentGroups());
+    }, {});
   }
 }

@@ -1,0 +1,13 @@
+<div>
+    <span>{{localize "HEART.pick_one_of"}}</span>
+    {{#each classes as |data class|}}
+        <div class="equipment_groups" data-class="{{class}}">
+            {{#each data.equipment_groups as |items group|}}
+            <div class="equipment_group" data-equipment-group="{{data.equipment_group}}">
+                <input type="radio" name="{{@../key}}_equipment_groups" value="{{group}}" id="{{@../key}}_{{group}}">
+                {{> "systems/heart/templates/document/basic/parts/items.hbs" items=items}}
+            </div>
+            {{/each}}
+        </div>
+    {{/each}}
+</div>
