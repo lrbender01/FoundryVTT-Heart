@@ -1,0 +1,12 @@
+{
+    "_id": "ep783ddyy69fih35",
+    "name": "Complete a major objective for your master - something taking at least two sessions to achieve.",
+    "type": "beat",
+    "system": {
+        "description": "Complete a major objective for your master - something taking at least two sessions to achieve.",
+        "type": "major"
+    },
+    "_key": "!items!ep783ddyy69fih35",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

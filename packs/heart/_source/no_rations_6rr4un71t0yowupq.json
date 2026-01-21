@@ -1,0 +1,14 @@
+{
+    "_id": "6rr4un71t0yowupq",
+    "name": "No Rations",
+    "type": "fallout",
+    "system": {
+        "description": "You're out of food. This functions as HALF RATIONS, and all actions you make become Risky due to shaking hands and low blood sugar. Another party member can remove this fallout by marking D8 stress to Supplies. [Ongoing]",
+        "resistance": "supplies",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!6rr4un71t0yowupq",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

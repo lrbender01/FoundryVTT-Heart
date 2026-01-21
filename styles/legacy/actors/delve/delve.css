@@ -1,0 +1,76 @@
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.section {
+  padding: 0.5em;
+}
+
+.item-list > * {
+  padding: 0.5em;
+  margin: 0.5em 0;
+  border: 1px solid rgba(99, 0, 0, 0.2);
+  border-radius: 5px;
+}
+
+a[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.heart.sheet.actor.delve {
+  position: relative;
+  background: white;
+}
+.heart.sheet.actor.delve h3 {
+  font-size: 1.5em;
+}
+.heart.sheet.actor.delve .info .grid-2 {
+  grid-gap: 1em;
+  align-items: center;
+}
+.heart.sheet.actor.delve img.profile {
+  object-fit: contain;
+  width: 100%;
+  min-height: 100px;
+  max-height: 256px;
+  border: 0;
+  background: rgba(99, 0, 0, 0.2);
+}
+.heart.sheet.actor.delve .faded {
+  opacity: 66%;
+}
+.heart.sheet.actor.delve .right {
+  float: right;
+  flex: auto 0 0;
+}
+.heart.sheet.actor.delve .col {
+  margin: 0 0.5em;
+}
+.heart.sheet.actor.delve .grid-2 input:not([type]) {
+  border: 0;
+  border-bottom: 1px dotted #630000;
+  font-size: 1.5em;
+}
+.heart.sheet.actor.delve .grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  place-items: stretch;
+  column-gap: 0.5em;
+}
+.heart.sheet.actor.delve .grid-3.resistances {
+  grid-template-columns: auto auto auto;
+  align-items: start;
+  justify-content: space-evenly;
+}
+.heart.sheet.actor.delve .grid-3.resistances.left {
+  justify-self: left;
+}
+.heart.sheet.actor.delve .bold {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/*# sourceMappingURL=delve.css.map */

@@ -1,0 +1,12 @@
+{
+    "_id": "ck1e437ivjrwatvm",
+    "name": "Involve an NPC in your master's schemes.",
+    "type": "beat",
+    "system": {
+        "description": "Involve an NPC in your master's schemes.",
+        "type": "minor"
+    },
+    "_key": "!items!ck1e437ivjrwatvm",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

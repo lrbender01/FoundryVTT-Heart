@@ -1,0 +1,12 @@
+{
+    "_id": "ixeh6alr07i4jv2y",
+    "name": "Bloodbound",
+    "type": "tag",
+    "system": {
+        "description": "Mark D4 stress to Blood to roll with mastery when using this equipment for the rest of the situation."
+    },
+    "effects": [],
+    "_key": "!items!ixeh6alr07i4jv2y",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

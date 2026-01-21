@@ -1,0 +1,14 @@
+{
+    "_id": "wrcbqo1ryjqu8h8t",
+    "name": "In Trouble",
+    "type": "fallout",
+    "system": {
+        "description": "You upset an important figure in this or a nearby haven. [Immediate, Ongoing]",
+        "resistance": "fortune",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!wrcbqo1ryjqu8h8t",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

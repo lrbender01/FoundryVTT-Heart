@@ -1,0 +1,13 @@
+{
+    "_id": "2mn635hepx22lvja",
+    "name": "That Which Is Golden",
+    "type": "ability",
+    "system": {
+        "description": "You may increase the damage die of any weapon you touch by two steps. The weapon is destroyed after it inflicts stress once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!2mn635hepx22lvja",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

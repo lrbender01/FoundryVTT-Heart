@@ -1,0 +1,12 @@
+{
+    "_id": "l5lf6ngkv9ldl538",
+    "name": "Slay a beast that drops resources of D10 or higher.",
+    "type": "beat",
+    "system": {
+        "description": "Slay a beast that drops resources of D10 or higher.",
+        "type": "minor"
+    },
+    "_key": "!items!l5lf6ngkv9ldl538",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

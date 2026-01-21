@@ -1,0 +1,15 @@
+{
+    "_id": "16c1sv7k8v5qj644",
+    "name": "Steel door shield",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.qlpw68612eiloddk"
+        ]
+    },
+    "_key": "!items!16c1sv7k8v5qj644",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

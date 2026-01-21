@@ -1,0 +1,14 @@
+{
+    "_id": "jzkx3050km9njx5o",
+    "name": "Unwilling Leader",
+    "type": "fallout",
+    "system": {
+        "description": "You end up responsible for an unwanted group - they have problems and they look to you to solve them. Maybe you killed their boss and now you're the new boss; maybe they appeal to your sense of kindness and you foolishly give in; maybe the “group” is an orphan you have to look after. You can use the group to achieve things, but honestly, they cause more problems than they solve.[Immediate,Ongoing]",
+        "resistance": "fortune",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!jzkx3050km9njx5o",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

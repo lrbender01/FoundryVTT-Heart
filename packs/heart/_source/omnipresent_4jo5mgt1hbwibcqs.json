@@ -1,0 +1,13 @@
+{
+    "_id": "4jo5mgt1hbwibcqs",
+    "name": "Omnipresent",
+    "type": "ability",
+    "system": {
+        "description": "When you cast this spell, you access the same temple every time, no matter where you are; it becomes a Fracture. At the GM's discretion, Major Mind fallout could result in you losing access to this specific temple, and Minor Mind fallout could see it robbed or otherwise compromised.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!4jo5mgt1hbwibcqs",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

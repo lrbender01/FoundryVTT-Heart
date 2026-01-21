@@ -1,0 +1,13 @@
+{
+    "_id": "8c021yosm2ck9nm7",
+    "name": "Walking Reliquary",
+    "type": "ability",
+    "system": {
+        "description": "Your pack clinks and jingles with a dozen minor totems of the dead; in a pinch, the meagre power within can save your life. Gain +2 Supplies Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!8c021yosm2ck9nm7",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

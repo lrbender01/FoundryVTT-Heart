@@ -1,0 +1,13 @@
+{
+    "_id": "7bgrhx7c3g21p87c",
+    "name": "Hunted",
+    "type": "ability",
+    "system": {
+        "description": "Name the creature that is coming after you. Once per session, you can declare that it replaces the opposition in a dangerous scene as it eats them, chases them off or causes a big distraction - the GM decides. You'll have to fight or evade it yourself now, of course. If you kill it, gain a minor advance and remove this ability.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!7bgrhx7c3g21p87c",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

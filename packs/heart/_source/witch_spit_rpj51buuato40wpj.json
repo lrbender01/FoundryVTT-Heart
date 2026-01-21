@@ -1,0 +1,13 @@
+{
+    "_id": "rpj51buuato40wpj",
+    "name": "Witch-Spit",
+    "type": "ability",
+    "system": {
+        "description": "They say that the spittle of witches can cure minor ailments, repair broken trinkets and soothe an aching heart. Yours closes up exit wounds. Gain the Mend skill. When you want it to be, your spit becomes adhesive and can harden into a tarry, sticky substance.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!rpj51buuato40wpj",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

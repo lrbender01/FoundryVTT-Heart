@@ -1,0 +1,37 @@
+.heart.form .options, .chat-message .options {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}
+.heart.form .options .option, .chat-message .options .option {
+  color: #000;
+  font-family: "Alegreya";
+  border: 1px solid #000;
+  border-radius: 5px;
+  background: #fff;
+  margin: 2px;
+  padding: 4px;
+  display: inline-block;
+  text-transform: uppercase;
+}
+.heart.form input:checked + .option, .chat-message input:checked + .option {
+  background: #630000;
+  color: #fff;
+}
+
+.heart.form .window-content {
+  background: #fff;
+}
+.heart.form label {
+  font-weight: bold;
+  font-family: "MelmaCracked";
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  text-align: left;
+}
+.heart.form .description {
+  text-align: center;
+}
+
+/*# sourceMappingURL=application.css.map */

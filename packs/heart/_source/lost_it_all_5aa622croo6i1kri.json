@@ -1,0 +1,13 @@
+{
+    "_id": "5aa622croo6i1kri",
+    "name": "Lost It All",
+    "type": "ability",
+    "system": {
+        "description": "You understand - truly - the wretched sensation of having less than nothing. Gain the Desolate domain. Once per session ask the GM where the nearest source of wealth is and they will tell you.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!5aa622croo6i1kri",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

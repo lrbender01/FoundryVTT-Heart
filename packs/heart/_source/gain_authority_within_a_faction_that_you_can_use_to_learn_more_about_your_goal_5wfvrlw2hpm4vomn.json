@@ -1,0 +1,12 @@
+{
+    "_id": "5wfvrlw2hpm4vomn",
+    "name": "Gain authority within a faction that you can use to learn more about your goal.",
+    "type": "beat",
+    "system": {
+        "description": "Gain authority within a faction that you can use to learn more about your goal.",
+        "type": "major"
+    },
+    "_key": "!items!5wfvrlw2hpm4vomn",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

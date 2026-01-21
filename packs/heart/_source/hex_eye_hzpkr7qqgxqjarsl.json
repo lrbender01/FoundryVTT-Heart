@@ -1,0 +1,14 @@
+{
+    "_id": "hzpkr7qqgxqjarsl",
+    "name": "Hex-Eye",
+    "type": "fallout",
+    "system": {
+        "description": "Your vision swims as you start to perceive worlds other than your own layered on top of one another.Any action you take that requires accurate judging of distance (jumping, shooting,running down a corridor) becomes Risky. Once per session, you see something useful - ask the GM what it is.[Ongoing]",
+        "resistance": "echo",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!hzpkr7qqgxqjarsl",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "2zf8rx30yid7kzsh",
+    "name": "Dirt Under The Fingernails",
+    "type": "ability",
+    "system": {
+        "description": "You dug your way out of your own grave. Gain the Warren domain. You can dig through earth and mud with your bare hands as though you had a shovel; your fingernails are always stained with a little soil, and you cannot clean it off.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!2zf8rx30yid7kzsh",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

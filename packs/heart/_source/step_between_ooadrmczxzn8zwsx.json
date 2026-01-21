@@ -1,0 +1,13 @@
+{
+    "_id": "ooadrmczxzn8zwsx",
+    "name": "Step Between",
+    "type": "ability",
+    "system": {
+        "description": "You can leave a Heaven and arrive at a completely different landmark than the one you started at. Your exit point must be within the same tier, and it must share a domain with the Heaven that you just visited. If you've never visited the landmark before, undertaking the delve is Risky.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ooadrmczxzn8zwsx",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

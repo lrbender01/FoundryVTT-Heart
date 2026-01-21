@@ -1,0 +1,13 @@
+{
+    "_id": "47phk0o0wpiaxrti",
+    "name": "Wild-Witch",
+    "type": "ability",
+    "system": {
+        "description": "You know the secrets of the wild things of the world, and are skilled at distilling their essences. Gain the Wild domain. When you're in a landmark and have time to prepare, you can turn a resource with the Wild domain into a healing draught. When drunk, this draught removes Blood or Mind stress equal to its dice size minus one step - choose whether it's Blood or Mind when you create it.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!47phk0o0wpiaxrti",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

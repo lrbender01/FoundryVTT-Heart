@@ -1,0 +1,13 @@
+{
+    "_id": "lq6ungwwtjbdz3y4",
+    "name": "Dimensional Bastion",
+    "type": "ability",
+    "system": {
+        "description": "You become a conduit to the Hive, and thousands of glyph-marked bees rush out of your body and clothing until your physical form is dissolved entirely into the swarm. The bees quickly spread out to the edges of the landmark you are occupying and ward it, building crystalline structures that keep the energies of the Heart at bay. While the bees endure, this place will be safe from the uncaring and ever- changing Heart Itself. You aren't quite dead, but you definitely aren't alive either: you persist as a message passed between the bees, an echo in the place. Rename the landmark appropriately.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!lq6ungwwtjbdz3y4",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

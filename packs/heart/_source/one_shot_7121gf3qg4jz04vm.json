@@ -1,0 +1,12 @@
+{
+    "_id": "7121gf3qg4jz04vm",
+    "name": "One-Shot",
+    "type": "tag",
+    "system": {
+        "description": "This equipment takes a very long time to prepare, so you can only use it once per situation."
+    },
+    "effects": [],
+    "_key": "!items!7121gf3qg4jz04vm",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

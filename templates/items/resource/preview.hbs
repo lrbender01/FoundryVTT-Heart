@@ -1,0 +1,27 @@
+<div class="item preview resource summary draggable" data-document-uuid="{{document.uuid}}">
+    <span class="name grow">{{document.name}}</span>
+    <heart-label class="major">
+        {{localize "heart.item.type.resource"}}
+    </heart-label>
+    <heart-label class="minor">
+        {{localize (concat "heart.domain.type." document.system.domain)}}
+    </heart-label>
+    <heart-label class="minor">
+        <a data-action="item-roll"><span class="fas fa-dice"></span> {{ localize (concat "heart.dieSize."
+            document.system.dieSize)}}</a>
+    </heart-label>
+
+    {{#each document.system.resistances as |resistance|}}
+    <heart-label class="minor">
+        {{localize (concat "heart.resistance.type." resistance)}}
+    </heart-label>
+    {{/each}}
+
+    {{#each document.system.tags as |uuid|}}
+    {{{ "foreignPartial" "systems/heart/templates/items/tag/preview.hbs" uuid}}}
+    {{/each}}
+    {{#if editMode}}
+    <div class="button" data-action="remove" title='{{localize "heart.button.remove"}}'><i
+            class="fas fa-trash"></i></div>
+    {{/if}}
+</div>

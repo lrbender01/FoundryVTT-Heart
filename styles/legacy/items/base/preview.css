@@ -1,0 +1,25 @@
+.item.preview {
+  position: relative;
+  border: 1px solid rgba(99, 0, 0, 0.4);
+  border-radius: 5px;
+  background: #fffefe;
+  padding: 0.5em;
+  margin: 0.5em 0;
+}
+.item.preview .actionbar {
+  float: right;
+}
+.item.preview .actionbar a:hover {
+  transform: scale(1.05);
+}
+.item.preview h1, .item.preview h2, .item.preview h3, .item.preview h4 {
+  font-family: "MelmaCracked";
+  color: black;
+}
+.item.preview h1 .right, .item.preview h2 .right, .item.preview h3 .right, .item.preview h4 .right {
+  float: right;
+  font-family: Alegreya;
+  font-size: 0.8em;
+}
+
+/*# sourceMappingURL=preview.css.map */

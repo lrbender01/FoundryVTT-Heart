@@ -1,0 +1,94 @@
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.section {
+  padding: 0.5em;
+}
+
+.item-list > * {
+  padding: 0.5em;
+  margin: 0.5em 0;
+  border: 1px solid rgba(99, 0, 0, 0.2);
+  border-radius: 5px;
+}
+
+a[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.heart.sheet.actor.character {
+  position: relative;
+  background: white;
+}
+.heart.sheet.actor.character h3 {
+  font-size: 1.5em;
+}
+.heart.sheet.actor.character .info .grid-2 {
+  grid-gap: 1em;
+  align-items: center;
+}
+.heart.sheet.actor.character .calling, .heart.sheet.actor.character .class {
+  align-items: top;
+}
+.heart.sheet.actor.character .calling .name, .heart.sheet.actor.character .class .name {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 1.5em;
+}
+.heart.sheet.actor.character img.profile {
+  object-fit: contain;
+  width: 100%;
+  min-height: 100px;
+  max-height: 256px;
+  border: 0;
+  background: rgba(99, 0, 0, 0.2);
+}
+.heart.sheet.actor.character .faded {
+  opacity: 66%;
+}
+.heart.sheet.actor.character .right {
+  float: right;
+  flex: auto 0 0;
+}
+.heart.sheet.actor.character .col {
+  margin: 0 0.5em;
+}
+.heart.sheet.actor.character .grid-2 input:not([type]) {
+  border: 0;
+  border-bottom: 1px dotted #630000;
+  font-size: 1.5em;
+}
+.heart.sheet.actor.character .grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  place-items: stretch;
+  column-gap: 0.5em;
+}
+.heart.sheet.actor.character .grid-3.resistances {
+  grid-template-columns: auto auto auto;
+  align-items: start;
+  justify-content: space-evenly;
+}
+.heart.sheet.actor.character .grid-3.resistances.left {
+  justify-self: left;
+}
+.heart.sheet.actor.character .bold {
+  font-weight: bold;
+  font-size: 16px;
+}
+.heart.sheet.actor.character .resistance-input {
+  font-family: "MelmaCracked";
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #630000;
+  border: none;
+  margin: 0 2px;
+  padding: 0;
+  vertical-align: top;
+}
+
+/*# sourceMappingURL=character.css.map */

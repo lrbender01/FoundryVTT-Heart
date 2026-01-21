@@ -1,0 +1,13 @@
+{
+    "_id": "9pu7buaopf4xoal3",
+    "name": "Judge",
+    "type": "ability",
+    "system": {
+        "description": "When you track a condemned target as part of a delve, increase your stress dice size by 1 step.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!9pu7buaopf4xoal3",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

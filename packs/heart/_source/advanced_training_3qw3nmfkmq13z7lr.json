@@ -1,0 +1,13 @@
+{
+    "_id": "3qw3nmfkmq13z7lr",
+    "name": "Advanced Training",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following skills: Compel, Delve, Discern, Endure, Evade, Hunt, Kill, Mend, Sneak. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!3qw3nmfkmq13z7lr",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "0ptu7r8j8kwizkp6",
+    "name": "The Harvest",
+    "type": "ability",
+    "system": {
+        "description": "The people of the Eastern Domain call Death the Harvestan untamed god-beast of endings that you pray to for a quick demise. Gain the Wild domain. Wild animals are scared of you and will not attack you if other targets are available.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!0ptu7r8j8kwizkp6",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,14 @@
+{
+    "_id": "mzi84jyev8qw21y9",
+    "name": "Battered",
+    "type": "fallout",
+    "system": {
+        "description": "Your dominant hand is injured; you can bandage it up and stop the bleeding, but it's of limited use for the time being. Any offensive action you make in combat becomes Risky; any tasks that require fine dexterity are out of the question. [Ongoing]",
+        "resistance": "blood",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!mzi84jyev8qw21y9",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

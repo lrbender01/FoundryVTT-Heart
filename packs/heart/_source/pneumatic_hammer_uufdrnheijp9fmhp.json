@@ -1,0 +1,17 @@
+{
+    "_id": "uufdrnheijp9fmhp",
+    "name": "Pneumatic hammer",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d8",
+        "tags": [
+            "Compendium.heart.heart.xucjrfv4d6c7b07t",
+            "Compendium.heart.heart.qufhosfz6cziu2a1",
+            "Compendium.heart.heart.yagk7wryfjp2ukc2"
+        ]
+    },
+    "_key": "!items!uufdrnheijp9fmhp",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

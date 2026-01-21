@@ -1,0 +1,14 @@
+{
+    "_id": "8fnpmtxtr7dnowaz",
+    "name": "Dark Cravings",
+    "type": "fallout",
+    "system": {
+        "description": "As STRANGE APPETITE, but the effect is permanent until this fallout is removed. [Ongoing]",
+        "resistance": "echo",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!8fnpmtxtr7dnowaz",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

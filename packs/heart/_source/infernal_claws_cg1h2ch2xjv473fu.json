@@ -1,0 +1,13 @@
+{
+    "_id": "cg1h2ch2xjv473fu",
+    "name": "Infernal Claws",
+    "type": "ability",
+    "system": {
+        "description": "You learn the secrets of the Dark Place. You know the location of and the route to hell (or something close to it). You can also summon fallen angels and other agents of misrule to drag a target down there. Compared to hell, the Eight Heavens seem like pretty nice places to spend an eternity. This process traps the target there indefinitely, wracking it with torments and driving it insane. Dragging someone to hell in this way consumes your life essence, and your death embraces you for one final time before stopping your heart.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!cg1h2ch2xjv473fu",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

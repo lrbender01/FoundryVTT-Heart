@@ -1,0 +1,13 @@
+{
+    "_id": "v3qfkdv3hccc1fdg",
+    "name": "Tainted Meat",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, when you use MONSTROUS APPETITE to consume a resource with the Cursed domain with a value of D8 or higher, add 1 to the minimum protection provided by your HEARTSBLOOD core ability instead of removing stress. This effect lasts until the end of the situation.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!v3qfkdv3hccc1fdg",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

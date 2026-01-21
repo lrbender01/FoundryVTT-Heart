@@ -1,0 +1,13 @@
+{
+    "_id": "e8mqeldauxi0m5oa",
+    "name": "Intoxicant",
+    "type": "ability",
+    "system": {
+        "description": "Pheromone glands pucker and blossom on your wrists and neck; you are alluring, irresistible, almost soporific. Gain the Compel skill. Once per session, when you talk to someone for five minutes or more, you convince them to revert to their basest impulses. They become driven solely by lust, hunger or a need for shelter - whichever they desire most right now.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!e8mqeldauxi0m5oa",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

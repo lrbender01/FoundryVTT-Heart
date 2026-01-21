@@ -1,0 +1,17 @@
+{
+    "_id": "05w04rbrx2d92kqo",
+    "name": "Frenzy Of The Sky Court",
+    "type": "ability",
+    "system": {
+        "description": "The Court had their memories stripped away and their brains filled with nothing but air; though all of genius-level intelligence, they exist purely in a single, frantic moment. Roll Evade+Occult to cast this spell. On a success, you are filled with the mercurial energy of the Sky Court, and you gain +1 Protection to all resistances for the remainder of the situation. However, until the spell ends (and you can't end it early), any actions that require more than a couple of seconds' attention become Risky.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.scz2w64vyii41npz",
+            "Compendium.heart.heart.z8wgxhvl9lxmviac",
+            "Compendium.heart.heart.cq1u7iin21o9j190"
+        ]
+    },
+    "_key": "!items!05w04rbrx2d92kqo",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "d00577pxm3gqf8ar",
+    "name": "Sacred Object",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, when you assume your true form, downgrade one Blood fallout result you are suffering from by one step.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!d00577pxm3gqf8ar",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

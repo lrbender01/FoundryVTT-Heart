@@ -1,0 +1,13 @@
+{
+    "_id": "ttidnihjf9pgxf7q",
+    "name": "Fragment Of Lekolé",
+    "type": "ability",
+    "system": {
+        "description": "The weapon gains the Brutal tag.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ttidnihjf9pgxf7q",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

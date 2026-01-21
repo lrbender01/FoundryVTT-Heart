@@ -1,0 +1,13 @@
+{
+    "_id": "t3vtqgbv31szdh13",
+    "name": "Sacrifice",
+    "type": "ability",
+    "system": {
+        "description": "You are willing to sacrifice anything for another hit. Before you cast a spell from this class, you can opt to destroy a resource with the Occult domain. Roll the resource's dice; the amount rolled is added to your Protection value against any stress incurred as a result of casting the spell.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!t3vtqgbv31szdh13",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

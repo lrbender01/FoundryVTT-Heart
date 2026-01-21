@@ -1,0 +1,13 @@
+{
+    "_id": "9bba3grv8idl8pgr",
+    "name": "Helixican Burst",
+    "type": "ability",
+    "system": {
+        "description": "When you activate AETHERIC FIELD, deal damage equal to your Echo protection to all adversaries standing nearby.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!9bba3grv8idl8pgr",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

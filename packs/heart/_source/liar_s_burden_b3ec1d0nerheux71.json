@@ -1,0 +1,13 @@
+{
+    "_id": "b3ec1d0nerheux71",
+    "name": "Liar's Burden",
+    "type": "ability",
+    "system": {
+        "description": "The moon beneath does not tolerate the wicked words of sinners. Gain the Discern skill. If you suspect an NPC is lying to you, roll Discern+Religion. On a success, if they were lying, they mark D4 stress; their mouth streams with blood as though they had attempted to chew on broken glass.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!b3ec1d0nerheux71",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "guqmqyyooh66hb9r",
+    "name": "Endurance Training",
+    "type": "ability",
+    "system": {
+        "description": "Your greatblade no longer has the Tiring tag, and inflicts D8 stress against human-sized targets.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!guqmqyyooh66hb9r",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

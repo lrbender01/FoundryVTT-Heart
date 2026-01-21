@@ -1,0 +1,13 @@
+{
+    "_id": "a8q7xir2x6of7wdi",
+    "name": "Angelic",
+    "type": "ability",
+    "system": {
+        "description": "You undergo the ultimate heartsblood transformation - you become an agent of the Heart Itself, a red and mighty angel, and your approach is ruin incarnate. Following a transformation process that is either distressingly sudden or agonisingly slow, your flesh and bones burst and reform into those of a towering Angel (p. 176. You are as powerful and ruinous as any other Angel, but you retain your will -for the remainder of the current situation, at least. After that, you are absorbed back into the flesh of the Heart, and become another agent of unreality that will beset delvers in centuries to come.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!a8q7xir2x6of7wdi",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

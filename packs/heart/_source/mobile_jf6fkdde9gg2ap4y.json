@@ -1,0 +1,12 @@
+{
+    "_id": "jf6fkdde9gg2ap4y",
+    "name": "Mobile",
+    "type": "tag",
+    "system": {
+        "description": "If left unattended, the resource will leave of its own accord."
+    },
+    "effects": [],
+    "_key": "!items!jf6fkdde9gg2ap4y",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

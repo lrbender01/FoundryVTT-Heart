@@ -1,0 +1,13 @@
+{
+    "_id": "7mq13g2x6hk1epa4",
+    "name": "Bezerk",
+    "type": "ability",
+    "system": {
+        "description": "When you activate CHIMERIC STRAIN, increase the Echo stress inflicted by 1 step and ignore the effects of Blood fallout until the end of the situation. You fight on, heedless of the pain.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!7mq13g2x6hk1epa4",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

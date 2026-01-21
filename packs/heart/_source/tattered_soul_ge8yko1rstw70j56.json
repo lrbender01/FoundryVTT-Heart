@@ -1,0 +1,13 @@
+{
+    "_id": "ge8yko1rstw70j56",
+    "name": "Tattered Soul",
+    "type": "ability",
+    "system": {
+        "description": "Your eternal spirit has been warped and torn by your experiences, leaving you with an affinity with the notquite-real. Gain the Cursed domain and +1 Echo protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ge8yko1rstw70j56",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

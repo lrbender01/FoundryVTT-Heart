@@ -1,0 +1,13 @@
+{
+    "_id": "1r6fyr9dpeahifi9",
+    "name": "Fragmentary Recollection",
+    "type": "ability",
+    "system": {
+        "description": "When you use ECHOES, you can speak with the echoes of people or other sentient entities present. These echoes are momentary snapshots of psyches, with all the limitations on cognition that such a state entails.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!1r6fyr9dpeahifi9",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

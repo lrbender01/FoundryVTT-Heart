@@ -1,0 +1,27 @@
+<details class="item preview ability" data-document-uuid="{{document.uuid}}" {{ifThen open "open" ""}}>
+    <summary>
+        <div class="inline-flex fill align-center">
+            <span class="name grow">{{document.name}}</span>
+            <heart-label class="major">
+                {{localize (concat "heart.item.type." document.type)}}
+            </heart-label>
+            <heart-label class="minor">
+                {{localize (concat "heart.ability.type." document.system.type ".short")}}
+            </heart-label>
+            {{#if editMode}}
+            <div class="button" data-action="remove" title='{{localize "heart.button.remove"}}'><i
+                    class="fas fa-trash"></i></div>
+            {{/if}}
+        </div>
+    </summary>
+    <div>
+        {{{document.system.description}}}
+    </div>
+    {{#if (eq document.system.type "major")}}
+    <div class="flex flex-col gap">
+        {{#each document.system.minorAbilities as |uuid|}}
+        {{{ foreignPartial "systems/heart/templates/items/ability/preview.hbs" uuid}}}
+        {{/each}}
+    </div>
+    {{/if}}
+</details>

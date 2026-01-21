@@ -1,0 +1,13 @@
+{
+    "_id": "z33lryal5ri7pki9",
+    "name": "Fragment Of Lombré",
+    "type": "ability",
+    "system": {
+        "description": "The weapon gains the Smoke tag (it manifests like ink dropped in water) and no longer creates noise - in fact, it dampens all nearby noise",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!z33lryal5ri7pki9",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

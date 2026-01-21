@@ -1,0 +1,12 @@
+{
+    "_id": "iml376b6qxswjsil",
+    "name": "Spread",
+    "type": "tag",
+    "system": {
+        "description": "Anyone standing near the target on a successful use must roll Evade+Domain (or another applicable skill) to avoid marking stress as well. On a partial success, downgrade the stress dice by one size. NPCs caught in a blast simply take the stress."
+    },
+    "effects": [],
+    "_key": "!items!iml376b6qxswjsil",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

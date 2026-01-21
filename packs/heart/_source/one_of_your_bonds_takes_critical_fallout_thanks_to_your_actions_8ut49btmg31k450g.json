@@ -1,0 +1,12 @@
+{
+    "_id": "8ut49btmg31k450g",
+    "name": "One of your bonds takes Critical fallout thanks to your actions.",
+    "type": "beat",
+    "system": {
+        "description": "One of your bonds takes Critical fallout thanks to your actions.",
+        "type": "major"
+    },
+    "_key": "!items!8ut49btmg31k450g",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

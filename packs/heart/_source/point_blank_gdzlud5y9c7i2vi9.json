@@ -1,0 +1,12 @@
+{
+    "_id": "gdzlud5y9c7i2vi9",
+    "name": "Point-Blank",
+    "type": "tag",
+    "system": {
+        "description": "As Ranged, but at very close range it increases its stress dice by one step. If the shot travels far enough to spread out and dissipate, it lowers its stress dice by one step."
+    },
+    "effects": [],
+    "_key": "!items!gdzlud5y9c7i2vi9",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

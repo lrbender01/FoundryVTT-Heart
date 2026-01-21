@@ -1,0 +1,13 @@
+{
+    "_id": "zl4q1cq0hacx1c35",
+    "name": "Arcane Rebreather",
+    "type": "ability",
+    "system": {
+        "description": "You possess a gas mask that filters out airborne infectants from the Heart. +2 Echo Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!zl4q1cq0hacx1c35",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

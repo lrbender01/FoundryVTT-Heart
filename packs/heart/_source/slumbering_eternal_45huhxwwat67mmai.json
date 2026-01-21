@@ -1,0 +1,13 @@
+{
+    "_id": "45huhxwwat67mmai",
+    "name": "Slumbering Eternal",
+    "type": "ability",
+    "system": {
+        "description": "You no longer need to breathe air; no matter the situation, you will not asphyxiate. Once per session, you can also locate a useful source of water - a stream, a pipe, a drain, a reservoir, a waterfall, etc.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!45huhxwwat67mmai",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "igbj5695wyk3wdjy",
+    "name": "Litanies Of False Power",
+    "type": "ability",
+    "system": {
+        "description": "You know that the gods of the world are distant, dead or disinterested; but you pay attention, for they may reveal useful secrets. Gain the Religion domain. When you use the SACRIFICE ability above, you may also consume resources with the Religion domain.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!igbj5695wyk3wdjy",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

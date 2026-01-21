@@ -1,0 +1,13 @@
+{
+    "_id": "tc15vrzh4empxelz",
+    "name": "Blossom Within The Skull",
+    "type": "ability",
+    "system": {
+        "description": "ANNIHILATION gains the Ranged tag.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!tc15vrzh4empxelz",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "igxqy931tg0rh78h",
+    "name": "Bountiful",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, when you access the temple, you can locate a non- unique item of D8 value or lower.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!igxqy931tg0rh78h",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

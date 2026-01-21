@@ -1,0 +1,16 @@
+{
+    "_id": "k06jrdgt9udaxsgl",
+    "name": "Heavy-draw bow",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d8",
+        "tags": [
+            "Compendium.heart.heart.sro4gij0p1nm6g4g",
+            "Compendium.heart.heart.yagk7wryfjp2ukc2"
+        ]
+    },
+    "_key": "!items!k06jrdgt9udaxsgl",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

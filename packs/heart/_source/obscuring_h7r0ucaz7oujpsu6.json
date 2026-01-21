@@ -1,0 +1,12 @@
+{
+    "_id": "h7r0ucaz7oujpsu6",
+    "name": "Obscuring",
+    "type": "tag",
+    "system": {
+        "description": "The bearer and any nearby allies reduce the damage of incoming and outgoing ranged weapons by 1 step."
+    },
+    "effects": [],
+    "_key": "!items!h7r0ucaz7oujpsu6",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "heart",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "generate-pack-from-yaml.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@foundryvtt/foundryvtt-cli": "^3.0.2",
+    "level": "^10.0.0",
+    "yaml": "^2.8.2"
+  }
+}

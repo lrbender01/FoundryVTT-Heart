@@ -1,0 +1,12 @@
+{
+    "_id": "g1qcgf5i96b90wd3",
+    "name": "Rebel against your orders, even though this puts you at risk.",
+    "type": "beat",
+    "system": {
+        "description": "Rebel against your orders, even though this puts you at risk.",
+        "type": "minor"
+    },
+    "_key": "!items!g1qcgf5i96b90wd3",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

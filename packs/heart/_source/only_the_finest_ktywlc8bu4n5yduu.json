@@ -1,0 +1,13 @@
+{
+    "_id": "ktywlc8bu4n5yduu",
+    "name": "Only The Finest",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, an item you are holding becomes Excellent quality. At the end of the situation, the item is destroyed.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ktywlc8bu4n5yduu",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

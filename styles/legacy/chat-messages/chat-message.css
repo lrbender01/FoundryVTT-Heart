@@ -1,0 +1,107 @@
+.chat-message {
+  background: #630000;
+  color: #fff;
+  border-color: #949494;
+}
+.chat-message .heart.sheet {
+  background: none;
+  color: #000;
+}
+.chat-message .item-type {
+  text-transform: capitalize;
+}
+.chat-message .message-header {
+  color: #fff;
+}
+.chat-message .dice-roll .dice-formula, .chat-message .dice-roll .dice-total {
+  background: #fff;
+  color: #630000;
+  border-color: #949494;
+}
+.chat-message .dice-roll .dice-formula {
+  background: #000;
+  color: white;
+  font-size: 1.2em;
+  padding: 0.2em;
+}
+.chat-message .dice-roll .dice .part-header {
+  border-bottom-color: #fff;
+}
+.chat-message .dice-roll .dice .part-header .part-formula {
+  text-transform: uppercase;
+}
+.chat-message .dice-roll .dice .dice-rolls .roll.discarded {
+  filter: sepia(0.5) contrast(0.75) opacity(0.5);
+}
+.chat-message .message-content + .message-content {
+  margin-top: 0.5em;
+}
+
+.chat-message .heart h1 {
+  border: 0;
+  text-align: center;
+}
+.chat-message .heart button {
+  background: #949494;
+  color: #fff;
+}
+.chat-message .heart button .fas {
+  padding: 0 0.5em;
+}
+.chat-message .heart button + button {
+  margin-top: 0.2em;
+}
+
+.chat-message .roll-request {
+  background: #000;
+  padding: 1em;
+  border-radius: 0.5em;
+  font-size: 1.1em;
+}
+.chat-message .roll-request label {
+  display: flex;
+  align-items: center;
+  justify-items: end;
+  place-content: end;
+}
+.chat-message .roll-request select {
+  color: #fff;
+  appearance: none;
+  width: 100%;
+  overflow: auto;
+}
+.chat-message .roll-request select option {
+  appearance: none;
+  text-align: center;
+  background: #000;
+}
+.chat-message .roll-request button > * {
+  text-overflow: ellipsis;
+}
+.chat-message .roll-request .options {
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.chat-message .roll-request .options .option img {
+  height: 3em;
+  width: 100%;
+  object-fit: contain;
+  border: 0;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+}
+
+.chat-message.whisper {
+  color: #000;
+}
+.chat-message.whisper .message-header {
+  color: #000;
+}
+
+.resistance-text {
+  text-transform: capitalize;
+}
+
+/*# sourceMappingURL=chat-message.css.map */

@@ -1,0 +1,24 @@
+.heart.heart-roll .dice-total {
+  font-family: "MelmaCracked";
+}
+.heart.heart-roll .dice-tooltip {
+  text-align: center;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: flex-end;
+}
+.heart.heart-roll .dice-tooltip .tooltip-part {
+  flex: 33% 1 1;
+  text-align: center;
+}
+.heart.heart-roll .dice-tooltip .tooltip-part .dice-rolls {
+  text-align: center;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+}
+.heart.heart-roll + .heart.heart-roll {
+  margin-top: 0.5em;
+}
+
+/*# sourceMappingURL=roll.css.map */

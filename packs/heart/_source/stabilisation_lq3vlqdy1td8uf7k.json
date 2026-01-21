@@ -1,0 +1,13 @@
+{
+    "_id": "lq3vlqdy1td8uf7k",
+    "name": "Stabilisation",
+    "type": "ability",
+    "system": {
+        "description": "UNCHAOS may now affect all allies within arm's reach rather than a single nearby ally. If they leave your side, they lose access to the effect.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!lq3vlqdy1td8uf7k",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

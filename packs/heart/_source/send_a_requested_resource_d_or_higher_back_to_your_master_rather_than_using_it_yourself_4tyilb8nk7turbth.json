@@ -1,0 +1,12 @@
+{
+    "_id": "4tyilb8nk7turbth",
+    "name": "Send a requested resource (D8 or higher) back to your master rather than using it yourself.",
+    "type": "beat",
+    "system": {
+        "description": "Send a requested resource (D8 or higher) back to your master rather than using it yourself.",
+        "type": "minor"
+    },
+    "_key": "!items!4tyilb8nk7turbth",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

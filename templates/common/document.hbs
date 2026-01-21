@@ -1,0 +1,10 @@
+<div>
+    <div class="info">
+        <img class="profile" src="{{document.img}}" title="{{document.name}}" data-edit="img" />
+        <div class="text">
+            <input name="name" value="{{document.name}}" placeholder="{{localize typeLabel}}" />
+            <div class="subtitle">{{localize subTypeLabel}}</div>
+        </div>
+    </div>
+    {{> @partial-block }}
+</div>

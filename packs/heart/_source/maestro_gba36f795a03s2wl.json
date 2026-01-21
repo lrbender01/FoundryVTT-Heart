@@ -1,0 +1,13 @@
+{
+    "_id": "gba36f795a03s2wl",
+    "name": "Maestro",
+    "type": "ability",
+    "system": {
+        "description": "The weapon gains the Piercing tag.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!gba36f795a03s2wl",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "le4d6wfabprmro9u",
+    "name": "Bloodless",
+    "type": "ability",
+    "system": {
+        "description": "Gain +1 Blood protection. You are immune to mundane poisons.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!le4d6wfabprmro9u",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

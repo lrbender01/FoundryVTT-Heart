@@ -1,0 +1,17 @@
+{
+    "_id": "gcqcpzpna986zjxn",
+    "name": "Unchaos",
+    "type": "ability",
+    "system": {
+        "description": "The Heart is a chaotic place, and you seek to undo that with ancient magic. Roll Mend+Occult to cast this spell. On a success, for the remainder of the situation, you or one nearby ally treats Risky actions as Standard actions (keep the highest rolled dice) as probability coalesces around you and crystallizes at your feet.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.lq3vlqdy1td8uf7k",
+            "Compendium.heart.heart.4xvjzkfgb5ss3a3a",
+            "Compendium.heart.heart.rwkmlvdf94o5v1mv"
+        ]
+    },
+    "_key": "!items!gcqcpzpna986zjxn",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

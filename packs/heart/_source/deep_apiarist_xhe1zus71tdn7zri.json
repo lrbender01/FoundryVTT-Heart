@@ -1,0 +1,81 @@
+{
+    "_id": "xhe1zus71tdn7zri",
+    "name": "Deep Apiarist",
+    "type": "class",
+    "system": {
+        "description": "<p>They called to you: a distant buzzing hivehum reverberating through the City, a message of control and hope, a secret means of scraping meaning and reason from the unfathomable and ever-changing Heart. They are the Hive, they say - a megaconsciousness, a defence network, grown from within the Spire. They are here to help you push back the tide of unreality.</p><p>Desperate, you accepted them into you. Ten dozen glyph-marked bees crawled into your sinuses and built waxen bulwarks against the disorder within. You are better now. You see the world in different patterns, and can sift through the chaff and noise that only confused you before. You have a crystal clear, perfect vision of what Should Be.</p><p>You are a Deep Apiarist - one of a small sect of occultists who use the power of the Hive to work magic that manipulates order and chaos. The sigil-covered bees crawling through their bodies can unleash deadly attacks on those who would stand in their way.</p>",
+        "abilities": [
+            "Compendium.heart.heart.iocevluzfsl21e37",
+            "Compendium.heart.heart.quauwtaqh6m37r2w"
+        ],
+        "futureAbilities": [
+            "Compendium.heart.heart.kh3mnc2rj0gnvi3z",
+            "Compendium.heart.heart.m5tt4y2zlh7qyoiz",
+            "Compendium.heart.heart.4nsxooweu8ggfrsl",
+            "Compendium.heart.heart.x6mukvst8nxfcqgr",
+            "Compendium.heart.heart.e8mqeldauxi0m5oa",
+            "Compendium.heart.heart.tagn9y0jaw36n0q1",
+            "Compendium.heart.heart.ac73yoydtc8qlqmq",
+            "Compendium.heart.heart.q3xo6unrhbnb74vx",
+            "Compendium.heart.heart.d5d9vc77q56gvtcj",
+            "Compendium.heart.heart.wtofuqd5iarxvwku",
+            "Compendium.heart.heart.aaar50eve07jxhkt",
+            "Compendium.heart.heart.zss1hn6k5vfvtq21",
+            "Compendium.heart.heart.rkkcfhbt5aeoy0qk",
+            "Compendium.heart.heart.y0d872fqjpbdnmon",
+            "Compendium.heart.heart.tvlp06613p9lre8z",
+            "Compendium.heart.heart.fz0wyt4furgqljeg",
+            "Compendium.heart.heart.6b6glsrc6ytnkjan",
+            "Compendium.heart.heart.gcqcpzpna986zjxn",
+            "Compendium.heart.heart.fpg7jb1tns4gt8su",
+            "Compendium.heart.heart.lq6ungwwtjbdz3y4",
+            "Compendium.heart.heart.aumgizanig6lh23j"
+        ],
+        "resources": [
+            "Compendium.heart.heart.qx3nr5kqi7fmr6xz"
+        ],
+        "equipment": [],
+        "equipmentGroups": [
+            [
+                "Compendium.heart.heart.vosqq2ui5tn3m3qz"
+            ],
+            [
+                "Compendium.heart.heart.u3pnqal8cuaatrjx"
+            ],
+            [
+                "Compendium.heart.heart.s778r5mk5leb0ypy"
+            ]
+        ]
+    },
+    "effects": [
+        {
+            "_key": "!items.effects!xhe1zus71tdn7zri.bf14c3abc59048fa",
+            "_id": "bf14c3abc59048fa",
+            "name": "The MEND skill",
+            "description": "The Deep Apiarist class provides a +1 to the MEND skill as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.skills.mend.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        },
+        {
+            "_key": "!items.effects!xhe1zus71tdn7zri.0c9f62fbd00d14fd",
+            "_id": "0c9f62fbd00d14fd",
+            "name": "The OCCULT domain",
+            "description": "The Deep Apiarist class provides a +1 to the OCCULT domain as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.domains.occult.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        }
+    ],
+    "img": "systems/heart/assets/class.png",
+    "folder": "yIJ6SF31RMT5vNhz",
+    "_key": "!items!xhe1zus71tdn7zri"
+}

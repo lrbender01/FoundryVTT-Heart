@@ -1,0 +1,13 @@
+{
+    "_id": "3fxnulcokkpqzj1j",
+    "name": "Ultimate Reward",
+    "type": "ability",
+    "system": {
+        "description": "You did it - you paid it off. You finally got out of Incarne's debt. You can retire to a normal life wherever you please and start a family, maybe set up a small business - whatever you want. You die several years from now, maybe decades, surrounded by your loved ones.  ",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!3fxnulcokkpqzj1j",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

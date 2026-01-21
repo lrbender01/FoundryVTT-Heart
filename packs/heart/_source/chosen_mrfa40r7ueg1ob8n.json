@@ -1,0 +1,14 @@
+{
+    "_id": "mrfa40r7ueg1ob8n",
+    "name": "Chosen",
+    "type": "fallout",
+    "system": {
+        "description": "You pass out and awaken in a half- dream state before the Heart; you have been blessed with its power. You return to life seemingly unharmed - a miracle! But within a session or two your transformation into an Angel, a nightmare creature of blistering unreality and scintillating ribbons of wet flesh, is complete. You're not dead; but then again, you can't die. You retire as a player character. [Ongoing]",
+        "resistance": "blood",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!mrfa40r7ueg1ob8n",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

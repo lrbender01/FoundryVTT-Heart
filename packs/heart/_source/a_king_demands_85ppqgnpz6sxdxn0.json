@@ -1,0 +1,13 @@
+{
+    "_id": "85ppqgnpz6sxdxn0",
+    "name": "A King Demands",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, you can demand that a target holding any item gives you that item, and they must obey.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!85ppqgnpz6sxdxn0",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "tu0zkcpnrclseays",
+    "name": "Red Dominion",
+    "type": "ability",
+    "system": {
+        "description": "You don't bleed unless you want to; when you're angry, your veins pulse visibly beneath your skin. Gain +2 Blood protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!tu0zkcpnrclseays",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

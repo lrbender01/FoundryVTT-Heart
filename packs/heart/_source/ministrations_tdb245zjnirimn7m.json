@@ -1,0 +1,13 @@
+{
+    "_id": "tdb245zjnirimn7m",
+    "name": "Ministrations",
+    "type": "ability",
+    "system": {
+        "description": "You offer solace and calm in a world of chaos. Once per session, lead your allies in a service of praise to the Moon Beneath (how you practice your faith is up to you). All player characters who took part can remove one Minor Blood or Mind fallout, or downgrade one Major Blood or Mind fallout to Minor, at the end of the service. If you perform this service whilst on a delve, add +D4 to the delve's resistance.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!tdb245zjnirimn7m",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

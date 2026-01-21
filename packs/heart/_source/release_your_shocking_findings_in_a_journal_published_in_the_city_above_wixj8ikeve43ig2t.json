@@ -1,0 +1,12 @@
+{
+    "_id": "wixj8ikeve43ig2t",
+    "name": "Release your shocking findings in a journal published in the City Above.",
+    "type": "beat",
+    "system": {
+        "description": "Release your shocking findings in a journal published in the City Above.",
+        "type": "minor"
+    },
+    "_key": "!items!wixj8ikeve43ig2t",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "9u5hiqonsvgouno4",
+    "name": "Invest",
+    "type": "ability",
+    "system": {
+        "description": "BROKER can now be used on yourself.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!9u5hiqonsvgouno4",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

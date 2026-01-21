@@ -1,0 +1,14 @@
+{
+    "_id": "338pwhgpt3pnzztd",
+    "name": "Siren Song",
+    "type": "fallout",
+    "system": {
+        "description": "You cannot shake the thought of a particular place or person from your mind (the GM will pick a nearby landmark or NPC). If you do anything other than move towards it or remove obstacles in your path, the action becomes Risky. Once you reach it, the feeling dissipates. [Ongoing]",
+        "resistance": "echo",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!338pwhgpt3pnzztd",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

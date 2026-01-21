@@ -1,0 +1,14 @@
+{
+    "_id": "113lmxirz6roj0mh",
+    "name": "Shattered",
+    "type": "fallout",
+    "system": {
+        "description": "[also: Supplies] Your armour is no longer of use. You cannot use Blood Protection. [Ongoing]",
+        "resistance": "blood",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!113lmxirz6roj0mh",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

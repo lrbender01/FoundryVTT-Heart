@@ -1,0 +1,13 @@
+{
+    "_id": "88z3v5xegb8uohnm",
+    "name": "Connection",
+    "type": "ability",
+    "system": {
+        "description": "When you cast KARMIC LEDGER, you can see who the debt is owed to via an ephemeral red string connecting the two parties. It's easy enough to follow it.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!88z3v5xegb8uohnm",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

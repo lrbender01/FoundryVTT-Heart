@@ -1,0 +1,13 @@
+{
+    "_id": "87apyhwh38eja7xv",
+    "name": "Regal",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, after you mark stress to a resistance, gain +2 Protection in that resistance until the end of the situation.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!87apyhwh38eja7xv",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

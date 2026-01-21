@@ -1,0 +1,18 @@
+.heart.fallout-roll .dice-total {
+  font-family: "MelmaCracked";
+}
+.heart.fallout-roll .flexrow .dice-total {
+  flex: 1;
+  display: flex;
+  place-items: center;
+  place-content: center;
+}
+.heart.fallout-roll .flexrow .icon-button {
+  padding: 0;
+  flex: 1em 0 0;
+}
+.heart.fallout-roll .flexrow .icon-button + .icon-button {
+  margin: 0;
+}
+
+/*# sourceMappingURL=roll.css.map */

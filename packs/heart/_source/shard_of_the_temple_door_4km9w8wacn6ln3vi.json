@@ -1,0 +1,13 @@
+{
+    "_id": "4km9w8wacn6ln3vi",
+    "name": "Shard Of The Temple Door",
+    "type": "ability",
+    "system": {
+        "description": "The great doors of the Moon Ascendant temple were smashed to pieces on the night of the purge. You carry a shard of the door, reminding you that your faith is eternal. Gain the Endure skill. Once per session, when you touch the shard to a closed door, it will not open for at least an hour (unless it is destroyed).",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!4km9w8wacn6ln3vi",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

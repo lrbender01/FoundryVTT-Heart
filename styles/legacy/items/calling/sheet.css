@@ -1,0 +1,87 @@
+form.heart.calling {
+  display: block;
+  font-size: 1.1em;
+  background: #fff;
+}
+form.heart.calling h1, form.heart.calling h2 {
+  font-family: "MelmaCracked";
+}
+form.heart.calling h1, form.heart.calling h2, form.heart.calling h3 {
+  text-transform: uppercase;
+}
+form.heart.calling h4 {
+  font-weight: bold;
+}
+form.heart.calling h1, form.heart.calling h2, form.heart.calling h3, form.heart.calling h4 {
+  border: 0;
+  margin: 0;
+  flex: auto 0 0;
+}
+form.heart.calling h1 .right, form.heart.calling h2 .right, form.heart.calling h3 .right, form.heart.calling h4 .right {
+  float: right;
+  font-family: Alegreya;
+  font-size: 0.8em;
+}
+form.heart.calling h1 {
+  background: #630000;
+  color: #fff;
+  padding: 0.2em;
+}
+form.heart.calling h1 input {
+  color: #fff !important;
+  border: 0;
+  width: 100%;
+  font-size: 1em !important;
+  text-align: left !important;
+}
+form.heart.calling h2 {
+  color: #630000;
+  padding: 0.2em 0;
+}
+form.heart.calling .description {
+  flex: auto 0 0;
+  font-size: 1.2em;
+  font-style: italic;
+  padding: 0 1em;
+  margin: 0.5em;
+}
+form.heart.calling .description .editor-content {
+  font-size: 1.7em !important;
+  line-height: 1em;
+  background: rgba(0, 0, 0, 0.1);
+  min-height: 6.5em;
+  padding: 0.5em;
+  text-align: center;
+}
+form.heart.calling li .action {
+  padding: 0.2em;
+}
+form.heart.calling .action {
+  flex: auto 0 0;
+}
+form.heart.calling p {
+  margin: 0;
+}
+form.heart.calling p + p {
+  margin-top: 0.2em;
+}
+form.heart.calling .flexrow {
+  align-content: center;
+}
+form.heart.calling .right {
+  flex: auto 0 0;
+}
+form.heart.calling .question {
+  font-weight: bold;
+  font-style: italic;
+}
+form.heart.calling .question .editor-content {
+  min-height: 7em !important;
+}
+form.heart.calling .name {
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #630000;
+}
+
+/*# sourceMappingURL=sheet.css.map */

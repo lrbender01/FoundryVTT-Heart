@@ -1,0 +1,13 @@
+{
+    "_id": "cq1u7iin21o9j190",
+    "name": "Maddening Storm",
+    "type": "ability",
+    "system": {
+        "description": "Roll Compel+Occult to cast this spell. On a success, an area roughly the size of a city block - centred on you - is assailed with stiff winds that stir up debris and howl deafeningly through tunnels and vents, but everything within ten feet of you remains calm. All Sneak and Evade checks in this area are made with mastery, but the inhabitants definitely know something's going on. This effect lasts until the end of the current situation; if you move outside of the zone of calm at the centre beforehand, the spell ends.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!cq1u7iin21o9j190",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

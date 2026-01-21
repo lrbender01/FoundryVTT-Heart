@@ -1,0 +1,17 @@
+{
+    "_id": "gzo7qu2dsgokauyy",
+    "name": "Home-made Spireblack Pipe Bombs",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.sro4gij0p1nm6g4g",
+            "Compendium.heart.heart.iml376b6qxswjsil",
+            "Compendium.heart.heart.7121gf3qg4jz04vm"
+        ]
+    },
+    "_key": "!items!gzo7qu2dsgokauyy",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

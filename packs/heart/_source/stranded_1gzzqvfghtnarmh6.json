@@ -1,0 +1,14 @@
+{
+    "_id": "1gzzqvfghtnarmh6",
+    "name": "Stranded",
+    "type": "fallout",
+    "system": {
+        "description": "Somewhere along the line, your reality diverged from everyone else's - and by the time you realise, it's too late to do anything about it. You are marooned in a fracture, an alternate future or a parasite dimension - tell the group about where you spend the rest of your life. You might return, but it's doubtful that anyone you know will recognise you (or be alive) by the time you get back. [Immediate]",
+        "resistance": "echo",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!1gzzqvfghtnarmh6",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

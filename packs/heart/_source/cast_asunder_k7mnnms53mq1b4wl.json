@@ -1,0 +1,13 @@
+{
+    "_id": "k7mnnms53mq1b4wl",
+    "name": "Cast Asunder",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, when an adversary inflicts Blood fallout on you, reduce that adversary's stress dice by 1 step.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!k7mnnms53mq1b4wl",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

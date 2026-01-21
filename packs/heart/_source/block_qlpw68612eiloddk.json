@@ -1,0 +1,12 @@
+{
+    "_id": "qlpw68612eiloddk",
+    "name": "Block",
+    "type": "tag",
+    "system": {
+        "description": "+1 Blood protection."
+    },
+    "effects": [],
+    "_key": "!items!qlpw68612eiloddk",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

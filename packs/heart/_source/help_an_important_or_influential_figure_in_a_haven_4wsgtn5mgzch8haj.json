@@ -1,0 +1,12 @@
+{
+    "_id": "4wsgtn5mgzch8haj",
+    "name": "Help an important or influential figure in a haven.",
+    "type": "beat",
+    "system": {
+        "description": "Help an important or influential figure in a haven.",
+        "type": "minor"
+    },
+    "_key": "!items!4wsgtn5mgzch8haj",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

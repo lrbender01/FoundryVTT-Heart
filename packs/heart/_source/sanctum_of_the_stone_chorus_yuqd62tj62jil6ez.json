@@ -1,0 +1,17 @@
+{
+    "_id": "yuqd62tj62jil6ez",
+    "name": "Sanctum Of The Stone Chorus",
+    "type": "ability",
+    "system": {
+        "description": "They claim, in a hundred voices like the scraping of tectonic plates, that they are the Old Gods, imprisoned in the Heart by upstart deities. Roll Discern+Religion to cast this spell. On a success, you find (or spontaneously create) a path to one of the parasitic temples of the Old Gods, which sucks existence from the world like ticks. When you meditate here, remove D6 stress from Echo; your allies may use the temple in the same way. You may not open more than one path to a temple at any one time. After an hour or so, the path will seal shut - but not without warning, so you'll have time to leave.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.b47jfpwl8x7izgao",
+            "Compendium.heart.heart.4jo5mgt1hbwibcqs",
+            "Compendium.heart.heart.igxqy931tg0rh78h"
+        ]
+    },
+    "_key": "!items!yuqd62tj62jil6ez",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

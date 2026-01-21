@@ -1,0 +1,13 @@
+{
+    "_id": "9khy7lk5f5gkdh4z",
+    "name": "Abide With Me",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, you may grant the benefits of OATH OF TENACITY to a nearby ally",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!9khy7lk5f5gkdh4z",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

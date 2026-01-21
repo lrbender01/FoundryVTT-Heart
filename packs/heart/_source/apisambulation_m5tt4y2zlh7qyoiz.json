@@ -1,0 +1,13 @@
+{
+    "_id": "m5tt4y2zlh7qyoiz",
+    "name": "Apisambulation",
+    "type": "ability",
+    "system": {
+        "description": "Your body sleeps while your mind, riddled with industrious bees, marches on. Gain access to the Delve skill. Once per session, while on a delve, you can opt to fall asleep and let the bees inside your body steer you. In this state, the bees speak for you and perform actions on your behalf -roleplay accordingly (the GM can use Fortune fallout to represent your inhuman pilots). Assuming you get a few hours' rest and progress on the delve, refresh D6 from any of your resistances.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!m5tt4y2zlh7qyoiz",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

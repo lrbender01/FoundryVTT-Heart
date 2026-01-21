@@ -1,0 +1,13 @@
+{
+    "_id": "wq8kc2n732k1d2bj",
+    "name": "True Form",
+    "type": "ability",
+    "system": {
+        "description": "Your skin skitters with barely-contained force: the heartsblood within you is waiting to remake you as a flickering, hungry zoetrope horror. Whenever you want to, or when you suffer Major fallout, you enter your true form -describe it. When in your true form, you roll with mastery on Hunt and Kill checks, but all other checks become Risky. At the end of the current situation, you revert to your humanoid form.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!wq8kc2n732k1d2bj",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

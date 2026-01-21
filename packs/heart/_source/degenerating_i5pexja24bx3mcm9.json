@@ -1,0 +1,12 @@
+{
+    "_id": "i5pexja24bx3mcm9",
+    "name": "Degenerating",
+    "type": "tag",
+    "system": {
+        "description": "If you take damage from a weapon with this tag, roll Endure+[Domain] at the end of the situation.On a failure, mark D6 stress; on a partial success, mark D4 stress; on a success, mark none."
+    },
+    "effects": [],
+    "_key": "!items!i5pexja24bx3mcm9",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

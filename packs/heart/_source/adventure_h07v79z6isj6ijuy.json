@@ -1,0 +1,62 @@
+{
+    "_id": "h07v79z6isj6ijuy",
+    "name": "Adventure",
+    "type": "calling",
+    "system": {
+        "description": "The City Above holds no more excitement for you. In the City Beneath, on the knife-edge between real and unreal, you can be who you really are.",
+        "questions": [
+            {
+                "question": "What drove you out of the City Above?"
+            },
+            {
+                "question": "You and another player character barely escaped from a dangerous situation recently. Who was it and what happened?"
+            },
+            {
+                "question": "Recently, you and another character returned from a delve with an item for a wealthy patron. They wouldn't give it up - why, and what was it?"
+            },
+            {
+                "question": "What's the most dangerous beast or individual you've heard tell of, and why haven't you defeated them yet?"
+            }
+        ],
+        "ability": "Compendium.heart.heart.b1o8ox9f1koetlq8",
+        "beats": [
+            "Compendium.heart.heart.4er6att76j7byqog",
+            "Compendium.heart.heart.ztyy4lsx2qmplk8e",
+            "Compendium.heart.heart.l5lf6ngkv9ldl538",
+            "Compendium.heart.heart.w1fbet3ly40yjw7l",
+            "Compendium.heart.heart.50e3fsh3d7rnoxjg",
+            "Compendium.heart.heart.xvu5yui2o2fsg4y5",
+            "Compendium.heart.heart.mwkqqeba0blilj8y",
+            "Compendium.heart.heart.4wsgtn5mgzch8haj",
+            "Compendium.heart.heart.6wmgi3qgg0lo6qxz",
+            "Compendium.heart.heart.7da4pelqc2b2eql3",
+            "Compendium.heart.heart.rk7diiimczs8knnr",
+            "Compendium.heart.heart.b043y6wqggij9ihb",
+            "Compendium.heart.heart.raxi6jajutzq6adn",
+            "Compendium.heart.heart.ds2p77ibocshzj23",
+            "Compendium.heart.heart.spebwtcxhojat9as",
+            "Compendium.heart.heart.vhe6zlndsieqoozw",
+            "Compendium.heart.heart.koui5i14p5bynggm",
+            "Compendium.heart.heart.cplq538nlhglfpk9",
+            "Compendium.heart.heart.c1xg06d48m83hcl6",
+            "Compendium.heart.heart.rqgs6xz3zorzhyln",
+            "Compendium.heart.heart.lzple8ibbco8au5h",
+            "Compendium.heart.heart.hkhyigyak4uihyl0",
+            "Compendium.heart.heart.zf02b5omsdbzbcwh",
+            "Compendium.heart.heart.h95uv78sdi5ek6ck",
+            "Compendium.heart.heart.7pqe05w3m3jvq9qf",
+            "Compendium.heart.heart.14vzcbkjo9xr9f97",
+            "Compendium.heart.heart.ejifkh71e9s5ffg5",
+            "Compendium.heart.heart.6onyvh5ex3kiq6hz",
+            "Compendium.heart.heart.5jbvh6801yjtxjfr",
+            "Compendium.heart.heart.55wgi7krlfvapuwy",
+            "Compendium.heart.heart.cvzn2fafippy12np",
+            "Compendium.heart.heart.vuhm41kwmk82xrtm",
+            "Compendium.heart.heart.ht0q3qaza7dehgsg"
+        ]
+    },
+    "effects": [],
+    "img": "systems/heart/assets/calling.png",
+    "folder": "CN0la67ziHUrLPD2",
+    "_key": "!items!h07v79z6isj6ijuy"
+}

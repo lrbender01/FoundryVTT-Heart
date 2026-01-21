@@ -1,0 +1,14 @@
+{
+    "_id": "bb2klkvqv29w5f9g",
+    "name": "Descent",
+    "type": "fallout",
+    "system": {
+        "description": "The next time you're in a landmark,the ground shakes as the Heart draws you and the place further down. Move the landmark, and anyone in it, to the next available space on the tier below. This is catastrophic; most people will not survive. You are swallowed up by the Heart, and retire as a player character.[Immediate]",
+        "resistance": "echo",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!bb2klkvqv29w5f9g",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

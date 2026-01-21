@@ -1,0 +1,12 @@
+{
+    "_id": "ehickdeargv3j4z9",
+    "name": "Sabotage the assets of those who stand against your order.",
+    "type": "beat",
+    "system": {
+        "description": "Sabotage the assets of those who stand against your order.",
+        "type": "minor"
+    },
+    "_key": "!items!ehickdeargv3j4z9",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

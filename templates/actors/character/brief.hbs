@@ -1,0 +1,101 @@
+<section class="tab dropzone {{tab.cssClass}}" data-tab="brief" data-group="tabs">
+    <div class="grid-2col">
+        <div class="grid-3col align-content-start justify-content-center">
+            <div class="melma bold">{{localize "heart.character.totalStress.brief"}}</div>
+            <div class="bold">{{document.system.totalStress}}</div>
+            <div class="melma red">{{localize "heart.class.protections"}}</div>
+
+            {{#forEach document.system.resistances as |value resistance|}}
+            <div class="melma red">{{localize (concat "heart.resistance.type." resistance ".brief")}}</div>
+            <heart-boxes name='{{concat "system.resistances." resistance ".value" }}' value="{{value.value}}"
+                max="10"></heart-boxes>
+            <heart-boxes name='{{concat "system.resistances." resistance ".protection" }}' value="{{value.protection}}"
+                max="5"></heart-boxes>
+            {{/forEach}}
+        </div>
+
+        <div class="flex wrap stretch-last justify-content-center align-content-center">
+            {{#forEach document.system.skills as |value skill|}}
+            {{#if (gte value.value 1)}}
+            <div class="flex align-items-center gap-5">
+                <heart-label class="major">{{localize "heart.skill.name.singular"}}</heart-label>
+                <span class="bold">{{localize (concat "heart.skill.type." skill)}}</span>
+                {{#if (gte value.value 2)}}
+                <div class="knack red">{{value.knack}}</div>
+                {{else}}
+                <div></div>
+                {{/if}}
+            </div>
+            {{/if}}
+            {{/forEach}}
+            {{#forEach document.system.domains as |value domain|}}
+            {{#if (gte value.value 1)}}
+            <div class="flex align-items-center gap-5">
+                <heart-label class="major">{{localize "heart.domain.name.singular"}}</heart-label>
+                <span class="bold">{{localize (concat "heart.domain.type." domain)}}</span>
+                {{#if (gte value.value 2)}}
+                <div class="knack red">{{value.knack}}</div>
+                {{else}}
+                <div></div>
+                {{/if}}
+            </div>
+            {{/if}}
+            {{/forEach}}
+        </div>
+
+        <div>
+            {{#forEach document.itemTypes.class as |class|}}
+            {{> "systems/heart/templates/items/class/preview.hbs" document=class}}
+            {{/forEach}}
+            {{#if (eq document.itemTypes.class.length 0)}}
+            <div class="item preview flex summary" data-picker="class" data-action="openPicker">
+                <span class="grow" title='{{localize "heart.character.class.missing"}}'><i
+                        class="fas fa-triangle-exclamation"></i></span>
+                <heart-label class="major">{{localize "heart.item.type.class"}}</heart-label>
+            </div>
+            {{/if}}
+        </div>
+
+        <div>
+            {{#forEach document.itemTypes.calling as |calling|}}
+            {{> "systems/heart/templates/items/calling/preview.hbs" document=calling}}
+            {{/forEach}}
+            {{#if (eq document.itemTypes.calling.length 0)}}
+            <div class="item preview flex summary"  data-picker="calling">
+
+                <span class="grow" title='{{localize "heart.character.calling.missing"}}'><i
+                        class="fas fa-triangle-exclamation"></i></span>
+                <heart-label class="major">{{localize "heart.item.type.calling"}}</heart-label>
+            </div>
+            {{/if}}
+        </div>
+
+        {{#forEach document.itemTypes.beat as |beat|}}
+        {{> "systems/heart/templates/items/beat/preview.hbs" document=beat}}
+        {{/forEach}}
+        {{#repeat (sub 2 document.itemTypes.beat.length)}}
+        <div class="item preview flex summary" data-picker="beat" >
+            <span class="grow" title='{{localize "heart.character.beat.missing"}}'><i
+                    class="fas fa-triangle-exclamation"></i></span>
+            <heart-label class="major">{{localize "heart.item.type.beat"}}</heart-label>
+        </div>
+        {{/repeat}}
+
+
+        {{#forEach document.itemTypes.equipment as |equipment|}}
+        {{> "systems/heart/templates/items/equipment/preview.hbs" document=equipment}}
+        {{/forEach}}
+
+        {{#forEach document.itemTypes.resource as |resource|}}
+        {{> "systems/heart/templates/items/resource/preview.hbs" document=resource}}
+        {{/forEach}}
+
+        {{#forEach document.itemTypes.ability as |ability|}}
+        {{> "systems/heart/templates/items/ability/preview.hbs" document=ability}}
+        {{/forEach}}
+
+        {{#forEach document.itemTypes.fallout as |fallout|}}
+        {{> "systems/heart/templates/items/fallout/preview.hbs" document=fallout}}
+        {{/forEach}}
+    </div>
+</section>

@@ -1,0 +1,9 @@
+<div class="item preview flex summary beat draggable" data-document-uuid="{{document.uuid}}">
+    <span class="name grow">{{document.name}}</span>
+    <heart-label class="major">
+        {{localize "heart.item.type.beat"}}
+    </heart-label>
+    <heart-label class="minor">
+        {{localize (concat "heart.beat.type." document.system.type ".short")}}
+    </heart-label>
+</div>

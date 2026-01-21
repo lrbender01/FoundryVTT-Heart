@@ -1,0 +1,13 @@
+{
+    "_id": "66q5i2ikqx9x6x8a",
+    "name": "Creative Acquisitions",
+    "type": "ability",
+    "system": {
+        "description": "You know that the best price for any item is free. Gain the Sneak skill. When you attempt to steal a resource or equipment of D10 value or higher, roll wit hmastery.  Core Traits ",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!66q5i2ikqx9x6x8a",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

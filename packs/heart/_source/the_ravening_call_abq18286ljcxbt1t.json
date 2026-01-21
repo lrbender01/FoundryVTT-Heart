@@ -1,0 +1,14 @@
+{
+    "_id": "abq18286ljcxbt1t",
+    "name": "The Ravening Call",
+    "type": "fallout",
+    "system": {
+        "description": "This fallout has no effect, but it stays on your character, and occasionally manifests as a broken, staccato howl in the back of their mind. Should this fallout by upgraded, see THE RAVENING BEAST below. [Ongoing]",
+        "resistance": "echo",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!abq18286ljcxbt1t",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

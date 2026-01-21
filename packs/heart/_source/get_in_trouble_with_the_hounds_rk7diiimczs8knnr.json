@@ -1,0 +1,12 @@
+{
+    "_id": "rk7diiimczs8knnr",
+    "name": "Get in trouble with the Hounds.",
+    "type": "beat",
+    "system": {
+        "description": "Get in trouble with the Hounds.",
+        "type": "minor"
+    },
+    "_key": "!items!rk7diiimczs8knnr",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

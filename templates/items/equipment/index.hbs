@@ -1,0 +1,22 @@
+<div>
+
+    <heart-label class="major">
+        {{localize "heart.item.type.equipment"}}
+    </heart-label>
+    <heart-label class="minor">
+        {{localize (concat "heart.equipment.type." document.system.type)}}
+        {{#if (or (eq document.system.type "kill") (eq document.system.type "mend")) }}
+        {{#each document.system.resistances as |resistance|}}
+            {{localize (concat "heart.resistance.type." resistance)}}
+        {{/each}}
+        {{localize (concat "heart.dieSize." document.system.dieSize)}}
+        {{/if}}
+    </heart-label>
+
+    {{#each document.system.tags as |uuid|}}
+    {{{ "foreignPartial" "systems/heart/templates/items/tag/preview.hbs" uuid }}}
+    {{/each}}
+
+    {{editor document.system.description target="system.description" button=true editable=editable
+    owner=owner}}
+</div>

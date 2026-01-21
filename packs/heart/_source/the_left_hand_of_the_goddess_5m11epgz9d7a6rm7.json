@@ -1,0 +1,13 @@
+{
+    "_id": "5m11epgz9d7a6rm7",
+    "name": "The Left Hand Of The Goddess",
+    "type": "ability",
+    "system": {
+        "description": "The faithful are a bountiful garden, and it is your task to excise disease and corruption at the root. Gain the Kill skill and +1 Blood Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!5m11epgz9d7a6rm7",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

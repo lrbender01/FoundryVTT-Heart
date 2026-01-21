@@ -1,0 +1,13 @@
+{
+    "_id": "x6mukvst8nxfcqgr",
+    "name": "Hunter Of The Damned",
+    "type": "ability",
+    "system": {
+        "description": "You bring order to the Heart with sword and shot. Gain the Hunt skill. Once per session, when you eliminate a heartsblooded creature, remove D6 stress from any of your resistances.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!x6mukvst8nxfcqgr",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

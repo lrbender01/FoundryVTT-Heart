@@ -1,0 +1,13 @@
+{
+    "_id": "y60my7d4a3uw4w4q",
+    "name": "Knife",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!y60my7d4a3uw4w4q",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

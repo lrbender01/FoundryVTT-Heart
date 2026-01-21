@@ -1,0 +1,12 @@
+{
+    "_id": "55wgi7krlfvapuwy",
+    "name": "Lead a group or organisation (other than your delving party).",
+    "type": "beat",
+    "system": {
+        "description": "Lead a group or organisation (other than your delving party).",
+        "type": "major"
+    },
+    "_key": "!items!55wgi7krlfvapuwy",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

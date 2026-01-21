@@ -1,0 +1,13 @@
+{
+    "_id": "ejiwucvz35vwhpp3",
+    "name": "Charms And Wards",
+    "type": "ability",
+    "system": {
+        "description": "Gain +1 Protection in the Blood, Mind, Supplies or Fortune resistance. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ejiwucvz35vwhpp3",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

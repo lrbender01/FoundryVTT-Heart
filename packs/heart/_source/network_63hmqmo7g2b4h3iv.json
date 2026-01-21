@@ -1,0 +1,17 @@
+{
+    "_id": "63hmqmo7g2b4h3iv",
+    "name": "Network",
+    "type": "ability",
+    "system": {
+        "description": "You draw the faithful - those whose lives have been scarred by debt - around a symbol of Incarne, and harvest the bounty they offer up to your god. When in a landmark with the Haven domain, roll Mend+Religion to cast this spell as you build a shrine to Incarne; on a success, you add the landmark to your trade network. When you enter a haven that you have added to your trade network, gain a D4(Haven) resource. Increase the dice size of this resource by one step for every additional haven in the network after the first to a maximum of D10. If you take this ability, you or any other incarnadine may now incur the fallout below.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.prvwf4vjbnpeqwn6",
+            "Compendium.heart.heart.ijtq92v42j97cuvx",
+            "Compendium.heart.heart.gzmidis8prdhounk"
+        ]
+    },
+    "_key": "!items!63hmqmo7g2b4h3iv",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

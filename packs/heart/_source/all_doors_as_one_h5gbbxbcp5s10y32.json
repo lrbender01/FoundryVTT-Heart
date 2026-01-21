@@ -1,0 +1,13 @@
+{
+    "_id": "h5gbbxbcp5s10y32",
+    "name": "All Doors As One",
+    "type": "ability",
+    "system": {
+        "description": "When you use STEP BETWEEN, your destination point can be one tier above or below your current tier. ",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!h5gbbxbcp5s10y32",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

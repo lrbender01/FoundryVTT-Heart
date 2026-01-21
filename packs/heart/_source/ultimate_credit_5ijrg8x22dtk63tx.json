@@ -1,0 +1,13 @@
+{
+    "_id": "5ijrg8x22dtk63tx",
+    "name": "Ultimate Credit",
+    "type": "ability",
+    "system": {
+        "description": "A life lived in service of Incarne brings with it a powerful favour. Once, and only once, you can buy anything (except the Heart Itself). You own this physical, conceptual or immaterial thing and have as much control over it as you do a knife, a suit of clothes or anything else you own. Two sessions from now, the debt will be recalled, and it will take your life.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!5ijrg8x22dtk63tx",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

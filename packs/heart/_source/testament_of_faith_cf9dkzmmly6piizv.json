@@ -1,0 +1,13 @@
+{
+    "_id": "cf9dkzmmly6piizv",
+    "name": "Testament of Faith",
+    "type": "ability",
+    "system": {
+        "description": "<p>You become a beacon of hope for those struck by fear or desperation. To activate this ability, die a martyr&rsquo;s death. The ground on which you died (or where you&rsquo;re buried, whichever is more dramatically appropriate) becomes holy to the church of the Moon Beneath. Over the next few months, pilgrims will visit the site and erect a suitable shrine. For the remainder of the campaign, and at the GM&rsquo;s discretion any future campaigns, the shrine functions as a landmark with some appropriate haunts. Once per campaign, when the surviving player characters visit it, they can beseech your spirit to answer a question. You will deliver valuable wisdom.</p>",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!cf9dkzmmly6piizv",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

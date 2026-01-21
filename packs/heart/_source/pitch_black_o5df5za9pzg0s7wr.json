@@ -1,0 +1,14 @@
+{
+    "_id": "o5df5za9pzg0s7wr",
+    "name": "Pitch Black",
+    "type": "fallout",
+    "system": {
+        "description": "Unable to see, you are dragged away by darkling creatures, never to return. [Immediate]",
+        "resistance": "supplies",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!o5df5za9pzg0s7wr",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

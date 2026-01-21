@@ -1,0 +1,13 @@
+{
+    "_id": "0j6266qldsbweizj",
+    "name": "Conditioning",
+    "type": "ability",
+    "system": {
+        "description": "When you cast CRAVE, mark D6 stress to Mind to scar the target with the desire. From now on, the first time they see you each session, treat them as though you had just cast CRAVE on them with the same subject of desire.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!0j6266qldsbweizj",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

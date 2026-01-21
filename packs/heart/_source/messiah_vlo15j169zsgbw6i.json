@@ -1,0 +1,14 @@
+{
+    "_id": "vlo15j169zsgbw6i",
+    "name": "Messiah",
+    "type": "fallout",
+    "system": {
+        "description": "You have been followed by a cult of weirdos and monsters for long enough now - something's got to give. One of two things happen: either you believe your own hype and become a cult leader, leaving your life of delving behind and attempting to set up shop in a new haven within the Heart, or the cult out you as a false prophet and attempt to kill you in an appropriately brutal and public manner. [Immediate]",
+        "resistance": "echo",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!vlo15j169zsgbw6i",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

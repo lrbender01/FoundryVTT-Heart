@@ -1,0 +1,13 @@
+{
+    "_id": "ct5kosofuguuvowq",
+    "name": "Applied Research",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, when you inflict stress on an adversary, you can identify its weak spots. For the remainder of the situation, you treat that adversary's difficulty as one step lower (to a minimum of Standard) when acting against it.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ct5kosofuguuvowq",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

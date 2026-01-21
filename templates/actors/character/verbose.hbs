@@ -1,0 +1,158 @@
+<section class="tab dropzone {{tab.cssClass}}" data-tab="verbose" data-group="tabs">
+    <div class="grid-2col auto-left">
+        <div class="melma red">
+            {{localize "Name"}}
+        </div>
+        <input name="name" value="{{document.name}}" />
+
+        <div class="grid-3col grid-2span">
+            <div class="melma bold">{{localize "heart.character.totalStress.brief"}}</div>
+            <div class="bold">{{document.system.totalStress}}</div>
+            <div class="melma red">{{localize "heart.class.protections"}}</div>
+
+            {{#forEach document.system.resistances as |value resistance|}}
+            <div class="melma red">{{localize (concat "heart.resistance.type." resistance ".brief")}}</div>
+            <heart-boxes name='{{concat "system.resistances." resistance ".value" }}' value="{{value.value}}"
+                max="10"></heart-boxes>
+            <heart-boxes name='{{concat "system.resistances." resistance ".protection" }}' value="{{value.protection}}"
+                max="5"></heart-boxes>
+            {{/forEach}}
+        </div>
+
+        <div class="melma">{{localize "heart.item.type.class"}}</div>
+        <select class="custom-select" data-type="class">
+            <button>
+                <selectedcontent></selectedcontent>
+                <span class="arrow"></span>
+            </button>
+            {{#if document.class }}
+            <option value="{{document.class.uuid}}">
+                {{> "systems/heart/templates/items/class/preview.hbs" document=document.class}}
+            </option>
+            {{/if}}
+            <option value="">
+                <div class="item preview flex summary">
+                    <span class="name grow">{{localize "None"}}</span>
+                </div>
+            </option>
+            {{#forEach classOptions as |class|}}
+            <option value="{{class.uuid}}">
+                {{> "systems/heart/templates/items/class/preview.hbs" document=class editMode=false}}
+            </option>
+            {{/forEach}}
+        </select>
+
+        <div class="melma">{{localize "heart.item.type.calling"}}</div>
+        <select class="custom-select" data-type="calling">
+            <button>
+                <selectedcontent></selectedcontent>
+                <span class="arrow"></span>
+            </button>
+            {{#if document.calling }}
+            <option value="{{document.calling.uuid}}">
+                {{> "systems/heart/templates/items/calling/preview.hbs" document=document.calling}}
+            </option>
+            {{/if}}
+            <option value="">
+                <div class="item preview flex summary">
+                    <span class="name grow">{{localize "None"}}</span>
+                </div>
+            </option>
+            {{#forEach callingOptions as |calling|}}
+            <option value="{{calling.uuid}}">
+                {{> "systems/heart/templates/items/calling/preview.hbs" document=calling editMode=false}}
+            </option>
+            {{/forEach}}
+        </select>
+
+        <div class="melma">{{localize "heart.beat.active.singular"}}</div>
+        <select class="custom-select" data-type="beat" data-index="0">
+            <button>
+                <selectedcontent></selectedcontent>
+                <span class="arrow"></span>
+            </button>
+            {{#if document.activeBeatOne }}
+            <option value="{{document.activeBeatOne.uuid}}">
+                {{> "systems/heart/templates/items/beat/preview.hbs" document=document.activeBeatOne}}
+            </option>
+            {{/if}}
+            <option value="">
+                <div class="item preview summary">
+                    <span class="name grow">{{localize "None"}}</span>
+                </div>
+            </option>
+            {{#forEach beatOptions as |beat|}}
+            <option value="{{beat.uuid}}">
+                {{> "systems/heart/templates/items/beat/preview.hbs" document=beat editMode=false}}
+            </option>
+            {{/forEach}}
+        </select>
+
+        <div class="melma">{{localize "heart.beat.active.singular"}}</div>
+        <select class="custom-select" data-type="beat" data-index="1">
+            <button>
+                <selectedcontent></selectedcontent>
+                <span class="arrow"></span>
+            </button>
+            {{#if document.activeBeatTwo }}
+            <option value="{{document.activeBeatTwo.uuid}}">
+                {{> "systems/heart/templates/items/beat/preview.hbs" document=document.activeBeatTwo}}
+            </option>
+            {{/if}}
+            <option value="">
+                <div class="item preview summary"><span class="name grow">{{localize "None"}}</span></div>
+            </option>
+            {{#forEach beatOptions as |beat|}}
+            <option value="{{beat.uuid}}">
+                {{> "systems/heart/templates/items/beat/preview.hbs" document=beat editMode=false}}
+            </option>
+            {{/forEach}}
+        </select>
+
+        <div class="grid-2col grid-2span">
+            <div class="grid-2col auto-left">
+
+                {{#forEach document.system.skills as |value skill|}}
+                <div class="melma red">{{localize "heart.skill.name.plural"}}</div>
+                <div class="melma">{{localize (concat "heart.skill.type." skill)}}</div>
+                <div class="flex gap-5">
+                    <input name='{{concat "system.skills." skill ".value"}}' type="number" value="{{value.value}}" />
+                    <input class="red" name='{{concat "system.skills." skill ".knack"}}' type="text"
+                        value="{{value.knack}}" placeholder='{{localize "heart.common.knack.plural"}}' />
+                </div>
+                {{/forEach}}
+            </div>
+
+            <div class="grid-2col auto-left">
+                <div class="melma red grid-2span">{{localize "heart.domain.name.plural"}}</div>
+                {{#forEach document.system.domains as |value domain|}}
+                <div class="melma">{{localize (concat "heart.domain.type." domain)}}</div>
+                <div class="flex gap-5">
+                    <input name='{{concat "system.domains." domain ".value"}}' type="number" value="{{value.value}}" />
+                    <input class="red" name='{{concat "system.domains." domain ".knack"}}' type="text"
+                        value="{{value.knack}}" placeholder='{{localize "heart.common.knack.plural"}}' />
+                </div>
+                {{/forEach}}
+            </div>
+        </div>
+
+    </div>
+
+    <div class="flex flex-col gap-5 margin-5">
+        {{#forEach document.itemTypes.equipment as |equipment|}}
+        {{> "systems/heart/templates/items/equipment/preview.hbs" document=equipment open=true}}
+        {{/forEach}}
+
+        {{#forEach document.itemTypes.resource as |resource|}}
+        {{> "systems/heart/templates/items/resource/preview.hbs" document=resource open=true}}
+        {{/forEach}}
+
+        {{#forEach document.itemTypes.ability as |ability|}}
+        {{> "systems/heart/templates/items/ability/preview.hbs" document=ability open=true}}
+        {{/forEach}}
+
+        {{#forEach document.itemTypes.fallout as |fallout|}}
+        {{> "systems/heart/templates/items/fallout/preview.hbs" document=fallout open=true}}
+        {{/forEach}}
+    </div>
+</section>

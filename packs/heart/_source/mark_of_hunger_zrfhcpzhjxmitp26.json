@@ -1,0 +1,13 @@
+{
+    "_id": "zrfhcpzhjxmitp26",
+    "name": "Mark Of Hunger",
+    "type": "ability",
+    "system": {
+        "description": "You can taste the power slumbering in the City Beneath, and you want it more than anything. Gain the Delve skill. You can smell sources of magical power - the more potent and active, the more pungent the smell. Different types of magic have different scents: relics of the Moon Beneath have the aroma of wine and butter, necromancy smells like nujabian kafee and the occult technology of the Vermissian resembles malt and rich tannins.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!zrfhcpzhjxmitp26",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

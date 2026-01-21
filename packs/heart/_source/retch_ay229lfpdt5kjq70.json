@@ -1,0 +1,13 @@
+{
+    "_id": "ay229lfpdt5kjq70",
+    "name": "Retch",
+    "type": "ability",
+    "system": {
+        "description": "The stress dice increases to D8.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ay229lfpdt5kjq70",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

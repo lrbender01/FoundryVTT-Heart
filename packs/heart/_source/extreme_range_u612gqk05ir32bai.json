@@ -1,0 +1,12 @@
+{
+    "_id": "u612gqk05ir32bai",
+    "name": "Extreme Range",
+    "type": "tag",
+    "system": {
+        "description": "This item can be used at extreme range."
+    },
+    "effects": [],
+    "_key": "!items!u612gqk05ir32bai",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

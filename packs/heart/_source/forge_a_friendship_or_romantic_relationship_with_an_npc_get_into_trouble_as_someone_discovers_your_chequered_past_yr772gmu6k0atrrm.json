@@ -1,0 +1,12 @@
+{
+    "_id": "yr772gmu6k0atrrm",
+    "name": "Forge a friendship or romantic relationship with an NPC. - Get into trouble as someone discovers your chequered past.",
+    "type": "beat",
+    "system": {
+        "description": "Forge a friendship or romantic relationship with an NPC. - Get into trouble as someone discovers your chequered past.",
+        "type": "minor"
+    },
+    "_key": "!items!yr772gmu6k0atrrm",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

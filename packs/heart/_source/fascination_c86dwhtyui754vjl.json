@@ -1,0 +1,14 @@
+{
+    "_id": "c86dwhtyui754vjl",
+    "name": "Fascination",
+    "type": "fallout",
+    "system": {
+        "description": "You become obsessed with a strange topic usually whatever caused the fallout. You must try and learn more about it, first hand if possible. Whenever you attempt to learn more about your weird fascination, roll with mastery. If you have the opportunity to learn about it and you refuse, mark D4 stress to Mind. [Ongoing]",
+        "resistance": "mind",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!c86dwhtyui754vjl",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

@@ -1,0 +1,14 @@
+{
+    "_id": "l8urnbv55tozpn3f",
+    "name": "Lost Map",
+    "type": "fallout",
+    "system": {
+        "description": "Your map is lost or stolen. Until you get it back or replace it, you cannot use connections - every journey is treated as unexplored territory. [Ongoing]",
+        "resistance": "fortune",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!l8urnbv55tozpn3f",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

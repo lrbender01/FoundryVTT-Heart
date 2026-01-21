@@ -1,0 +1,13 @@
+{
+    "_id": "d1igr1dyz9lxzi4h",
+    "name": "Liminal",
+    "type": "ability",
+    "system": {
+        "description": "Gain +2 Blood protection after entering the Grey. You can see and interact with people who are in the living world - they appear as indistinct blurs at a distance, but become clearer when nearby. You manifest as a weird, semi-ethereal phantom when you use this ability.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!d1igr1dyz9lxzi4h",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,83 @@
+{
+    "_id": "ov40wunekc8uhz3z",
+    "name": "Incarnadine",
+    "type": "class",
+    "system": {
+        "description": "It's easy to fall into debt; it's not easy to fall into the catastrophic levels of debt that you managed to achieve. You had to be good at borrowing money - and time, and the faith of others, anything you could get your hands on - to attract the attention of Incarne, the Crimson God of Debt. One day you woke up and found parts of your life missing as though it had been rummaged through by celestial bailiffs: property, possessions, memories, family members, emotions and desires were divided up between your creditors by an unseen force. Maybe your husband didn't recognise you anymore; maybe you were never married in the first place. Maybe you came home to find the rooms barren and filthy as though it hadn't been lived in for decades. Incarne made their mark on you: a brand across your heart which brought an end to your life as you knew it. Some people seek out the mark; there's power and freedom associated with burning your old life to ashes, and Incarne rewards those they claim with uncanny abilities that can bring them (and others) even deeper into debt. You stepped into the Heart to find meaning, fortune or oblivion. You rarely speak of the mark or talk about how far you have fallen to be trading stories, hours and lives down in the dark of the City Beneath. But the mark itches. Your greed itches. You carry a heavier weight than can be seen and push anger, sadness and loss out into the darkness, far beyond the light of the haven. ",
+        "abilities": [
+            "Compendium.heart.heart.tl8xxy12omguc28k",
+            "Compendium.heart.heart.8fkuecmj2f6y8we6"
+        ],
+        "futureAbilities": [
+            "Compendium.heart.heart.82jcoba3i951c74s",
+            "Compendium.heart.heart.qfp6fneqkmo7uro8",
+            "Compendium.heart.heart.f5o87g5y7fexkg5k",
+            "Compendium.heart.heart.66q5i2ikqx9x6x8a",
+            "Compendium.heart.heart.j4o03toi8vfc5dpy",
+            "Compendium.heart.heart.hb9eyuzj2ke178em",
+            "Compendium.heart.heart.1u0mljmoo9jqft3m",
+            "Compendium.heart.heart.5aa622croo6i1kri",
+            "Compendium.heart.heart.2higdtvezbiroqy8",
+            "Compendium.heart.heart.rnqci4o3rcphzfd9",
+            "Compendium.heart.heart.l07vtmg66fiur6l8",
+            "Compendium.heart.heart.dgix22j00bhwzvof",
+            "Compendium.heart.heart.xj2fp08vqbvifv81",
+            "Compendium.heart.heart.b9jzhgv5l11yd1zz",
+            "Compendium.heart.heart.v1d56o6ntbbiy823",
+            "Compendium.heart.heart.dilevkoqid4e6ar4",
+            "Compendium.heart.heart.tcroayzs0pjlxjzu",
+            "Compendium.heart.heart.ipcuuahl2g74snxg",
+            "Compendium.heart.heart.s8hpqdcvl0e5aqsn",
+            "Compendium.heart.heart.63hmqmo7g2b4h3iv",
+            "Compendium.heart.heart.5ijrg8x22dtk63tx",
+            "Compendium.heart.heart.ubgqq40nsqhhkiov",
+            "Compendium.heart.heart.3fxnulcokkpqzj1j"
+        ],
+        "resources": [
+            "Compendium.heart.heart.qbxizdzuiycueoyj"
+        ],
+        "equipment": [],
+        "equipmentGroups": [
+            [
+                "Compendium.heart.heart.z0rz16i4eh82zmz1"
+            ],
+            [
+                "Compendium.heart.heart.811q34ugaj56f8y9"
+            ],
+            [
+                "Compendium.heart.heart.gzo7qu2dsgokauyy"
+            ]
+        ]
+    },
+    "effects": [
+        {
+            "_key": "!items.effects!ov40wunekc8uhz3z.a9bf238f389f8de3",
+            "_id": "a9bf238f389f8de3",
+            "name": "The COMPEL skill",
+            "description": "The Incarnadine class provides a +1 to the COMPEL skill as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.skills.compel.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        },
+        {
+            "_key": "!items.effects!ov40wunekc8uhz3z.5f2a40a5c3de69d9",
+            "_id": "5f2a40a5c3de69d9",
+            "name": "The HAVEN domain",
+            "description": "The Incarnadine class provides a +1 to the HAVEN domain as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.domains.haven.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        }
+    ],
+    "img": "systems/heart/assets/class.png",
+    "folder": "yIJ6SF31RMT5vNhz",
+    "_key": "!items!ov40wunekc8uhz3z"
+}

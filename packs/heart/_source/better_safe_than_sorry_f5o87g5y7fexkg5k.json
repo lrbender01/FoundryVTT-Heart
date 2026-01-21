@@ -1,0 +1,13 @@
+{
+    "_id": "f5o87g5y7fexkg5k",
+    "name": "Better Safe Than Sorry",
+    "type": "ability",
+    "system": {
+        "description": "Gain +1 Protection in the Mind, Echo, Supplies or Fortune resistance. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!f5o87g5y7fexkg5k",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

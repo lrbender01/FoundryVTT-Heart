@@ -1,0 +1,13 @@
+{
+    "_id": "fkfgojlk7rrrg35r",
+    "name": "Candidate",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, when you spend a few minutes communing with Incarne, they show you a vision of a person with outstanding karmic debt in your nearby area. ",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!fkfgojlk7rrrg35r",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

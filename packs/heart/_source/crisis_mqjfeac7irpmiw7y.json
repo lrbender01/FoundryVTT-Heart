@@ -1,0 +1,14 @@
+{
+    "_id": "mqjfeac7irpmiw7y",
+    "name": "Crisis",
+    "type": "fallout",
+    "system": {
+        "description": "As FOREBODING, above, but now the danger actually occurs. [Immediate]",
+        "resistance": "fortune",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!mqjfeac7irpmiw7y",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

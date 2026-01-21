@@ -1,0 +1,13 @@
+{
+    "_id": "4b6r5585a3x3my5q",
+    "name": "Scything Blow",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, treat your weapon as though it has the Spread tag when you inflict stress to an adversary.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!4b6r5585a3x3my5q",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

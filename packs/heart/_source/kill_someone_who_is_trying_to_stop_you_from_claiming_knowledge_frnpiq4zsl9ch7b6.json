@@ -1,0 +1,12 @@
+{
+    "_id": "frnpiq4zsl9ch7b6",
+    "name": "Kill someone who is trying to stop you from claiming knowledge.",
+    "type": "beat",
+    "system": {
+        "description": "Kill someone who is trying to stop you from claiming knowledge.",
+        "type": "major"
+    },
+    "_key": "!items!frnpiq4zsl9ch7b6",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

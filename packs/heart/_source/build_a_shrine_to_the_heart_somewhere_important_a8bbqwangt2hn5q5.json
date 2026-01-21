@@ -1,0 +1,12 @@
+{
+    "_id": "a8bbqwangt2hn5q5",
+    "name": "Build a shrine to the Heart somewhere important.",
+    "type": "beat",
+    "system": {
+        "description": "Build a shrine to the Heart somewhere important.",
+        "type": "minor"
+    },
+    "_key": "!items!a8bbqwangt2hn5q5",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

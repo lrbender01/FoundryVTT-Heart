@@ -1,0 +1,13 @@
+{
+    "_id": "hit8c842vfcvz9u9",
+    "name": "Rite Of Placidity",
+    "type": "ability",
+    "system": {
+        "description": "Scholars who search for the Lady often find her immense majesty hard to bear, but you are well versed in the sacred canticles that allow you to weather her revelations. Gain +2 Mind Protection",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!hit8c842vfcvz9u9",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

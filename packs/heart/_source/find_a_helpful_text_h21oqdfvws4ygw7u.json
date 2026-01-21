@@ -1,0 +1,12 @@
+{
+    "_id": "h21oqdfvws4ygw7u",
+    "name": "Find a helpful text.",
+    "type": "beat",
+    "system": {
+        "description": "Find a helpful text.",
+        "type": "minor"
+    },
+    "_key": "!items!h21oqdfvws4ygw7u",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

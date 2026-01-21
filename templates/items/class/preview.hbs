@@ -1,0 +1,10 @@
+<div class="item preview flex summary draggable class" data-document-uuid="{{document.uuid}}">
+    <span class="name grow">{{document.name}}</span>
+
+    <heart-label class="major">
+        {{localize "heart.item.type.class"}}
+    </heart-label>
+    {{#if editMode}}
+    {{> "systems/heart/templates/common/remove.hbs"}}
+    {{/if}}
+</div>

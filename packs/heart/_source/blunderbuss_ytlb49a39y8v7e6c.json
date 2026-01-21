@@ -1,0 +1,17 @@
+{
+    "_id": "ytlb49a39y8v7e6c",
+    "name": "Blunderbuss",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d4",
+        "tags": [
+            "Compendium.heart.heart.iml376b6qxswjsil",
+            "Compendium.heart.heart.gdzlud5y9c7i2vi9",
+            "Compendium.heart.heart.7121gf3qg4jz04vm"
+        ]
+    },
+    "_key": "!items!ytlb49a39y8v7e6c",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

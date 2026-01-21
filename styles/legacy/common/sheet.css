@@ -1,0 +1,80 @@
+.heart.sheet {
+  background: white;
+}
+.heart.sheet img.profile {
+  flex-grow: 1;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.heart.sheet .text {
+  flex-grow: 3;
+  display: flex;
+  flex-flow: column;
+}
+.heart.sheet .subtitle {
+  color: #2c2c2c;
+  font-size: 1.2em;
+  text-transform: uppercase;
+  font-style: italic;
+  align-self: top;
+  flex-grow: 0;
+  text-align: center;
+}
+.heart.sheet .editor-content {
+  font-size: 15px;
+  line-height: 20px;
+  background-image: -moz-linear-gradient(top, transparent, transparent 19px, rgba(99, 0, 0, 0.2) 0px);
+  background-image: -webkit-linear-gradient(top, transparent, transparent 19px, rgba(99, 0, 0, 0.2) 0px);
+  background-size: 100% 20px;
+  min-height: 8em;
+}
+.heart.sheet .editor-content p {
+  margin: 0;
+}
+.heart.sheet .item-list {
+  font-size: 1.2em;
+}
+.heart.sheet.base .info {
+  display: flex;
+  flex: 0% 0 1;
+  flex-flow: row wrap;
+  place-items: center;
+  place-content: center;
+  background: #949494;
+}
+.heart.sheet.base .info > * {
+  flex: 0% 1 1;
+}
+.heart.sheet.base img.profile {
+  flex-grow: 1;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  max-height: 6em;
+}
+.heart.sheet.base .text {
+  flex-grow: 3;
+  display: flex;
+  flex-flow: column;
+}
+.heart.sheet.base input[name=name] {
+  grid-area: 1/2/2/3;
+  flex-grow: 0;
+  font-size: 2em;
+  border: 0;
+  align-self: bottom;
+  text-align: center;
+  background: none;
+  color: #630000;
+  font-weight: bold;
+}
+.heart.sheet h1, .heart.sheet h2, .heart.sheet h3, .heart.sheet h4 {
+  font-family: "MelmaCracked";
+  color: black;
+}
+.heart.sheet h1 .right, .heart.sheet h2 .right, .heart.sheet h3 .right, .heart.sheet h4 .right {
+  float: right;
+  font-family: Alegreya;
+  font-size: 0.8em;
+}
+
+/*# sourceMappingURL=sheet.css.map */

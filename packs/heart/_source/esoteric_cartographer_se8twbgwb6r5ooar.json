@@ -1,0 +1,13 @@
+{
+    "_id": "se8twbgwb6r5ooar",
+    "name": "Esoteric Cartographer",
+    "type": "ability",
+    "system": {
+        "description": "Choose two additional heavens that you have access to whilst in the Grey.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!se8twbgwb6r5ooar",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

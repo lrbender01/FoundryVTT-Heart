@@ -1,0 +1,16 @@
+{
+    "_id": "fl567gvforu2a590",
+    "name": "Overstuffed coat",
+    "type": "equipment",
+    "system": {
+        "type": "mend",
+        "resistances": [
+            "supplies"
+        ],
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!fl567gvforu2a590",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

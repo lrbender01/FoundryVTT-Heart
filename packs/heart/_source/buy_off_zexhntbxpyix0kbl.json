@@ -1,0 +1,13 @@
+{
+    "_id": "zexhntbxpyix0kbl",
+    "name": "Buy Off",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, if you are wearing your Debtor's Reds and incur stress, you can mark stress to Supplies instead of another resistance.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!zexhntbxpyix0kbl",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

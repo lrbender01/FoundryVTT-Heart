@@ -1,0 +1,13 @@
+{
+    "_id": "gu3civcvzsnyy1al",
+    "name": "Blood-Quiet",
+    "type": "ability",
+    "system": {
+        "description": "The darkness of the City Beneath beats black within your veins. Gain the Sneak skill. When you enter your TRUE FORM, Sneak and Evade rolls are no longer considered Risky.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!gu3civcvzsnyy1al",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

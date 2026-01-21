@@ -1,0 +1,12 @@
+{
+    "_id": "yvdgx994nfjevvvt",
+    "name": "Establish a connection to a landmark that's important to your order.",
+    "type": "beat",
+    "system": {
+        "description": "Establish a connection to a landmark that's important to your order.",
+        "type": "minor"
+    },
+    "_key": "!items!yvdgx994nfjevvvt",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

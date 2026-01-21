@@ -1,0 +1,13 @@
+{
+    "_id": "7tjiddzkw8nsv2ez",
+    "name": "Emergency Supplies",
+    "type": "ability",
+    "system": {
+        "description": "If you have a few minutes to spare, you can give yourself or one ally one of the benefits from the list by consuming a resource worth D6 or higher. This does not count as the per-session use of the ability.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!7tjiddzkw8nsv2ez",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

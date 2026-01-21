@@ -1,0 +1,13 @@
+{
+    "_id": "o85byecdiwb8cgi0",
+    "name": "Final Form",
+    "type": "ability",
+    "system": {
+        "description": "You reach down deep within yourself, inside the singing of your blood, and unearth your purest state: a nightblack being of wrath and ruin. Your true form was but a mere shadow of this. You have complete control over the landmark you are currently occupying (or the nearby area, if you're on a delve) and you are omniscient and omnipresent within its borders. You alone chooses who lives and dies inside. At the end of the situation after you activate this power, the area you are in is stained forever with your essence. It counts as one tier deeper than it was before and changes to become appropriately strange. You live on as an echo, a mark on the place; it becomes part of you, and you part of it.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!o85byecdiwb8cgi0",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "nmn4trc2mlnol24p",
+    "name": "Keep Your Heads Down",
+    "type": "ability",
+    "system": {
+        "description": "Whilst on a delve, any ally who can see or hear you while you give orders gains +1 Fortune protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!nmn4trc2mlnol24p",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

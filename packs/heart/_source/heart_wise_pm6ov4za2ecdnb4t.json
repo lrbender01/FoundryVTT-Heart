@@ -1,0 +1,13 @@
+{
+    "_id": "pm6ov4za2ecdnb4t",
+    "name": "Heart-Wise",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following skills: Compel, Delve, Discern, Endure, Hunt, Kill, Mend. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!pm6ov4za2ecdnb4t",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

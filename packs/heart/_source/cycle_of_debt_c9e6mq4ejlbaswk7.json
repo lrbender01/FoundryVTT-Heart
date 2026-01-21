@@ -1,0 +1,13 @@
+{
+    "_id": "c9e6mq4ejlbaswk7",
+    "name": "Cycle Of Debt",
+    "type": "ability",
+    "system": {
+        "description": "Roll Kill+Religion to cast this spell. Target an adversary who has been harmed by DEBTOR'S REDS. They mark stress equal to your current Supplies stress.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!c9e6mq4ejlbaswk7",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

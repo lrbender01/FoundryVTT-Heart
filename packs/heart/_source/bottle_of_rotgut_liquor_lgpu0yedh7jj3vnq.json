@@ -1,0 +1,12 @@
+{
+    "_id": "lgpu0yedh7jj3vnq",
+    "type": "resource",
+    "name": "Bottle of rotgut liquor",
+    "system": {
+        "active": true,
+        "tags": []
+    },
+    "_key": "!items!lgpu0yedh7jj3vnq",
+    "img": "systems/heart/assets/resource.png",
+    "folder": "bDiHYHlOFLzWySfV"
+}

@@ -1,0 +1,16 @@
+{
+    "_id": "qx3nr5kqi7fmr6xz",
+    "type": "resource",
+    "name": "Heartsbloom rose in a glass jar",
+    "system": {
+        "active": true,
+        "domain": "occult",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.92652pitzecon4t5"
+        ]
+    },
+    "_key": "!items!qx3nr5kqi7fmr6xz",
+    "img": "systems/heart/assets/resource.png",
+    "folder": "bDiHYHlOFLzWySfV"
+}

@@ -1,0 +1,17 @@
+{
+    "_id": "irudxyg3q4wvp5nm",
+    "name": "Crimson Mirror",
+    "type": "ability",
+    "system": {
+        "description": "You bleed onto an upturned mirror, and omens swim within the crimson. Roll Discern+Occult to cast this spell before you embark on a delve. On a success, you see three omens; describe them. You don't have to be too specific - in fact, the more vague you are, the better. These are fated to come up on the delve. The first time you interact with whatever you find that relates to each omen, you roll with mastery.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.f5c8y1cr4tvkn9va",
+            "Compendium.heart.heart.t47nuf31u480n8ee",
+            "Compendium.heart.heart.l24wv8d4nzrqjzwe"
+        ]
+    },
+    "_key": "!items!irudxyg3q4wvp5nm",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

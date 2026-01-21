@@ -1,0 +1,12 @@
+{
+    "_id": "opqvf2sesagu97yz",
+    "name": "Explore a mysterious tower whilst on a delve (this increases the difficulty of the delve by D12).",
+    "type": "beat",
+    "system": {
+        "description": "Explore a mysterious tower whilst on a delve (this increases the difficulty of the delve by D12).",
+        "type": "major"
+    },
+    "_key": "!items!opqvf2sesagu97yz",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

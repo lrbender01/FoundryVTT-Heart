@@ -1,0 +1,12 @@
+{
+    "_id": "nd6548mkfeki358c",
+    "name": "Perform a rite at a place of power (Tier 2 or deeper).",
+    "type": "beat",
+    "system": {
+        "description": "Perform a rite at a place of power (Tier 2 or deeper).",
+        "type": "minor"
+    },
+    "_key": "!items!nd6548mkfeki358c",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

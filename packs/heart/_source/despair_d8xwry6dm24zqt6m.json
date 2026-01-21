@@ -1,0 +1,14 @@
+{
+    "_id": "d8xwry6dm24zqt6m",
+    "name": "Despair",
+    "type": "fallout",
+    "system": {
+        "description": "Your mind races with the implications of what you've seen; your life before seems unreal and distant. The GM picks a domain that you have access to and you no longer have access to that domain. [Ongoing]",
+        "resistance": "mind",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!d8xwry6dm24zqt6m",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

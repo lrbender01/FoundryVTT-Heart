@@ -1,0 +1,13 @@
+{
+    "_id": "f5rwek3el723gxhf",
+    "name": "Avatar of Moonlight",
+    "type": "ability",
+    "system": {
+        "description": "When you use OATH OF FURY, you can choose to replace the benefits granted with +2 Echo protection.In addition, when you use the Mend skill on an ally, instead of removing stress you may remove Minor Blood or Mind fallout on a successful roll. At the end of the session, if you have not removed both Blood and Mind fallout from your allies, mark D6 stress to Mind.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!f5rwek3el723gxhf",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

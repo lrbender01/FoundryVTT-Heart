@@ -1,0 +1,126 @@
+{
+    "id": "heart",
+    "title": "Heart - The City Beneath",
+    "description": "",
+    "version": "#{VERSION}#",
+    "compatibility": {
+        "minimum": 13,
+        "verified": 13,
+        "maximum": 13
+    },
+    "authors": [
+        {
+            "name": "hitcherland",
+            "url": "https://github.com/hitcherland"
+        }
+    ],
+    "flags": {
+        "hotReload": {
+            "extensions": ["css", "hbs", "json", "js"],
+            "paths": [
+                "styles/",
+                "templates/",
+                "scripts/sheets/"
+            ]
+        }
+    },
+    "esmodules": [
+        "scripts/heart.js"
+    ],
+    "styles": [
+        "styles/heart.css"
+    ],
+    "documentTypes": {
+        "Actor": {
+            "adversary": {
+                "htmlFields": [
+                    "notes",
+                    "special"
+                ]
+            },
+            "character": {
+                "htmlFields": [
+                    "notes"
+                ]
+            },
+            "delve": {
+                "htmlFields": [
+                    "description",
+                    "notes"
+                ]
+            },
+            "landmark": {
+                "htmlFields": [
+                    "description",
+                    "specialRules"
+                ]
+            }
+        },
+        "Item": {
+            "ability": {
+                "htmlFields": [
+                    "description"
+                ]
+            },
+            "beat": {
+                "htmlFields": [
+                    "description"
+                ]
+            },
+            "calling": {
+                "htmlFields": [
+                    "description",
+                    "questions.question",
+                    "questions.answer"
+                ]
+            },
+            "class": {
+                "htmlFields": [
+                    "description"
+                ]
+            },
+            "equipment": {
+                "htmlFields": [
+                    "description"
+                ]
+            },
+            "fallout": {
+                "htmlFields": [
+                    "description"
+                ]
+            },
+            "haunt": {
+                "htmlFields": [
+                    "description"
+                ]
+            },
+            "resource": {
+                "htmlFields": [
+                    "description"
+                ]
+            },
+            "tag": {
+                "htmlFields": [
+                    "description"
+                ]
+            }
+        }
+    },
+    "languages": [
+        {
+            "lang": "en",
+            "name": "English",
+            "path": "languages/en.json"
+        }
+    ],
+    "packs": [{
+        "name": "heart",
+        "label": "Heart",
+        "type": "Item"
+    }],
+    "url": "#{URL}#",
+    "manifest": "#{MANIFEST}#",
+    "download": "#{DOWNLOAD}#",
+    "license": "LICENSE",
+    "readme": "README.md"
+}

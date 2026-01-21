@@ -1,0 +1,14 @@
+{
+    "_id": "47lnofldhu62bhd9",
+    "name": "Starvation",
+    "type": "fallout",
+    "system": {
+        "description": "You starve to death or are overcome by dehydration. [Immediate]",
+        "resistance": "supplies",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!47lnofldhu62bhd9",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

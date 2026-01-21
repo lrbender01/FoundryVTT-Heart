@@ -1,0 +1,14 @@
+{
+    "_id": "x61duqy1eme5mbzr",
+    "name": "Lost Property",
+    "type": "fallout",
+    "system": {
+        "description": "You have misplaced an item; the GM picks which.You could spend time searching for it, but you'll need to back-track - and someone might have made off with it already.[Immediate]",
+        "resistance": "supplies",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!x61duqy1eme5mbzr",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

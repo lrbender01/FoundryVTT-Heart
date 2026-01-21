@@ -1,0 +1,11 @@
+.equipment.resistances {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-around;
+  color: #630000;
+}
+.equipment.resistances h3 {
+  color: #630000;
+}
+
+/*# sourceMappingURL=sheet.css.map */

@@ -1,0 +1,53 @@
+{{#*inline "abilitySection"}}
+{{#each abilities as |uuid|}}
+{{{ "foreignPartial" "systems/heart/templates/items/ability/preview.hbs" uuid }}}
+{{/each}}
+{{/inline}}
+
+<div class="flex flex-2col">
+    <div class="description fill">
+        {{{document.system.description}}}
+    </div>
+
+    <div class="fill bold">
+        {{localize "heart.class.corePrelude"}}
+    </div>
+
+    {{#each document.effects as |effect|}}
+    <div class="item preview summary">
+        {{effect.name}}
+    </div>
+    {{/each}}
+
+    {{#each document.system.resources as |uuid|}}
+    {{{ "foreignPartial" "systems/heart/templates/items/resource/preview.hbs" uuid}}}
+    {{/each}}
+
+    {{#each document.system.equipment as |uuid|}}
+    {{{ "foreignPartial" "systems/heart/templates/items/equipment/preview.hbs" uuid}}}
+    {{/each}}
+
+    {{#each document.system.abilities as |uuid|}}
+    {{{ "foreignPartial" "systems/heart/templates/items/ability/preview.hbs" uuid}}}
+    {{/each}}
+
+    <div class="fill bold">
+        {{localize "heart.class.equipmentGroupPrelude"}}
+    </div>
+
+    {{#each document.system.equipmentGroups as |equipmentGroup|}}
+    <div class="transparent-red-container" data-index="{{@index}}">
+        {{#each equipmentGroup as |uuid|}}
+        {{{ "foreignPartial" "systems/heart/templates/items/equipment/preview.hbs" uuid}}}
+        {{/each}}
+    </div>
+    {{/each}}
+
+    <div class="fill bold">
+        {{localize "heart.class.abilitiesPrelude"}}
+    </div>
+
+    {{#each document.system.futureAbilities as |uuid|}}
+    {{{ "foreignPartial" "systems/heart/templates/items/ability/preview.hbs" uuid }}}
+    {{/each}}
+</div>

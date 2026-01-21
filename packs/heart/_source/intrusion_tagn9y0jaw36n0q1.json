@@ -1,0 +1,13 @@
+{
+    "_id": "tagn9y0jaw36n0q1",
+    "name": "Intrusion",
+    "type": "ability",
+    "system": {
+        "description": "Your swarm grants you the power to overwhelm and control rudimentary minds. Gain the Wild domain. You learn the following spell: send your swarm to occupy and control the body of a wild animal that you can see with a successful Compel+Wild roll. You can now direct the animal to perform basic tasks, but the swarm's control is imperfect. For the duration of this spell, your unconscious body slumps to the floor; you come to when the swarm returns to you. At the end of the situation, the animal you controlled dies.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!tagn9y0jaw36n0q1",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

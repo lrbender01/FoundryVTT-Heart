@@ -1,0 +1,13 @@
+{
+    "_id": "g6k56qn7dle274o4",
+    "name": "Limping Onward",
+    "type": "ability",
+    "system": {
+        "description": "UNSTOPPABLE also increases your Delve stress dice by one step.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!g6k56qn7dle274o4",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

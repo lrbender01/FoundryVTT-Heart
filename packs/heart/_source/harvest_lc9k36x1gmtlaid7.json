@@ -1,0 +1,13 @@
+{
+    "_id": "lc9k36x1gmtlaid7",
+    "name": "Harvest",
+    "type": "ability",
+    "system": {
+        "description": "When you cast KARMIC LEDGER, you can beseech Incarne (ask the GM) to rate the value of their debt on a scale from D4 (low) to D12 (extremely high). When you murder the target and give their debt to Incarne, remove stress equal to the dice size of their debt.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!lc9k36x1gmtlaid7",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

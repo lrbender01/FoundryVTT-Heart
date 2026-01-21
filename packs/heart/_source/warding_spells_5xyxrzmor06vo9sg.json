@@ -1,0 +1,13 @@
+{
+    "_id": "5xyxrzmor06vo9sg",
+    "name": "Warding Spells",
+    "type": "ability",
+    "system": {
+        "description": "Gain +1 Protection in the Blood, Supplies, Echo or Fortune resistance. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!5xyxrzmor06vo9sg",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,69 @@
+.heart.sheet.actor h2 {
+  font-family: "MelmaCracked";
+  text-transform: uppercase;
+  color: #630000;
+  border: 0;
+  font-weight: bold;
+  margin: 0;
+  padding: 0;
+  flex-grow: 0;
+}
+.heart.sheet.actor h2 > div {
+  font-size: 1rem;
+  color: #000;
+}
+.heart.sheet.actor h3 {
+  font-family: "MelmaCracked";
+  font-size: 1.5em;
+  text-transform: uppercase;
+  color: #630000;
+  border: 0;
+  font-weight: bold;
+  margin: 0;
+  padding: 0;
+  flex-grow: 0;
+}
+.heart.sheet.actor .editor-content {
+  font-size: 15px;
+  line-height: 20px;
+  background-image: -moz-linear-gradient(top, transparent, transparent 19px, rgba(99, 0, 0, 0.2) 0px);
+  background-image: -webkit-linear-gradient(top, transparent, transparent 19px, rgba(99, 0, 0, 0.2) 0px);
+  background-size: 100% 20px;
+  min-height: 8em;
+}
+.heart.sheet.actor .editor-content p {
+  margin: 0;
+}
+.heart.sheet.actor.base img.profile {
+  flex-grow: 1;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  max-height: 6em;
+}
+.heart.sheet.actor.base .text {
+  flex-grow: 3;
+  display: flex;
+  flex-flow: column;
+}
+.heart.sheet.actor.base input[name=name] {
+  grid-area: 1/2/2/3;
+  flex-grow: 0;
+  font-size: 2em;
+  border: 0;
+  align-self: bottom;
+  text-align: center;
+  background: none;
+  color: #630000;
+  font-weight: bold;
+}
+.heart.sheet.actor.base .actor-type {
+  color: #2c2c2c;
+  font-size: 1.2em;
+  text-transform: uppercase;
+  font-style: italic;
+  align-self: top;
+  flex-grow: 0;
+  text-align: center;
+}
+
+/*# sourceMappingURL=sheet.css.map */

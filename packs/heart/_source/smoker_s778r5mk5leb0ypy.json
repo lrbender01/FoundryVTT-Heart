@@ -1,0 +1,16 @@
+{
+    "_id": "s778r5mk5leb0ypy",
+    "name": "Smoker",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d4",
+        "tags": [
+            "Compendium.heart.heart.x1oj01fb3ncmgdtj",
+            "Compendium.heart.heart.vbiy48z3ffpldo35"
+        ]
+    },
+    "_key": "!items!s778r5mk5leb0ypy",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

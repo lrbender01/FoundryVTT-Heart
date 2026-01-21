@@ -1,0 +1,13 @@
+{
+    "_id": "oizlogagkrbggyrm",
+    "name": "Enthrall",
+    "type": "ability",
+    "system": {
+        "description": "When you enter your true form, you may mark D4 stress to Echo; all who see you transform are stunned into inaction, and you have enough time to make a single action entirely unopposed.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!oizlogagkrbggyrm",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

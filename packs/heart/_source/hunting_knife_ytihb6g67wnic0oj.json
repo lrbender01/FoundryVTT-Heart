@@ -1,0 +1,13 @@
+{
+    "_id": "ytihb6g67wnic0oj",
+    "name": "Hunting Knife",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!ytihb6g67wnic0oj",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

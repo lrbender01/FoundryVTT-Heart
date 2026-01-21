@@ -1,0 +1,14 @@
+{
+    "_id": "edpswkj98piy6a9i",
+    "name": "Aetheric Scourge",
+    "type": "fallout",
+    "system": {
+        "description": "Mark D6 stress to cast this spell. A nearby target takes D6 stress as raw magic boils out of you and into them, burning their skin and hair.",
+        "resistance": "echo",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!edpswkj98piy6a9i",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

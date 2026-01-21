@@ -1,0 +1,13 @@
+{
+    "_id": "ijtq92v42j97cuvx",
+    "name": "Pathways",
+    "type": "ability",
+    "system": {
+        "description": "When you and your allies attempt to establish a Connection between landmarks and at least one of them is part of your trade network, roll with mastery.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ijtq92v42j97cuvx",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

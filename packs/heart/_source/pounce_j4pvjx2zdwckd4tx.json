@@ -1,0 +1,13 @@
+{
+    "_id": "j4pvjx2zdwckd4tx",
+    "name": "Pounce",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, select an adversary you can see. That adversary marks D6 stress as your companion leaps on them.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!j4pvjx2zdwckd4tx",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

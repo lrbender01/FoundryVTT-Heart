@@ -1,0 +1,14 @@
+{
+    "_id": "gj59qejy1ckywqjb",
+    "name": "Services Rendered",
+    "type": "fallout",
+    "system": {
+        "description": "You've been forced to sell your skills to a third party to pay your debtors, and the work is not pleasant. Work out with the GM what your character doesn't want to do but is prepared to do to make ends meet. If you don't do it, you'll be in trouble; alternatively, you've done it in the past, and you describe it in a flashback. [Immediate]",
+        "resistance": "supplies",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!gj59qejy1ckywqjb",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

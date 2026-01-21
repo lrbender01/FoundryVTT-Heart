@@ -1,0 +1,14 @@
+{
+    "_id": "1qtqe65tuuqctjgy",
+    "name": "The Ravening Beast",
+    "type": "fallout",
+    "system": {
+        "description": "Emerging from a patch of shadows, the Ravening Beast that has been hiding in your mind appears. It will attempt to maul others, but its primary motivation is to consume you utterly. Fighting off the beast does not remove this fallout, but it has no further effect unless you upgrade this fallout (see THE RAVENING).[Immediate]",
+        "resistance": "echo",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!1qtqe65tuuqctjgy",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

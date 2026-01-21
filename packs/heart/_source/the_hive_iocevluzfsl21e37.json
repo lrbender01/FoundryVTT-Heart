@@ -1,0 +1,13 @@
+{
+    "_id": "iocevluzfsl21e37",
+    "name": "The Hive",
+    "type": "ability",
+    "system": {
+        "description": "The sweetlings nest within your body. Some of your organs are replaced with complex copies made from wax by industrious bees. They live within you - a few at first, but as you grow in power, great swarms. Their curious buzzing aligns your mind with the Hive. At the beginning of each situation, clear all Mind stress as incipient madness flows through you and into the Hive. You can never benefit from Mind protection or remove stress from Mind, aside from using this ability.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!iocevluzfsl21e37",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

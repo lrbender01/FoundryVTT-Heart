@@ -1,0 +1,12 @@
+{
+    "_id": "5g3u095ctspwxmgu",
+    "name": "Unreliable",
+    "type": "tag",
+    "system": {
+        "description": "When you fail an action using this equipment, it cannot be used for the remainder of the situation if in a landmark or for the remainder of the journey if on a delve."
+    },
+    "effects": [],
+    "_key": "!items!5g3u095ctspwxmgu",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

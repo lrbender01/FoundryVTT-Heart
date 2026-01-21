@@ -1,0 +1,14 @@
+{
+    "_id": "q8fwmdm7egpeiyvj",
+    "name": "Empty",
+    "type": "fallout",
+    "system": {
+        "description": "You're down to your last scraps of food, your last scraping of spireblack. You cannot use Supplies protection. [Ongoing]",
+        "resistance": "supplies",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!q8fwmdm7egpeiyvj",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

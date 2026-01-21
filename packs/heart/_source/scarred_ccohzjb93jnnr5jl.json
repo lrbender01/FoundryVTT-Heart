@@ -1,0 +1,14 @@
+{
+    "_id": "ccohzjb93jnnr5jl",
+    "name": "Scarred",
+    "type": "fallout",
+    "system": {
+        "description": "(See SHAKEN above.) Your mind cracks and reforms in primal, instinctive patterns. This functions as SHAKEN. In addition, every time you encounter the source of the fallout from now on,the GM can ask you to make an Endure check or suffer D8 stress to Mind.[Ongoing]",
+        "resistance": "mind",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!ccohzjb93jnnr5jl",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

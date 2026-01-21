@@ -1,0 +1,16 @@
+<div class="flex flex-col gap-5 picker">
+    {{#forEach choices as |document|}}
+        <div class="option{{ifThen (eq document.uuid activeUuid) ' active' ''}}" data-action="activate" data-activate="{{document.uuid}}">
+            {{> (concat "systems/heart/templates/items/" type "/preview.hbs") document=document}}
+        </div>
+    {{/forEach}}
+    <div class="grid-2col">
+        <button data-action="cancel">{{localize "Cancel"}}</button>
+        {{#if (eq mode "add")}}
+        <button data-action="add">{{localize "Add"}}</button>
+        {{/if}}
+        {{#if (eq mode "replace")}}
+        <button data-action="replace">{{localize "heart.button.replace"}}</button>
+        {{/if}}
+    </div>
+</div>

@@ -1,0 +1,202 @@
+@import url("https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,600;1,400&display=swap");
+@font-face {
+  font-family: "MelmaCracked";
+  src: url(fonts/melma/MelmaCracked.ttf);
+}
+.title-font {
+  font-family: "MelmaCracked";
+}
+
+input.hidden {
+  display: none !important;
+}
+
+input.toggle-display ~ * {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+}
+input.toggle-display:checked ~ * {
+  max-height: 20em;
+  transition: max-height 0.2s ease-in;
+}
+
+.toggle-button {
+  font-family: "MelmaCracked";
+  color: black;
+  font-size: 1.5em;
+  text-align: center;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+  padding: 0.2em;
+  margin: 0.3em 0;
+  border-radius: 0.2em;
+  background: #fff;
+  border: 3px solid #000;
+  cursor: pointer;
+}
+
+.chat-message {
+  background: #630000;
+  color: #fff;
+  border-color: #949494;
+}
+.chat-message .message-header {
+  color: #fff;
+}
+.chat-message .dice-roll .dice-formula, .chat-message .dice-roll .dice-total {
+  background: #fff;
+  color: #630000;
+  border-color: #949494;
+}
+.chat-message .dice-roll .dice-formula {
+  background: #000;
+  color: white;
+}
+.chat-message .dice-roll .dice .part-header {
+  border-bottom-color: #fff;
+}
+.chat-message .dice-roll .dice .part-header .part-formula {
+  text-transform: uppercase;
+}
+.chat-message .dice-roll .dice .dice-rolls .roll.discarded {
+  filter: sepia(0.5) contrast(0.75) opacity(0.5);
+}
+.chat-message .message-content + .message-content {
+  margin-top: 0.5em;
+}
+
+.chat-message .heart button {
+  background: #949494;
+  color: #fff;
+}
+.chat-message .heart button .fas {
+  padding: 0 0.5em;
+}
+.chat-message .heart button + button {
+  margin-top: 0.2em;
+}
+
+.heart .window-content {
+  font-family: "Alegreya", serif;
+}
+.heart .window-content input {
+  font-family: inherit;
+}
+.heart .window-content button {
+  font-family: "Alegreya";
+  background: #630000;
+  color: #fff;
+  border-color: #2c2c2c;
+  font-size: 1rem;
+  text-transform: uppercase;
+  font-weight: bold;
+  cursor: pointer;
+}
+.heart .window-content.buttons {
+  display: flex;
+  flex-flow: row wrap;
+  background: #000;
+}
+.heart .window-content.buttons > * {
+  flex: 50px 1 0;
+  min-width: calc(50% - 10px);
+}
+.heart .window-content table {
+  border: 0;
+}
+.heart .window-content .ordered-checkable-box {
+  flex: 14px 0 0;
+}
+.heart .window-content .ordered-checkable-box::after, .heart .window-content .ordered-checkable-box.checked::after {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 3px solid #000;
+  margin: 0 2px;
+}
+.heart .window-content .ordered-checkable-box.checked::after {
+  background-image: linear-gradient(90deg, #000 0%, #000 100%);
+  background-size: 12px 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.heart .window-content input[type=checkbox] {
+  flex: 14px 0 0;
+  appearance: none;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 3px solid #000;
+  margin: 0 2px;
+  box-sizing: content-box;
+}
+.heart .window-content input[type=checkbox]:disabled:checked {
+  background-image: linear-gradient(90deg, #2c2c2c 0%, #2c2c2c 100%);
+  background-size: 12px 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.heart .window-content input[type=checkbox]:checked {
+  background-image: linear-gradient(90deg, #000 0%, #000 100%);
+  background-size: 12px 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.heart .window-content input[type=checkbox]:disabled {
+  background-image: linear-gradient(90deg, #D4D4D4 0%, #D4D4D4 100%);
+  background-size: 12px 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+  cursor: not-allowed;
+}
+.heart .window-content input[type=checkbox].invert {
+  border-color: #fff;
+}
+.heart .window-content input[type=checkbox].invert:checked {
+  background-image: linear-gradient(90deg, #fff 0%, #fff 100%);
+}
+.heart .window-content .red .ordered-checkable-box::after, .heart .window-content .red .ordered-checkable-box.checked:after {
+  border-color: #630000;
+}
+.heart .window-content .red .ordered-checkable-box.checked::after {
+  background-image: linear-gradient(90deg, #630000 0%, #630000 100%);
+}
+
+.window-app .window-content {
+  padding: 0;
+}
+.window-app .window-content > * {
+  padding: 8px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  place-items: stretch;
+  grid-gap: 0.5em;
+  margin: 0.5em;
+}
+.grid-2.auto-first-col {
+  grid-template-columns: auto 1fr;
+  margin: 0.5em 0;
+}
+.grid-2 .wide {
+  grid-column: 1/3;
+}
+.grid-2.place-center {
+  place-content: center;
+}
+.grid-2.place-top {
+  align-items: start;
+}
+
+.version-tabs {
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  justify-content: flex-start;
+}
+
+/*# sourceMappingURL=index.css.map */

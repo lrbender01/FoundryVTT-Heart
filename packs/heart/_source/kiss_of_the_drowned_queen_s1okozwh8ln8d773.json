@@ -1,0 +1,17 @@
+{
+    "_id": "s1okozwh8ln8d773",
+    "name": "Kiss Of The Drowned Queen",
+    "type": "ability",
+    "system": {
+        "description": "You have glimpsed the sunken Court of the Drowned Queen, where she slumbers and awaits the resurgence of her line. With a touch, you can conjure salt water in the lungs of those who oppose you. This spell functions as the following weapon: (Kill D6, Piercing.) If the target is at least shin-deep in water, it inflicts D8 damage.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.45huhxwwat67mmai",
+            "Compendium.heart.heart.qigshbaaijsyz7ja",
+            "Compendium.heart.heart.w03ylpddjbqdik8b"
+        ]
+    },
+    "_key": "!items!s1okozwh8ln8d773",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

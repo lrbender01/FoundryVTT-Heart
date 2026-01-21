@@ -1,0 +1,9 @@
+.vscode
+node_modules
+packs/heart/*.log
+packs/heart/*ldb
+packs/heart/CURRENT
+packs/heart/LOCK
+packs/heart/LOG
+packs/heart/LOG.old
+packs/heart/MANIFEST-000472

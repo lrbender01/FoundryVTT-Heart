@@ -1,0 +1,12 @@
+{
+    "_id": "7pqe05w3m3jvq9qf",
+    "name": "Upgrade a haunt to D12.",
+    "type": "beat",
+    "system": {
+        "description": "Upgrade a haunt to D12.",
+        "type": "major"
+    },
+    "_key": "!items!7pqe05w3m3jvq9qf",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "3eylzbevb0ppenqf",
+    "name": "Receive aid from someone reprehensible who's in the employ of your master.",
+    "type": "beat",
+    "system": {
+        "description": "Receive aid from someone reprehensible who's in the employ of your master.",
+        "type": "minor"
+    },
+    "_key": "!items!3eylzbevb0ppenqf",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

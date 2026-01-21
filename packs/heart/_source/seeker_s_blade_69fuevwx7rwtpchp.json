@@ -1,0 +1,15 @@
+{
+    "_id": "69fuevwx7rwtpchp",
+    "name": "Seeker's blade",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.xucjrfv4d6c7b07t"
+        ]
+    },
+    "_key": "!items!69fuevwx7rwtpchp",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

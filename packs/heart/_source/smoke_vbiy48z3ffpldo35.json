@@ -1,0 +1,12 @@
+{
+    "_id": "vbiy48z3ffpldo35",
+    "name": "Smoke",
+    "type": "tag",
+    "system": {
+        "description": "As Obscuring, but only when the item is used,and only around the area it was used."
+    },
+    "effects": [],
+    "_key": "!items!vbiy48z3ffpldo35",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

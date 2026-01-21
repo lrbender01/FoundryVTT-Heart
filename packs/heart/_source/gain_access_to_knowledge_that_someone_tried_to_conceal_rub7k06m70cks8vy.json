@@ -1,0 +1,12 @@
+{
+    "_id": "rub7k06m70cks8vy",
+    "name": "Gain access to knowledge that someone tried to conceal.",
+    "type": "beat",
+    "system": {
+        "description": "Gain access to knowledge that someone tried to conceal.",
+        "type": "minor"
+    },
+    "_key": "!items!rub7k06m70cks8vy",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

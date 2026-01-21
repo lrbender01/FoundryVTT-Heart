@@ -1,0 +1,12 @@
+{
+    "_id": "ulvnx2rpnnmalygw",
+    "name": "Destroy evidence or rhetoric that proves your task to be impossible.",
+    "type": "beat",
+    "system": {
+        "description": "Destroy evidence or rhetoric that proves your task to be impossible.",
+        "type": "minor"
+    },
+    "_key": "!items!ulvnx2rpnnmalygw",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

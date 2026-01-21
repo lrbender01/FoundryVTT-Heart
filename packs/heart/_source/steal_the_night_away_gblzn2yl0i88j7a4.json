@@ -1,0 +1,13 @@
+{
+    "_id": "gblzn2yl0i88j7a4",
+    "name": "Steal The Night Away",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, when you engage in reckless hedonism, refresh D6. If you spend time with someone who fascinates you during the process, refresh D8 instead. These refreshes can be spent to remove fallout as though you were making use of a haunt.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!gblzn2yl0i88j7a4",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

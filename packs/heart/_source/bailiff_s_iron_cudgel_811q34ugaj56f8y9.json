@@ -1,0 +1,15 @@
+{
+    "_id": "811q34ugaj56f8y9",
+    "name": "Bailiff's Iron Cudgel",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d8",
+        "tags": [
+            "Compendium.heart.heart.yagk7wryfjp2ukc2"
+        ]
+    },
+    "_key": "!items!811q34ugaj56f8y9",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

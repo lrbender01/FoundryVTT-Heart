@@ -1,0 +1,14 @@
+{
+    "_id": "syqbsnrfzj9yqjxw",
+    "name": "Unlucky",
+    "type": "fallout",
+    "system": {
+        "description": "Things are going to get worse before they get better. You cannot use Fortune protection. [Ongoing]",
+        "resistance": "fortune",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!syqbsnrfzj9yqjxw",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

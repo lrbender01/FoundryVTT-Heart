@@ -1,0 +1,13 @@
+{
+    "_id": "5pznlpxp7zcpqvq8",
+    "name": "Bloodied But Unbroken",
+    "type": "ability",
+    "system": {
+        "description": "When you have 4 or more stress marked to Blood or are suffering from ongoing Blood fallout, gain +2 Blood Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!5pznlpxp7zcpqvq8",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

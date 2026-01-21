@@ -1,0 +1,13 @@
+{
+    "_id": "6hbna7v773m880my",
+    "name": "Staff",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!6hbna7v773m880my",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "wsw0nm36ii2v8cn3",
+    "name": "Harpoon",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, when you inflict stress to an adversary with the EXTINCTION BOW, you attach yourself to them with a rope or chain. They can't flee while attached - and neither can you.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!wsw0nm36ii2v8cn3",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

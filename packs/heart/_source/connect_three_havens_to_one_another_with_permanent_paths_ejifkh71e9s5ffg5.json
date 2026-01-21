@@ -1,0 +1,12 @@
+{
+    "_id": "ejifkh71e9s5ffg5",
+    "name": "Connect three havens to one another with permanent paths.",
+    "type": "beat",
+    "system": {
+        "description": "Connect three havens to one another with permanent paths.",
+        "type": "major"
+    },
+    "_key": "!items!ejifkh71e9s5ffg5",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

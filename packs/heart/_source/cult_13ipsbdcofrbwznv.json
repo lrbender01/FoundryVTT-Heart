@@ -1,0 +1,14 @@
+{
+    "_id": "13ipsbdcofrbwznv",
+    "name": "Cult",
+    "type": "fallout",
+    "system": {
+        "description": "Your actions mark you as a true scion of the Heart, and weird people/creatures will trail around you, espousing your glories (whether real or imagined).This is nothing but trouble, and any attempt to take advantage of them will go wrong. Getting into a haven will be difficult with this many people around, so you'd best hope that some of them die along the way. [Ongoing]",
+        "resistance": "echo",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!13ipsbdcofrbwznv",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "yxgbvy2cdkmf6spu",
+    "name": "Perform a rite at a place of power (Tier 3 or deeper).",
+    "type": "beat",
+    "system": {
+        "description": "Perform a rite at a place of power (Tier 3 or deeper).",
+        "type": "major"
+    },
+    "_key": "!items!yxgbvy2cdkmf6spu",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

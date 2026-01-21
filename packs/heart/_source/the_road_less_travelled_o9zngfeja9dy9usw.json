@@ -1,0 +1,14 @@
+{
+    "_id": "o9zngfeja9dy9usw",
+    "name": "The Road Less Travelled",
+    "type": "fallout",
+    "system": {
+        "description": "You pick the wrong path. The next landmark you reach isn't the one you're expecting - it's an entirely different one, and probably one you were trying to avoid. [Immediate]",
+        "resistance": "fortune",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!o9zngfeja9dy9usw",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

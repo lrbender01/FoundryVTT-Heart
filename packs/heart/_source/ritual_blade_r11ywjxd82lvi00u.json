@@ -1,0 +1,13 @@
+{
+    "_id": "r11ywjxd82lvi00u",
+    "name": "Ritual blade",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!r11ywjxd82lvi00u",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

@@ -1,0 +1,14 @@
+{
+    "_id": "5lv441ad0fl9m83y",
+    "name": "Beast",
+    "type": "fallout",
+    "system": {
+        "description": "Your body warps and changes beyond recognition: you become a protean mess of meat and bone, terrifying to behold. You disappear into the Heart, surfacing only as a legend whispered in deep shadows; those who knew you tell stories of your exploits to remember you and warn others. You will be seen again in future sessions: the GM can use the stats for a Greater Heartsblood Beast to represent you. [Immediate]",
+        "resistance": "echo",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!5lv441ad0fl9m83y",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

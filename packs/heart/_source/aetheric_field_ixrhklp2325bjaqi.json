@@ -1,0 +1,17 @@
+{
+    "_id": "ixrhklp2325bjaqi",
+    "name": "Aetheric Field",
+    "type": "ability",
+    "system": {
+        "description": "Your armour buzzes with static that makes your hair stand on end; this discharge can keep you safe from the body-warping effects of the Vermissian. Once per session, activate this power. You gain +3 Echo protection until the end of the current situation.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.9bba3grv8idl8pgr",
+            "Compendium.heart.heart.w0axsq6k3wnou7fn",
+            "Compendium.heart.heart.ko65iz6ql18z6p8c"
+        ]
+    },
+    "_key": "!items!ixrhklp2325bjaqi",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

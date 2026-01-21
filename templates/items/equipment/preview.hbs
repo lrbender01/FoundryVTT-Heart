@@ -1,0 +1,19 @@
+<div class="item preview equipment summary draggable" data-document-uuid="{{document.uuid}}">
+    <span class="name">{{document.name}}</span>
+    <heart-label class="major">
+        {{localize "heart.item.type.equipment"}}
+    </heart-label>
+    <heart-label class="minor">
+        {{localize (concat "heart.equipment.type." document.system.type)}}
+        {{ localize (concat "heart.dieSize."
+        document.system.dieSize)}}
+        {{#if (eq document.system.type "mend")}}
+        {{#each document.system.resistances as |resistance|}}
+        {{localize (concat "heart.resistance.type." resistance)}}
+        {{/each}}
+        {{/if}}
+    </heart-label>
+    {{#each document.system.tags as |uuid|}}
+    {{{ "foreignPartial" "systems/heart/templates/items/tag/preview.hbs" uuid}}}
+    {{/each}}
+</div>

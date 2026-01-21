@@ -1,0 +1,82 @@
+{
+    "_id": "nevicmg6s3j4jzl1",
+    "name": "Deadwalker",
+    "type": "class",
+    "system": {
+        "description": "You were always obsessed with death; maybe you were a nihilistic cultist, a moneyed arcanist, a radical theologist or a sanctified killer. But your initial fascination was nothing compared to what happened after you died for the first time. Nothing's been the same ever since. You didn't die properly; somehow, through willpower, luck or trickery, you stayed alive. Your tattered soul gives you a near-unique ability to step between the lands of the living and the dead with relative ease. Your constant companion - a spectral manifestation of the death that didn't take - guards you jealously and whispers secrets from beyond the veil into your ear while you slumber.",
+        "abilities": [
+            "Compendium.heart.heart.4pfxdhskd6yh2zm8",
+            "Compendium.heart.heart.wtdk6urncsod2t8k"
+        ],
+        "futureAbilities": [
+            "Compendium.heart.heart.gwaf44eect8j5v7x",
+            "Compendium.heart.heart.rrvy7f1f0f2mcaz5",
+            "Compendium.heart.heart.2zf8rx30yid7kzsh",
+            "Compendium.heart.heart.tbbj6gx4eqtmirt2",
+            "Compendium.heart.heart.ar2014xro2mev52m",
+            "Compendium.heart.heart.xwdqms3c76jq3zw1",
+            "Compendium.heart.heart.0ptu7r8j8kwizkp6",
+            "Compendium.heart.heart.5c7n4ttdk3k1dthd",
+            "Compendium.heart.heart.8outivyzl26ddwyw",
+            "Compendium.heart.heart.0sy9stn4z7v9z1z1",
+            "Compendium.heart.heart.y3bjtk5uwnggu1nt",
+            "Compendium.heart.heart.ge8yko1rstw70j56",
+            "Compendium.heart.heart.8c021yosm2ck9nm7",
+            "Compendium.heart.heart.iap7h1ago9hz2vnf",
+            "Compendium.heart.heart.ldowns97bjg7h258",
+            "Compendium.heart.heart.c5mluifz0lmmcrp9",
+            "Compendium.heart.heart.78g36e0qpke8iwus",
+            "Compendium.heart.heart.jxtgypnz6uokgxel",
+            "Compendium.heart.heart.17gmim1iw4dkfy6b",
+            "Compendium.heart.heart.cg1h2ch2xjv473fu",
+            "Compendium.heart.heart.hlrgl0bbk664ohlz"
+        ],
+        "resources": [
+            "Compendium.heart.heart.iecn41o3c9bukf62"
+        ],
+        "equipment": [],
+        "equipmentGroups": [
+            [
+                "Compendium.heart.heart.oqezc4m1xaf9sxb8"
+            ],
+            [
+                "Compendium.heart.heart.z112ql83tf9fw7sn"
+            ],
+            [
+                "Compendium.heart.heart.kvqa4fx9pyiizh00",
+                "Compendium.heart.heart.r11ywjxd82lvi00u"
+            ]
+        ]
+    },
+    "effects": [
+        {
+            "_key": "!items.effects!nevicmg6s3j4jzl1.2e715f1760e9d6d5",
+            "_id": "2e715f1760e9d6d5",
+            "name": "The DELVE skill",
+            "description": "The Deadwalker class provides a +1 to the DELVE skill as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.skills.delve.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        },
+        {
+            "_key": "!items.effects!nevicmg6s3j4jzl1.474fec0e34493640",
+            "_id": "474fec0e34493640",
+            "name": "The DESOLATE domain",
+            "description": "The Deadwalker class provides a +1 to the DESOLATE domain as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.domains.desolate.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        }
+    ],
+    "img": "systems/heart/assets/class.png",
+    "folder": "yIJ6SF31RMT5vNhz",
+    "_key": "!items!nevicmg6s3j4jzl1"
+}

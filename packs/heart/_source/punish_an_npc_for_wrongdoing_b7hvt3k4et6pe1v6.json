@@ -1,0 +1,12 @@
+{
+    "_id": "b7hvt3k4et6pe1v6",
+    "name": "Punish an NPC for wrongdoing.",
+    "type": "beat",
+    "system": {
+        "description": "Punish an NPC for wrongdoing.",
+        "type": "minor"
+    },
+    "_key": "!items!b7hvt3k4et6pe1v6",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

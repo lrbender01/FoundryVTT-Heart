@@ -1,0 +1,12 @@
+{
+    "_id": "h95uv78sdi5ek6ck",
+    "name": "Have a landmark or connection named after you.",
+    "type": "beat",
+    "system": {
+        "description": "Have a landmark or connection named after you.",
+        "type": "major"
+    },
+    "_key": "!items!h95uv78sdi5ek6ck",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

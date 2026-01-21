@@ -1,0 +1,13 @@
+{
+    "_id": "xyo10zv8tzmv885n",
+    "name": "The Herald Of The Drowned Queen",
+    "type": "ability",
+    "system": {
+        "description": "You give the Queen what she wants most of all: subjects. You can only cast this spell once, but you do so automatically without needing to roll. The landmark you're in is half-submerged in water, and from the depths in the centre a throne room rises, bearing the immortal majesty of the Drowned Queen. This is now her dominion, and you are her most trusted advisor; the remade landmark is utterly under your and the Queen's control. You have a session or two to get what you need out of the situation before you are retired as a player character - driven mad from occult stress, assassinated by agents of a rival haven, or betrothed to the Queen to cement the new expansion.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!xyo10zv8tzmv885n",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "4nsxooweu8ggfrsl",
+    "name": "Hiveborn",
+    "type": "ability",
+    "system": {
+        "description": "You were reborn in one of the Great Hives; your body, though still mortal, is waxen and papery. Gain the Warren domain. You can fit yourself through any gap small enough for a bee by having your swarm chew up and reform your body on the other side. This process takes upwards of six hours. You can rush to get it done in an hour instead, but mark D8 stress to Blood as a result.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!4nsxooweu8ggfrsl",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

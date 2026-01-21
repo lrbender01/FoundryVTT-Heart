@@ -1,0 +1,13 @@
+{
+    "_id": "dgix22j00bhwzvof",
+    "name": "Red Marketeer",
+    "type": "ability",
+    "system": {
+        "description": "For a while, you were bold enough to trade blood and souls in the shifting alleyways of the Red Market. Gain the Warren domain. If someone tries to take what's yours, your attacks gain the Brutal tag when you attempt to stop them.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!dgix22j00bhwzvof",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

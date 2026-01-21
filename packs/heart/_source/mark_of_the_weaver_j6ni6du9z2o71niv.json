@@ -1,0 +1,13 @@
+{
+    "_id": "j6ni6du9z2o71niv",
+    "name": "Mark Of The Weaver",
+    "type": "ability",
+    "system": {
+        "description": "Your hands are covered in spiderweb ink; you have the capacity to stitch, fix and bind with a thought. Gain the Mend skill. Once per session, you can fix someone or something in a matter of seconds, even if it would usually take hours of careful work.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!j6ni6du9z2o71niv",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

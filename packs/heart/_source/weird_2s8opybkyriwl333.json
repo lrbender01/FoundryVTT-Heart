@@ -1,0 +1,14 @@
+{
+    "_id": "2s8opybkyriwl333",
+    "name": "Weird",
+    "type": "fallout",
+    "system": {
+        "description": "You do something unsettling that bothers normal people - obsessive behaviour, singing to yourself,fulfilling a strange compulsion at inappropriate times. At the earliest opportunity, the GM can declare that your weirdness puts a useful NPC off you (and probably your allies, too).[Immediate,Ongoing]",
+        "resistance": "mind",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!2s8opybkyriwl333",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

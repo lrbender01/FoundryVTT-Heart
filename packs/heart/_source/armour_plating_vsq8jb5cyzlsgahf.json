@@ -1,0 +1,13 @@
+{
+    "_id": "vsq8jb5cyzlsgahf",
+    "name": "Armour Plating",
+    "type": "ability",
+    "system": {
+        "description": "Retro-engineered from train carriages, this trademark chest armour still bears the symbols of the rail networks that built the Vermissian. +2 Blood Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!vsq8jb5cyzlsgahf",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

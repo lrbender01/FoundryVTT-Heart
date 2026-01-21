@@ -1,0 +1,43 @@
+{{#> "systems/heart/templates/items/base/index.hbs" type="haunt"}}
+<div class="section upgrade-track">
+    <h3>
+        {{localize "heart.haunt.upgradeTrack"}}
+        <div class="right">
+            <a data-action="upgrade" data-type="haunt"><span class="fas fa-level-up-alt"></span>{{localize
+                "heart.haunt.button.upgrade"}}</a>
+            <a data-action="downgrade" data-type="haunt"><span class="fas fa-level-down-alt"></span>{{localize
+                "heart.haunt.button.downgrade"}}</a>
+        </div>
+    </h3>
+    <div class="red" data-target='system.upgradeTrack'>{{{ordered-checkable item.system.upgradeTrack 6}}}</div>
+</div>
+
+<div class="section services" data-item-id="{{document.uuid}}">
+    <h3>
+        {{#if overrideTitle}}
+        {{overrideTitle}}
+        {{else}}
+        {{localize "heart.haunt.service.name.plural"}}
+        {{/if}}
+        <div class="right">
+            <a data-action="add-service" data-type="service"><span class="fas fa-plus"></span></a>
+        </div>
+    </h3>
+    <div class="item-list">
+        {{#each system.resistances as |service id|}}
+        <div data-id="{{id}}">
+            <a data-action="service-roll"><span class="fas fa-dice"></span></a>
+            <select name="system.resistances.{{id}}.dieSize">
+                {{selectOptions dieSizes selected=service.dieSize}}
+            </select>
+            <select name="system.resistances.{{id}}.resistance">
+                {{selectOptions resistances selected=service.resistance localize=true}}
+            </select>
+            {{#if (and editable ../user.isGM) }}
+            <a class="action right" data-action="delete-service"><span class="fas fa-trash"></span></a>
+            {{/if}}
+        </div>
+        {{/each}}
+    </div>
+</div>
+{{/ "systems/heart/templates/items/base/index.hbs" }}

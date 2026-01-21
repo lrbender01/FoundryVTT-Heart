@@ -1,0 +1,13 @@
+{
+    "_id": "vkjqvvf0spt6z8i2",
+    "name": "Unwavering Faith",
+    "type": "ability",
+    "system": {
+        "description": "Gain +1 Protection in the Mind, Supplies, Blood or Fortune resistance. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!vkjqvvf0spt6z8i2",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

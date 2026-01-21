@@ -1,0 +1,17 @@
+{
+    "_id": "gnhnq0bhpioe4dgs",
+    "name": "Exsanguinate",
+    "type": "ability",
+    "system": {
+        "description": "You pluck a target's blood out of its mouth and nose, choking it on its own viscera. This spell functions as a weapon with the following tags: (Kill D6, ranged). You can mark stress accrued as a result of using this spell to Echo.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.ay229lfpdt5kjq70",
+            "Compendium.heart.heart.gba36f795a03s2wl",
+            "Compendium.heart.heart.8gag8vixnxqwm2ly"
+        ]
+    },
+    "_key": "!items!gnhnq0bhpioe4dgs",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

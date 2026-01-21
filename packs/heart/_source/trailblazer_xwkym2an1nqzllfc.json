@@ -1,0 +1,17 @@
+{
+    "_id": "xwkym2an1nqzllfc",
+    "name": "Trailblazer",
+    "type": "ability",
+    "system": {
+        "description": "Leading teams of explorers to lost sites and distant stations have taught you how best to move throughtheCity Beneath - even at a cost to your own health. When you lead a party on a delve, you may activate this ability. When active, increase the stress dice inflicted on the delve (and that the delve inflicts on you) by one step.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.mi3pa9792zla2s5k",
+            "Compendium.heart.heart.q4ks6h8bbaf0x4mu",
+            "Compendium.heart.heart.nmn4trc2mlnol24p"
+        ]
+    },
+    "_key": "!items!xwkym2an1nqzllfc",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

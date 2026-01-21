@@ -1,0 +1,14 @@
+{
+    "_id": "j1g1hfgnwdfuoffb",
+    "name": "Exhausted",
+    "type": "fallout",
+    "system": {
+        "description": "You can't go on; if you push yourself any harder you're going to pass out. Stop now,or convince someone else to carry you the rest of the way. Alternatively, make one more action and then fall unconscious once the roll is resolved. [Immediate, Ongoing]",
+        "resistance": "blood",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!j1g1hfgnwdfuoffb",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

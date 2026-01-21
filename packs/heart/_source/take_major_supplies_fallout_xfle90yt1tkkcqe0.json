@@ -1,0 +1,12 @@
+{
+    "_id": "xfle90yt1tkkcqe0",
+    "name": "Take Major Supplies fallout.",
+    "type": "beat",
+    "system": {
+        "description": "Take Major Supplies fallout.",
+        "type": "major"
+    },
+    "_key": "!items!xfle90yt1tkkcqe0",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

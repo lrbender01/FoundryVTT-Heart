@@ -1,0 +1,12 @@
+{
+    "_id": "cvzn2fafippy12np",
+    "name": "Successfully lead, and take full credit for, a delve that takes you to Tier 3 or deeper.",
+    "type": "beat",
+    "system": {
+        "description": "Successfully lead, and take full credit for, a delve that takes you to Tier 3 or deeper.",
+        "type": "major"
+    },
+    "_key": "!items!cvzn2fafippy12np",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

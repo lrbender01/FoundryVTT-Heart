@@ -1,0 +1,13 @@
+{
+    "_id": "4xvjzkfgb5ss3a3a",
+    "name": "Perfection",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, a target under the effect of UNCHAOS can treat a Dangerous action as a Standard action.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!4xvjzkfgb5ss3a3a",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

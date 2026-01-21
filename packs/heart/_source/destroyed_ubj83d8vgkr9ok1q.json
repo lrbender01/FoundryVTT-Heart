@@ -1,0 +1,14 @@
+{
+    "_id": "ubj83d8vgkr9ok1q",
+    "name": "Destroyed",
+    "type": "fallout",
+    "system": {
+        "description": "If you're currently on a delve that has a connection established, remove the connection and describe what happened. If you're inside a landmark, you destroy something of value and remove one of the landmark's haunts (if it has any). Tell us how you did it (on purpose or accidentally). [Immediate]",
+        "resistance": "fortune",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!ubj83d8vgkr9ok1q",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

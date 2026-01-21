@@ -1,0 +1,14 @@
+{
+    "_id": "pyw1hkfmwfcdl9ln",
+    "name": "Disarmed",
+    "type": "fallout",
+    "system": {
+        "description": "You drop and lose whatever you're holding, leaving you defenceless; you inflict D4 stress in combat until you source a weapon. If you're somewhere precarious, you might lose the item forever. [Immediate]",
+        "resistance": "blood",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!pyw1hkfmwfcdl9ln",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

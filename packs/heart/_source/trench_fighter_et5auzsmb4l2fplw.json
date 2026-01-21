@@ -1,0 +1,17 @@
+{
+    "_id": "et5auzsmb4l2fplw",
+    "name": "Trench-Fighter",
+    "type": "ability",
+    "system": {
+        "description": "Your mind is scarred with mud, gore and screams from a century before your birth. When you attack at close range, your attacks gain the Piercing tag, even if you're unarmed.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.s7se8xg9cobrvqbw",
+            "Compendium.heart.heart.zpcl7zr72b9c9muf",
+            "Compendium.heart.heart.t4ug7gsb8iw4603k"
+        ]
+    },
+    "_key": "!items!et5auzsmb4l2fplw",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

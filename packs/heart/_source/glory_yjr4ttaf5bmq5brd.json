@@ -1,0 +1,13 @@
+{
+    "_id": "yjr4ttaf5bmq5brd",
+    "name": "Glory",
+    "type": "ability",
+    "system": {
+        "description": "<p>You come face to face with the goddess herself, and the radiance reflected in your eyes is too much for people to behold. You keep your face covered. When you uncover it, all those who can see you are stunned and awed, unable to look upon you without falling to their knees.&nbsp; hose who remain in your presence miraculously remove one Minor Blood or Mind fallout result, or downgrade a Major to a Minor after about an hour; most NPCs will convert to your faith on the spot.</p> <p>In the City Above, a team of aelfir hunters working for the Solar Church are mobilised and dispatched to kill you. They will find and eliminate you, and you will die.</p>",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!yjr4ttaf5bmq5brd",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

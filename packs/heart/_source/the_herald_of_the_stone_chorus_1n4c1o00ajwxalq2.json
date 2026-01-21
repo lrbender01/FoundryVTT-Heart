@@ -1,0 +1,13 @@
+{
+    "_id": "1n4c1o00ajwxalq2",
+    "name": "The Herald Of The Stone Chorus",
+    "type": "ability",
+    "system": {
+        "description": "You throw open the door to the Chorus' prison; while they look on in shock, you throw another captive into the cell. You can only cast this spell once, but you do so automatically without needing to roll. A creature or entity you are touching is sealed away in the Stone Chorus'prison eternally; you become part of the mechanism that locks the door, and cease to exist in any meaningful sense. Nothing can free the target from its prison short of you, the door, agreeing to open.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!1n4c1o00ajwxalq2",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

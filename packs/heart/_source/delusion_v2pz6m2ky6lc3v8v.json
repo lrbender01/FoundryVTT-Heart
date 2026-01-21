@@ -1,0 +1,14 @@
+{
+    "_id": "v2pz6m2ky6lc3v8v",
+    "name": "Delusion",
+    "type": "fallout",
+    "system": {
+        "description": "Something you believe to be true is in fact false. While you step outside, or during downtime, all the other players work with the GM to determine what you are deluded about. For example: you're not an orphan, and you've got a family back in High Rise; there's no such group as the Hounds, and your uniform doesn't mean anything; etc. Next time you encounter the subject, reality (and the other characters) behave appropriately,leaving you confused and shaken.",
+        "resistance": "mind",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!v2pz6m2ky6lc3v8v",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

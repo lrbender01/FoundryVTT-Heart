@@ -1,0 +1,16 @@
+<div>
+    {{editor document.system.description target="system.description" button=true editable=editable
+    owner=owner}}
+
+    <heart-label class="major">
+        {{localize "heart.item.type.resource"}}
+    </heart-label>
+    <heart-label class="minor">
+        {{localize (concat "heart.dieSize." document.system.dieSize)}}
+        {{localize (concat "heart.domain.type." document.system.domain)}}
+    </heart-label>
+
+    {{#each document.system.tags as |uuid|}}
+    {{{ "foreignPartial" "systems/heart/templates/items/tag/preview.hbs" uuid}}}
+    {{/each}}
+</div>

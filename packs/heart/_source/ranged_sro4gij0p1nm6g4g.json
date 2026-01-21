@@ -1,0 +1,12 @@
+{
+    "_id": "sro4gij0p1nm6g4g",
+    "name": "Ranged",
+    "type": "tag",
+    "system": {
+        "description": "This equipment can be used at range."
+    },
+    "effects": [],
+    "_key": "!items!sro4gij0p1nm6g4g",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

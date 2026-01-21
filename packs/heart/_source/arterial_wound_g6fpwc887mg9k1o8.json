@@ -1,0 +1,14 @@
+{
+    "_id": "g6fpwc887mg9k1o8",
+    "name": "Arterial Wound",
+    "type": "fallout",
+    "system": {
+        "description": "As BLEEDING, but you mark D6 stress at the end of every situation. [Ongoing]",
+        "resistance": "blood",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!g6fpwc887mg9k1o8",
+    "folder": "l7pxZoNF1qlTw2gA"
+}
