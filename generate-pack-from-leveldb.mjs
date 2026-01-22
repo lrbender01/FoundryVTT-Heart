@@ -62,20 +62,6 @@ await new Promise((resolve, reject) => {
   });
 });
 
-/*
-const en_lang = await new Promise((resolve, reject) => {
-  let b = "";
-  const r = get('https://raw.githubusercontent.com/hitcherland/FoundryVTT-Heart/refs/heads/release/lang/en.json', (res) => {
-    res.setEncoding('utf-8');
-    res.on('data', (d) => {
-      b += d;
-    });
-    res.on("end", () => resolve(JSON.parse(b)));
-    res.on("error", reject);
-  });
-});
-*/
-
 async function getDB(type) {
   const dbPath = `/tmp/heart/packs/${type}`;
   return new Level(dbPath);
