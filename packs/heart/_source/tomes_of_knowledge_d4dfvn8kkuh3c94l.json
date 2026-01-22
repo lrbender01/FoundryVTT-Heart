@@ -1,0 +1,13 @@
+{
+    "_id": "d4dfvn8kkuh3c94l",
+    "name": "Tomes Of Knowledge",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following domains: Cursed, Desolate, Haven, Religion, Technology, Wild, Warren. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!d4dfvn8kkuh3c94l",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

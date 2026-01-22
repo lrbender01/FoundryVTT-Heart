@@ -1,0 +1,13 @@
+{
+    "_id": "cevj8wh7a6ajptsn",
+    "name": "Brisk Conjuration",
+    "type": "ability",
+    "system": {
+        "description": "You are able to summon an indiscriminate blast of air in a direction of your choice. This spell functions as a (Kill D4, Spread, Debilitating, One-Shot) weapon.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!cevj8wh7a6ajptsn",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "sm5zezi3lnhwvco1",
+    "name": "Assume Debt",
+    "type": "ability",
+    "system": {
+        "description": "Whilst wearing your Debtor's Reds, any time you mark Supplies stress you may choose to ignore your Supplies protection. If you do so, you may immediately cause someone within arms reach to mark the same amount of stress that you have just taken.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!sm5zezi3lnhwvco1",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

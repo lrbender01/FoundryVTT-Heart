@@ -1,0 +1,13 @@
+{
+    "_id": "aqkck1b6sqeebyp7",
+    "name": "Twisting Territory",
+    "type": "ability",
+    "system": {
+        "description": "You've fought tooth and nail in tunnels and pits to defend what's yours. Gain the Warren domain. Once per situation, you can ask the GM who's in charge of the immediate area around you. By smell, sight or some other esoteric sense, you gain an intuitive understanding of the apex predator or alpha creature (whether that's a person or a beast) in the local area. When you use this power, the target gets the uncanny feeling that they're under threat.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!aqkck1b6sqeebyp7",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

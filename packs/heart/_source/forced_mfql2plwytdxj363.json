@@ -1,0 +1,63 @@
+{
+    "_id": "mfql2plwytdxj363",
+    "name": "Forced",
+    "type": "calling",
+    "system": {
+        "description": "You don't want to be down here, but you don't have any choice. You're a prisoner, an initiate to a cult or someone's blackmailing you.",
+        "questions": [
+            {
+                "question": "Who, or what, are your masters?"
+            },
+            {
+                "question": "What do your masters want?"
+            },
+            {
+                "question": "How are your masters maintaining power over you?"
+            },
+            {
+                "question": "How do your masters contact you?"
+            },
+            {
+                "question": "Choose another player character. They have history with your masters too. What's their relationship?"
+            }
+        ],
+        "ability": "Compendium.heart.heart.09bleyawukgopf7a",
+        "beats": [
+            "Compendium.heart.heart.04rfi3ly0hi6fdkz",
+            "Compendium.heart.heart.yfu3tnh8x5mqkl63",
+            "Compendium.heart.heart.u0xdy1a19mksrqp0",
+            "Compendium.heart.heart.vicemtdw740u97pu",
+            "Compendium.heart.heart.vforgrsuh2rcz36n",
+            "Compendium.heart.heart.irz27jj3umn6m7fh",
+            "Compendium.heart.heart.9ryx2kc45mdjhcgr",
+            "Compendium.heart.heart.pgnu7fpjbgsho3tn",
+            "Compendium.heart.heart.569116jyd3lyag4r",
+            "Compendium.heart.heart.601kzuksr8fzc0nr",
+            "Compendium.heart.heart.5e1mu2fih66g3ms7",
+            "Compendium.heart.heart.e7rnpdb0227xqlal",
+            "Compendium.heart.heart.knhh6xqk96hrdax7",
+            "Compendium.heart.heart.6e8pg5kdvvovu2u2",
+            "Compendium.heart.heart.zpz06i6175mzihd6",
+            "Compendium.heart.heart.wfp8fu3grsh0dfbn",
+            "Compendium.heart.heart.b57xlxbwbzub1x1n",
+            "Compendium.heart.heart.nu6jk5zs8teb34c4",
+            "Compendium.heart.heart.cdvy4602z37b897s",
+            "Compendium.heart.heart.vr0ikh2n76t2r6y4",
+            "Compendium.heart.heart.opr9hffm6cousl8f",
+            "Compendium.heart.heart.bphb6tqvpfhpmgk9",
+            "Compendium.heart.heart.ei25t86fu8oy0x2b",
+            "Compendium.heart.heart.oh6phzeujyp3upf0",
+            "Compendium.heart.heart.f4zkzyv7kvmwaqhx",
+            "Compendium.heart.heart.49tfcoavyygo9kl6",
+            "Compendium.heart.heart.ggeiadulk1l7rtsf",
+            "Compendium.heart.heart.01k6byz1viuej174",
+            "Compendium.heart.heart.4wvbgrajwmwiuojo",
+            "Compendium.heart.heart.6w8ts8aqzlm0d9w5",
+            "Compendium.heart.heart.2fejl67p6ibneir2"
+        ]
+    },
+    "effects": [],
+    "img": "systems/heart/assets/calling.png",
+    "folder": "CN0la67ziHUrLPD2",
+    "_key": "!items!mfql2plwytdxj363"
+}

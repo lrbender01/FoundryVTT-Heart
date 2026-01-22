@@ -1,0 +1,13 @@
+{
+    "_id": "42d97ad6wn9ck55b",
+    "name": "Martyr's Blood",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, when a nearby ally takes Major Blood fallout, you both take Minor Blood fallout instead.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!42d97ad6wn9ck55b",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

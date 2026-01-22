@@ -1,0 +1,14 @@
+{
+    "_id": "7j21x04u9i07wnvn",
+    "name": "Downed",
+    "type": "fallout",
+    "system": {
+        "description": "You can't move under your own power and you're barely clinging on to consciousness. You can be moved around by others,but without medical attention, you're not going anywhere. Can be upgraded to DYING.[Ongoing]",
+        "resistance": "blood",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!7j21x04u9i07wnvn",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

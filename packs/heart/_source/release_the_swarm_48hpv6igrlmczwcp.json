@@ -1,0 +1,13 @@
+{
+    "_id": "48hpv6igrlmczwcp",
+    "name": "Release The Swarm",
+    "type": "ability",
+    "system": {
+        "description": "You send out a swarm of bees, eager to defend you. Gain access to the following weapon: (Kill D4, Spread, Ranged).",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!48hpv6igrlmczwcp",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

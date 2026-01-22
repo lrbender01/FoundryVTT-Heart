@@ -1,0 +1,17 @@
+{
+    "_id": "brvdtoei6922dl2q",
+    "name": "Familiar",
+    "type": "ability",
+    "system": {
+        "description": "You have developed a special relationship with a creature; you feed it your blood, and in return it accepts the monstrous changes of your magic. You are accompanied by a small creature - no bigger than a dog - that is cowardly and strange to look at. Describe it. When you take stress from magical sources (including your own), you may assign that stress to your familiar instead of your own resistances. When you mark 4 total stress to your familiar, it is unavailable until the start of the next session. It returns changed; describe what aspect of it has been transformed by the magical energy coursing through it. At the start of each session, remove all stress marked against your familiar.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.jkfdg51qxsnx09je",
+            "Compendium.heart.heart.13ceshihvqqex5zn",
+            "Compendium.heart.heart.nc5j4twvbrb8zp0f"
+        ]
+    },
+    "_key": "!items!brvdtoei6922dl2q",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

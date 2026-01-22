@@ -1,0 +1,14 @@
+{
+    "_id": "dlumcto4oppxuuio",
+    "name": "Break",
+    "type": "fallout",
+    "system": {
+        "description": "You completely lose it. Anyone standing nearby who you care about marks D8 stress to Mind; anyone standing nearby who you've never really liked marks D8 stress to Blood as you attack them. After this, you die (either self-inflicted or at the hands of your allies) or your mind is so shattered that you retire as a player character. [Immediate]",
+        "resistance": "mind",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!dlumcto4oppxuuio",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

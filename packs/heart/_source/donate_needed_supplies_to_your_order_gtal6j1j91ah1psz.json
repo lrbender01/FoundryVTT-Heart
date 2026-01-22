@@ -1,0 +1,12 @@
+{
+    "_id": "gtal6j1j91ah1psz",
+    "name": "Donate needed supplies to your order.",
+    "type": "beat",
+    "system": {
+        "description": "Donate needed supplies to your order.",
+        "type": "minor"
+    },
+    "_key": "!items!gtal6j1j91ah1psz",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

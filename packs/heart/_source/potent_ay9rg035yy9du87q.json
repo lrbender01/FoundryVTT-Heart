@@ -1,0 +1,12 @@
+{
+    "_id": "ay9rg035yy9du87q",
+    "name": "Potent",
+    "type": "tag",
+    "system": {
+        "description": "When you roll for stress removed from yourself or an ally with this item, roll two dice and pick the highest. Multiple instances of this tag stack as per the Brutal tag."
+    },
+    "effects": [],
+    "_key": "!items!ay9rg035yy9du87q",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

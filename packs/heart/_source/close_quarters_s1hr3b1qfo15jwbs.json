@@ -1,0 +1,13 @@
+{
+    "_id": "s1hr3b1qfo15jwbs",
+    "name": "Close Quarters",
+    "type": "ability",
+    "system": {
+        "description": "You like things to be up-close and personal. Gain the Warren domain. When in areas with the Warren domain, gain +1 Blood protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!s1hr3b1qfo15jwbs",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

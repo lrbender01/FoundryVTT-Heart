@@ -1,0 +1,13 @@
+{
+    "_id": "ainez4lw25sfmzfo",
+    "name": "Incandescent Communion",
+    "type": "ability",
+    "system": {
+        "description": "In the tear between worlds, She blessed you with night-black eyes that resonate with Her Eternal Light. Gain the Cursed domain. You can see in total darkness as though the area was illuminated by candle-light.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ainez4lw25sfmzfo",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

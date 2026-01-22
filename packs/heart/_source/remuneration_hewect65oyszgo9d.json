@@ -1,0 +1,13 @@
+{
+    "_id": "hewect65oyszgo9d",
+    "name": "Remuneration",
+    "type": "ability",
+    "system": {
+        "description": "When you reduce a target to 0 resistance using BACKSTAB, remove stress from Supplies equal to double the value of your current tier.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!hewect65oyszgo9d",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

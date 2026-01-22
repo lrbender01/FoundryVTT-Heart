@@ -1,0 +1,12 @@
+{
+    "_id": "9ryx2kc45mdjhcgr",
+    "name": "Do something dangerous to conceal your past.",
+    "type": "beat",
+    "system": {
+        "description": "Do something dangerous to conceal your past.",
+        "type": "minor"
+    },
+    "_key": "!items!9ryx2kc45mdjhcgr",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

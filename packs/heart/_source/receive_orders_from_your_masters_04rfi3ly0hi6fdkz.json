@@ -1,0 +1,12 @@
+{
+    "_id": "04rfi3ly0hi6fdkz",
+    "name": "Receive orders from your masters.",
+    "type": "beat",
+    "system": {
+        "description": "Receive orders from your masters.",
+        "type": "minor"
+    },
+    "_key": "!items!04rfi3ly0hi6fdkz",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

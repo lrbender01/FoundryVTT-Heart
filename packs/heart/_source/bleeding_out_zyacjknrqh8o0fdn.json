@@ -1,0 +1,14 @@
+{
+    "_id": "zyacjknrqh8o0fdn",
+    "name": "Bleeding Out",
+    "type": "fallout",
+    "system": {
+        "description": "You're dying. Choose: do something useful before you die (and roll with mastery, because this is the last thing you'll ever do) or desperately try to cling onto life (and lose something vital in the bargain). [Immediate]",
+        "resistance": "blood",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!zyacjknrqh8o0fdn",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

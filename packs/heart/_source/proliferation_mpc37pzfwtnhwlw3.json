@@ -1,0 +1,13 @@
+{
+    "_id": "mpc37pzfwtnhwlw3",
+    "name": "Proliferation",
+    "type": "ability",
+    "system": {
+        "description": "Whilst at a haven that's in your trade network, you and your party may use haunts located in havens that you are not currently visiting. When you use a haunt in this way, halve the value rolled on the dice when determining how much stress to remove from your resistances. If you use such a haunt to remove fallout, increase the cost by 1 step.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!mpc37pzfwtnhwlw3",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

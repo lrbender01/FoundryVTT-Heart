@@ -1,0 +1,12 @@
+{
+    "_id": "f1fd0c5gaoowkjpy",
+    "name": "Deliver a crucial message on behalf of the Heart.",
+    "type": "beat",
+    "system": {
+        "description": "Deliver a crucial message on behalf of the Heart.",
+        "type": "major"
+    },
+    "_key": "!items!f1fd0c5gaoowkjpy",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

@@ -1,0 +1,17 @@
+{
+    "_id": "voodmkf5g81ai43c",
+    "name": "Karmic Ledger",
+    "type": "ability",
+    "system": {
+        "description": "Once you know what's keeping someone awake at night, it's much easier to take advantage of them. Roll Discern+Haven to cast this spell on a target you can see and hear. On a success, you determine their deepest karmic debt: the greatest thing that they've taken from someone else (money, valuables, freedom, a son, etc). When you act on this information, roll with mastery.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.wix6dq24uayw2m96",
+            "Compendium.heart.heart.lqib4awe9dwcm21u",
+            "Compendium.heart.heart.cgscu0v8yqha8r07"
+        ]
+    },
+    "_key": "!items!voodmkf5g81ai43c",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

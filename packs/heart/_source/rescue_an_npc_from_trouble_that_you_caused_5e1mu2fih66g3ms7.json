@@ -1,0 +1,12 @@
+{
+    "_id": "5e1mu2fih66g3ms7",
+    "name": "Rescue an NPC from trouble that you caused.",
+    "type": "beat",
+    "system": {
+        "description": "Rescue an NPC from trouble that you caused.",
+        "type": "minor"
+    },
+    "_key": "!items!5e1mu2fih66g3ms7",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

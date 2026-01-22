@@ -1,0 +1,12 @@
+{
+    "_id": "940tn081sein3ewi",
+    "name": "Have at least three havens know your name, for good or ill.",
+    "type": "beat",
+    "system": {
+        "description": "Have at least three havens know your name, for good or ill.",
+        "type": "minor"
+    },
+    "_key": "!items!940tn081sein3ewi",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

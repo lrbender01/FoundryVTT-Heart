@@ -1,0 +1,13 @@
+{
+    "_id": "eh4n0i0oedpbtrvo",
+    "name": "Anathema",
+    "type": "ability",
+    "system": {
+        "description": "When AETHERIC FIELD is active, your melee attacks against heartsblood creatures or people gain the Brutal tag.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!eh4n0i0oedpbtrvo",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

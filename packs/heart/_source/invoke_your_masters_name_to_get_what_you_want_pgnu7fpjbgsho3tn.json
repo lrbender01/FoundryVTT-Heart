@@ -1,0 +1,12 @@
+{
+    "_id": "pgnu7fpjbgsho3tn",
+    "name": "Invoke your masters' name to get what you want.",
+    "type": "beat",
+    "system": {
+        "description": "Invoke your masters' name to get what you want.",
+        "type": "minor"
+    },
+    "_key": "!items!pgnu7fpjbgsho3tn",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "hxk52kv037ow614m",
+    "name": "Shared Visions",
+    "type": "ability",
+    "system": {
+        "description": "Your allies can also roll with mastery when they interact with the portentous items.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!hxk52kv037ow614m",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

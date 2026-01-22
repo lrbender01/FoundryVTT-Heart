@@ -1,0 +1,13 @@
+{
+    "_id": "el8ydg5wvik7e6tp",
+    "name": "Bounty Shared",
+    "type": "ability",
+    "system": {
+        "description": "When you complete a delve or hunt and kill a renowned beast (see above), everyone who took part in THE WILD HUNT may remove D6 stress from Fortune or Supplies.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!el8ydg5wvik7e6tp",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

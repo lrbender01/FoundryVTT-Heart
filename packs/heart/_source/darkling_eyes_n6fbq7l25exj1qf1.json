@@ -1,0 +1,13 @@
+{
+    "_id": "n6fbq7l25exj1qf1",
+    "name": "Darkling Eyes",
+    "type": "ability",
+    "system": {
+        "description": "Years of exploring the City Beneath have rid you of the need for creature comforts such as warmth, light and shelter. Gain the Delve skill. Your jet-black eyes allow you to see in pitch blackness as though it were full day light.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!n6fbq7l25exj1qf1",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

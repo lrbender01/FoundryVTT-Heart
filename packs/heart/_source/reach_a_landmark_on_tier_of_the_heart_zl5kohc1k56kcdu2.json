@@ -1,0 +1,12 @@
+{
+    "_id": "zl5kohc1k56kcdu2",
+    "name": "Reach a landmark on tier 3 of the Heart.",
+    "type": "beat",
+    "system": {
+        "description": "Reach a landmark on tier 3 of the Heart.",
+        "type": "minor"
+    },
+    "_key": "!items!zl5kohc1k56kcdu2",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

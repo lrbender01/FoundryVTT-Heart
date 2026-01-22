@@ -1,0 +1,14 @@
+{
+    "_id": "xb4qyvpp66qweg0a",
+    "name": "Tired",
+    "type": "fallout",
+    "system": {
+        "description": "You're weary; you're going to make bad decisions and snap at your friends.You cannot gain extra dice from skills. [Ongoing]",
+        "resistance": "blood",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!xb4qyvpp66qweg0a",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

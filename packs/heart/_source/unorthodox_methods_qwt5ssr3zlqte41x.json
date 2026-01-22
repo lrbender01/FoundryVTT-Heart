@@ -1,0 +1,13 @@
+{
+    "_id": "qwt5ssr3zlqte41x",
+    "name": "Unorthodox Methods",
+    "type": "ability",
+    "system": {
+        "description": "You blend together method and madness in pursuit of your goals. Gain the Discern skill. Once per session, before you roll dice to resolve an action, instead state that your result is a 6. You succeed but take stress.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!qwt5ssr3zlqte41x",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

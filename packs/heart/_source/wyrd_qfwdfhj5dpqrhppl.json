@@ -1,0 +1,12 @@
+{
+    "_id": "qfwdfhj5dpqrhppl",
+    "name": "Wyrd",
+    "type": "tag",
+    "system": {
+        "description": "When you inflict stress with this item and roll the maximum amount, mark D6 stress to Echo"
+    },
+    "effects": [],
+    "_key": "!items!qfwdfhj5dpqrhppl",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

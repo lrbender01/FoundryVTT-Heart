@@ -1,0 +1,12 @@
+{
+    "_id": "f0n4460slf7vnvcq",
+    "name": "Defend a haven from attack.",
+    "type": "beat",
+    "system": {
+        "description": "Defend a haven from attack.",
+        "type": "minor"
+    },
+    "_key": "!items!f0n4460slf7vnvcq",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

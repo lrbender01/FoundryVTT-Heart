@@ -1,0 +1,13 @@
+{
+    "_id": "05021pzfujconvot",
+    "name": "Surrender To Chaos",
+    "type": "ability",
+    "system": {
+        "description": "A life time of carving order from disorder, and still the Heart remains chaotic. You lost before you ever started. You give in, tragically and catastrophically. When you cast this spell, everything that is ordered around you flips to disorder: buildings collapse, machinery overloads and malfunctions, disease runs rampant, language breaks down and fire crackles at the edges of your vision. You are unmade, inverted; your bees are destroyed; and the Heart arrives to greedily consume your essence. The Heart Itself spontaneously manifests in your current position. You are killed when this ability is used - crushed under the weight of impossible mathematics and ruinous vectors. Lines and angles no longer fully meet at the seams as raw nuclear chaos unfolds within you. After a few seconds of utter nightmare, the manifestation collapses, lapsing back into its natural state.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!05021pzfujconvot",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

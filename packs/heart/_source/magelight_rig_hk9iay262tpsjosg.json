@@ -1,0 +1,13 @@
+{
+    "_id": "hk9iay262tpsjosg",
+    "name": "Magelight rig",
+    "type": "equipment",
+    "system": {
+        "type": "delve",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!hk9iay262tpsjosg",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

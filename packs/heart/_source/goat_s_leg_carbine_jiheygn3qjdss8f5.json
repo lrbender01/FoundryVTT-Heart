@@ -1,0 +1,16 @@
+{
+    "_id": "jiheygn3qjdss8f5",
+    "name": "Goat's Leg Carbine",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.r9p0yhil77g3cjwc",
+            "Compendium.heart.heart.11h7qvhbw5qimlrr"
+        ]
+    },
+    "_key": "!items!jiheygn3qjdss8f5",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

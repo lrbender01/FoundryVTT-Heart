@@ -1,0 +1,60 @@
+{
+    "_id": "vqbxvdxe9pqyfdbj",
+    "name": "Enlightenment",
+    "type": "calling",
+    "system": {
+        "description": "Everyone said that what you intended to do was impossible, but you've never let \"possibility\" slow you down. You're looking for secrets hidden deep within the earth. You know that the Heart holds the answers to all your questions; no matter what it takes, you'll get them.",
+        "questions": [
+            {
+                "question": "What \"impossible\" thing are you attempting to achieve in the City Beneath?"
+            },
+            {
+                "question": "What's the first step on your journey?"
+            },
+            {
+                "question": "Choose another player character. They've been invaluable in your journey so far. What have you learned from them?"
+            },
+            {
+                "question": "Choose another player character. You know they're hiding secrets from you - why do you suspect they're doing this?"
+            }
+        ],
+        "ability": "Compendium.heart.heart.qwt5ssr3zlqte41x",
+        "beats": [
+            "Compendium.heart.heart.uhn1e6s6p1f9wyg1",
+            "Compendium.heart.heart.kzfz9gfqnstky2v4",
+            "Compendium.heart.heart.uhos8wc03ytqysd6",
+            "Compendium.heart.heart.ckom5drmw496z04f",
+            "Compendium.heart.heart.6o7iyp1hvuqr3gr7",
+            "Compendium.heart.heart.zagevlxiyosy203n",
+            "Compendium.heart.heart.3jlhbq50w8q095er",
+            "Compendium.heart.heart.zl5kohc1k56kcdu2",
+            "Compendium.heart.heart.33fpn712hgju7jao",
+            "Compendium.heart.heart.s0b42vao6ab2l342",
+            "Compendium.heart.heart.fxgikhl58vnzmfx3",
+            "Compendium.heart.heart.1zmyteszfuo3d4ef",
+            "Compendium.heart.heart.ej5zfbw1x264numb",
+            "Compendium.heart.heart.zvdj6j0jfq6tmder",
+            "Compendium.heart.heart.aitc88fts0owgiuz",
+            "Compendium.heart.heart.an5i8vjzwejmwz4w",
+            "Compendium.heart.heart.v01tejuk6diczzi3",
+            "Compendium.heart.heart.mnmxnyt1hxzt8fb9",
+            "Compendium.heart.heart.6wnbjifduhcn3lmn",
+            "Compendium.heart.heart.i5eci94spgfxpub2",
+            "Compendium.heart.heart.tbhlzjrbfaogu8j0",
+            "Compendium.heart.heart.eubme9659hg63k5z",
+            "Compendium.heart.heart.3hxaxshnbmlvcelt",
+            "Compendium.heart.heart.olnxvt4s36id01np",
+            "Compendium.heart.heart.7kgflkfmujgf89mp",
+            "Compendium.heart.heart.yt3kfct40kls4ivw",
+            "Compendium.heart.heart.zxzkeq4mwptpewip",
+            "Compendium.heart.heart.ec0rllby1q83a3v6",
+            "Compendium.heart.heart.0vqvp2kg6i4ey3o5",
+            "Compendium.heart.heart.3duti7759fd9nea4",
+            "Compendium.heart.heart.tq06rp4rgcso3tr6"
+        ]
+    },
+    "effects": [],
+    "img": "systems/heart/assets/calling.png",
+    "folder": "CN0la67ziHUrLPD2",
+    "_key": "!items!vqbxvdxe9pqyfdbj"
+}

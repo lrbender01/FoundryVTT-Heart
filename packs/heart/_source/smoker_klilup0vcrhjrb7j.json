@@ -1,0 +1,16 @@
+{
+    "_id": "klilup0vcrhjrb7j",
+    "name": "Smoker",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d4",
+        "tags": [
+            "Compendium.heart.heart.b2uih42csdjahlsu",
+            "Compendium.heart.heart.4ieni1d1xtdsu9f8"
+        ]
+    },
+    "_key": "!items!klilup0vcrhjrb7j",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

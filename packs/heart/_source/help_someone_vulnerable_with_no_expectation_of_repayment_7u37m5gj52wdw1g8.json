@@ -1,0 +1,12 @@
+{
+    "_id": "7u37m5gj52wdw1g8",
+    "name": "Help someone vulnerable with no expectation of repayment.",
+    "type": "beat",
+    "system": {
+        "description": "Help someone vulnerable with no expectation of repayment.",
+        "type": "minor"
+    },
+    "_key": "!items!7u37m5gj52wdw1g8",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

@@ -1,0 +1,17 @@
+{
+    "_id": "mrumencgjdt3roev",
+    "name": "Scripture-etched bandages and blessed oils",
+    "type": "equipment",
+    "system": {
+        "type": "mend",
+        "resistances": [
+            "blood",
+            "mind"
+        ],
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!mrumencgjdt3roev",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

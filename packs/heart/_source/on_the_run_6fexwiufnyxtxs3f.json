@@ -1,0 +1,13 @@
+{
+    "_id": "6fexwiufnyxtxs3f",
+    "name": "On The Run",
+    "type": "ability",
+    "system": {
+        "description": "You've been running from your creditors for years; you're not above crawling through shit on your hands and knees to survive. Gain the Evade skill. Mark D4 stress to Supplies to shift the attention of a person or creature to another PC or an important NPC.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!6fexwiufnyxtxs3f",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

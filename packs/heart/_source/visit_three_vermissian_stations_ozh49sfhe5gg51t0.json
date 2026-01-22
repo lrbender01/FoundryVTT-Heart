@@ -1,0 +1,12 @@
+{
+    "_id": "ozh49sfhe5gg51t0",
+    "name": "Visit three Vermissian Stations.",
+    "type": "beat",
+    "system": {
+        "description": "Visit three Vermissian Stations.",
+        "type": "major"
+    },
+    "_key": "!items!ozh49sfhe5gg51t0",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

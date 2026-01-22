@@ -1,0 +1,12 @@
+{
+    "_id": "afxz9owpukebhnws",
+    "name": "Limited ${X}",
+    "type": "tag",
+    "system": {
+        "description": "You can use this ${X} times before it gives out."
+    },
+    "effects": [],
+    "_key": "!items!afxz9owpukebhnws",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

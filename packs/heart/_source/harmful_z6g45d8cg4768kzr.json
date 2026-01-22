@@ -1,0 +1,12 @@
+{
+    "_id": "z6g45d8cg4768kzr",
+    "name": "Harmful",
+    "type": "tag",
+    "system": {
+        "description": "The resource has the capacity to harm those who carry it via black magic, illness or strange energies."
+    },
+    "effects": [],
+    "_key": "!items!z6g45d8cg4768kzr",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

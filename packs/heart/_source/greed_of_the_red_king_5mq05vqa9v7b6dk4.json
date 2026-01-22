@@ -1,0 +1,17 @@
+{
+    "_id": "5mq05vqa9v7b6dk4",
+    "name": "Greed Of The Red King",
+    "type": "ability",
+    "system": {
+        "description": "The Red King's one desire is wealth; he was so devoted to the pursuit of gold that he dreamed himself a reality of infinite splendour. Roll Discern+Occult to cast the spell. On a success, you determine what a target you can see wants most of all right now. In addition, you can smell money, or anything of particular value.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.cnu5yon955ms9o9j",
+            "Compendium.heart.heart.i2idvv6mmfigexcn",
+            "Compendium.heart.heart.inrf1etpwvlxgck7"
+        ]
+    },
+    "_key": "!items!5mq05vqa9v7b6dk4",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,64 @@
+{
+    "_id": "vzvt0901daac7n9g",
+    "name": "Heartsong",
+    "type": "calling",
+    "system": {
+        "description": "When you sleep, you dream of the Heart. You're half-mad with glimpses of knowledge; mad enough to go ever deeper into the undercity, looking for revelations.",
+        "questions": [
+            {
+                "question": "Which three images, symbols, people or creatures do you repeatedly see when you dream?"
+            },
+            {
+                "question": "What signs do you look for to recognise where the Heart is strongest?"
+            },
+            {
+                "question": "You recently witnessed an unearthly sight with another player character. Who was it, what happened and how did they react?"
+            },
+            {
+                "question": "Your connection to the Heart has touched you in some way. How does that manifest?"
+            }
+        ],
+        "ability": "Compendium.heart.heart.fl95v2bksa5apvgg",
+        "beats": [
+            "Compendium.heart.heart.0b34go5vlss9uoii",
+            "Compendium.heart.heart.au13fnspmeoco514",
+            "Compendium.heart.heart.f1u9pyil7teilz7o",
+            "Compendium.heart.heart.1d611snl1cy2305q",
+            "Compendium.heart.heart.icss0hxbsnm2wi69",
+            "Compendium.heart.heart.1yvrq9v25tg8u1sq",
+            "Compendium.heart.heart.1yud020fffec4rs4",
+            "Compendium.heart.heart.rbdsrbz366ba243m",
+            "Compendium.heart.heart.ke5lc674bpv5u1ft",
+            "Compendium.heart.heart.zt0eiu9jx21h44gz",
+            "Compendium.heart.heart.ef4aixbg78mcy2cw",
+            "Compendium.heart.heart.wo8mph8916fwwxh4",
+            "Compendium.heart.heart.8ebz68uymspcbmtd",
+            "Compendium.heart.heart.ncy8edz79q7igwpg",
+            "Compendium.heart.heart.k84or19n44bj8pr3",
+            "Compendium.heart.heart.4yuz8sooqiqnty40",
+            "Compendium.heart.heart.g2pehfv4levscokg",
+            "Compendium.heart.heart.osh26gmbv544eke0",
+            "Compendium.heart.heart.8iad81ru638sl8uv",
+            "Compendium.heart.heart.2j4n6o9d3735bfs8",
+            "Compendium.heart.heart.9t01oj3o92kh5nw2",
+            "Compendium.heart.heart.jzn8gqiqa4busd68",
+            "Compendium.heart.heart.b00gz9eae8cc30pq",
+            "Compendium.heart.heart.adnt97ebxocscbo7",
+            "Compendium.heart.heart.4jmpwqg9bciao9a0",
+            "Compendium.heart.heart.7acdjlko58g07m98",
+            "Compendium.heart.heart.7p358ahd2mgbcr1y",
+            "Compendium.heart.heart.m1cbg2u0npmxw15e",
+            "Compendium.heart.heart.x4oo363pbaavtk5w",
+            "Compendium.heart.heart.l7n5k9v5ksord0a5",
+            "Compendium.heart.heart.ng0qmnf7flc8ylgd",
+            "Compendium.heart.heart.f1fd0c5gaoowkjpy",
+            "Compendium.heart.heart.ozh49sfhe5gg51t0",
+            "Compendium.heart.heart.n3rt3tdul5k1qp5m",
+            "Compendium.heart.heart.imms48hb62pa62k8"
+        ]
+    },
+    "effects": [],
+    "img": "systems/heart/assets/calling.png",
+    "folder": "CN0la67ziHUrLPD2",
+    "_key": "!items!vzvt0901daac7n9g"
+}

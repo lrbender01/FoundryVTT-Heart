@@ -1,0 +1,12 @@
+{
+    "_id": "8iad81ru638sl8uv",
+    "name": "Terrify or intrigue an NPC with your obsession.",
+    "type": "beat",
+    "system": {
+        "description": "Terrify or intrigue an NPC with your obsession.",
+        "type": "minor"
+    },
+    "_key": "!items!8iad81ru638sl8uv",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

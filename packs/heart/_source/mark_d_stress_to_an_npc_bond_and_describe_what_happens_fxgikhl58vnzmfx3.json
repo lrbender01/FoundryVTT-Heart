@@ -1,0 +1,12 @@
+{
+    "_id": "fxgikhl58vnzmfx3",
+    "name": "Mark D8 stress to an NPC bond and describe what happens.",
+    "type": "beat",
+    "system": {
+        "description": "Mark D8 stress to an NPC bond and describe what happens.",
+        "type": "minor"
+    },
+    "_key": "!items!fxgikhl58vnzmfx3",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

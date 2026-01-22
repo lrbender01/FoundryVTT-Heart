@@ -1,0 +1,12 @@
+{
+    "_id": "qw9uixix6bgyljww",
+    "name": "Beacon",
+    "type": "tag",
+    "system": {
+        "description": "the resource attracts something dangerous towards its position."
+    },
+    "effects": [],
+    "_key": "!items!qw9uixix6bgyljww",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

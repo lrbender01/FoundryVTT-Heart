@@ -1,0 +1,12 @@
+{
+    "_id": "plfx23gfk08jjqnb",
+    "name": "Niche",
+    "type": "tag",
+    "system": {
+        "description": "The resource is only valuable to a very select group of people."
+    },
+    "effects": [],
+    "_key": "!items!plfx23gfk08jjqnb",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

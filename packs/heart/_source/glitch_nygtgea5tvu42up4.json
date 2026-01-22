@@ -1,0 +1,14 @@
+{
+    "_id": "nygtgea5tvu42up4",
+    "name": "Glitch",
+    "type": "fallout",
+    "system": {
+        "description": "You disappear, only reappearing after every other player has acted at least once. [Immediate]",
+        "resistance": "echo",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!nygtgea5tvu42up4",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

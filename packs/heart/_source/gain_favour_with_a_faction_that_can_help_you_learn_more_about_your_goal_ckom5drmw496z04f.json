@@ -1,0 +1,12 @@
+{
+    "_id": "ckom5drmw496z04f",
+    "name": "Gain favour with a faction that can help you learn more about your goal.",
+    "type": "beat",
+    "system": {
+        "description": "Gain favour with a faction that can help you learn more about your goal.",
+        "type": "minor"
+    },
+    "_key": "!items!ckom5drmw496z04f",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

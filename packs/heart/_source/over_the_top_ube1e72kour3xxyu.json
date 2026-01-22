@@ -1,0 +1,13 @@
+{
+    "_id": "ube1e72kour3xxyu",
+    "name": "Over The Top",
+    "type": "ability",
+    "system": {
+        "description": "+2 Blood Protection against ranged attacks.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ube1e72kour3xxyu",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

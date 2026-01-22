@@ -1,0 +1,13 @@
+{
+    "_id": "skinupv7e516krpg",
+    "name": "Distinguished Lineage",
+    "type": "ability",
+    "system": {
+        "description": "Your blood-mothers have operated in the City Beneath for centuries; you carry the weight of their actions (and their promises) on your back. Gain the Haven domain. Once per session, when you mark stress to a bond, do not roll for fallout.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!skinupv7e516krpg",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

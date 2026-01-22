@@ -1,0 +1,12 @@
+{
+    "_id": "7acdjlko58g07m98",
+    "name": "Sacrifice someone important to the Heart.",
+    "type": "beat",
+    "system": {
+        "description": "Sacrifice someone important to the Heart.",
+        "type": "major"
+    },
+    "_key": "!items!7acdjlko58g07m98",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

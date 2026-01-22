@@ -1,0 +1,13 @@
+{
+    "_id": "36ex1229kba4qf7a",
+    "name": "Words Of Grace",
+    "type": "ability",
+    "system": {
+        "description": "As you shine Her light into dark places, you are filled with her glory. Gain the Haven domain. Once per session, when you lead the community in an act of mercy and grace, refresh D6.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!36ex1229kba4qf7a",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

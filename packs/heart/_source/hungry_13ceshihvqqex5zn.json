@@ -1,0 +1,13 @@
+{
+    "_id": "13ceshihvqqex5zn",
+    "name": "Hungry",
+    "type": "ability",
+    "system": {
+        "description": "Your familiar functions as a (D8 Kill, Ranged, Unreliable) item.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!13ceshihvqqex5zn",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

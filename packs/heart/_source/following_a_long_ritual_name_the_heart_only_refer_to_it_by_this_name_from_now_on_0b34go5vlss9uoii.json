@@ -1,0 +1,12 @@
+{
+    "_id": "0b34go5vlss9uoii",
+    "name": "Following a long ritual, name The Heart. Only refer to it by this name from now on.",
+    "type": "beat",
+    "system": {
+        "description": "Following a long ritual, name The Heart. Only refer to it by this name from now on.",
+        "type": "minor"
+    },
+    "_key": "!items!0b34go5vlss9uoii",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

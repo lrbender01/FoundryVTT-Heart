@@ -1,0 +1,13 @@
+{
+    "_id": "lqtgwhjlrd40x9om",
+    "name": "Incursion",
+    "type": "ability",
+    "system": {
+        "description": "You learn a fragment of the terrible truth behind what happened to the 33rd all those years ago, and understand why they can never die. At the culmination of a dark ritual, you smash your badge apart on an altar made from bones and shell casings, and summon the last moments of the 33rd to your location. Reality comes undone; the world is transformed into a twisted, burning maze of trench and razorwire, and the 33rd act out their terrified final moments on whoever they can find. The landmark you're in is destroyed, pretty much everything inside it dies and your mind is blasted into pieces as you witness the lengths they went to in order to survive.  ",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!lqtgwhjlrd40x9om",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

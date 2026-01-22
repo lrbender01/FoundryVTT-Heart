@@ -1,0 +1,13 @@
+{
+    "_id": "xcmv40ajxfk5mcrf",
+    "name": "Ethereal Touch",
+    "type": "ability",
+    "system": {
+        "description": "If you mark stress to activate the Conduit tag on your weapon, it gains the Piercing tag.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!xcmv40ajxfk5mcrf",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

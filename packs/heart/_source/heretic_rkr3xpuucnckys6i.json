@@ -1,0 +1,82 @@
+{
+    "_id": "rkr3xpuucnckys6i",
+    "name": "Heretic",
+    "type": "class",
+    "system": {
+        "description": "<p>The Church of the Moon were driven out of the City Above two hundred years ago. Their faith had been outlawed by invading forces, their temples burned, their idols smashed to pieces, their priests slain in the street - but still they believed in Damnou, goddess of the moon tripartite, bringer of light and life to the drow. They fled into the undercity, seeking solace; what they found was a communion with their goddess greater than anything they could dream of in Spire. They found secrets hidden deep within the earth. They found the Moon Beneath. </p> <p>You are an adherent to the faith of the Moon Beneath. Your great-grandparents might have been among the original refugees driven down to the Heart, or you might be a recent convert to the religion. Either way, you draw power from your faith and unearth the hidden wisdom of your queens who dwell deep in the earth. You proudly bear the symbols of your church - jewellery adorned with eyes, sacred chains that symbolise the restraints on the Moon Beneath, moonsilver piercings, and reams of sacred text - that would have you shot in the street in the City Above.</p>",
+        "abilities": [
+            "Compendium.heart.heart.btmmlyznz752n41z"
+        ],
+        "futureAbilities": [
+            "Compendium.heart.heart.rj3itik83uazd0x9",
+            "Compendium.heart.heart.u9kj1jm78jkr5v3k",
+            "Compendium.heart.heart.0hz2bu0evyqk7e5p",
+            "Compendium.heart.heart.n9gsnvbzriglsege",
+            "Compendium.heart.heart.ainez4lw25sfmzfo",
+            "Compendium.heart.heart.o8aq64otiulefkir",
+            "Compendium.heart.heart.unuwh84msv9y36te",
+            "Compendium.heart.heart.iz8aflsq557kyjue",
+            "Compendium.heart.heart.xuzao62e829bfc9d",
+            "Compendium.heart.heart.d4dfvn8kkuh3c94l",
+            "Compendium.heart.heart.5piootsxydmtdi2d",
+            "Compendium.heart.heart.36ex1229kba4qf7a",
+            "Compendium.heart.heart.y3gc5p2cfkoboawc",
+            "Compendium.heart.heart.o3mafyzvwye32rpu",
+            "Compendium.heart.heart.a6h14w2gr6losqzl",
+            "Compendium.heart.heart.j1uhyo7olmjazjld",
+            "Compendium.heart.heart.yrhj7epkmu6mp3z3",
+            "Compendium.heart.heart.hmk7la40q0j2e8m7",
+            "Compendium.heart.heart.9l3k2lsh2s84zivb",
+            "Compendium.heart.heart.7szjl930kk5gj17n"
+        ],
+        "resources": [
+            "Compendium.heart.heart.vkrtlazfu5qzhydx"
+        ],
+        "equipment": [],
+        "equipmentGroups": [
+            [
+                "Compendium.heart.heart.mty41ezx0go26nax",
+                "Compendium.heart.heart.c62bxescbemegwbv"
+            ],
+            [
+                "Compendium.heart.heart.akfea6lvvghld0n3",
+                "Compendium.heart.heart.uetsubzcbxgxyb32"
+            ],
+            [
+                "Compendium.heart.heart.mrumencgjdt3roev",
+                "Compendium.heart.heart.91b4icv8b78crja4"
+            ]
+        ]
+    },
+    "effects": [
+        {
+            "_key": "!items.effects!rkr3xpuucnckys6i.9e42e1e74973da66",
+            "_id": "9e42e1e74973da66",
+            "name": "The MEND skill",
+            "description": "The Heretic class provides a +1 to the MEND skill as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.skills.mend.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        },
+        {
+            "_key": "!items.effects!rkr3xpuucnckys6i.044cdf7faeeac8d9",
+            "_id": "044cdf7faeeac8d9",
+            "name": "The RELIGION domain",
+            "description": "The Heretic class provides a +1 to the RELIGION domain as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.domains.religion.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        }
+    ],
+    "img": "systems/heart/assets/class.png",
+    "folder": "yIJ6SF31RMT5vNhz",
+    "_key": "!items!rkr3xpuucnckys6i"
+}

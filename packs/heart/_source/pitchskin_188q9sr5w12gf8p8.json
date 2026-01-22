@@ -1,0 +1,13 @@
+{
+    "_id": "188q9sr5w12gf8p8",
+    "name": "Pitchskin",
+    "type": "ability",
+    "system": {
+        "description": "Your skin bubbles and shifts into night-black tones as tar seeps through the pores. Gain the Sneak skill. The secretions from your skin are flammable and adhesive, acting as a sort of volatile glue you can exude at will.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!188q9sr5w12gf8p8",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

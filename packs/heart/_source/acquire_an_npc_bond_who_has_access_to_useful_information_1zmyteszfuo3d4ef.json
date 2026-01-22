@@ -1,0 +1,12 @@
+{
+    "_id": "1zmyteszfuo3d4ef",
+    "name": "Acquire an NPC bond who has access to useful information.",
+    "type": "beat",
+    "system": {
+        "description": "Acquire an NPC bond who has access to useful information.",
+        "type": "minor"
+    },
+    "_key": "!items!1zmyteszfuo3d4ef",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

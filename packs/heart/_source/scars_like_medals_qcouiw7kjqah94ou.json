@@ -1,0 +1,13 @@
+{
+    "_id": "qcouiw7kjqah94ou",
+    "name": "Scars Like Medals",
+    "type": "ability",
+    "system": {
+        "description": "Gain +1 Blood protection for each ongoing fallout you have.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!qcouiw7kjqah94ou",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

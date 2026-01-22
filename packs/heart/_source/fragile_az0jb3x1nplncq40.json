@@ -1,0 +1,12 @@
+{
+    "_id": "az0jb3x1nplncq40",
+    "name": "Fragile",
+    "type": "tag",
+    "system": {
+        "description": "The resource will be destroyed if dropped or damaged"
+    },
+    "effects": [],
+    "_key": "!items!az0jb3x1nplncq40",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

@@ -1,0 +1,15 @@
+{
+    "_id": "uetsubzcbxgxyb32",
+    "name": "Seeker's blade",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.hgzgz5pzaal75h7h"
+        ]
+    },
+    "_key": "!items!uetsubzcbxgxyb32",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

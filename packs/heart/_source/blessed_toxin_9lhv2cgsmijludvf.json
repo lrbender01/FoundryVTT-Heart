@@ -1,0 +1,17 @@
+{
+    "_id": "9lhv2cgsmijludvf",
+    "name": "Blessed Toxin",
+    "type": "ability",
+    "system": {
+        "description": "The swarm within you offers up its members as sacrifices to your cause, just like you offer yourself up to the Hive. Some of the bees inside you develop a sting that soothes the mind when injected (as well as being an addictive narcotic). Your body functions as a (Mend, Mind D6) item; you can mark D4 stress to Blood to have it function as a (Mend, Mind D8) item on your next action.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.f39juht4sjwmihbd",
+            "Compendium.heart.heart.3b2wfp1ejqqcuffx",
+            "Compendium.heart.heart.rufle60hw7q8pnqs"
+        ]
+    },
+    "_key": "!items!9lhv2cgsmijludvf",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

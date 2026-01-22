@@ -1,0 +1,13 @@
+{
+    "_id": "0q7jdbu61eviud8h",
+    "name": "An Eye For The Strange",
+    "type": "ability",
+    "system": {
+        "description": "Years of exposure to unnatural energies from the items you've bought and sold has left a dirty handprint on your soul. Gain the Occult domain. Once per session, you may exchange one domain on one resource for any other.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!0q7jdbu61eviud8h",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

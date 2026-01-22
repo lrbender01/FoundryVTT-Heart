@@ -1,0 +1,13 @@
+{
+    "_id": "2ufc8zxj8fsr0zua",
+    "name": "Words Of Flame",
+    "type": "ability",
+    "system": {
+        "description": "Your unarmed attacks inflict D6 stress rather than D4.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!2ufc8zxj8fsr0zua",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

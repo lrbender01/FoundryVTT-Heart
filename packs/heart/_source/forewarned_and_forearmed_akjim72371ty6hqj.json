@@ -1,0 +1,17 @@
+{
+    "_id": "akjim72371ty6hqj",
+    "name": "Forewarned And Forearmed",
+    "type": "ability",
+    "system": {
+        "description": "Never get into a fight you can't win. Once per session, when you have an hour or two to spare in a landmark, you can make preparations for the coming challenges. Pick one of the benefits from the list below. You and all other characters who choose to take part in preparations gain this benefit until they next enter a landmark. • Whetstone and Weapon Drill. One piece of Kill equipment gains the Brutal tag. • Checked and Triple-Checked. One piece of Delve equipment gains the Trusty tag. • Toughen Up. Gain +1 Blood protection. • One for the Road. Gain +1 Mind protection. • Creative Acquisitions. Gain +1 Supplies protection.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.eusjvw8kdau9q6p1",
+            "Compendium.heart.heart.busijqsywi7mvigw",
+            "Compendium.heart.heart.13gp9v39rrodbp6s"
+        ]
+    },
+    "_key": "!items!akjim72371ty6hqj",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

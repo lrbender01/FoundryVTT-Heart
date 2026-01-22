@@ -1,0 +1,12 @@
+{
+    "_id": "2j4n6o9d3735bfs8",
+    "name": "Perform an act of service to an NPC witch.",
+    "type": "beat",
+    "system": {
+        "description": "Perform an act of service to an NPC witch.",
+        "type": "minor"
+    },
+    "_key": "!items!2j4n6o9d3735bfs8",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

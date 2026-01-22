@@ -1,0 +1,12 @@
+{
+    "_id": "nsoxgveeu0jmrq5z",
+    "name": "Save a haven from destruction or doom.",
+    "type": "beat",
+    "system": {
+        "description": "Save a haven from destruction or doom.",
+        "type": "major"
+    },
+    "_key": "!items!nsoxgveeu0jmrq5z",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

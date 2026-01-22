@@ -1,0 +1,13 @@
+{
+    "_id": "ep2lrqz982b54plv",
+    "name": "End Of The Line",
+    "type": "ability",
+    "system": {
+        "description": "A lifetime of searching has paid off: you discover what you've been looking for all these years. On tier 2 or deeper, you may activate this power. You learn of the location of a unique landmark - something truly extraordinary. Work out what it is with the GM. You must complete a delve to reach it. Once there, you cannot leave the landmark. Instead, you die in some tragic fashion, vow to protect it forever or ascend into a pure state of electricity and echoing rails. Your character is removed from the story.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!ep2lrqz982b54plv",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

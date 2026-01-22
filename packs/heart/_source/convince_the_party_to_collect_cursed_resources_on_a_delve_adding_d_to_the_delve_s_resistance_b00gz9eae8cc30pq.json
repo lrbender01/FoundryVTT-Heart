@@ -1,0 +1,12 @@
+{
+    "_id": "b00gz9eae8cc30pq",
+    "name": "Convince the party to collect Cursed resources on a delve, adding D6 to the delve's resistance.",
+    "type": "beat",
+    "system": {
+        "description": "Convince the party to collect Cursed resources on a delve, adding D6 to the delve's resistance.",
+        "type": "minor"
+    },
+    "_key": "!items!b00gz9eae8cc30pq",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

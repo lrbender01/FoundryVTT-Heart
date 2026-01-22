@@ -1,0 +1,12 @@
+{
+    "_id": "c3bg60lh7c80tj5m",
+    "name": "Acquire a rare or powerful (D12 value) item, preferably magic.",
+    "type": "beat",
+    "system": {
+        "description": "Acquire a rare or powerful (D12 value) item, preferably magic.",
+        "type": "major"
+    },
+    "_key": "!items!c3bg60lh7c80tj5m",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

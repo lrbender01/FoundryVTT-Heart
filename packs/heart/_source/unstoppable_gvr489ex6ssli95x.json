@@ -1,0 +1,17 @@
+{
+    "_id": "gvr489ex6ssli95x",
+    "name": "Unstoppable",
+    "type": "ability",
+    "system": {
+        "description": "You are filled with the spirits of those Hounds who have come before you. When you are suffering from ongoing Blood fallout, increase your Kill stress dice size by one step.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.65lpokdl8jibk171",
+            "Compendium.heart.heart.qcouiw7kjqah94ou",
+            "Compendium.heart.heart.wd5dd2akja8p6jz6"
+        ]
+    },
+    "_key": "!items!gvr489ex6ssli95x",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

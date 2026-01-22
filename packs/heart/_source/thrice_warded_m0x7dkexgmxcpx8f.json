@@ -1,0 +1,13 @@
+{
+    "_id": "m0x7dkexgmxcpx8f",
+    "name": "Thrice-warded",
+    "type": "ability",
+    "system": {
+        "description": "Yo ur bees are marked with auspicious glyphs and you are able to brave the worst of the Heart unscathed. Gain the Cursed domain. Each session, the first time you would take Minor Fortune fallout, avoid the fallout and do not remove stress from Fortune.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!m0x7dkexgmxcpx8f",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

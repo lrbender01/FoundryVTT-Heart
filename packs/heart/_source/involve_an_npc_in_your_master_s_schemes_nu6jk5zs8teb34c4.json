@@ -1,0 +1,12 @@
+{
+    "_id": "nu6jk5zs8teb34c4",
+    "name": "Involve an NPC in your master's schemes.",
+    "type": "beat",
+    "system": {
+        "description": "Involve an NPC in your master's schemes.",
+        "type": "minor"
+    },
+    "_key": "!items!nu6jk5zs8teb34c4",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

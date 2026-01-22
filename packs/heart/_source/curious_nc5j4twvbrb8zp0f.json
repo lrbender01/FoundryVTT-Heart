@@ -1,0 +1,13 @@
+{
+    "_id": "nc5j4twvbrb8zp0f",
+    "name": "Curious",
+    "type": "ability",
+    "system": {
+        "description": "Your familiar functions as a (D8 Delve, Unreliable) item.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!nc5j4twvbrb8zp0f",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

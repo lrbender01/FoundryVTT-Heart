@@ -1,0 +1,12 @@
+{
+    "_id": "zpz06i6175mzihd6",
+    "name": "Perform a seemingly unconnected action for your masters that has grim consequences.",
+    "type": "beat",
+    "system": {
+        "description": "Perform a seemingly unconnected action for your masters that has grim consequences.",
+        "type": "minor"
+    },
+    "_key": "!items!zpz06i6175mzihd6",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

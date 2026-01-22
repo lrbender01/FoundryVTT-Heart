@@ -1,0 +1,14 @@
+{
+    "_id": "lvlm3n0ccjdp4ekm",
+    "type": "resource",
+    "name": "Bag of interesting teeth",
+    "system": {
+        "active": true,
+        "domain": "desolate",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!lvlm3n0ccjdp4ekm",
+    "img": "systems/heart/assets/resource.png",
+    "folder": "bDiHYHlOFLzWySfV"
+}

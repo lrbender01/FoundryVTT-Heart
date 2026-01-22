@@ -1,0 +1,17 @@
+{
+    "_id": "hgs8jfxitzwobg1d",
+    "name": "Echoes",
+    "type": "ability",
+    "system": {
+        "description": "You can glimpse the remnants of what has come before. Roll Discern + Domain to witness ghostly recreations of the past in your current location. This will generally show the most interesting or dramatic thing that occured within recent memory.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.i8smpx1orb6n3ehr",
+            "Compendium.heart.heart.w5iomwocnae4isux",
+            "Compendium.heart.heart.nf69pz6cc2af512f"
+        ]
+    },
+    "_key": "!items!hgs8jfxitzwobg1d",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

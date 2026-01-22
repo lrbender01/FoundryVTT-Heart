@@ -1,0 +1,12 @@
+{
+    "_id": "7krvmplr0wugn3y0",
+    "name": "Your order suffers a devastating setback, and you believe that it's your fault.",
+    "type": "beat",
+    "system": {
+        "description": "Your order suffers a devastating setback, and you believe that it's your fault.",
+        "type": "major"
+    },
+    "_key": "!items!7krvmplr0wugn3y0",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "7ti37qopqsxrln9n",
+    "name": "Scarlet Insight",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, when you cast this spell, clear D8 stress from Mind or Fortune. ",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!7ti37qopqsxrln9n",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

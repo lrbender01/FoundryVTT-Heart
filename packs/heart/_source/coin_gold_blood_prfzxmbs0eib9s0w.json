@@ -1,0 +1,13 @@
+{
+    "_id": "prfzxmbs0eib9s0w",
+    "name": "Coin-gold Blood",
+    "type": "ability",
+    "system": {
+        "description": "You gain Protection 5 against stress marked due to flame or heat.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!prfzxmbs0eib9s0w",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

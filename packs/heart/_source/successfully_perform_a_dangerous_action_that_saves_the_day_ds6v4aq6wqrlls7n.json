@@ -1,0 +1,12 @@
+{
+    "_id": "ds6v4aq6wqrlls7n",
+    "name": "Successfully perform a Dangerous action that saves the day.",
+    "type": "beat",
+    "system": {
+        "description": "Successfully perform a Dangerous action that saves the day.",
+        "type": "major"
+    },
+    "_key": "!items!ds6v4aq6wqrlls7n",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

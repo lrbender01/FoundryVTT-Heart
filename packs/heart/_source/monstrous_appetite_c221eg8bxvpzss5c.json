@@ -1,0 +1,17 @@
+{
+    "_id": "c221eg8bxvpzss5c",
+    "name": "Monstrous Appetite",
+    "type": "ability",
+    "system": {
+        "description": "When you eat, you unhinge your jaw and wolf down anything within reach until your belly is distended and you are resplendent with power. When you use THE RED FEAST to consume a resource that has a domain you can access, remove stress from Blood or Echo equal to the amount rolled on the dice instead.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.2pd62dqirtwrb3h9",
+            "Compendium.heart.heart.bedb5d7g6ftufjd8",
+            "Compendium.heart.heart.49t65acpkxqz9y45"
+        ]
+    },
+    "_key": "!items!c221eg8bxvpzss5c",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

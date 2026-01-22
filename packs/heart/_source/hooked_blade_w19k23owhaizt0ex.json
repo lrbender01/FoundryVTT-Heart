@@ -1,0 +1,13 @@
+{
+    "_id": "w19k23owhaizt0ex",
+    "name": "Hooked blade",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!w19k23owhaizt0ex",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

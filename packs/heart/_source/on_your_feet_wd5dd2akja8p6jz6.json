@@ -1,0 +1,13 @@
+{
+    "_id": "wd5dd2akja8p6jz6",
+    "name": "On Your Feet",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, downgrade a Major Blood fallout you have to a Minor Blood fallout. ",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!wd5dd2akja8p6jz6",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

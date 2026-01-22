@@ -1,0 +1,13 @@
+{
+    "_id": "e4nlnehpggtnkp7a",
+    "name": "Avatar Of Flame",
+    "type": "ability",
+    "system": {
+        "description": "When you use OATH OF FURY, you can choose to replace the benefits granted with +2 Blood protection and your attacks gaining the Debilitating tag. At the end of the session, if you have not taken the life of a worthy creature, mark D6 stress to Mind.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!e4nlnehpggtnkp7a",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

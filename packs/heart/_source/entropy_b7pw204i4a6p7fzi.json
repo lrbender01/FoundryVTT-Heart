@@ -1,0 +1,13 @@
+{
+    "_id": "b7pw204i4a6p7fzi",
+    "name": "Entropy",
+    "type": "ability",
+    "system": {
+        "description": "Your hands become (Kill D8,  Dangerous). When you touch a machine, construction or mechanism and focus, you can cause rust and decay where you touched it. Doing this quickly or under stress (e.g. destroying a bridge before your enemies can cross it all the way) requires a Kill+Technology check.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!b7pw204i4a6p7fzi",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

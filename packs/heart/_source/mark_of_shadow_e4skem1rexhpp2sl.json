@@ -1,0 +1,13 @@
+{
+    "_id": "e4skem1rexhpp2sl",
+    "name": "Mark Of Shadow",
+    "type": "ability",
+    "system": {
+        "description": "You conceal your activities from rivals and superstitious fools with a mark etched on your skin; when you speak the right words, you become hard to notice. Gain the Sneak skill. Hiding from someone or something is always a Standard action for you, and never Risky or Dangerous.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!e4skem1rexhpp2sl",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "46gq4ovpebvkno8b",
+    "name": "Steelbones",
+    "type": "ability",
+    "system": {
+        "description": "Your armour bolts onto special implants that absorb harmful energy and distribute it through your body. Gain the Endure skill. You can fall distances of up to 3 storeys without taking damage.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!46gq4ovpebvkno8b",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

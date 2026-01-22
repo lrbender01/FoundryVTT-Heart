@@ -1,0 +1,16 @@
+{
+    "_id": "e30wybnyw4oj73p9",
+    "name": "Bone charms and animal-gut sutures",
+    "type": "equipment",
+    "system": {
+        "type": "mend",
+        "resistances": [
+            "blood"
+        ],
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!e30wybnyw4oj73p9",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

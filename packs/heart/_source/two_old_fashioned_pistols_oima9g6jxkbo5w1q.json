@@ -1,0 +1,17 @@
+{
+    "_id": "oima9g6jxkbo5w1q",
+    "name": "Two old fashioned pistols",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d8",
+        "tags": [
+            "Compendium.heart.heart.r9p0yhil77g3cjwc",
+            "Compendium.heart.heart.33ldkc0qaaj3j3au",
+            "Compendium.heart.heart.z24qoothpll929yw"
+        ]
+    },
+    "_key": "!items!oima9g6jxkbo5w1q",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

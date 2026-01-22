@@ -1,0 +1,17 @@
+{
+    "_id": "p4pcxjmfd9ijsn75",
+    "name": "Invidious Spectre",
+    "type": "ability",
+    "system": {
+        "description": "Your death has got your back - right up until it can claim you for itself. Your death manifests as poltergeist activity and other supernatural phenomena that distresses and confuses your enemies. Any weapon you carry is considered to have the Conduit tag, and as such, you can mark D4 stress to Mind to roll with mastery when you attack for the remainder of the current situation.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.zsonnoxdn5pp1oir",
+            "Compendium.heart.heart.lta8my90l4lzmhxm",
+            "Compendium.heart.heart.xcmv40ajxfk5mcrf"
+        ]
+    },
+    "_key": "!items!p4pcxjmfd9ijsn75",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

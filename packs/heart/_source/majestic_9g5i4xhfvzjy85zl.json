@@ -1,0 +1,13 @@
+{
+    "_id": "9g5i4xhfvzjy85zl",
+    "name": "Majestic",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, when you roll to resolve an action and you roll a 6, count that dice as if it rolled 10.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!9g5i4xhfvzjy85zl",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "wx8e3mb4tckkqh4j",
+    "name": "Rush into danger before anyone else.",
+    "type": "beat",
+    "system": {
+        "description": "Rush into danger before anyone else.",
+        "type": "minor"
+    },
+    "_key": "!items!wx8e3mb4tckkqh4j",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

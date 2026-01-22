@@ -1,0 +1,13 @@
+{
+    "_id": "586czvfxjwpdpd93",
+    "name": "Rust And Iron",
+    "type": "ability",
+    "system": {
+        "description": "You know of pathways that are clockwork and galvanic, shifting and malevolent, and were built by no mortal hand. Gain the Technology domain. Learn the following spell: roll Mend+Technology to improve a piece of equipment that has moving parts using a ritual that takes around half an hour. On a success, increase the equipment's quality by 1 step (standard becomes good, good becomes excellent) and give it the Dangerous and Unreliable tags. Once you have improved a piece of equipment with this spell, you can't improve it again.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!586czvfxjwpdpd93",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

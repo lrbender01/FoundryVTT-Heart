@@ -1,0 +1,13 @@
+{
+    "_id": "nderbliiakjj87xh",
+    "name": "A Mind Of Many Doorways",
+    "type": "ability",
+    "system": {
+        "description": "Mortal concerns fade in comparison to the majesty of the blood-song that resonates within you. Gain +2 Mind Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!nderbliiakjj87xh",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

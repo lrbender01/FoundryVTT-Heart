@@ -1,0 +1,13 @@
+{
+    "_id": "ze3mczryg2mmdzmd",
+    "name": "Perpetual Motion Engine",
+    "type": "ability",
+    "system": {
+        "description": "Years of heartsblood radiation and forbidden knowledge culminate in your ultimate work: an engine powered by a throbbing heart seed, a source of wild and limitless power. Upon implantation of the heartseed into your suit's furnace, you become an unstoppable force within the City Beneath - indeed, you can never stop moving. You stamp off into the darkness, and your character is removed from the story except for the DEUS EX MACHINA ability that is granted to all surviving members of your party.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!ze3mczryg2mmdzmd",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

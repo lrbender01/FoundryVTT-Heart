@@ -1,0 +1,13 @@
+{
+    "_id": "yfkx2qptoqp6lyur",
+    "name": "Jack Of All Trades",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following skills: Compel, Discern, Endure, Hunt, Kill, Mend, Sneak. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!yfkx2qptoqp6lyur",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

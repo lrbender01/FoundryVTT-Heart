@@ -1,0 +1,12 @@
+{
+    "_id": "g2pehfv4levscokg",
+    "name": "Receive a strange surgical implant or heartsblood transfusion.",
+    "type": "beat",
+    "system": {
+        "description": "Receive a strange surgical implant or heartsblood transfusion.",
+        "type": "minor"
+    },
+    "_key": "!items!g2pehfv4levscokg",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

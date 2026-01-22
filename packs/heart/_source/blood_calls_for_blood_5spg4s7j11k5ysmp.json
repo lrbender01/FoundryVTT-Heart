@@ -1,0 +1,13 @@
+{
+    "_id": "5spg4s7j11k5ysmp",
+    "name": "Blood Calls For Blood",
+    "type": "ability",
+    "system": {
+        "description": "All weapons used in the area increase their stress dice by 1 step for both adversaries and player characters.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!5spg4s7j11k5ysmp",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "jzn8gqiqa4busd68",
+    "name": "Find a heart-touched sapling on a delve and bring it back to a haven for planting.",
+    "type": "beat",
+    "system": {
+        "description": "Find a heart-touched sapling on a delve and bring it back to a haven for planting.",
+        "type": "minor"
+    },
+    "_key": "!items!jzn8gqiqa4busd68",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

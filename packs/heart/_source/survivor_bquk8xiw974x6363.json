@@ -1,0 +1,13 @@
+{
+    "_id": "bquk8xiw974x6363",
+    "name": "Survivor",
+    "type": "ability",
+    "system": {
+        "description": "Gain +1 Protection in the Blood, Echo, Fortune or Supplies resistance. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!bquk8xiw974x6363",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

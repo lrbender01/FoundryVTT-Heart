@@ -1,0 +1,13 @@
+{
+    "_id": "iz8aflsq557kyjue",
+    "name": "Sacred Tattoo",
+    "type": "ability",
+    "system": {
+        "description": "You carry your holy text inked onto your skin, a litany of pain endured in the name of Her Cthonic Majesty. Gain +2 Fortune Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!iz8aflsq557kyjue",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

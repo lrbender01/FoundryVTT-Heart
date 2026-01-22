@@ -1,0 +1,13 @@
+{
+    "_id": "ebo9ligvxtc5lkf1",
+    "name": "Implacable",
+    "type": "ability",
+    "system": {
+        "description": "You have withstood worse torments, and you will go onto do so again; through your blood you are stable, eternal, unwavering. Gain the Endure skill. Once per session, add 1 to a resistance of your choice. Remove the +1 at the end of the session.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ebo9ligvxtc5lkf1",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

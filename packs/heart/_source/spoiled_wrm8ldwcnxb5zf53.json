@@ -1,0 +1,14 @@
+{
+    "_id": "wrm8ldwcnxb5zf53",
+    "name": "Spoiled",
+    "type": "fallout",
+    "system": {
+        "description": "A resource you are carrying is destroyed: it degrades into uselessness, is revealed to be fake, breaks in your pack or scatters on the ground. Remove it from your possessions.[Immediate]",
+        "resistance": "supplies",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!wrm8ldwcnxb5zf53",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

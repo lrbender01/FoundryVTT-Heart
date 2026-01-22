@@ -1,0 +1,13 @@
+{
+    "_id": "qxy7keh6osrh0feq",
+    "name": "Been Everywhere",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following domains: Cursed, Desolate, Haven, Occult, Religion, Technology, Warren. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!qxy7keh6osrh0feq",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

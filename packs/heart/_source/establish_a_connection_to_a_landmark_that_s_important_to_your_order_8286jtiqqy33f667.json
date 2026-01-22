@@ -1,0 +1,12 @@
+{
+    "_id": "8286jtiqqy33f667",
+    "name": "Establish a connection to a landmark that's important to your order.",
+    "type": "beat",
+    "system": {
+        "description": "Establish a connection to a landmark that's important to your order.",
+        "type": "minor"
+    },
+    "_key": "!items!8286jtiqqy33f667",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

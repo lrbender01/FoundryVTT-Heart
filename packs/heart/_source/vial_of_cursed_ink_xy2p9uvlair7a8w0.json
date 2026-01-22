@@ -1,0 +1,14 @@
+{
+    "_id": "xy2p9uvlair7a8w0",
+    "type": "resource",
+    "name": "Vial of cursed ink",
+    "system": {
+        "active": true,
+        "domain": "occult",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!xy2p9uvlair7a8w0",
+    "img": "systems/heart/assets/resource.png",
+    "folder": "bDiHYHlOFLzWySfV"
+}

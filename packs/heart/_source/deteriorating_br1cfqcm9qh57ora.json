@@ -1,0 +1,12 @@
+{
+    "_id": "br1cfqcm9qh57ora",
+    "name": "Deteriorating",
+    "type": "tag",
+    "system": {
+        "description": "The resource is breaking down, rotting or rusting and you'll need to get it to a new owner quickly."
+    },
+    "effects": [],
+    "_key": "!items!br1cfqcm9qh57ora",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

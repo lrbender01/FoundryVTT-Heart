@@ -1,0 +1,13 @@
+{
+    "_id": "n332cooe3jk5c8lp",
+    "name": "Last-minute Intervention",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, when an ally within arm's reach of you suffers Blood fallout, immediately downgrade it by one step (or remove it if it's Minor fallout).",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!n332cooe3jk5c8lp",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

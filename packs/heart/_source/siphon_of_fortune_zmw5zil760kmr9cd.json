@@ -1,0 +1,13 @@
+{
+    "_id": "zmw5zil760kmr9cd",
+    "name": "Siphon Of Fortune",
+    "type": "ability",
+    "system": {
+        "description": "There are places where you can wager more than cash on a game of cards; your stake of choice is good luck. +2 Fortune Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!zmw5zil760kmr9cd",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

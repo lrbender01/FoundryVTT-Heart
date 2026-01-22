@@ -1,0 +1,13 @@
+{
+    "_id": "yu932wy406il1bwe",
+    "name": "As Above, So Below",
+    "type": "ability",
+    "system": {
+        "description": "You do not need line of sight to use EXSANGUINATE as long as you have a sympathetic token connected to your target (their hair, a figurine in their shape, a favoured item of theirs, etc. ), but you are still limited to making an attack within the usual distance of the Range tag.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!yu932wy406il1bwe",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

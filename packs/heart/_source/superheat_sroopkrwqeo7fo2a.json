@@ -1,0 +1,13 @@
+{
+    "_id": "sroopkrwqeo7fo2a",
+    "name": "Superheat",
+    "type": "ability",
+    "system": {
+        "description": "In melee, your unarmed attacks have the Piercing tag.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!sroopkrwqeo7fo2a",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,16 @@
+{
+    "_id": "szw4ctnznw9u5z9c",
+    "name": "Well-stocked Haversack",
+    "type": "equipment",
+    "system": {
+        "type": "mend",
+        "resistances": [
+            "supplies"
+        ],
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!szw4ctnznw9u5z9c",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

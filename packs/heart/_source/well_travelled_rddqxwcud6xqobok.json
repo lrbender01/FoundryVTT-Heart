@@ -1,0 +1,13 @@
+{
+    "_id": "rddqxwcud6xqobok",
+    "name": "Well Travelled",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following domains: Cursed, Desolate, Haven, Occult, Technology, Wild, Warren. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!rddqxwcud6xqobok",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

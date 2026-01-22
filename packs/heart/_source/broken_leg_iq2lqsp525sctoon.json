@@ -1,0 +1,14 @@
+{
+    "_id": "iq2lqsp525sctoon",
+    "name": "Broken Leg",
+    "type": "fallout",
+    "system": {
+        "description": "Your leg bones splinter and crack. Any action involving the leg (climbing, moving above a crawl) automatically fails. This fallout can be downgraded to or upgraded from LIMPING. [Ongoing]",
+        "resistance": "blood",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!iq2lqsp525sctoon",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

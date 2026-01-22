@@ -1,0 +1,13 @@
+{
+    "_id": "aimdvw2ohxazw2us",
+    "name": "Rule",
+    "type": "ability",
+    "system": {
+        "description": "While in your lair, you roll with mastery on all actions.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!aimdvw2ohxazw2us",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

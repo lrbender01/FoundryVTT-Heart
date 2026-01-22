@@ -1,0 +1,14 @@
+{
+    "_id": "3n4na3sk33uuq7z5",
+    "type": "resource",
+    "name": "Second-hand wedding ring",
+    "system": {
+        "active": true,
+        "domain": "haven",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!3n4na3sk33uuq7z5",
+    "img": "systems/heart/assets/resource.png",
+    "folder": "bDiHYHlOFLzWySfV"
+}

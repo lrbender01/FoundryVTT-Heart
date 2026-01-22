@@ -1,0 +1,17 @@
+{
+    "_id": "yq1lftqb47gmwkws",
+    "name": "The Wild Hunt",
+    "type": "ability",
+    "system": {
+        "description": "The Heart sings of flesh and plenty; you echo that sickeningsong. You may lead a group in communion with the Heart. This requires you to pass an Endure+ Cursed roll, and the check is Risky if you're in an area with the Haven tag. (If you fail the check, you can try again later this session. ) Those who commune gain the Hunt skill if they don't already have it, and increase the stress they inflict on delves by 1 step until the end of the current delve.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.smi8a93e0orjeow5",
+            "Compendium.heart.heart.b9qjahgf0i57elfo",
+            "Compendium.heart.heart.el8ydg5wvik7e6tp"
+        ]
+    },
+    "_key": "!items!yq1lftqb47gmwkws",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

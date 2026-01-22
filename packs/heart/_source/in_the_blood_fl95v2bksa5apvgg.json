@@ -1,0 +1,13 @@
+{
+    "_id": "fl95v2bksa5apvgg",
+    "name": "In The Blood",
+    "type": "ability",
+    "system": {
+        "description": "You move through the Heart as if blessed. +1 Echo Protection. Once per situation, when you take stress to any resistance other than Echo, allocate it to Echo.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!fl95v2bksa5apvgg",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

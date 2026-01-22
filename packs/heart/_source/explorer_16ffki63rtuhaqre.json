@@ -1,0 +1,13 @@
+{
+    "_id": "16ffki63rtuhaqre",
+    "name": "Explorer",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following domains: Cursed, Desolate, Occult, Religion, Technology, Warren, Wild. You can take this advance more than once. ",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!16ffki63rtuhaqre",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "602bnwoiufrvt6fh",
+    "name": "Refuse a desirable offer due to the restrictions of your penance.",
+    "type": "beat",
+    "system": {
+        "description": "Refuse a desirable offer due to the restrictions of your penance.",
+        "type": "minor"
+    },
+    "_key": "!items!602bnwoiufrvt6fh",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

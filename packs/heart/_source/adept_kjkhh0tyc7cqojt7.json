@@ -1,0 +1,13 @@
+{
+    "_id": "kjkhh0tyc7cqojt7",
+    "name": "Adept",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following skills: Compel, Delve, Discern, Endure, Evade, Hunt, Kill, Sneak. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!kjkhh0tyc7cqojt7",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

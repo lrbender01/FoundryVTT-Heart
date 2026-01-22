@@ -1,0 +1,17 @@
+{
+    "_id": "j5uxh4c3xdpk9mo1",
+    "name": "Lair",
+    "type": "ability",
+    "system": {
+        "description": "You adopt or create a predatory building and claim it as your own; it still eats people, but it doesn't eat you. The building in question is no larger than a small shop or study. Inside, the shadows crawl and scurry, the walls creak and whisper and a maddening heartbeat thuds at the back of your consciousness - perfect for you, but unsettling for anyone else. Any non-witch who enters your lair must roll Resist+Occult and mark D6 stress to Echo on a failure or D4 stress to Echo on a partial success. When you are in a landmark, roll Mend+Occult to summon your lair. On a success, it's always been here, as far as anyone knows. Your lair acts as a bond (p. 98) - if it suffers fallout, it's either eaten someone who'll be missed or been damaged by suspicious locals.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.cjry848sofg53gkj",
+            "Compendium.heart.heart.aimdvw2ohxazw2us",
+            "Compendium.heart.heart.rqiau3nrondp4wif"
+        ]
+    },
+    "_key": "!items!j5uxh4c3xdpk9mo1",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

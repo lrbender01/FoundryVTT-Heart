@@ -1,0 +1,17 @@
+{
+    "_id": "q1rjdyhby9llh9yy",
+    "name": "Backstab",
+    "type": "ability",
+    "system": {
+        "description": "They were fools to have trusted you. When you attack a target who is unaware of your position with a one-handed melee weapon, your attacks gain the Piercing tag.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.jok6uv5pap8lgxzy",
+            "Compendium.heart.heart.57zi3m1koybmxj91",
+            "Compendium.heart.heart.hewect65oyszgo9d"
+        ]
+    },
+    "_key": "!items!q1rjdyhby9llh9yy",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

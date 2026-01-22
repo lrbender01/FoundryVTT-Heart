@@ -1,0 +1,12 @@
+{
+    "_id": "b57xlxbwbzub1x1n",
+    "name": "Claim you're doing something on behalf of your masters when in fact it's for your own ends.",
+    "type": "beat",
+    "system": {
+        "description": "Claim you're doing something on behalf of your masters when in fact it's for your own ends.",
+        "type": "minor"
+    },
+    "_key": "!items!b57xlxbwbzub1x1n",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

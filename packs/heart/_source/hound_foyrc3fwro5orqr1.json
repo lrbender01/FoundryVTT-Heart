@@ -1,0 +1,81 @@
+{
+    "_id": "foyrc3fwro5orqr1",
+    "name": "Hound",
+    "type": "class",
+    "system": {
+        "description": "In the past: the 33rd Regiment were sent down to pacify the Heart by a mad warrior-poet from the City Above. Of the nine hundred or so enlisted soldiers who set off, three hundred survived. Surrounded by forces beyond their understanding and on the verge of total destruction, the surviving officers did what they could to save their troops. They did something terrible. Now: there are three hundred badges, each marked with the name of the original hero who carried it. When you steal one, or have it bestowed upon you, you join the Hounds: the new name of the 33rd, protectors of the fragile populace of the Heart. You carry the weight of their deeds on your shoulders. You hear that some of the original three hundred are still out there, still wearing their badges. You've heard of Hounds holding back the darkness alone, withstanding tremendous amounts of punishment, defending havens for days on end without sleep or food. The Hounds draw on one another and the people of the Heart for strength. So long as someone draws breath in the City Beneath, they cannot be destroyed; this is their gift, and their curse. ",
+        "abilities": [
+            "Compendium.heart.heart.4hh9jj5xnd3rfj8p"
+        ],
+        "futureAbilities": [
+            "Compendium.heart.heart.jrh7umr17j33mw91",
+            "Compendium.heart.heart.l4i7gnt42v8qnhvv",
+            "Compendium.heart.heart.s1hr3b1qfo15jwbs",
+            "Compendium.heart.heart.eljiqcbp0mnprjw7",
+            "Compendium.heart.heart.yscyuah89vw9k1eq",
+            "Compendium.heart.heart.2jgmhq1dg6ilqjkc",
+            "Compendium.heart.heart.33r9vslhpymhhup9",
+            "Compendium.heart.heart.rl2ry0zk5r3lx9u9",
+            "Compendium.heart.heart.rldeuzuqpxgyvwmm",
+            "Compendium.heart.heart.ayxhrq48nrrw10zh",
+            "Compendium.heart.heart.2pcx27ka41q6ow93",
+            "Compendium.heart.heart.whxlp2pmg0bktazc",
+            "Compendium.heart.heart.j6ic4t697kk1c2ro",
+            "Compendium.heart.heart.akjim72371ty6hqj",
+            "Compendium.heart.heart.x6drlorzv1lwju16",
+            "Compendium.heart.heart.mn3z5qpdqna2kczx",
+            "Compendium.heart.heart.gvr489ex6ssli95x",
+            "Compendium.heart.heart.25ucnm8atmyklhsp",
+            "Compendium.heart.heart.251qjd101slqr62b",
+            "Compendium.heart.heart.lqtgwhjlrd40x9om"
+        ],
+        "resources": [
+            "Compendium.heart.heart.pekrhsrwa7l6nvv2"
+        ],
+        "equipment": [],
+        "equipmentGroups": [
+            [
+                "Compendium.heart.heart.vne6rjr8p4qoga67"
+            ],
+            [
+                "Compendium.heart.heart.bzblb3n8hh6q3yr1",
+                "Compendium.heart.heart.szlgz0phvsch6uyi"
+            ],
+            [
+                "Compendium.heart.heart.szw4ctnznw9u5z9c",
+                "Compendium.heart.heart.xhol26iv2zgna9l4"
+            ]
+        ]
+    },
+    "effects": [
+        {
+            "_key": "!items.effects!foyrc3fwro5orqr1.9c67d0826e7d1ade",
+            "_id": "9c67d0826e7d1ade",
+            "name": "The HUNT skill",
+            "description": "The Hound class provides a +1 to the HUNT skill as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.skills.hunt.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        },
+        {
+            "_key": "!items.effects!foyrc3fwro5orqr1.331efc7319343cf4",
+            "_id": "331efc7319343cf4",
+            "name": "The HAVEN domain",
+            "description": "The Hound class provides a +1 to the HAVEN domain as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.domains.haven.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        }
+    ],
+    "img": "systems/heart/assets/class.png",
+    "folder": "yIJ6SF31RMT5vNhz",
+    "_key": "!items!foyrc3fwro5orqr1"
+}

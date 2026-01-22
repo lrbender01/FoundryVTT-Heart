@@ -1,0 +1,12 @@
+{
+    "_id": "ej5zfbw1x264numb",
+    "name": "Establish a connection on a delve.",
+    "type": "beat",
+    "system": {
+        "description": "Establish a connection on a delve.",
+        "type": "minor"
+    },
+    "_key": "!items!ej5zfbw1x264numb",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

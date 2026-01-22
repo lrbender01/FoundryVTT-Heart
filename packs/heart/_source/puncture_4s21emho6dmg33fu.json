@@ -1,0 +1,13 @@
+{
+    "_id": "4s21emho6dmg33fu",
+    "name": "Puncture",
+    "type": "ability",
+    "system": {
+        "description": "When you activate OVERCLOCK, you may choose to add the Piercing tag to your attacks in addition to the Brutal tag. If you do this, mark D6 stress to Fortune after using the ability.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!4s21emho6dmg33fu",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

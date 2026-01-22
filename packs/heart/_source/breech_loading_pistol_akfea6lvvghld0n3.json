@@ -1,0 +1,16 @@
+{
+    "_id": "akfea6lvvghld0n3",
+    "name": "Breech-loading pistol",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.r9p0yhil77g3cjwc",
+            "Compendium.heart.heart.11h7qvhbw5qimlrr"
+        ]
+    },
+    "_key": "!items!akfea6lvvghld0n3",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

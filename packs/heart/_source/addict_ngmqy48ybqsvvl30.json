@@ -1,0 +1,14 @@
+{
+    "_id": "ngmqy48ybqsvvl30",
+    "name": "Addict",
+    "type": "fallout",
+    "system": {
+        "description": "You realise that you have become reliant on drugs to keep yourself stable. When you're high (or drunk, or whatever) you take Mind stress normally,but all tasks that require extended concentration or fine manipulation become Risky.When you're not intoxicated and you suffer stress to Mind, roll twice and pick the higher dice. It takes a few minutes to get high and a few hours to sober up. [Ongoing]",
+        "resistance": "mind",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!ngmqy48ybqsvvl30",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

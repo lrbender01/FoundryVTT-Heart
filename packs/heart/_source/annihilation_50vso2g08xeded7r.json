@@ -1,0 +1,17 @@
+{
+    "_id": "50vso2g08xeded7r",
+    "name": "Annihilation",
+    "type": "ability",
+    "system": {
+        "description": "Your body is unHeart; it burns through the parasitic world of meat and bone. Against heartsblooded people or creatures, your touch functions as a (Kill D8) weapon. As you use it, your flesh roils and cracks, but the swarm repairs it as quickly as it is unmade; your opponent doesn't have that luxury. Against any other target, it functions as a (Kill D6) weapon.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.llwf23qq40p9k7k1",
+            "Compendium.heart.heart.mrzeou2o5ow81bv4",
+            "Compendium.heart.heart.365r4ux2icme9rbh"
+        ]
+    },
+    "_key": "!items!50vso2g08xeded7r",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

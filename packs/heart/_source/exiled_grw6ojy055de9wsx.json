@@ -1,0 +1,14 @@
+{
+    "_id": "grw6ojy055de9wsx",
+    "name": "Exiled",
+    "type": "fallout",
+    "system": {
+        "description": "You are banned from entering the haven you are currently in, or one that's nearby - tell us what happened. Your allies aren't subject to the same restrictions, but they will be treated with suspicion. [Immediate, Ongoing]",
+        "resistance": "fortune",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!grw6ojy055de9wsx",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

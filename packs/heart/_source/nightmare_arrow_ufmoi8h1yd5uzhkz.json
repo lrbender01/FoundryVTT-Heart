@@ -1,0 +1,13 @@
+{
+    "_id": "ufmoi8h1yd5uzhkz",
+    "name": "Nightmare Arrow",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to the following weapon: (Kill D8, Spread, Ranged, One-Shot).",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ufmoi8h1yd5uzhkz",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

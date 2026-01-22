@@ -1,0 +1,17 @@
+{
+    "_id": "e46q0ua0zops22pj",
+    "name": "Ascendancy",
+    "type": "ability",
+    "system": {
+        "description": "You know the secret of singing the City Beneath into different shapes. Roll Compel+Occult to cast this spell and draw the Heart Itself into the area around you. The area you're in gains the Occult domain, and reacts appropriately: magic circles blossom on the floor and thrum with dark power, mist floods the air and so on. This lasts until the end of your current situation.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.u2uwjc3undos1qux",
+            "Compendium.heart.heart.5spg4s7j11k5ysmp",
+            "Compendium.heart.heart.ssy0ozgqe128k9jk"
+        ]
+    },
+    "_key": "!items!e46q0ua0zops22pj",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "ijesy8hhjzfplw42",
+    "name": "Recharge",
+    "type": "ability",
+    "system": {
+        "description": "Once you've used AETHERIC FIELD, you can use it again by consuming a D6 or higher value resource with the Occult or Cursed tags.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ijesy8hhjzfplw42",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "q0ktb93c2oh06hsh",
+    "name": "Save a landmark dedicated to your order.",
+    "type": "beat",
+    "system": {
+        "description": "Save a landmark dedicated to your order.",
+        "type": "major"
+    },
+    "_key": "!items!q0ktb93c2oh06hsh",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

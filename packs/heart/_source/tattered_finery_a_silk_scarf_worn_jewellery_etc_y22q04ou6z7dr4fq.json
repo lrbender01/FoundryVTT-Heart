@@ -1,0 +1,14 @@
+{
+    "_id": "y22q04ou6z7dr4fq",
+    "type": "resource",
+    "name": "Tattered finery (a silk scarf, worn jewellery, etc)",
+    "system": {
+        "active": true,
+        "domain": "haven",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!y22q04ou6z7dr4fq",
+    "img": "systems/heart/assets/resource.png",
+    "folder": "bDiHYHlOFLzWySfV"
+}

@@ -1,0 +1,14 @@
+{
+    "_id": "2uocw1yuwbvm6417",
+    "name": "Grievance",
+    "type": "fallout",
+    "system": {
+        "description": "You are marked as an enemy by a group within the Heart - a cult, a church, the Hounds, members of a particular haven, beasts, etc. They will work to foil your efforts as best they can until you clear your name or kill your way out of the problem.[Immediate,Ongoing]",
+        "resistance": "fortune",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!2uocw1yuwbvm6417",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

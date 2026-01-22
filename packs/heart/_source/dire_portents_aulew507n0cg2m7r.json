@@ -1,0 +1,13 @@
+{
+    "_id": "aulew507n0cg2m7r",
+    "name": "Dire Portents",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, re-roll any dice that you or anyone else rolled; the original roll is a vision you received, and you shout a warning (or act differently this time around).",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!aulew507n0cg2m7r",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

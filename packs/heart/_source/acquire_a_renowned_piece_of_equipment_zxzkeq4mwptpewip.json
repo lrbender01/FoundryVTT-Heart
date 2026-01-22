@@ -1,0 +1,12 @@
+{
+    "_id": "zxzkeq4mwptpewip",
+    "name": "Acquire a renowned piece of equipment.",
+    "type": "beat",
+    "system": {
+        "description": "Acquire a renowned piece of equipment.",
+        "type": "major"
+    },
+    "_key": "!items!zxzkeq4mwptpewip",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

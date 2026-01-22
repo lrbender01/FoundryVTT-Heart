@@ -1,0 +1,17 @@
+{
+    "_id": "qnzjkqj8fdq4d2r2",
+    "name": "Sudden Death",
+    "type": "ability",
+    "system": {
+        "description": "Your soul is so poorly attached to your body that you can dive headlong into the Grey without warning. ENTER THE GREY no longer takes ten minutes to cast - it is instantaneous. Bringing others along with you when you cast it in this manner makes the action Risky.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.h2265sx80ml06bb9",
+            "Compendium.heart.heart.b7pw204i4a6p7fzi",
+            "Compendium.heart.heart.p0dkkevh25jrh0ag"
+        ]
+    },
+    "_key": "!items!qnzjkqj8fdq4d2r2",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "zsonnoxdn5pp1oir",
+    "name": "Soothe",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, when you mark stress, add 1 to any of your Protection values. This increase remains in place until the end of the session.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!zsonnoxdn5pp1oir",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

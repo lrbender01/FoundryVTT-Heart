@@ -1,0 +1,12 @@
+{
+    "_id": "05vl9o5t6dqwdydi",
+    "name": "Awkward",
+    "type": "tag",
+    "system": {
+        "description": "The resource is heavy or hard to carry"
+    },
+    "effects": [],
+    "_key": "!items!05vl9o5t6dqwdydi",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

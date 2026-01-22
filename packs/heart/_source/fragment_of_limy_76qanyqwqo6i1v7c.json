@@ -1,0 +1,13 @@
+{
+    "_id": "76qanyqwqo6i1v7c",
+    "name": "Fragment Of Limyé",
+    "type": "ability",
+    "system": {
+        "description": "When you use OATH OF SAGACITY, you and all nearby allies remove D4 stress from Blood",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!76qanyqwqo6i1v7c",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

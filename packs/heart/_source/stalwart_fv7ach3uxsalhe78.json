@@ -1,0 +1,13 @@
+{
+    "_id": "fv7ach3uxsalhe78",
+    "name": "Stalwart",
+    "type": "ability",
+    "system": {
+        "description": "Gain +1 Protection in the Blood, Echo, Supplies or Fortune resistance. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!fv7ach3uxsalhe78",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "af972664ktmcj6ts",
+    "name": "Engage in reckless abandon with drink, drugs or sex.",
+    "type": "beat",
+    "system": {
+        "description": "Engage in reckless abandon with drink, drugs or sex.",
+        "type": "minor"
+    },
+    "_key": "!items!af972664ktmcj6ts",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

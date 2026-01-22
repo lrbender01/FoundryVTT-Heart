@@ -1,0 +1,16 @@
+{
+    "_id": "c62bxescbemegwbv",
+    "name": "Spireblack brazier (lit)",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d8",
+        "tags": [
+            "Compendium.heart.heart.f7xd6m1pjcidlfdw",
+            "Compendium.heart.heart.lypnx0iq5yjiqryu"
+        ]
+    },
+    "_key": "!items!c62bxescbemegwbv",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

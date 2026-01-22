@@ -1,0 +1,13 @@
+{
+    "_id": "ztl42e61zzk16q78",
+    "name": "Inflict",
+    "type": "ability",
+    "system": {
+        "description": "When you cast TRANSFERRAL, the target receiving the fallout does not have to be willing to receive it. Casting the spell in this way uses the target's difficulty instead of standard difficulty.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ztl42e61zzk16q78",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

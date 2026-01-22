@@ -1,0 +1,12 @@
+{
+    "_id": "mf0wczav50l4ql14",
+    "name": "Eliminate or completely undermine a faction that is opposed to your order.",
+    "type": "beat",
+    "system": {
+        "description": "Eliminate or completely undermine a faction that is opposed to your order.",
+        "type": "major"
+    },
+    "_key": "!items!mf0wczav50l4ql14",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

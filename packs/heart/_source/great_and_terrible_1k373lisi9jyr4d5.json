@@ -1,0 +1,17 @@
+{
+    "_id": "1k373lisi9jyr4d5",
+    "name": "Great And Terrible",
+    "type": "ability",
+    "system": {
+        "description": "You unlock the power of your true form - an awe-inspiring union of magic and flesh. You are no longer forced to assume your true form (see TRUE FORM, above) when you take Major fallout. When you choose to enter your true form, all adversaries who can see you take D4 stress.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.ubv68u67k5971rs5",
+            "Compendium.heart.heart.cbdlu54t5icajxu0",
+            "Compendium.heart.heart.h8z2z4soy3igzgyu"
+        ]
+    },
+    "_key": "!items!1k373lisi9jyr4d5",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

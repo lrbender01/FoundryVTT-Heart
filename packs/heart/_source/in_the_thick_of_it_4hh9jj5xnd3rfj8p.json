@@ -1,0 +1,13 @@
+{
+    "_id": "4hh9jj5xnd3rfj8p",
+    "name": "In The Thick Of It",
+    "type": "ability",
+    "system": {
+        "description": "You have a knack for getting yourself in just enough trouble to find the truth. Once per situation, when you would mark stress to any other resistance than Fortune, mark it to Fortune. When you suffer Fortune fallout, roll with mastery for the remainder of the situation.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!4hh9jj5xnd3rfj8p",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

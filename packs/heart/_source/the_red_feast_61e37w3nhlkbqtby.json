@@ -1,0 +1,13 @@
+{
+    "_id": "61e37w3nhlkbqtby",
+    "name": "The Red Feast",
+    "type": "ability",
+    "system": {
+        "description": "Your crucible guts pluck memories from the meat. When you eat a resource, you gain any domains associated with that resource until the end of the situation. If you already have access to the domain, gain an appropriate knack. There's no limit to what you can eat, but tough or noxious materials might require an Endure+Cursed check to avoid causing yourself harm. Consuming resources requires your attention and leaves you exposed, so doing it successfully in stressful situations (such as combat) could require a Sneak or Evade roll.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!61e37w3nhlkbqtby",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,14 @@
+{
+    "_id": "e11chma1nr4ypd4j",
+    "name": "Heavy Hangs The Head",
+    "type": "fallout",
+    "system": {
+        "description": "Despite your best efforts, you are elected leader of a haven; maybe you defend it from an attack and the people think you've got what it takes to run the place. You don't. You have the capacity to do one useful thing with the haven's resources before you're assassinated by your rivals, the haven is overrun or the fact you were a patsy all along is revealed and you're hung out to dry. [Immediate]",
+        "resistance": "fortune",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!e11chma1nr4ypd4j",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

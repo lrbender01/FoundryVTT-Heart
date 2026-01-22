@@ -1,0 +1,12 @@
+{
+    "_id": "b2kicuhwp8kcyhij",
+    "name": "Perform an act in service to your order.",
+    "type": "beat",
+    "system": {
+        "description": "Perform an act in service to your order.",
+        "type": "minor"
+    },
+    "_key": "!items!b2kicuhwp8kcyhij",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

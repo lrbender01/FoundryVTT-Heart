@@ -1,0 +1,13 @@
+{
+    "_id": "ssy0ozgqe128k9jk",
+    "name": "Refuge",
+    "type": "ability",
+    "system": {
+        "description": "Clear D6 Fortune stress on you or an ally each time you cast this spell.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ssy0ozgqe128k9jk",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "v8a36nij9mcv3it7",
+    "name": "Phantom Lens",
+    "type": "ability",
+    "system": {
+        "description": "Various blood, ichors and spittles have been used to treat these lenses, allowing you to see into dimensions other than the material. Gain the Hunt skill. While you wear these lenses, you can track anything - even if it doesn't leave a tangible trail.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!v8a36nij9mcv3it7",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

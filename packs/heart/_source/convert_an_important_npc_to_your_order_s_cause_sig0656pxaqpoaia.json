@@ -1,0 +1,12 @@
+{
+    "_id": "sig0656pxaqpoaia",
+    "name": "Convert an important NPC to your order's cause.",
+    "type": "beat",
+    "system": {
+        "description": "Convert an important NPC to your order's cause.",
+        "type": "major"
+    },
+    "_key": "!items!sig0656pxaqpoaia",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

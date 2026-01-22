@@ -1,0 +1,13 @@
+{
+    "_id": "49t65acpkxqz9y45",
+    "name": "Horrendous Bite",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, when you inflict stress with an unarmed attack on an adversary, you may choose to lower their difficulty by one step to a minimum of Standard until the end of the situation.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!49t65acpkxqz9y45",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

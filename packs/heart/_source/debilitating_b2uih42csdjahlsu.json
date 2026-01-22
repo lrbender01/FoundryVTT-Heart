@@ -1,0 +1,12 @@
+{
+    "_id": "b2uih42csdjahlsu",
+    "name": "Debilitating",
+    "type": "tag",
+    "system": {
+        "description": "Once per situation, when you inflict stress with this item to one or more targets, the next attack made against them is rolled with mastery."
+    },
+    "effects": [],
+    "_key": "!items!b2uih42csdjahlsu",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

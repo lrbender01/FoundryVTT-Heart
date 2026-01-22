@@ -1,0 +1,12 @@
+{
+    "_id": "9gvt496klldxqh1e",
+    "name": "Sabotage the assets of those who stand against your order.",
+    "type": "beat",
+    "system": {
+        "description": "Sabotage the assets of those who stand against your order.",
+        "type": "minor"
+    },
+    "_key": "!items!9gvt496klldxqh1e",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

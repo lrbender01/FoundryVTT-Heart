@@ -1,0 +1,12 @@
+{
+    "_id": "rjgikk06x9fz9ixm",
+    "name": "Win an unarmed brawl in a haven.",
+    "type": "beat",
+    "system": {
+        "description": "Win an unarmed brawl in a haven.",
+        "type": "minor"
+    },
+    "_key": "!items!rjgikk06x9fz9ixm",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

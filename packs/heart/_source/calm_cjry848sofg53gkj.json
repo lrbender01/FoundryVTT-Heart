@@ -1,0 +1,13 @@
+{
+    "_id": "cjry848sofg53gkj",
+    "name": "Calm",
+    "type": "ability",
+    "system": {
+        "description": "Your lair no longer inflicts stress on non-witches when they enter, unless you wish it to. You can't pick specific targets - it's either active or inactive.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!cjry848sofg53gkj",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

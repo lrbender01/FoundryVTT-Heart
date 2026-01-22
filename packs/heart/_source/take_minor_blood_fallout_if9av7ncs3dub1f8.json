@@ -1,0 +1,12 @@
+{
+    "_id": "if9av7ncs3dub1f8",
+    "name": "Take Minor Blood fallout.",
+    "type": "beat",
+    "system": {
+        "description": "Take Minor Blood fallout.",
+        "type": "minor"
+    },
+    "_key": "!items!if9av7ncs3dub1f8",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

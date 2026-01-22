@@ -1,0 +1,12 @@
+{
+    "_id": "olvv2a85i2hu56g9",
+    "name": "Spare someone's life.",
+    "type": "beat",
+    "system": {
+        "description": "Spare someone's life.",
+        "type": "minor"
+    },
+    "_key": "!items!olvv2a85i2hu56g9",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

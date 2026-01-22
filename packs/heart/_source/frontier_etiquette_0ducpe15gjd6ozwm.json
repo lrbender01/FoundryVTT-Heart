@@ -1,0 +1,13 @@
+{
+    "_id": "0ducpe15gjd6ozwm",
+    "name": "Frontier Etiquette",
+    "type": "ability",
+    "system": {
+        "description": "Your time in the City Above wasn't for naught; you learned how to hold a conversation, smile and nod in all the right places and read a room to avoid offence. Gain the Haven domain. The first time each session that you use a haunt, your spent resource counts as one dice size higher.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!0ducpe15gjd6ozwm",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

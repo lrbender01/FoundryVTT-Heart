@@ -1,0 +1,13 @@
+{
+    "_id": "busijqsywi7mvigw",
+    "name": "Encampment",
+    "type": "ability",
+    "system": {
+        "description": "You may now perform this action on a delve; add a D6 bane to the delve's resistance if you do. ",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!busijqsywi7mvigw",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

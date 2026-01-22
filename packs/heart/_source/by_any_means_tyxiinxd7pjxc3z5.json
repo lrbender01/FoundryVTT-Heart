@@ -1,0 +1,13 @@
+{
+    "_id": "tyxiinxd7pjxc3z5",
+    "name": "By Any Means",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following skills: Compel, Delve, Discern, Evade, Hunt, Kill, Sneak, Mend. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!tyxiinxd7pjxc3z5",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "3hxaxshnbmlvcelt",
+    "name": "Destroy a haunt to learn more about your task.",
+    "type": "beat",
+    "system": {
+        "description": "Destroy a haunt to learn more about your task.",
+        "type": "major"
+    },
+    "_key": "!items!3hxaxshnbmlvcelt",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

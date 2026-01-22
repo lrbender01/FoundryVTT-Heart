@@ -1,0 +1,14 @@
+{
+    "_id": "4ohism0s9es8i0ho",
+    "name": "The Ravening",
+    "type": "fallout",
+    "system": {
+        "description": "Your body hatches with a wet red noise and a Ravening Beast emerges from you, skinless and steaming with heat, hungry for food. You die; this is how they breed. If your surviving friends are nearby. [Immediate]",
+        "resistance": "echo",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!4ohism0s9es8i0ho",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

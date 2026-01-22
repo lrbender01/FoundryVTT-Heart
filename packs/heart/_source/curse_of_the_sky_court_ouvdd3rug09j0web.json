@@ -1,0 +1,17 @@
+{
+    "_id": "ouvdd3rug09j0web",
+    "name": "Curse Of The Sky Court",
+    "type": "ability",
+    "system": {
+        "description": "These fae spirits of air, long-banished from their birth realm, are in a zealous and perpetual quest for pleasure. Roll Compel+Occult to cast this spell by drinking strong liquor or taking narcotics and intoning an ancient contract. On a success, all those nearby are compelled to seek immediate pleasure: drink, drugs, dance, wild creation of art, music, general hedonism and miscellaneous frivolity. The alien creatures of the Heart may have an unusual definition of \"pleasure\" that defies mortal minds.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.57h01q6rlivlm26y",
+            "Compendium.heart.heart.xqp70y5emlfvvcqm",
+            "Compendium.heart.heart.03jtef8vvfwevyh3"
+        ]
+    },
+    "_key": "!items!ouvdd3rug09j0web",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

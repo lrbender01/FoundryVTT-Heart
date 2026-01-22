@@ -1,0 +1,17 @@
+{
+    "_id": "bd37t8jwh6d6jkho",
+    "name": "Delirium Spike",
+    "type": "ability",
+    "system": {
+        "description": "The sacred majesty of the Hive fills you with fizzing, unstable power. The stress inflicted by your RELEASE THE SWARM ability increases to D6. The first time you inflict stress using RELEASE THE SWARM in a situation, add your Mind stress to the stress inflicted on the target. After the action is resolved, reduce your Mind stress to 0. This supersedes the normal limitations on removing Mind stress outlined in THE HIVE (p. 37).",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.005ujau0ye5h5o7a",
+            "Compendium.heart.heart.a5q0rkby145sa2ls",
+            "Compendium.heart.heart.l4tscae2wqf6c2u2"
+        ]
+    },
+    "_key": "!items!bd37t8jwh6d6jkho",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

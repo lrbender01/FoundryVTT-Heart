@@ -1,0 +1,12 @@
+{
+    "_id": "v01tejuk6diczzi3",
+    "name": "Meet someone from your old life who's trying to get you to give up on your quest.",
+    "type": "beat",
+    "system": {
+        "description": "Meet someone from your old life who's trying to get you to give up on your quest.",
+        "type": "minor"
+    },
+    "_key": "!items!v01tejuk6diczzi3",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

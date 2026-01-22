@@ -1,0 +1,13 @@
+{
+    "_id": "zr0tf2kslge1edyh",
+    "name": "Desperate Measures",
+    "type": "ability",
+    "system": {
+        "description": "You've eaten people. Sometimes to survive; other times to prosper. Gain the Desolate domain. You can consume the flesh of something or someone that you have recently killed and gain a skill associated with them for the remainder of the situation.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!zr0tf2kslge1edyh",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

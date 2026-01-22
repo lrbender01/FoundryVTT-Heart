@@ -1,0 +1,13 @@
+{
+    "_id": "cka12ihy4bk354h4",
+    "name": "Horned",
+    "type": "ability",
+    "system": {
+        "description": "When you activate CHIMERIC STRAIN, increase the Echo stress inflicted by 1 step and increase your melee damage by 1 step until the end of the current situation, in addition to any other effects.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!cka12ihy4bk354h4",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

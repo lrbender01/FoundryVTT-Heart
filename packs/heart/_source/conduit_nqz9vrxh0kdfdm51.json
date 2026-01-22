@@ -1,0 +1,14 @@
+{
+    "_id": "nqz9vrxh0kdfdm51",
+    "name": "Conduit",
+    "type": "fallout",
+    "system": {
+        "description": "Your best efforts to keep the unreal energies of the Heart at bay are futile: your body is a crucible for strangeness. You cannot use Echo protection. [Ongoing]",
+        "resistance": "echo",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!nqz9vrxh0kdfdm51",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

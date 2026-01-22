@@ -1,0 +1,12 @@
+{
+    "_id": "ugkpe14n8h2utw5m",
+    "name": "Rescue or assist an NPC who belongs to your order.",
+    "type": "beat",
+    "system": {
+        "description": "Rescue or assist an NPC who belongs to your order.",
+        "type": "minor"
+    },
+    "_key": "!items!ugkpe14n8h2utw5m",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

@@ -1,0 +1,14 @@
+{
+    "_id": "pha3smbmv9bsuz5m",
+    "name": "Sold",
+    "type": "fallout",
+    "system": {
+        "description": "You're forced to sell off something valuable to pay your debtors. Work out with the GM what you're forced to sell. If you haven't used it since you last visited a haven, you sold it retroactively. [Immediate]",
+        "resistance": "supplies",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!pha3smbmv9bsuz5m",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

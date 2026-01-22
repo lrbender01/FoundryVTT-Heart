@@ -1,0 +1,13 @@
+{
+    "_id": "l4i7gnt42v8qnhvv",
+    "name": "The Better Part Of Valour",
+    "type": "ability",
+    "system": {
+        "description": "You'll get everyone out alive, if not intact. Gain the Evade skill. If you succeed on an Evade roll, all nearby allies roll with mastery when trying to evade until you next act.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!l4i7gnt42v8qnhvv",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

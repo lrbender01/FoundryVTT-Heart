@@ -1,0 +1,13 @@
+{
+    "_id": "nf69pz6cc2af512f",
+    "name": "Absorb Memories",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, when you're in a location with a domain that you do not possess, activate this power. You have access to that domain until the end of the session.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!nf69pz6cc2af512f",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

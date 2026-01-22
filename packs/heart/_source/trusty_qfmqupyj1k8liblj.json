@@ -1,0 +1,12 @@
+{
+    "_id": "qfmqupyj1k8liblj",
+    "name": "Trusty",
+    "type": "tag",
+    "system": {
+        "description": "When you roll for stress marked against a delve while using this item, roll two dice and pick the highest.Multiple instances of this tag stack as per the Brutal tag."
+    },
+    "effects": [],
+    "_key": "!items!qfmqupyj1k8liblj",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

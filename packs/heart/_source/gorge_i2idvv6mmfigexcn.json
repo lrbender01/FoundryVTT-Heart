@@ -1,0 +1,13 @@
+{
+    "_id": "i2idvv6mmfigexcn",
+    "name": "Gorge",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, when you eat (destroy) a resource with the Haven domain, remove stress from Blood, Mind or Echo equal to half the amount rolled on the resource's dice.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!i2idvv6mmfigexcn",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

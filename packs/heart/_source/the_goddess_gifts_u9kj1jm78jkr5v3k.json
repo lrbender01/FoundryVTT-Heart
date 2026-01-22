@@ -1,0 +1,13 @@
+{
+    "_id": "u9kj1jm78jkr5v3k",
+    "name": "The Goddess' Gifts",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following skills: Compel, Discern, Endure, Evade, Hunt, Kill, Mend. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!u9kj1jm78jkr5v3k",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

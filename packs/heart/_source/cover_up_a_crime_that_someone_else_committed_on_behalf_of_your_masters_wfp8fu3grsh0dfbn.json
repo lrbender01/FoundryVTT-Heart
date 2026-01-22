@@ -1,0 +1,12 @@
+{
+    "_id": "wfp8fu3grsh0dfbn",
+    "name": "Cover up a crime that someone else committed on behalf of your masters.",
+    "type": "beat",
+    "system": {
+        "description": "Cover up a crime that someone else committed on behalf of your masters.",
+        "type": "minor"
+    },
+    "_key": "!items!wfp8fu3grsh0dfbn",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

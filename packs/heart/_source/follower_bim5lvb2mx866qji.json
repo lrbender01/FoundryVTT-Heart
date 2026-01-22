@@ -1,0 +1,14 @@
+{
+    "_id": "bim5lvb2mx866qji",
+    "name": "Follower",
+    "type": "fallout",
+    "system": {
+        "description": "Someone, or something, believes you are very important: chosen of the Heart and worth following. A weird-looking but essentially harmless creature or person follows you at a distance; they won't approach you, but they'll be keen to sift through your rubbish or attempt to hurt anyone who looks like they might want to get in your way. [Ongoing]",
+        "resistance": "echo",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!bim5lvb2mx866qji",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

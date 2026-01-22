@@ -1,0 +1,62 @@
+{
+    "_id": "kr79oil3tkgsidlp",
+    "name": "Penitent",
+    "type": "calling",
+    "system": {
+        "description": "You betrayed the trust of your order. Due to negligence, cowardice or malice, you caused them great harm. Now, wracked with guilt, you have sworn to make amends by venturing deep into the Heart and performing acts in service of your order.",
+        "questions": [
+            {
+                "question": "What marks your order out from others like it?"
+            },
+            {
+                "question": "What evidence of your failings is visible in the City Beneath?"
+            },
+            {
+                "question": "Pick one of the other player characters; they were present at your betrayal. How were they involved?"
+            },
+            {
+                "question": "Pick one of the other player characters; you look up to them as an example of how to live one's life. What inspired this?"
+            }
+        ],
+        "ability": "Compendium.heart.heart.64zvaoddu5ph35b7",
+        "beats": [
+            "Compendium.heart.heart.if9av7ncs3dub1f8",
+            "Compendium.heart.heart.7u37m5gj52wdw1g8",
+            "Compendium.heart.heart.wfv9ui4uekxnqci8",
+            "Compendium.heart.heart.rf46urqgikvefgyy",
+            "Compendium.heart.heart.olvv2a85i2hu56g9",
+            "Compendium.heart.heart.29qd0qh11p2d1c3a",
+            "Compendium.heart.heart.m3pk9xjxntegaets",
+            "Compendium.heart.heart.rt6lhtbm4tharnn1",
+            "Compendium.heart.heart.b2kicuhwp8kcyhij",
+            "Compendium.heart.heart.0r194wgj3olgv2w8",
+            "Compendium.heart.heart.9gvt496klldxqh1e",
+            "Compendium.heart.heart.8286jtiqqy33f667",
+            "Compendium.heart.heart.1p1xh8s8zy5hjlsx",
+            "Compendium.heart.heart.gtal6j1j91ah1psz",
+            "Compendium.heart.heart.oqph3jx6yzdzuwug",
+            "Compendium.heart.heart.73d29pesdvew4m4s",
+            "Compendium.heart.heart.j238qod6lmfejcez",
+            "Compendium.heart.heart.c3qegsyqxuyuec57",
+            "Compendium.heart.heart.ugkpe14n8h2utw5m",
+            "Compendium.heart.heart.9921cjp2tvd9ucjk",
+            "Compendium.heart.heart.602bnwoiufrvt6fh",
+            "Compendium.heart.heart.axx14jrdxverd435",
+            "Compendium.heart.heart.sig0656pxaqpoaia",
+            "Compendium.heart.heart.opevg246ohc9ulix",
+            "Compendium.heart.heart.7alk08vajix53m11",
+            "Compendium.heart.heart.fx6giglcrh9qambh",
+            "Compendium.heart.heart.q0ktb93c2oh06hsh",
+            "Compendium.heart.heart.abxan3jvoygd6r06",
+            "Compendium.heart.heart.mf0wczav50l4ql14",
+            "Compendium.heart.heart.7krvmplr0wugn3y0",
+            "Compendium.heart.heart.y3og9sjrofjhfxa8",
+            "Compendium.heart.heart.xm8fwrs2h6a6dxj2",
+            "Compendium.heart.heart.l789vg049hgk1fzd"
+        ]
+    },
+    "effects": [],
+    "img": "systems/heart/assets/calling.png",
+    "folder": "CN0la67ziHUrLPD2",
+    "_key": "!items!kr79oil3tkgsidlp"
+}

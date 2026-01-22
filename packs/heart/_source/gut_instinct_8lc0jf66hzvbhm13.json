@@ -1,0 +1,13 @@
+{
+    "_id": "8lc0jf66hzvbhm13",
+    "name": "Gut Instinct",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following skills: Compel, Delve, Discern, Endure, Evade, Hunt, Kill, Mend. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!8lc0jf66hzvbhm13",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

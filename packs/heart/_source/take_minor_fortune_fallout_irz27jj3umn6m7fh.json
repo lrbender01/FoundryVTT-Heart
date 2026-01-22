@@ -1,0 +1,12 @@
+{
+    "_id": "irz27jj3umn6m7fh",
+    "name": "Take Minor Fortune fallout.",
+    "type": "beat",
+    "system": {
+        "description": "Take Minor Fortune fallout.",
+        "type": "minor"
+    },
+    "_key": "!items!irz27jj3umn6m7fh",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

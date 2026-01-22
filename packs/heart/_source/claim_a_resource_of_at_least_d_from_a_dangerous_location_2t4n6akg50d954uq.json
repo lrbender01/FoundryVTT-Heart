@@ -1,0 +1,12 @@
+{
+    "_id": "2t4n6akg50d954uq",
+    "name": "Claim a resource of at least D10 from a dangerous location.",
+    "type": "beat",
+    "system": {
+        "description": "Claim a resource of at least D10 from a dangerous location.",
+        "type": "minor"
+    },
+    "_key": "!items!2t4n6akg50d954uq",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

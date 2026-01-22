@@ -1,0 +1,13 @@
+{
+    "_id": "iyl0wkfttf4368hu",
+    "name": "Grail Armour",
+    "type": "ability",
+    "system": {
+        "description": "You wear patchwork platemail scavenged from the bodies of dead heroes. Gain +2 Blood Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!iyl0wkfttf4368hu",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

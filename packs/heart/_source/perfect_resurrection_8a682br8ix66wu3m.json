@@ -1,0 +1,13 @@
+{
+    "_id": "8a682br8ix66wu3m",
+    "name": "Perfect Resurrection",
+    "type": "ability",
+    "system": {
+        "description": "The communion between flesh and fracture, between the mortal and the undying, becomes near-perfect. You can make a perfect copy of someone who has died, but only once. The copy is absolutely the same as the original, right down to the soul. The copy is so good, in fact, that the person can no longer permanently die. If they sustain damage that would kill them, they appear dead, but in fact a new copy is pupating somewhere in the depths of the Heart. It will slide out wetly within a lunar month. They get no say in this, and there is no known way to turn it off short of destroying the Heart Itself. Casting this spell takes an hour or so of ritual chanting and kills you.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!8a682br8ix66wu3m",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

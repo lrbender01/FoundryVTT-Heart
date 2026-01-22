@@ -1,0 +1,14 @@
+{
+    "_id": "ef4iu4lriajcwk8k",
+    "name": "Spitting Teeth",
+    "type": "fallout",
+    "system": {
+        "description": "Any action that requires you to speak or look respectable is Risky. [Ongoing]",
+        "resistance": "blood",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!ef4iu4lriajcwk8k",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

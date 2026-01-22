@@ -1,0 +1,14 @@
+{
+    "_id": "8b84m3e7sv9t8lou",
+    "name": "Physiker's bag",
+    "type": "equipment",
+    "system": {
+        "type": "mend",
+        "resistances": "blood",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!8b84m3e7sv9t8lou",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

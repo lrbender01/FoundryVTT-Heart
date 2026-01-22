@@ -1,0 +1,14 @@
+{
+    "_id": "1o1x2q496880cdiv",
+    "name": "Separated",
+    "type": "fallout",
+    "system": {
+        "description": "You think you hear something, but when you turn to tell your allies, they are gone. You'll have to track them down or hope they find you. [Immediate]",
+        "resistance": "fortune",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!1o1x2q496880cdiv",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

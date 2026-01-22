@@ -1,0 +1,12 @@
+{
+    "_id": "l7n5k9v5ksord0a5",
+    "name": "Destroy a haven, returning the land to the Heart.",
+    "type": "beat",
+    "system": {
+        "description": "Destroy a haven, returning the land to the Heart.",
+        "type": "major"
+    },
+    "_key": "!items!l7n5k9v5ksord0a5",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

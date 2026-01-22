@@ -1,0 +1,13 @@
+{
+    "_id": "ayxhrq48nrrw10zh",
+    "name": "Quartermaster Training",
+    "type": "ability",
+    "system": {
+        "description": "You have studied under the Quartermasters of the Hounds, learning the valuable skill of creative acquisition. +1 Supplies Protection. You don't like to be unarmed - you steal, build and improvise what you need. Your \"unarmed\" attacks become (D6, Brutal, Unreliable); on a failure, it breaks and your unarmed attacks are D4 as standard.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ayxhrq48nrrw10zh",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

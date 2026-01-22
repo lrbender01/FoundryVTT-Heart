@@ -1,0 +1,14 @@
+{
+    "_id": "zgonocpksb9lk3wl",
+    "name": "Collateral Magic",
+    "type": "fallout",
+    "system": {
+        "description": "Your panicked mind breaks for a second and reforms in an arcane pattern; down here, the old magics of blood and bone work better than they do on the surface. You immediately cast AETHERIC SCOURGE on a nearby ally, but mark no stress for doing so. This fallout can be upgraded (see AETHERIC RESONANCE below).[Immediate]",
+        "resistance": "mind",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!zgonocpksb9lk3wl",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

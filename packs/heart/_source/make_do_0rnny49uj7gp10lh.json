@@ -1,0 +1,13 @@
+{
+    "_id": "0rnny49uj7gp10lh",
+    "name": "Make Do",
+    "type": "ability",
+    "system": {
+        "description": "Periods of poverty have taught you to make the best of what you've got and keep things ticking over until your next big score. Gain the Mend skill. Once per session, you can immediately fix something that's broken - but it only works once. After that, it's destroyed past the point of repair.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!0rnny49uj7gp10lh",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

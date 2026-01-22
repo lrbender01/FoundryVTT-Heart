@@ -1,0 +1,13 @@
+{
+    "_id": "2aa65fcbzbwjfg9m",
+    "name": "Shadow",
+    "type": "ability",
+    "system": {
+        "description": "Your body, unmoored from the lands of the living, can become shadowy and indistinct. Gain the Sneak skill. By blowing out a lit candle and focusing, you can extinguish all light sources nearby. Sources that cannot be easily extinguished (magelights, glowworms, etc) are temporarily muted instead.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!2aa65fcbzbwjfg9m",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

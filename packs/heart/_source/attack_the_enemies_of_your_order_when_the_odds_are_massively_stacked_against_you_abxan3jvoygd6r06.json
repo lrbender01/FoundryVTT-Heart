@@ -1,0 +1,12 @@
+{
+    "_id": "abxan3jvoygd6r06",
+    "name": "Attack the enemies of your order when the odds are massively stacked against you.",
+    "type": "beat",
+    "system": {
+        "description": "Attack the enemies of your order when the odds are massively stacked against you.",
+        "type": "major"
+    },
+    "_key": "!items!abxan3jvoygd6r06",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

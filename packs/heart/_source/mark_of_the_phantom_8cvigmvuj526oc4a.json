@@ -1,0 +1,13 @@
+{
+    "_id": "8cvigmvuj526oc4a",
+    "name": "Mark Of The Phantom",
+    "type": "ability",
+    "system": {
+        "description": "Silver-grey skinspells and litanies of obfuscation wind their way over your body; you are an aberration in space and time, glitching through the City Beneath. Gain the Evade skill. Once per situation, when you mark stress due to physical harm or detection, you may make the GM reroll the stress dice. Keep the second result, even if it's higher.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!8cvigmvuj526oc4a",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

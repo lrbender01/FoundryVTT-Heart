@@ -1,0 +1,14 @@
+{
+    "_id": "qss0kszon2aw0wwc",
+    "name": "The Life Not Lived",
+    "type": "fallout",
+    "system": {
+        "description": "Upgrades DEJA VU. You meet someone from your past who should, by all rights, be dead. [Immediate]",
+        "resistance": "echo",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!qss0kszon2aw0wwc",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

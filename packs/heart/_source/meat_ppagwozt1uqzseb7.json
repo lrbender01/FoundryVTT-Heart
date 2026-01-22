@@ -1,0 +1,14 @@
+{
+    "_id": "ppagwozt1uqzseb7",
+    "name": "Meat",
+    "type": "fallout",
+    "system": {
+        "description": "Everyone is just meat to you: dull, worthless, soulless. Any time you enter a situation where you must talk to a mundane NPC for an extended period of time,the GM can call for an Endure roll; on a failure, take D6 stress. If you are intimate with a mundane NPC, take D10 stress on a failure. [Ongoing]",
+        "resistance": "echo",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!ppagwozt1uqzseb7",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

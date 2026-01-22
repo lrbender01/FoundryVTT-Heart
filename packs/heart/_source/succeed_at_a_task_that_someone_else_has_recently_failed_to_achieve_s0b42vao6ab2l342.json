@@ -1,0 +1,12 @@
+{
+    "_id": "s0b42vao6ab2l342",
+    "name": "Succeed at a task that someone else has recently failed to achieve.",
+    "type": "beat",
+    "system": {
+        "description": "Succeed at a task that someone else has recently failed to achieve.",
+        "type": "minor"
+    },
+    "_key": "!items!s0b42vao6ab2l342",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

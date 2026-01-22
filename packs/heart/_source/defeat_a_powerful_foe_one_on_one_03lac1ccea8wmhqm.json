@@ -1,0 +1,12 @@
+{
+    "_id": "03lac1ccea8wmhqm",
+    "name": "Defeat a powerful foe one-on-one.",
+    "type": "beat",
+    "system": {
+        "description": "Defeat a powerful foe one-on-one.",
+        "type": "minor"
+    },
+    "_key": "!items!03lac1ccea8wmhqm",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

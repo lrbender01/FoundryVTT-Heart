@@ -1,0 +1,14 @@
+{
+    "_id": "uwicukylj8rpc8yx",
+    "name": "Clouded",
+    "type": "fallout",
+    "system": {
+        "description": "Your mind starts to shut down in an attempt to protect itself; you can't think straight and sensations are dulled. You cannot gain extra dice from Domains. [Ongoing]",
+        "resistance": "mind",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!uwicukylj8rpc8yx",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

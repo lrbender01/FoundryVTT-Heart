@@ -1,0 +1,13 @@
+{
+    "_id": "i8smpx1orb6n3ehr",
+    "name": "Hidden Passageway",
+    "type": "ability",
+    "system": {
+        "description": "Once per delve, when you use ECHOES, it functions as a D8 boon.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!i8smpx1orb6n3ehr",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

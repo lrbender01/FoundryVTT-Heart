@@ -1,0 +1,13 @@
+{
+    "_id": "jc96cbbxeo9d6vxq",
+    "name": "Steam Vent",
+    "type": "ability",
+    "system": {
+        "description": "Your armour gains the Smoke tag, and you can activate it at will.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!jc96cbbxeo9d6vxq",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

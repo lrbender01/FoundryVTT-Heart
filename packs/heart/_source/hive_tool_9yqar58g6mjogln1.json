@@ -1,0 +1,15 @@
+{
+    "_id": "9yqar58g6mjogln1",
+    "name": "Hive tool",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d4",
+        "tags": [
+            "Compendium.heart.heart.hgzgz5pzaal75h7h"
+        ]
+    },
+    "_key": "!items!9yqar58g6mjogln1",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

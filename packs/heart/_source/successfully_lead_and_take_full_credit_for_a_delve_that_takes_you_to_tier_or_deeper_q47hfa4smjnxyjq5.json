@@ -1,0 +1,12 @@
+{
+    "_id": "q47hfa4smjnxyjq5",
+    "name": "Successfully lead, and take full credit for, a delve that takes you to Tier 3 or deeper.",
+    "type": "beat",
+    "system": {
+        "description": "Successfully lead, and take full credit for, a delve that takes you to Tier 3 or deeper.",
+        "type": "major"
+    },
+    "_key": "!items!q47hfa4smjnxyjq5",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

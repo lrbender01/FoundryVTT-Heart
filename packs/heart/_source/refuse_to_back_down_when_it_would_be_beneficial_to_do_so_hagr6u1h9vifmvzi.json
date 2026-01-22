@@ -1,0 +1,12 @@
+{
+    "_id": "hagr6u1h9vifmvzi",
+    "name": "Refuse to back down when it would be beneficial to do so.",
+    "type": "beat",
+    "system": {
+        "description": "Refuse to back down when it would be beneficial to do so.",
+        "type": "minor"
+    },
+    "_key": "!items!hagr6u1h9vifmvzi",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

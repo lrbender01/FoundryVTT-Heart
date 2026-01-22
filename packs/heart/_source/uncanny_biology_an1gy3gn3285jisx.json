@@ -1,0 +1,13 @@
+{
+    "_id": "an1gy3gn3285jisx",
+    "name": "Uncanny Biology",
+    "type": "ability",
+    "system": {
+        "description": "Aside from the Queen nestled inside your heart, every part of your body is replaceable by the swarm. Gain +2 Blood Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!an1gy3gn3285jisx",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "sh0xolgjz5bdjhdc",
+    "name": "Tiring",
+    "type": "tag",
+    "system": {
+        "description": "When you fail an action using this equipment, the size of its stress dice decreases by 1 for the remainder of the situation."
+    },
+    "effects": [],
+    "_key": "!items!sh0xolgjz5bdjhdc",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

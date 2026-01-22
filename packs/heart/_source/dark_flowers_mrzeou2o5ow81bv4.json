@@ -1,0 +1,13 @@
+{
+    "_id": "mrzeou2o5ow81bv4",
+    "name": "Dark Flowers",
+    "type": "ability",
+    "system": {
+        "description": "Your touch gains the Debilitating tag and causes crystal to coalesce around your targets.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!mrzeou2o5ow81bv4",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

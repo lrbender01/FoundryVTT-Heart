@@ -1,0 +1,13 @@
+{
+    "_id": "yf2gs82r92mju5rc",
+    "name": "Dominion",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following domains: Cursed, Desolate, Occult, Religion, Wild, Warren. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!yf2gs82r92mju5rc",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

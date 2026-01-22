@@ -1,0 +1,14 @@
+{
+    "_id": "mg1ivzpw0s9x7pn8",
+    "name": "Long Way Round",
+    "type": "fallout",
+    "system": {
+        "description": "You take longer than expected to reach your target. On a delve, add D6 to the delve's resistance. If you're searching for someone or something in a landmark, you arrive just late enough to be in trouble. [Immediate]",
+        "resistance": "fortune",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!mg1ivzpw0s9x7pn8",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

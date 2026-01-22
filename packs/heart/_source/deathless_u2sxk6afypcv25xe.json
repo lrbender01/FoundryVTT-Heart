@@ -1,0 +1,13 @@
+{
+    "_id": "u2sxk6afypcv25xe",
+    "name": "Deathless",
+    "type": "ability",
+    "system": {
+        "description": "You've already died once; you can suffer through this. Gain the Endure skill. Roll Endure+Religion to ignore the effects of ongoing Minor Blood or Echo fallout until the end of the situation.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!u2sxk6afypcv25xe",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

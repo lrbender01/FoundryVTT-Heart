@@ -1,0 +1,13 @@
+{
+    "_id": "vfrkpc0kf7qmbhp9",
+    "name": "Mutually Assured Destruction",
+    "type": "ability",
+    "system": {
+        "description": "If you go down, you're taking them with you. If you die, the wards placed on your soul detonate in an attempt to take down whoever did you in. You explode and inflict stress equal to D8 + your current Fortune stress on anyone standing nearby.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!vfrkpc0kf7qmbhp9",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "nl0obaeyymml53yr",
+    "name": "The Cost Of Doing Business",
+    "type": "ability",
+    "system": {
+        "description": "A mix of scrying and luck magic lets you portion off your fortune to be used as you wish. At any time you may consume a resource and roll its dice; set this dice aside. When you perform an action or inflict stress, but before you roll the dice to resolve it, you may replace any unrolled dice in your pool with the dice you set aside. Once used in this manner, it is consumed. If you have an unspent dice set aside at the end of the session, you take Fortune stress equal to the value rolled on the dice.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!nl0obaeyymml53yr",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

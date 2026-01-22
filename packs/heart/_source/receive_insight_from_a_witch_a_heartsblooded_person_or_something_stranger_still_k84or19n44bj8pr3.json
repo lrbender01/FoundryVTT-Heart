@@ -1,0 +1,12 @@
+{
+    "_id": "k84or19n44bj8pr3",
+    "name": "Receive insight from a witch, a heartsblooded person or something stranger still.",
+    "type": "beat",
+    "system": {
+        "description": "Receive insight from a witch, a heartsblooded person or something stranger still.",
+        "type": "minor"
+    },
+    "_key": "!items!k84or19n44bj8pr3",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

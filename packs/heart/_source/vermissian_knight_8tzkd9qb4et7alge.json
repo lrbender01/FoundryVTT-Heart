@@ -1,0 +1,81 @@
+{
+    "_id": "8tzkd9qb4et7alge",
+    "name": "Vermissian Knight",
+    "type": "class",
+    "system": {
+        "description": "<p>The Vermissian is a cursed, centuries-old mass transport network that the people from the City Above built to get from place to place quicker. To power it, they tapped into the wellspring of potential that is the Heart, and damned every single tunnel and station to eternal weirdness. The Vermissian never officially opened. Now, desperate people, fringe historians and heretic cults hide in the infrastructure, using the strange unreality within to further their own ends.</p> <p>Using barely-understood technology and living in the space between worlds, the Vermissian Knights do their level best to understand the parasite reality and protect others they find there. They are in high demand as companions on delves: they have an understanding of the Heart, a good sword arm and a suit of powered armour built from scavenged train materials that helps keep them (and their allies) alive.</p> <p>Knights will inscribe the names of landmarks that they have discovered, or found stable routes to, on their armour - it is as much a research project and an advertisement of their prowess as it is a means of protection. Each knight's suit is utterly unique, using technology taken from a dozen different places: different gauges of steels, different weights and levels of protection and flexibility and controls that are often inscrutable to anyone but the creator themselves</p>",
+        "abilities": [
+            "Compendium.heart.heart.nd677qoza6d331sq"
+        ],
+        "futureAbilities": [
+            "Compendium.heart.heart.gzblqulfmamf0bsf",
+            "Compendium.heart.heart.pe5g66580qniuyzx",
+            "Compendium.heart.heart.iw7mfc7lgt915ixp",
+            "Compendium.heart.heart.z0eyu1fhysn21t51",
+            "Compendium.heart.heart.vjucpm4ac3s4vd68",
+            "Compendium.heart.heart.v8a36nij9mcv3it7",
+            "Compendium.heart.heart.2t8q79vagfym3nco",
+            "Compendium.heart.heart.cdzyhw35b7s66xj1",
+            "Compendium.heart.heart.fv7ach3uxsalhe78",
+            "Compendium.heart.heart.46gq4ovpebvkno8b",
+            "Compendium.heart.heart.tg8c965at5a8eq4f",
+            "Compendium.heart.heart.r093u8djmw9w8k6i",
+            "Compendium.heart.heart.rddqxwcud6xqobok",
+            "Compendium.heart.heart.vhmynrmww6nmt0ys",
+            "Compendium.heart.heart.sp5edtionkjoie9l",
+            "Compendium.heart.heart.4ckf4n0r0uk2mluy",
+            "Compendium.heart.heart.62i1ci4p2oojusjg",
+            "Compendium.heart.heart.si79ptcms4hztn65",
+            "Compendium.heart.heart.ep2lrqz982b54plv",
+            "Compendium.heart.heart.ze3mczryg2mmdzmd",
+            "Compendium.heart.heart.ykywir5qhvq1yb74"
+        ],
+        "resources": [
+            "Compendium.heart.heart.6octynpoeyjppetm"
+        ],
+        "equipment": [],
+        "equipmentGroups": [
+            [
+                "Compendium.heart.heart.3v3le7o42vaqqd6x"
+            ],
+            [
+                "Compendium.heart.heart.z7zgl4renn08c375",
+                "Compendium.heart.heart.hk9iay262tpsjosg"
+            ],
+            [
+                "Compendium.heart.heart.7201gltq1etyn2s3"
+            ]
+        ]
+    },
+    "effects": [
+        {
+            "_key": "!items.effects!8tzkd9qb4et7alge.69245ed69e8f2934",
+            "_id": "69245ed69e8f2934",
+            "name": "The DELVE skill",
+            "description": "The Vermissian Knight class provides a +1 to the DELVE skill as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.skills.delve.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        },
+        {
+            "_key": "!items.effects!8tzkd9qb4et7alge.ca82bd6e3ab0670e",
+            "_id": "ca82bd6e3ab0670e",
+            "name": "The TECHNOLOGY domain",
+            "description": "The Vermissian Knight class provides a +1 to the TECHNOLOGY domain as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.domains.technology.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        }
+    ],
+    "img": "systems/heart/assets/class.png",
+    "folder": "yIJ6SF31RMT5vNhz",
+    "_key": "!items!8tzkd9qb4et7alge"
+}

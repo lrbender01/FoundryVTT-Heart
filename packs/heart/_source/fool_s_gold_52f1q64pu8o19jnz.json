@@ -1,0 +1,14 @@
+{
+    "_id": "52f1q64pu8o19jnz",
+    "name": "Fool's Gold",
+    "type": "fallout",
+    "system": {
+        "description": "You get exactly what you want - secrets, penitence, freedom, whatever. It seems too good to be true, which is apt, because it isn't: you've been tricked or deluded, and you don't have it after all. The stress is too much for you to bear,and your only worth now is as a warning to other delvers not to take things at face value. [Immediate]",
+        "resistance": "fortune",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!52f1q64pu8o19jnz",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

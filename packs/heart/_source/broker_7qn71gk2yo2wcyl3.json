@@ -1,0 +1,17 @@
+{
+    "_id": "7qn71gk2yo2wcyl3",
+    "name": "Broker",
+    "type": "ability",
+    "system": {
+        "description": "You beseech Incarne for aid. Roll Mend+Haven to cast this spell. On a success, remove D6 stress from any resistance (other than Supplies) for one nearby character other than yourself. ",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.7fc4jx8s5mms71f4",
+            "Compendium.heart.heart.nfmhmd3m55kfbpn9",
+            "Compendium.heart.heart.ztl42e61zzk16q78"
+        ]
+    },
+    "_key": "!items!7qn71gk2yo2wcyl3",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

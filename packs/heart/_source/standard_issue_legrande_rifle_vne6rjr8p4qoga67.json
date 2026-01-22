@@ -1,0 +1,17 @@
+{
+    "_id": "vne6rjr8p4qoga67",
+    "name": "Standard-issue Legrande rifle",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d8",
+        "tags": [
+            "Compendium.heart.heart.r9p0yhil77g3cjwc",
+            "Compendium.heart.heart.zgy5em4fdo8o7mo5",
+            "Compendium.heart.heart.l4t4r02bixjp8joe"
+        ]
+    },
+    "_key": "!items!vne6rjr8p4qoga67",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

@@ -1,0 +1,14 @@
+{
+    "_id": "jd2f34e903k53ryh",
+    "name": "Aetheric Resonance",
+    "type": "fallout",
+    "system": {
+        "description": "As COLLATERAL MAGIC Minor fallout, but you permanently learn AETHERIC SCOURGE and can cast it at will. [Ongoing]",
+        "resistance": "mind",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!jd2f34e903k53ryh",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

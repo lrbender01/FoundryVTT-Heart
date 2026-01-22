@@ -1,0 +1,14 @@
+{
+    "_id": "vkrtlazfu5qzhydx",
+    "type": "resource",
+    "name": "A single devotional candle that burns with a silver flame",
+    "system": {
+        "active": true,
+        "domain": "religion",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!vkrtlazfu5qzhydx",
+    "img": "systems/heart/assets/resource.png",
+    "folder": "bDiHYHlOFLzWySfV"
+}

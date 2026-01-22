@@ -1,0 +1,12 @@
+{
+    "_id": "1yud020fffec4rs4",
+    "name": "Damage or sabotage a haven, letting the Heart in.",
+    "type": "beat",
+    "system": {
+        "description": "Damage or sabotage a haven, letting the Heart in.",
+        "type": "minor"
+    },
+    "_key": "!items!1yud020fffec4rs4",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

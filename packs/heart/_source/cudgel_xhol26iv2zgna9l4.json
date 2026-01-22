@@ -1,0 +1,13 @@
+{
+    "_id": "xhol26iv2zgna9l4",
+    "name": "Cudgel",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!xhol26iv2zgna9l4",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

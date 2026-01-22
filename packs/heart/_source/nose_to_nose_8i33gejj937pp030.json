@@ -1,0 +1,13 @@
+{
+    "_id": "8i33gejj937pp030",
+    "name": "Nose-To-Nose",
+    "type": "ability",
+    "system": {
+        "description": "Your gaze gains the Point-blank tag.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!8i33gejj937pp030",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "6wnbjifduhcn3lmn",
+    "name": "Buy some cutting-edge, experimental or finely-made equipment and use it on a delve.",
+    "type": "beat",
+    "system": {
+        "description": "Buy some cutting-edge, experimental or finely-made equipment and use it on a delve.",
+        "type": "minor"
+    },
+    "_key": "!items!6wnbjifduhcn3lmn",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

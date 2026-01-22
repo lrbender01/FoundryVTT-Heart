@@ -1,0 +1,13 @@
+{
+    "_id": "1r0kkj1e7v48y14e",
+    "name": "Homecoming",
+    "type": "ability",
+    "system": {
+        "description": "When you enter a location with the Haven domain after a delve, refresh stress according to the size and importance of the location. Three shacks with a campfire is D4; Derelictus is D12.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!1r0kkj1e7v48y14e",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,83 @@
+{
+    "_id": "wztcw9qd9vfp7f9n",
+    "name": "Junk Mage",
+    "type": "class",
+    "system": {
+        "description": "<p>You were a magician, but you always knew there was something more. In the City Above, magic is a pale imitation of what it can be in the Heart. Down here, there is true power to be channeled (i.e. stolen) from beings of tremendous power. You see that the rites of the spell-slinging occultists and the miracle-summoning priests of Spire are nothing but two sides of the same coin - tricks that redirect ambient energy into desired effects.</p>  <p>You've tasted the dreams of the ancients. You know that vastly powerful things slumber in the City Beneath, and you know the secrets that plumb your brain directly into their vast, alien consciousnesses. Your spells are cobbled together from snatches of dreams, shards of true-names and the ravings of madmen. You are on the bleeding edge of magic.</p><p>The power is undeniable; addictive, in fact. To channel - to steal - the power of godlike beings is intoxicating. You relish the touch of madness, of accursed insight, into the vast and terrible truths that hide beneath reality. Sanity, safety, reputation; all these are secondary to the pursuit of arcane majesty.</p>",
+        "abilities": [
+            "Compendium.heart.heart.7aroooeqxkvq2f5v",
+            "Compendium.heart.heart.gyz5gy33gsja9x88"
+        ],
+        "futureAbilities": [
+            "Compendium.heart.heart.0p21o1nnz8k9f2bf",
+            "Compendium.heart.heart.qxy7keh6osrh0feq",
+            "Compendium.heart.heart.tyxiinxd7pjxc3z5",
+            "Compendium.heart.heart.0ducpe15gjd6ozwm",
+            "Compendium.heart.heart.l77ju1yx2r33jxar",
+            "Compendium.heart.heart.nc9n9ta21rbt5zsi",
+            "Compendium.heart.heart.8cvigmvuj526oc4a",
+            "Compendium.heart.heart.e4skem1rexhpp2sl",
+            "Compendium.heart.heart.cp8l2cafkg9u30oq",
+            "Compendium.heart.heart.586czvfxjwpdpd93",
+            "Compendium.heart.heart.zmw5zil760kmr9cd",
+            "Compendium.heart.heart.bovjf2ozi4tk3qxf",
+            "Compendium.heart.heart.xzolbruogn9rzovp",
+            "Compendium.heart.heart.ouvdd3rug09j0web",
+            "Compendium.heart.heart.aaky0u9mhpz7tfo1",
+            "Compendium.heart.heart.oex2ljsq78fz51mc",
+            "Compendium.heart.heart.5mq05vqa9v7b6dk4",
+            "Compendium.heart.heart.mc4ieme9cqdbmawq",
+            "Compendium.heart.heart.w5lsvezcfcizh1hk",
+            "Compendium.heart.heart.ql359cth54oodlan",
+            "Compendium.heart.heart.fje4ktjsjlfefwvw",
+            "Compendium.heart.heart.77yku6c6nu51y8rq"
+        ],
+        "resources": [
+            "Compendium.heart.heart.xy2p9uvlair7a8w0"
+        ],
+        "equipment": [],
+        "equipmentGroups": [
+            [
+                "Compendium.heart.heart.oima9g6jxkbo5w1q"
+            ],
+            [
+                "Compendium.heart.heart.w1y3wwffgzyllb37"
+            ],
+            [
+                "Compendium.heart.heart.qctjzq69d2hnj5qz",
+                "Compendium.heart.heart.yeggvbqr7gp5ap4n"
+            ]
+        ]
+    },
+    "effects": [
+        {
+            "_key": "!items.effects!wztcw9qd9vfp7f9n.9df8be70af794cc3",
+            "_id": "9df8be70af794cc3",
+            "name": "The DISCERN skill",
+            "description": "The Junk Mage class provides a +1 to the DISCERN skill as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.skills.discern.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        },
+        {
+            "_key": "!items.effects!wztcw9qd9vfp7f9n.06f7cc13c363bbe8",
+            "_id": "06f7cc13c363bbe8",
+            "name": "The OCCULT domain",
+            "description": "The Junk Mage class provides a +1 to the OCCULT domain as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.domains.occult.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        }
+    ],
+    "img": "systems/heart/assets/class.png",
+    "folder": "yIJ6SF31RMT5vNhz",
+    "_key": "!items!wztcw9qd9vfp7f9n"
+}

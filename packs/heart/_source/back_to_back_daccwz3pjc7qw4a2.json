@@ -1,0 +1,13 @@
+{
+    "_id": "daccwz3pjc7qw4a2",
+    "name": "Back-to-back",
+    "type": "ability",
+    "system": {
+        "description": "If there's only one ally within arm's reach of you, they gain +2 Blood protection instead of +1.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!daccwz3pjc7qw4a2",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "cdzyhw35b7s66xj1",
+    "name": "Sanguinary Array",
+    "type": "ability",
+    "system": {
+        "description": "Your inefficient mortal heart is supplemented by a rig that extracts, filters and nourishes your vital fluids. One side effect of this is that your blood acts as an antenna for the scattershot electrical impulses of the Heart. Gain the Discern skill. If one of your senses becomes damaged or unusable, you can replace it with the weird echoes that shudder through your exposed blood - it's not perfect, but it'll do.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!cdzyhw35b7s66xj1",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "11h7qvhbw5qimlrr",
+    "name": "Reload",
+    "type": "tag",
+    "system": {
+        "description": "This equipment must be reloaded between uses, giving enemies a chance to close in or flee."
+    },
+    "effects": [],
+    "_key": "!items!11h7qvhbw5qimlrr",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

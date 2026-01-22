@@ -1,0 +1,13 @@
+{
+    "_id": "lta8my90l4lzmhxm",
+    "name": "Ghoulish Grasp",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, a weapon you are carrying has the Debilitating tag.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!lta8my90l4lzmhxm",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

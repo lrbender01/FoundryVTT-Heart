@@ -1,0 +1,12 @@
+{
+    "_id": "7mg4fgoqko2qeeqg",
+    "name": "Have a cocktail, fighting move or legendary beast named after you.",
+    "type": "beat",
+    "system": {
+        "description": "Have a cocktail, fighting move or legendary beast named after you.",
+        "type": "minor"
+    },
+    "_key": "!items!7mg4fgoqko2qeeqg",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

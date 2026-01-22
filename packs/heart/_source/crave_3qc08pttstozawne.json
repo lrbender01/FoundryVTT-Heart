@@ -1,0 +1,16 @@
+{
+    "_id": "3qc08pttstozawne",
+    "name": "Crave",
+    "type": "ability",
+    "system": {
+        "description": "Debt is just quantified want; you cut out the middleman. Roll Compel+Haven to cast this spell on an NPC you're speaking to; on a success, you can instill a great desire for something in them. If the thing they want is unusual for them, casting this spell is Risky. On a success, they now fiercely want whatever it is you've specified until the end of the current situation.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.vamagksxpjrzupmf",
+            "Compendium.heart.heart.5f5m2j7h2vlv3dlf"
+        ]
+    },
+    "_key": "!items!3qc08pttstozawne",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

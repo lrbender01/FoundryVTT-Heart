@@ -1,0 +1,14 @@
+{
+    "_id": "3tdyi4pk03o2xt01",
+    "name": "Foreboding",
+    "type": "fallout",
+    "system": {
+        "description": "Something bad is about to happen. GM, hint at an ominous future event - smoke in the distance, the tremors before a pulse, the frantic music of the Carnival. This fallout can be upgraded to CRISIS (see below). [Ongoing]",
+        "resistance": "fortune",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!3tdyi4pk03o2xt01",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

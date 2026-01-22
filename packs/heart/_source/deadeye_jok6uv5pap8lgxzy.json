@@ -1,0 +1,13 @@
+{
+    "_id": "jok6uv5pap8lgxzy",
+    "name": "Deadeye",
+    "type": "ability",
+    "system": {
+        "description": "The benefit also applies to ranged weapons.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!jok6uv5pap8lgxzy",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

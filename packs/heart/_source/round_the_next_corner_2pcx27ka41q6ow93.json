@@ -1,0 +1,13 @@
+{
+    "_id": "2pcx27ka41q6ow93",
+    "name": "Round The Next Corner",
+    "type": "ability",
+    "system": {
+        "description": "You can find a place to shelter, smoke a roll-up and let things blow over. Gain the Delve skill. Once per delve, you find an out-of-the-way location where you can catch your breath and recuperate without fear of being discovered by your enemies. You can take your time and heal here without incurring a bane.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!2pcx27ka41q6ow93",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

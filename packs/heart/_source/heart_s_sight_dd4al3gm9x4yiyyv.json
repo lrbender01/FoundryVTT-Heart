@@ -1,0 +1,13 @@
+{
+    "_id": "dd4al3gm9x4yiyyv",
+    "name": "Heart's Sight",
+    "type": "ability",
+    "system": {
+        "description": "When an ally acts on the information you give them as a result of this power and attempts to socialise with the people you've seen, they roll with mastery on their first action.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!dd4al3gm9x4yiyyv",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

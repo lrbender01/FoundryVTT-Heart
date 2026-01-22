@@ -1,0 +1,13 @@
+{
+    "_id": "rqiau3nrondp4wif",
+    "name": "Feed",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, you may feed a helpless or dead person or animal to your lair to remove stress from your bond. The larger the creature, the more stress you remove from the bond - a cat is D4, a person is D6, and if you can haul or lure a bear in there it's D12.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!rqiau3nrondp4wif",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,17 @@
+{
+    "_id": "bzblb3n8hh6q3yr1",
+    "name": "Repeater Sidearm",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.r9p0yhil77g3cjwc",
+            "Compendium.heart.heart.hgzgz5pzaal75h7h",
+            "Compendium.heart.heart.11h7qvhbw5qimlrr"
+        ]
+    },
+    "_key": "!items!bzblb3n8hh6q3yr1",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

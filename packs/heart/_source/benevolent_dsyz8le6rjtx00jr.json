@@ -1,0 +1,13 @@
+{
+    "_id": "dsyz8le6rjtx00jr",
+    "name": "Benevolent",
+    "type": "ability",
+    "system": {
+        "description": "Instead of removing D6 stress from Echo, you or any allies may remove D6 stress from Supplies or Fortune instead.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!dsyz8le6rjtx00jr",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

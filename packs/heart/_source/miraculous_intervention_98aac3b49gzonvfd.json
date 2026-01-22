@@ -1,0 +1,13 @@
+{
+    "_id": "98aac3b49gzonvfd",
+    "name": "Miraculous Intervention",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, when you would mark stress to Blood but before the GM rolls to determine how much, activate this power. The attack only inflicts D4 stress.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!98aac3b49gzonvfd",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

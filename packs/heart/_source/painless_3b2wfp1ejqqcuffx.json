@@ -1,0 +1,13 @@
+{
+    "_id": "3b2wfp1ejqqcuffx",
+    "name": "Painless",
+    "type": "ability",
+    "system": {
+        "description": "Your body functions as a (Mend Blood D6) item. You can mark D4 stress to Blood to have it function as a (Mend Blood D8) item on your next action.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!3b2wfp1ejqqcuffx",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

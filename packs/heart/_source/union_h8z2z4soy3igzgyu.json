@@ -1,0 +1,13 @@
+{
+    "_id": "h8z2z4soy3igzgyu",
+    "name": "Union",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, when you are in your true form and an action you perform would be considered Risky, treat it as Standard difficulty instead.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!h8z2z4soy3igzgyu",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

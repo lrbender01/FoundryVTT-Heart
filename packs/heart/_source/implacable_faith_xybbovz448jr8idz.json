@@ -1,0 +1,13 @@
+{
+    "_id": "xybbovz448jr8idz",
+    "name": "Implacable Faith",
+    "type": "ability",
+    "system": {
+        "description": "When you take stress due to attempting a Risky or Dangerous action, the stress dice is reduced by 1 step",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!xybbovz448jr8idz",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

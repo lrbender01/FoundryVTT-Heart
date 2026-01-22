@@ -1,0 +1,13 @@
+{
+    "_id": "hhfo5bbv4fdb0p8r",
+    "name": "Grace",
+    "type": "ability",
+    "system": {
+        "description": "You may walk on water as though it were solid ground.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!hhfo5bbv4fdb0p8r",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

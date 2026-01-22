@@ -1,0 +1,13 @@
+{
+    "_id": "rldeuzuqpxgyvwmm",
+    "name": "Our Glorious Lady",
+    "type": "ability",
+    "system": {
+        "description": "You found the goddess at the bottom of a bottle; she turned your life around. Gain the Religion domain. Once per session, clear D4 Blood stress from an ally as you beseech the goddess for their protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!rldeuzuqpxgyvwmm",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

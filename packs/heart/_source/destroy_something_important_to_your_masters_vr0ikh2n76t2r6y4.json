@@ -1,0 +1,12 @@
+{
+    "_id": "vr0ikh2n76t2r6y4",
+    "name": "Destroy something important to your masters.",
+    "type": "beat",
+    "system": {
+        "description": "Destroy something important to your masters.",
+        "type": "major"
+    },
+    "_key": "!items!vr0ikh2n76t2r6y4",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

@@ -1,0 +1,17 @@
+{
+    "_id": "mpliglp7g3pmm0kj",
+    "name": "Bloodbound Beast",
+    "type": "ability",
+    "system": {
+        "description": "You are accompanied by a ragged cryptid that follows your commands - an ancient stone-browed stag, a razor toothed heartsblood hound or something stranger. You feed it your blood, and it fights for you. You gain the Bloodbound tag on all weapons as you and your companion work in concert.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.dxpbfi7kn4u2ek75",
+            "Compendium.heart.heart.7vc99myri9lcoik1",
+            "Compendium.heart.heart.kjvavz7ahos8cjk3"
+        ]
+    },
+    "_key": "!items!mpliglp7g3pmm0kj",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

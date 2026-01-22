@@ -1,0 +1,81 @@
+{
+    "_id": "9b1y86tl7hess0yr",
+    "name": "Cleaver",
+    "type": "class",
+    "system": {
+        "description": "The Heart is a wild place, and it calls to wild people - those on the edge of society who find that the yoke of civilisation chafes against their skin. The wildest of all are known as Cleavers. They step out into the shifting nightmare of the City Beneath and make a home there. They are the first people to set foot in each new chamber of the place, forging ahead through a dark and strange frontier. Their bodies change. Some welcome and seek out transformation, being unsatisfied with their physical forms - they modify their bodies with surgeries that are impossible in the City Above, or hunt and consume beasts of the Heart to gain their power. Some struggle with the change, but it is inevitable. Just as they scar the Heart into new patterns with each footstep forward, the Heart scars them in return and remakes them in a more suitable form: twisting horns, night-black eyes, curious senses unknown to the surface world and so on. Cleavers are a common sight amongst parties of delvers, especially those in need of a guide - no-one knows the Heart like they do. No amount of research, no technological device and no arcane scrying ritual can tell you as much as burying yourself waist-deep in the red wet heaven and eating the bounty it generously offers up.",
+        "abilities": [
+            "Compendium.heart.heart.ygln46uzwthm4kwa",
+            "Compendium.heart.heart.61e37w3nhlkbqtby"
+        ],
+        "futureAbilities": [
+            "Compendium.heart.heart.rt941w8l6mfhq32c",
+            "Compendium.heart.heart.n6fbq7l25exj1qf1",
+            "Compendium.heart.heart.zr0tf2kslge1edyh",
+            "Compendium.heart.heart.yf2gs82r92mju5rc",
+            "Compendium.heart.heart.uyti2iu5btl7hohu",
+            "Compendium.heart.heart.8gppz5geij7vu9px",
+            "Compendium.heart.heart.8lc0jf66hzvbhm13",
+            "Compendium.heart.heart.ivefol68hfgjs4s0",
+            "Compendium.heart.heart.188q9sr5w12gf8p8",
+            "Compendium.heart.heart.z0djfinn7o6u7q1n",
+            "Compendium.heart.heart.aqkck1b6sqeebyp7",
+            "Compendium.heart.heart.erj1loacqdlcg973",
+            "Compendium.heart.heart.074x9qg9oou9el8m",
+            "Compendium.heart.heart.mpliglp7g3pmm0kj",
+            "Compendium.heart.heart.xmzk6ugy4eo9k1sp",
+            "Compendium.heart.heart.1pjugu42pu3t0qxf",
+            "Compendium.heart.heart.c221eg8bxvpzss5c",
+            "Compendium.heart.heart.yq1lftqb47gmwkws",
+            "Compendium.heart.heart.s35bnsl70ib2qhrf",
+            "Compendium.heart.heart.7ptjviicn8fbce99",
+            "Compendium.heart.heart.8cm6w4hu6kembymr"
+        ],
+        "resources": [
+            "Compendium.heart.heart.ui0f9g82ta7xpeih"
+        ],
+        "equipment": [],
+        "equipmentGroups": [
+            [
+                "Compendium.heart.heart.jsqwk93j966fd0ss"
+            ],
+            [
+                "Compendium.heart.heart.e30wybnyw4oj73p9"
+            ],
+            [
+                "Compendium.heart.heart.w0j2hwbbusoktq93"
+            ]
+        ]
+    },
+    "effects": [
+        {
+            "_key": "!items.effects!9b1y86tl7hess0yr.026a5edf5b101469",
+            "_id": "026a5edf5b101469",
+            "name": "The HUNT skill",
+            "description": "The Cleaver class provides a +1 to the HUNT skill as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.skills.hunt.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        },
+        {
+            "_key": "!items.effects!9b1y86tl7hess0yr.d9105ebab5180bba",
+            "_id": "d9105ebab5180bba",
+            "name": "The CURSED domain",
+            "description": "The Cleaver class provides a +1 to the CURSED domain as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.domains.cursed.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        }
+    ],
+    "img": "systems/heart/assets/class.png",
+    "folder": "yIJ6SF31RMT5vNhz",
+    "_key": "!items!9b1y86tl7hess0yr"
+}

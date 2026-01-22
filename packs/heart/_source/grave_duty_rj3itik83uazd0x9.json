@@ -1,0 +1,13 @@
+{
+    "_id": "rj3itik83uazd0x9",
+    "name": "Grave Duty",
+    "type": "ability",
+    "system": {
+        "description": "You spent time amongst the dead in the sepulchres, and time amongst the living at the funerals. Gain the Warren domain. Once per session, when you console or bolster an ally in times of fear and uncertainty, they gain +1 Mind protection until the end of the session.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!rj3itik83uazd0x9",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

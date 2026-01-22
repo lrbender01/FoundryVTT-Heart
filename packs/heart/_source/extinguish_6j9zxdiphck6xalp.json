@@ -1,0 +1,13 @@
+{
+    "_id": "6j9zxdiphck6xalp",
+    "name": "Extinguish",
+    "type": "ability",
+    "system": {
+        "description": "Your death tells you soft and sweet: you can kill anything you want to. Using your powers over life and death and binding your own energy to the spell, you can draw any person, entity, landmark or concept (aside from the Heart Itself) into a physical vessel. You can then kill the vessel, destroying the concept and yourself in a final strike. The entity has stats as determined by the GM; you don't have to fight it alone, and it's certainly possible (and encouraged) to tip the odds in your favour beforehand. When and if it dies, you die as well. If you kill a landmark, that landmark is destroyed. If you kill a concept, it will wither and die in the minds of the people of the Heart, and they will no longer think of it. There are limits to what you can achieve with this ability. If you kill the concept of breathable air, for example, folk will still breathe in and out but they won't understand what they're doing or why it's important.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!6j9zxdiphck6xalp",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,17 @@
+{
+    "_id": "dthrcy5lh6c4o7vl",
+    "name": "Descent",
+    "type": "ability",
+    "system": {
+        "description": "You push through purgatory into the storied lands of the dead. When you are in the Grey (see above), you may undertake a delve to one of the eight heavens listed in the landmark section. Choose which one you have access to when you take this advance. The delve will be Risky unless you and your companions dress in ritual garb and make suitable preparations to enter the heaven in question. Returning to the Grey requires another delve, which can be harder or easier than the initial one depending on whether the heaven wants to keep you there.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.rl35say2l6aqdvbm",
+            "Compendium.heart.heart.eag9rwbfocaywkxj",
+            "Compendium.heart.heart.43wwidnwbra9f2i5"
+        ]
+    },
+    "_key": "!items!dthrcy5lh6c4o7vl",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

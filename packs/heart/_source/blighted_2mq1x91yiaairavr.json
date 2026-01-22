@@ -1,0 +1,13 @@
+{
+    "_id": "2mq1x91yiaairavr",
+    "name": "Blighted",
+    "type": "ability",
+    "system": {
+        "description": "When you activate CHIMERIC STRAIN, increase the Echo stress inflicted by 1 step and gain +2 Blood Protection until the end of the current situation in addition to any other effects.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!2mq1x91yiaairavr",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

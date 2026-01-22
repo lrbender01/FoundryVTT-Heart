@@ -1,0 +1,13 @@
+{
+    "_id": "0ubu5ampc1m89k8s",
+    "name": "Keep Smiling",
+    "type": "ability",
+    "system": {
+        "description": "The first time you suffer Mind stress in a situation, do not roll for fallout.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!0ubu5ampc1m89k8s",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

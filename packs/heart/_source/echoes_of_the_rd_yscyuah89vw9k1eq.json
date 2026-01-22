@@ -1,0 +1,13 @@
+{
+    "_id": "yscyuah89vw9k1eq",
+    "name": "Echoes Of The 33rd",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following domains: Cursed, Desolate, Haven, Technology, Warren, Wild. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!yscyuah89vw9k1eq",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

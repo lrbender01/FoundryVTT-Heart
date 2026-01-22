@@ -1,0 +1,13 @@
+{
+    "_id": "xku864i7pimp188t",
+    "name": "Ultimate Debt",
+    "type": "ability",
+    "system": {
+        "description": "You wield the wrath of Incarne. Once, and only once, you can unload the weight of Incarne's debt upon a single luckless individual, location or entity (except the Heart Itself). Anything and everything that could go wrong for the target does go wrong, and it does so catastrophically, but they do not die. Once per situation, you can harvest the debt on the target to clear stress from your resistance tracks - when you do so, roll a D10. On a 2 or higher, remove that much stress. On a 1, your luck runs out, and a cosmic loophole sees Incarne claim your life.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!xku864i7pimp188t",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

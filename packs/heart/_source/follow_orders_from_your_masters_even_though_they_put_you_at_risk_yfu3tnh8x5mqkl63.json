@@ -1,0 +1,12 @@
+{
+    "_id": "yfu3tnh8x5mqkl63",
+    "name": "Follow orders from your masters, even though they put you at risk.",
+    "type": "beat",
+    "system": {
+        "description": "Follow orders from your masters, even though they put you at risk.",
+        "type": "minor"
+    },
+    "_key": "!items!yfu3tnh8x5mqkl63",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

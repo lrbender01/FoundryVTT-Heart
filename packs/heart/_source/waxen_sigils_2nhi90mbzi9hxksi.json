@@ -1,0 +1,13 @@
+{
+    "_id": "2nhi90mbzi9hxksi",
+    "name": "Waxen Sigils",
+    "type": "ability",
+    "system": {
+        "description": "Gain +1 Protection in the Blood, Echo, Fortune or Supplies resistance. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!2nhi90mbzi9hxksi",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

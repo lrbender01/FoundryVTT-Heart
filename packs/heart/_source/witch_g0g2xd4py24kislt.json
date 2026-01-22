@@ -1,0 +1,82 @@
+{
+    "_id": "g0g2xd4py24kislt",
+    "name": "Witch",
+    "type": "class",
+    "system": {
+        "description": "There is a disease, deep in the City Beneath, that worms its way inside the blood and binds the victim to the place; they become a part of something far greater than themselves. Those who have made such a bond are called witches, and are viewed with a mixture of suspicion and awe by the other inhabitants of the Heart. Each strain of the disease has a lineage and history associated with it, and witches are careful not to infect those who they think would squander the gift. This long tradition, combined with the way that some witches can kill the average person simply by glancing at them, means that the sect is treated as nobility or emissaries of the Heart Itself. They are almost fae-like, existing in their own world of strange practices and esoteric arts whispered from teacher to student over several centuries. The witches' base of power is Hallow, a ramshackle town built within a burned-out cathedral inside the Heart. Almost every witch has passed through there, is going to pass through there or is trying to avoid it at all costs.  Core Traits",
+        "abilities": [
+            "Compendium.heart.heart.a8varahhw5uoopjh",
+            "Compendium.heart.heart.qco4qb4bh2m372iw"
+        ],
+        "futureAbilities": [
+            "Compendium.heart.heart.nderbliiakjj87xh",
+            "Compendium.heart.heart.t4h6yrjygiw4bvd8",
+            "Compendium.heart.heart.e91me62wes4dh7ww",
+            "Compendium.heart.heart.dvfvo01vf8ole0ax",
+            "Compendium.heart.heart.skinupv7e516krpg",
+            "Compendium.heart.heart.zwqvow5b5xbosflw",
+            "Compendium.heart.heart.6b63k6ci7pc03915",
+            "Compendium.heart.heart.ebo9ligvxtc5lkf1",
+            "Compendium.heart.heart.em8v9bjiozgqzv2s",
+            "Compendium.heart.heart.zbfape7egwc2mlfj",
+            "Compendium.heart.heart.48h72oe4ieurtnh3",
+            "Compendium.heart.heart.guycxqch96ewcojb",
+            "Compendium.heart.heart.90p5dv18gsbtlicz",
+            "Compendium.heart.heart.e46q0ua0zops22pj",
+            "Compendium.heart.heart.n96mm6237vx2bxsj",
+            "Compendium.heart.heart.bft1u3iftpt1spb1",
+            "Compendium.heart.heart.brvdtoei6922dl2q",
+            "Compendium.heart.heart.1k373lisi9jyr4d5",
+            "Compendium.heart.heart.j5uxh4c3xdpk9mo1",
+            "Compendium.heart.heart.bgy6ne83aqfhueax",
+            "Compendium.heart.heart.8a682br8ix66wu3m",
+            "Compendium.heart.heart.hx2d02dbftcbq50z"
+        ],
+        "resources": [
+            "Compendium.heart.heart.y22q04ou6z7dr4fq"
+        ],
+        "equipment": [],
+        "equipmentGroups": [
+            [
+                "Compendium.heart.heart.wp87jd2ddmsad97z"
+            ],
+            [
+                "Compendium.heart.heart.jiheygn3qjdss8f5"
+            ],
+            [
+                "Compendium.heart.heart.8b84m3e7sv9t8lou"
+            ]
+        ]
+    },
+    "effects": [
+        {
+            "_key": "!items.effects!g0g2xd4py24kislt.2ed1f74acf1f267d",
+            "_id": "2ed1f74acf1f267d",
+            "name": "The COMPEL skill",
+            "description": "The Witch class provides a +1 to the COMPEL skill as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.skills.compel.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        },
+        {
+            "_key": "!items.effects!g0g2xd4py24kislt.cd995c9a6ae218c7",
+            "_id": "cd995c9a6ae218c7",
+            "name": "The OCCULT domain",
+            "description": "The Witch class provides a +1 to the OCCULT domain as part of the core traits.",
+            "changes": [
+                {
+                    "key": "system.domains.occult.value",
+                    "value": 1,
+                    "mode": 2
+                }
+            ]
+        }
+    ],
+    "img": "systems/heart/assets/class.png",
+    "folder": "yIJ6SF31RMT5vNhz",
+    "_key": "!items!g0g2xd4py24kislt"
+}

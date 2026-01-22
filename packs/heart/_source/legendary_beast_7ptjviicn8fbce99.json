@@ -1,0 +1,13 @@
+{
+    "_id": "7ptjviicn8fbce99",
+    "name": "Legendary Beast",
+    "type": "ability",
+    "system": {
+        "description": "You shed what little remains of your human form and ascend into something many-limbed and majestic. When you gain access to this ability, you begin your hunt to slay the Beast: the capital-B Beast, an ancient creature wrought from stone and muscle and petrified wood. You will kill the Beast, and in doing so, you understand it perfectly. You become the new Beast, an epitome of bestial power and a legendary terror in the City Beneath. You become part of the wilderness of the Heart; it grows around you more than ever, blossoming into patterns that you dream of in the echoing recesses of your ancient gestalt mind. Create a new landmark that you call your territory; here, you are lord and ruler, but you can no longer leave. One day, another Cleaver will find you, kill you and become you.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!7ptjviicn8fbce99",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

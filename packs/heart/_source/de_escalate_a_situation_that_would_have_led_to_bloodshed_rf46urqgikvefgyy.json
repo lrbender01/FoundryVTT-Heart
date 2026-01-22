@@ -1,0 +1,12 @@
+{
+    "_id": "rf46urqgikvefgyy",
+    "name": "De-escalate a situation that would have led to bloodshed.",
+    "type": "beat",
+    "system": {
+        "description": "De-escalate a situation that would have led to bloodshed.",
+        "type": "minor"
+    },
+    "_key": "!items!rf46urqgikvefgyy",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

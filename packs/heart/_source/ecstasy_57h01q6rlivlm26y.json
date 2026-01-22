@@ -1,0 +1,13 @@
+{
+    "_id": "57h01q6rlivlm26y",
+    "name": "Ecstasy",
+    "type": "ability",
+    "system": {
+        "description": "When you cast CURSE OF THE SKY COURT, you can focus it on a single target rather than everyone nearby. This individual is overwhelmed with joy, and energised to seek more of it - they find it hard to focus on even immediate dangers. As long as you maintain your concentration on them, their difficulty is reduced to Standard.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!57h01q6rlivlm26y",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "2ncl3klc9tjhf2wk",
+    "name": "Jury",
+    "type": "ability",
+    "system": {
+        "description": "You no longer need evidence to condemn a target, but you do need a name, a picture or a first-hand description.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!2ncl3klc9tjhf2wk",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

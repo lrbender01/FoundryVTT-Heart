@@ -1,0 +1,12 @@
+{
+    "_id": "7p358ahd2mgbcr1y",
+    "name": "Establish a bond with a hearts-blood beast (Tier 2 or deeper).",
+    "type": "beat",
+    "system": {
+        "description": "Establish a bond with a hearts-blood beast (Tier 2 or deeper).",
+        "type": "major"
+    },
+    "_key": "!items!7p358ahd2mgbcr1y",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

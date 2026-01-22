@@ -1,0 +1,17 @@
+{
+    "_id": "j6ic4t697kk1c2ro",
+    "name": "Condemn",
+    "type": "ability",
+    "system": {
+        "description": "You have the authority to declare someone as a wanted criminal. Once per session, when you find evidence of someone's (or something's) crimes, you can publicly condemn them. When you or another Hound tracks down a condemned target, roll with mastery.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.5c1fu7lifpnua82y",
+            "Compendium.heart.heart.2ncl3klc9tjhf2wk",
+            "Compendium.heart.heart.c6ad3vdhc7gsmt1q"
+        ]
+    },
+    "_key": "!items!j6ic4t697kk1c2ro",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

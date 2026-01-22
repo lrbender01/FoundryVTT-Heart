@@ -1,0 +1,16 @@
+{
+    "_id": "5b23seyii4plcthy",
+    "type": "resource",
+    "name": "Heartsbloom rose in a glass jar",
+    "system": {
+        "active": true,
+        "domain": "occult",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.az0jb3x1nplncq40"
+        ]
+    },
+    "_key": "!items!5b23seyii4plcthy",
+    "img": "systems/heart/assets/resource.png",
+    "folder": "bDiHYHlOFLzWySfV"
+}

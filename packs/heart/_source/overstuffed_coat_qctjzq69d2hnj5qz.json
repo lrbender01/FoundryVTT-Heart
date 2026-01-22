@@ -1,0 +1,16 @@
+{
+    "_id": "qctjzq69d2hnj5qz",
+    "name": "Overstuffed coat",
+    "type": "equipment",
+    "system": {
+        "type": "mend",
+        "resistances": [
+            "supplies"
+        ],
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!qctjzq69d2hnj5qz",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

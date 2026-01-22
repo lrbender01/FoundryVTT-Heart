@@ -1,0 +1,13 @@
+{
+    "_id": "ce4m5r8237dsdlkh",
+    "name": "Whispers Of The Hive",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following domains: Cursed, Desolate, Occult, Religion, Technology, Warren, Wild. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!ce4m5r8237dsdlkh",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

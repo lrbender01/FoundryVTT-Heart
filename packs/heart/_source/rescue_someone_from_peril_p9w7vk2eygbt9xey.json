@@ -1,0 +1,12 @@
+{
+    "_id": "p9w7vk2eygbt9xey",
+    "name": "Rescue someone from peril.",
+    "type": "beat",
+    "system": {
+        "description": "Rescue someone from peril.",
+        "type": "minor"
+    },
+    "_key": "!items!p9w7vk2eygbt9xey",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "8n3y1lja0kllnwat",
+    "name": "Momentum",
+    "type": "ability",
+    "system": {
+        "description": "When you activate OVERCLOCK, you may choose to add the Trusty tag to a Delve roll instead of the Brutal tag to an attack.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!8n3y1lja0kllnwat",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

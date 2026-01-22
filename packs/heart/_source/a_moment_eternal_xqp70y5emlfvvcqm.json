@@ -1,0 +1,13 @@
+{
+    "_id": "xqp70y5emlfvvcqm",
+    "name": "A Moment Eternal",
+    "type": "ability",
+    "system": {
+        "description": "Roll Evade+Occult to cast this spell. On a success, your immediate area is time-shifted. For each hour outside of the area, those in the area experience 4 hours of time passing. While intended to stretch out a perfect moment, this can make time-sensitive tasks easier to attempt. The barrier that surrounds the area is blurry and indistinct, and if anyone from outside the area intrudes, the spell is broken and time resumes to normal speed.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!xqp70y5emlfvvcqm",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

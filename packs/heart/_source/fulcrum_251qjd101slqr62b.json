@@ -1,0 +1,13 @@
+{
+    "_id": "251qjd101slqr62b",
+    "name": "Fulcrum",
+    "type": "ability",
+    "system": {
+        "description": "Your actions have earned you the ultimate reward - your name replaces the one marked on your badge, and you are officially inducted into the 33rd. You are filled with the hopes and fears of every terrified, desperate person in the Heart. Until the end of the current situation, you roll five dice and pick the highest whenever you make an action. Once the situation ends, you slope off into the depths of the Heart to fight metaphysical battles beyond the understanding of mortals.",
+        "type": "zenith",
+        "minorAbilities": []
+    },
+    "_key": "!items!251qjd101slqr62b",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

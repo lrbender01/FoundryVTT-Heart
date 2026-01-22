@@ -1,0 +1,12 @@
+{
+    "_id": "ptf74mezklpedopp",
+    "name": "Make a dramatic entrance that's a Risky action.",
+    "type": "beat",
+    "system": {
+        "description": "Make a dramatic entrance that's a Risky action.",
+        "type": "minor"
+    },
+    "_key": "!items!ptf74mezklpedopp",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

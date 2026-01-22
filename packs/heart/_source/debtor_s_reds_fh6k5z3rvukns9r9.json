@@ -1,0 +1,17 @@
+{
+    "_id": "fh6k5z3rvukns9r9",
+    "name": "Debtor's Reds",
+    "type": "ability",
+    "system": {
+        "description": "Incarne's presence thrums through you; you are resplendent, terrible, and hard to look at directly. When you wear the sacred robes of Incarne and a myriad of holy symbols, ledgers and freshly-minted coins, you may automatically cause 1 stress to an adversary who can see you each time you act.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.mbb0a931g6pynxra",
+            "Compendium.heart.heart.qonks7p3qwi864wg",
+            "Compendium.heart.heart.sm5zezi3lnhwvco1"
+        ]
+    },
+    "_key": "!items!fh6k5z3rvukns9r9",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "aitc88fts0owgiuz",
+    "name": "Flee from combat or a similarly dangerous situation, or hide until it all blows over.",
+    "type": "beat",
+    "system": {
+        "description": "Flee from combat or a similarly dangerous situation, or hide until it all blows over.",
+        "type": "minor"
+    },
+    "_key": "!items!aitc88fts0owgiuz",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

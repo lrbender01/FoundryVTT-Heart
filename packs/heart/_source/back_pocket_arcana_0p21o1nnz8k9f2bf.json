@@ -1,0 +1,13 @@
+{
+    "_id": "0p21o1nnz8k9f2bf",
+    "name": "Back Pocket Arcana",
+    "type": "ability",
+    "system": {
+        "description": "Your satchel is overstuffed with occult leftovers - shavings of spireblack amber here, cursed squid-ink there, nails from wrongful crucifictions - that you can press into service. +2 Supplies Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!0p21o1nnz8k9f2bf",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

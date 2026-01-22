@@ -1,0 +1,12 @@
+{
+    "_id": "569116jyd3lyag4r",
+    "name": "As a result of using the COLLATERAL ability, an NPC is taken out of action or a PC suffers fallout.",
+    "type": "beat",
+    "system": {
+        "description": "As a result of using the COLLATERAL ability, an NPC is taken out of action or a PC suffers fallout.",
+        "type": "minor"
+    },
+    "_key": "!items!569116jyd3lyag4r",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "2pd62dqirtwrb3h9",
+    "name": "Rejuvenation",
+    "type": "ability",
+    "system": {
+        "description": "Once per session, when you use MONSTROUS APPETITE to consume a resource that has a domain that you have access to - and the resource has a value of D8 or higher - you can remove a Minor Blood or Echo fallout entirely.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!2pd62dqirtwrb3h9",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

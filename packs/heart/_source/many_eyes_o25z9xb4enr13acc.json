@@ -1,0 +1,13 @@
+{
+    "_id": "o25z9xb4enr13acc",
+    "name": "Many Eyes",
+    "type": "ability",
+    "system": {
+        "description": "Each of your companions is avessel for your sight. Gain the Discern skill. When you stand still and close your eyes, you can see through the eyes of any of your bees, allowing you to spy around corners or look into closed spaces. You can't control the bees directly, but you have enough at your disposal to cover the area around you.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!o25z9xb4enr13acc",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

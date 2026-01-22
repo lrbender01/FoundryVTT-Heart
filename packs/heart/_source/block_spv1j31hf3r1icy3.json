@@ -1,0 +1,12 @@
+{
+    "_id": "spv1j31hf3r1icy3",
+    "name": "Block",
+    "type": "tag",
+    "system": {
+        "description": "+1 Blood protection."
+    },
+    "effects": [],
+    "_key": "!items!spv1j31hf3r1icy3",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

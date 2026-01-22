@@ -1,0 +1,12 @@
+{
+    "_id": "co0udfp12nwjwl6i",
+    "name": "Access a haven in tier 2 of the Heart.",
+    "type": "beat",
+    "system": {
+        "description": "Access a haven in tier 2 of the Heart.",
+        "type": "minor"
+    },
+    "_key": "!items!co0udfp12nwjwl6i",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

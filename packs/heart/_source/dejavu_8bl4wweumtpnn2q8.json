@@ -1,0 +1,14 @@
+{
+    "_id": "8bl4wweumtpnn2q8",
+    "name": "Dejavu",
+    "type": "fallout",
+    "system": {
+        "description": "You notice minor elements of your past life appearing in the Heart as though it is reading your mind and adapting itself to your expectations; the GM tells you what happens. [Immediate, Ongoing]",
+        "resistance": "echo",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!8bl4wweumtpnn2q8",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

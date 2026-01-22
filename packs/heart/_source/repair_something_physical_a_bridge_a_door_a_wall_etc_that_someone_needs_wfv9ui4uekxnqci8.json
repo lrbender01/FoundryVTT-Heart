@@ -1,0 +1,12 @@
+{
+    "_id": "wfv9ui4uekxnqci8",
+    "name": "Repair something physical - a bridge, a door, a wall, etc. - that someone needs.",
+    "type": "beat",
+    "system": {
+        "description": "Repair something physical - a bridge, a door, a wall, etc. - that someone needs.",
+        "type": "minor"
+    },
+    "_key": "!items!wfv9ui4uekxnqci8",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

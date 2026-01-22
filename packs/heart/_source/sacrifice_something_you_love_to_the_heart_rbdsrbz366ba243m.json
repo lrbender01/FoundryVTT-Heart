@@ -1,0 +1,12 @@
+{
+    "_id": "rbdsrbz366ba243m",
+    "name": "Sacrifice something you love to the Heart.",
+    "type": "beat",
+    "system": {
+        "description": "Sacrifice something you love to the Heart.",
+        "type": "minor"
+    },
+    "_key": "!items!rbdsrbz366ba243m",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

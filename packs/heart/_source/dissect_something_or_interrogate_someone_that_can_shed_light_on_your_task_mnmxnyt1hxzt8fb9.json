@@ -1,0 +1,12 @@
+{
+    "_id": "mnmxnyt1hxzt8fb9",
+    "name": "Dissect something or interrogate someone that can shed light on your task.",
+    "type": "beat",
+    "system": {
+        "description": "Dissect something or interrogate someone that can shed light on your task.",
+        "type": "minor"
+    },
+    "_key": "!items!mnmxnyt1hxzt8fb9",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

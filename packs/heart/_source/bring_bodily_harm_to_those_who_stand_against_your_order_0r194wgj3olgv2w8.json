@@ -1,0 +1,12 @@
+{
+    "_id": "0r194wgj3olgv2w8",
+    "name": "Bring bodily harm to those who stand against your order.",
+    "type": "beat",
+    "system": {
+        "description": "Bring bodily harm to those who stand against your order.",
+        "type": "minor"
+    },
+    "_key": "!items!0r194wgj3olgv2w8",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

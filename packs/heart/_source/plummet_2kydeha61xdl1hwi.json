@@ -1,0 +1,14 @@
+{
+    "_id": "2kydeha61xdl1hwi",
+    "name": "Plummet",
+    "type": "fallout",
+    "system": {
+        "description": "Your line snaps; your hooks don't hold; your pick shears away and tumbles into a chasm. Whatever it is, you plunge into the darkness beneath and do not return.[Immediate]",
+        "resistance": "supplies",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!2kydeha61xdl1hwi",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "7alk08vajix53m11",
+    "name": "Perform an act that, if your order discovered it, would undo your penance.",
+    "type": "beat",
+    "system": {
+        "description": "Perform an act that, if your order discovered it, would undo your penance.",
+        "type": "major"
+    },
+    "_key": "!items!7alk08vajix53m11",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

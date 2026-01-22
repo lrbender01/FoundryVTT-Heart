@@ -1,0 +1,14 @@
+{
+    "_id": "fnpzhsu0g59mv6gh",
+    "name": "Vanished",
+    "type": "fallout",
+    "system": {
+        "description": "The next landmark you reach isn't there; you find something else instead. Presumably the landmark is somewhere, assuming it hasn't been entirely swallowed up by the Heart. [Immediate]",
+        "resistance": "echo",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!fnpzhsu0g59mv6gh",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

@@ -1,0 +1,14 @@
+{
+    "_id": "a22blgt28kw6j9sf",
+    "name": "Figment",
+    "type": "fallout",
+    "system": {
+        "description": "You lose track of what's real and what's not. The GM picks a Minor fallout from a different resistance and tells you have it.Until this fallout is removed, you're convinced you're suffering from the fallout (no matter what others tell you) and suffer from all appropriate effects. (GM: it is up to you whether you inform the player that this is a delusion or not.) [Ongoing]",
+        "resistance": "mind",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!a22blgt28kw6j9sf",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

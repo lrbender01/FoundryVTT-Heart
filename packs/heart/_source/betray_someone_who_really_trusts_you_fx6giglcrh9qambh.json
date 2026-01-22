@@ -1,0 +1,12 @@
+{
+    "_id": "fx6giglcrh9qambh",
+    "name": "Betray someone who really trusts you.",
+    "type": "beat",
+    "system": {
+        "description": "Betray someone who really trusts you.",
+        "type": "major"
+    },
+    "_key": "!items!fx6giglcrh9qambh",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

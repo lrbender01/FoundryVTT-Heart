@@ -1,0 +1,13 @@
+{
+    "_id": "87q6rpx85lqum7vj",
+    "name": "Valuable Asset",
+    "type": "ability",
+    "system": {
+        "description": "Incarne won't let you die, because then they can't collect what they're owed. Gain +2 Fortune Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!87q6rpx85lqum7vj",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

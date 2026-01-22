@@ -1,0 +1,13 @@
+{
+    "_id": "e91me62wes4dh7ww",
+    "name": "Books Of Lore",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following domains: Cursed, Desolate, Occult, Religion, Warren, Wild. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!e91me62wes4dh7ww",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

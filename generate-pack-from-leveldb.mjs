@@ -1,27 +1,89 @@
 import { Level } from "level";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, appendFileSync } from "node:fs";
+import { open, mkdir } from "node:fs/promises";
 import { compilePack } from "@foundryvtt/foundryvtt-cli";
 import { createHash } from "crypto";
+import { get } from "https";
+import { parse } from "yaml";
+import yauzl from 'yauzl';
+import { Mutex } from 'async-mutex';
 
-var path = process.argv[2];
-if (path === undefined) {
-    console.warn(`please call like\n  ${process.argv[0]} ${process.argv[1]} <path-to-old-heart-repo>`);
-    process.exit(1);
-}
+let en_lang = {};
 
-const en_lang = JSON.parse(
-  readFileSync(`${path}/dist/lang/en.json`, "utf-8")
-);
+await new Promise((resolve, reject) => {
+  const mutex = new Mutex();
+  get("https://github.com/hitcherland/FoundryVtt-Heart/releases/download/0.9.4/heart.zip", (res) => {
+    res.on("data", (d) => console.log("d", d));
+    res.on("end", () => {
+      get(res.headers.location, (res2) => {
+        let b = new Uint8Array();
+        res2.on('data', async (d) => {
+          const release = await mutex.acquire();
+          b = Buffer.concat([b, d])
+          if (res2.complete) {
+            yauzl.fromBuffer(b, {}, function(err, zipfile) {
+              if (err) reject(err);
+              const output = {};
+              zipfile.on('entry', async function(entry) {
+                if (entry.fileName === "lang/en.json") {
+                  zipfile.openReadStream(entry, async function (err, readStream) {
+                    const buff = [];
+                    readStream.on("data", (d) => {
+                      buff.push(d);
+                    });
+                    readStream.on("end", () => {
+                      en_lang = JSON.parse(Buffer.concat(buff));
+                      writeFileSync("/tmp/heart/en.json", Buffer.concat(buff));
+                    });
+                  })
+                }
+                if (!entry.fileName.match(/^packs\//)) return;
+                if (entry.fileName.match(/\/$/)) {
+                  await mkdir("/tmp/heart/" + entry.fileName, {recursive: true});
+                  return;
+                }
+                zipfile.openReadStream(entry, async function(err, readStream) {
+                  if (err) reject(err);
+                  const fh = await open("/tmp/heart/" + entry.fileName, "w");
+                  readStream.pipe(fh.createWriteStream());
+                });
+              });
+              zipfile.once('end', function() {
+                resolve();
+              });
+            })
+          }
+          release();
+        });
+        res2.on("error", reject);
+      });
+    });
+    res.on("error", reject);
+  });
+});
 
-function getDB(type) {
-  const dbPath = `${path}/dist/packs/${type}`;
+/*
+const en_lang = await new Promise((resolve, reject) => {
+  let b = "";
+  const r = get('https://raw.githubusercontent.com/hitcherland/FoundryVTT-Heart/refs/heads/release/lang/en.json', (res) => {
+    res.setEncoding('utf-8');
+    res.on('data', (d) => {
+      b += d;
+    });
+    res.on("end", () => resolve(JSON.parse(b)));
+    res.on("error", reject);
+  });
+});
+*/
+
+async function getDB(type) {
+  const dbPath = `/tmp/heart/packs/${type}`;
   return new Level(dbPath);
 }
 
 function getUUID(data) {
   return `Compendium.heart.heart.${data._id}`;
 }
-
 
 const folders = {
   'ability': {
@@ -75,7 +137,13 @@ const folders = {
 };
 
 function translate(key) {
-  const value = en_lang[`heart.${key}`];
+  let value;
+  if (key.match(/thrice_warded\.description/)) {
+    value = en_lang[`heart.${key.replace("minor.thrice", "minorthrice")}`];
+
+  } else {
+    value = en_lang[`heart.${key}`];
+  }
   if (value === undefined) {
     console.warn(`Unexpectedly couldn't translate ${key}`);
   }
@@ -96,7 +164,7 @@ function saveToFile(data) {
 
 const tags = {};
 async function generateTags() {
-  const db = getDB("tags");
+  const db = await getDB("tags");
   for await (let [key, value_str] of db.iterator()) {
     const value = JSON.parse(value_str);
     value.name = translate(value.name);
@@ -110,7 +178,7 @@ async function generateTags() {
 }
 
 async function generateFallouts() {
-  const db = getDB("fallouts");
+  const db = await getDB("fallouts");
   for await (let [key, value_str] of db.iterator()) {
     const value = JSON.parse(value_str);
     value.name = translate(value.name);
@@ -127,7 +195,7 @@ function convertAbility(value) {
   value.system.description = translate(value.system.description);
   value._key = `!items!${value._id}`;
   value.img = 'systems/heart/assets/ability.png';
-    value.folder = folders.ability._id;
+  value.folder = folders.ability._id;
 
   const minorAbilityUUIDs = [];
   for (let child of Object.values(value.system.children ?? {})) {
@@ -150,9 +218,12 @@ function convertAbility(value) {
 async function convertBeat(value) {
   value.name = translate(value.name);
   value.system.description = translate(value.system.description);
+  if( value._id === 'c3bg60lh7c80tj5n') {
+    value._id = 'c3bg60lh7c80tj5m';
+  }
   value._key = `!items!${value._id}`;
   value.img = 'systems/heart/assets/beat.png';
-    value.folder = folders.beat._id;
+  value.folder = folders.beat._id;
   saveToFile(value);
   return value;
 }
@@ -162,7 +233,7 @@ async function convertResource(value) {
   // value.system.description = translate(value.system.description);
   value._key = `!items!${value._id}`;
   value.img = 'systems/heart/assets/resource.png';
-    value.folder = folders.resource._id;
+  value.folder = folders.resource._id;
 
   value.system.dieSize = value.system.die_size;
   delete value.system.die_size;
@@ -188,7 +259,7 @@ async function convertEquipment(value) {
   value.name = translate(value.name);
   value._key = `!items!${value._id}`;
   value.img = "systems/heart/assets/equipment.png";
-    value.folder = folders.equipment._id;
+  value.folder = folders.equipment._id;
 
   value.system.dieSize = value.system.die_size;
   delete value.system.die_size;
@@ -218,9 +289,9 @@ const conversions = {
 };
 
 async function generateCallings() {
-  const db = getDB("callings");
+  const db = await getDB("callings");
   for await (let [key, value_str] of db.iterator()) {
-    const value = JSON.parse(value_str);
+    const value = JSON.parse(value_str)
     value.name = translate(value.name);
     value.img = 'systems/heart/assets/calling.png';
     value.folder = folders.calling._id;
@@ -262,9 +333,9 @@ async function generateCallings() {
 }
 
 async function generateClasses() {
-  const db = getDB("classes");
+  const db = await getDB("classes");
   for await (let [key, value_str] of db.iterator()) {
-    const value = JSON.parse(value_str);
+    const value = JSON.parse(value_str)
     value.name = translate(value.name);
     value.img = 'systems/heart/assets/class.png';
     value.folder = folders.class._id;
@@ -323,7 +394,7 @@ async function generateClasses() {
       const newChild = await converter(child);
 
       if (newChild.type === "equipment") {
-        if( child.system.group === "core") {
+        if (child.system.group === "core") {
           equipment.push(getUUID(newChild));
         } else {
           equipmentGroups[group] ??= [];
@@ -332,7 +403,7 @@ async function generateClasses() {
       } else if (newChild.type === "ability") {
         if (newChild.system.type === "core") {
           abilities.push(getUUID(newChild));
-        } else{
+        } else {
           futureAbilities.push(getUUID(newChild));
         }
       } else if (newChild.type === "resource") {
@@ -366,8 +437,6 @@ await saveToFile(folders.equipment);
 await saveToFile(folders.fallout);
 await saveToFile(folders.resource);
 await saveToFile(folders.tag);
-
-
 
 await generateTags();
 await generateFallouts();

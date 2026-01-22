@@ -1,0 +1,16 @@
+{
+    "_id": "cybd2svhkd9cbpjz",
+    "name": "Filigreed Revolver",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d8",
+        "tags": [
+            "Compendium.heart.heart.r9p0yhil77g3cjwc",
+            "Compendium.heart.heart.l4t4r02bixjp8joe"
+        ]
+    },
+    "_key": "!items!cybd2svhkd9cbpjz",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

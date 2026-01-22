@@ -1,0 +1,14 @@
+{
+    "_id": "majn24c0d5k0opii",
+    "name": "Phantasm",
+    "type": "fallout",
+    "system": {
+        "description": "As FIGMENT (see above), but the GM chooses a Major fallout instead. [Ongoing]",
+        "resistance": "mind",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!majn24c0d5k0opii",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

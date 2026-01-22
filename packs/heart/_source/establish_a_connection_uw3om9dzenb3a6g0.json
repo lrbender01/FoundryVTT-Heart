@@ -1,0 +1,12 @@
+{
+    "_id": "uw3om9dzenb3a6g0",
+    "name": "Establish a connection.",
+    "type": "beat",
+    "system": {
+        "description": "Establish a connection.",
+        "type": "minor"
+    },
+    "_key": "!items!uw3om9dzenb3a6g0",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

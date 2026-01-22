@@ -1,0 +1,14 @@
+{
+    "_id": "6octynpoeyjppetm",
+    "type": "resource",
+    "name": "Spare capacitors and wires",
+    "system": {
+        "active": true,
+        "domain": "technology",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!6octynpoeyjppetm",
+    "img": "systems/heart/assets/resource.png",
+    "folder": "bDiHYHlOFLzWySfV"
+}

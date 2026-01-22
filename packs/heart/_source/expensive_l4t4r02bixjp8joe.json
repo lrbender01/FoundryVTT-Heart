@@ -1,0 +1,12 @@
+{
+    "_id": "l4t4r02bixjp8joe",
+    "name": "Expensive",
+    "type": "tag",
+    "system": {
+        "description": "When you inflict stress with this item and roll the maximum amount, mark D6 stress to Supplies."
+    },
+    "effects": [],
+    "_key": "!items!l4t4r02bixjp8joe",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

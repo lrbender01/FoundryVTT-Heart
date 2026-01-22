@@ -1,0 +1,13 @@
+{
+    "_id": "z0eyu1fhysn21t51",
+    "name": "Knight Protector",
+    "type": "ability",
+    "system": {
+        "description": "You are willing to kill and die to ensure that the Vermissian is safe. Gain the Kill skill. Once per situation, when an ally within arm's reach would mark stress to Blood, you mark an equivalent amount to Blood instead.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!z0eyu1fhysn21t51",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

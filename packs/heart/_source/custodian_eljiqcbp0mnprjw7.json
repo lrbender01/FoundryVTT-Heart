@@ -1,0 +1,13 @@
+{
+    "_id": "eljiqcbp0mnprjw7",
+    "name": "Custodian",
+    "type": "ability",
+    "system": {
+        "description": "You - and those who wore the badge before you - have spent so much time rebuilding shattered lives and shattered homes that everyone welcomes you. Gain the Mend skill. If you are in a populated location you can always find someone willing to take you in, give you somewhere to sleep and maybe even some warm food.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!eljiqcbp0mnprjw7",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

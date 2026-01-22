@@ -1,0 +1,17 @@
+{
+    "_id": "xmzk6ugy4eo9k1sp",
+    "name": "Chimeric Strain",
+    "type": "ability",
+    "system": {
+        "description": "With the sound of cracking muscle and twisting tendon, your form is transmuted into something terrifying. When you activate this power, mark D4 stress to Echo. For the remainder of the current situation, all melee attacks you make gain the Brutal and Wyrd tags.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.2mq1x91yiaairavr",
+            "Compendium.heart.heart.cka12ihy4bk354h4",
+            "Compendium.heart.heart.sk4tk08ic7qhhdep"
+        ]
+    },
+    "_key": "!items!xmzk6ugy4eo9k1sp",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

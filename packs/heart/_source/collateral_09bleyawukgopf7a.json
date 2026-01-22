@@ -1,0 +1,13 @@
+{
+    "_id": "09bleyawukgopf7a",
+    "name": "Collateral",
+    "type": "ability",
+    "system": {
+        "description": "You have a knack for getting behind someone else when things kick off. Once per session, allocate stress to the nearest friendly target (PC or NPC) instead of marking it yourself.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!09bleyawukgopf7a",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,14 @@
+{
+    "_id": "bbk1i23zr5ubqnis",
+    "name": "Limping",
+    "type": "fallout",
+    "system": {
+        "description": "You're slowed. If someone or something attacks your party, they'll attack you first. If there's any question over who arrives last, it's you. All checks involving rapid or stealthy movement become Risky. [Ongoing]",
+        "resistance": "blood",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!bbk1i23zr5ubqnis",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

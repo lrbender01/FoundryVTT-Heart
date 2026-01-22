@@ -1,0 +1,14 @@
+{
+    "_id": "qr2v9qnxklnpo4qq",
+    "name": "Burst",
+    "type": "fallout",
+    "system": {
+        "description": "Unable to contain the energy (or parasites, or your alternate self) within your form any longer, your body ruptures like overripe fruit. If you're lucky, you die; otherwise, you're kept alive indefinitely, spread throughout the Heart. Anyone standing near you marks D6 stress to Echo.",
+        "resistance": "echo",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!qr2v9qnxklnpo4qq",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

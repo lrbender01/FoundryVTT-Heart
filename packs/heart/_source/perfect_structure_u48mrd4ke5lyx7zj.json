@@ -1,0 +1,13 @@
+{
+    "_id": "u48mrd4ke5lyx7zj",
+    "name": "Perfect Structure",
+    "type": "ability",
+    "system": {
+        "description": "Your body eschews treacherous meat in favour of a sturdy waxen comb. Gain +2 Echo Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!u48mrd4ke5lyx7zj",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

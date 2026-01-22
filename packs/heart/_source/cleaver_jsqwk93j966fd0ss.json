@@ -1,0 +1,16 @@
+{
+    "_id": "jsqwk93j966fd0ss",
+    "name": "Cleaver",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.hgzgz5pzaal75h7h",
+            "Compendium.heart.heart.sh0xolgjz5bdjhdc"
+        ]
+    },
+    "_key": "!items!jsqwk93j966fd0ss",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

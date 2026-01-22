@@ -1,0 +1,13 @@
+{
+    "_id": "rxlyl6kcyrp32c9k",
+    "name": "No Sympathy",
+    "type": "ability",
+    "system": {
+        "description": "Once per situation, your gaze functions as (Mend Mind/Blood D6, Ranged) as you give your allies a disapproving glance that spurs them into action.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!rxlyl6kcyrp32c9k",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

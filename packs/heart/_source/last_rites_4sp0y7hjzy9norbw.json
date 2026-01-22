@@ -1,0 +1,13 @@
+{
+    "_id": "4sp0y7hjzy9norbw",
+    "name": "Last Rites",
+    "type": "ability",
+    "system": {
+        "description": "You know enough about death rituals to be sworn in as a priest in three major faiths. Gain the Religion domain. When you touch the brow of a recently dead person, you can ask their spirit a single question before it fades away.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!4sp0y7hjzy9norbw",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

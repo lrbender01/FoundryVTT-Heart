@@ -1,0 +1,13 @@
+{
+    "_id": "oip6ad0ddx83boa3",
+    "name": "First To The Front",
+    "type": "ability",
+    "system": {
+        "description": "When you lead a party in a fight you may activate this ability. When active, increase the stress dice that you and the adversary inflict on each other by one step.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!oip6ad0ddx83boa3",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,17 @@
+{
+    "_id": "yzg6t911qsnntvqo",
+    "name": "Reaper's Strike",
+    "type": "ability",
+    "system": {
+        "description": "You forsake defence for a single, decisive blow. When you attack an adversary, you can choose to lose your Blood protection for the attack before you roll. If you do so and succeed or partially succeed, add your Blood protection value to the stress inflicted.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.xhj5b5k0submtptq",
+            "Compendium.heart.heart.01ag8erp30yxfs88",
+            "Compendium.heart.heart.vyxrh1opfpyaeln3"
+        ]
+    },
+    "_key": "!items!yzg6t911qsnntvqo",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "ggeiadulk1l7rtsf",
+    "name": "Coerce an important or beloved NPC into undertaking a task they don't want to do.",
+    "type": "beat",
+    "system": {
+        "description": "Coerce an important or beloved NPC into undertaking a task they don't want to do.",
+        "type": "major"
+    },
+    "_key": "!items!ggeiadulk1l7rtsf",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

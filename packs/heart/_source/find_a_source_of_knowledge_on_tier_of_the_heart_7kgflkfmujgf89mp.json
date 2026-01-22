@@ -1,0 +1,12 @@
+{
+    "_id": "7kgflkfmujgf89mp",
+    "name": "Find a source of knowledge on Tier 3 of the Heart.",
+    "type": "beat",
+    "system": {
+        "description": "Find a source of knowledge on Tier 3 of the Heart.",
+        "type": "major"
+    },
+    "_key": "!items!7kgflkfmujgf89mp",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

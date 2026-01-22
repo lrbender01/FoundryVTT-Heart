@@ -1,0 +1,14 @@
+{
+    "_id": "wudxpijc47aau4o7",
+    "name": "The Hard Way",
+    "type": "fallout",
+    "system": {
+        "description": "You lead the party into danger. The next obstacle the group attempts to overcome is Dangerous; they can reduce it to Risky, or even Standard, with a decent plan. [Immediate]",
+        "resistance": "fortune",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!wudxpijc47aau4o7",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

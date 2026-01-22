@@ -1,0 +1,13 @@
+{
+    "_id": "u2uwjc3undos1qux",
+    "name": "Bypass",
+    "type": "ability",
+    "system": {
+        "description": "The first time you cast this spell on a delve, it functions as a D6 Boon.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!u2uwjc3undos1qux",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "erj1loacqdlcg973",
+    "name": "Unmaking Claws",
+    "type": "ability",
+    "system": {
+        "description": "Your hands, anointed in the blood of angels, flicker in and out of reality. Gain the Kill skill. Your unarmed attacks gain the Piercing tag.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!erj1loacqdlcg973",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "rt6lhtbm4tharnn1",
+    "name": "Meet an NPC who hates you for what you've done.",
+    "type": "beat",
+    "system": {
+        "description": "Meet an NPC who hates you for what you've done.",
+        "type": "minor"
+    },
+    "_key": "!items!rt6lhtbm4tharnn1",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

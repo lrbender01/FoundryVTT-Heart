@@ -1,0 +1,17 @@
+{
+    "_id": "y3gc5p2cfkoboawc",
+    "name": "Oath of Community",
+    "type": "ability",
+    "system": {
+        "description": "You are scarred and battered from defending the defenceless, and you bear a sacred shield adorned with the wisdom of the Goddesses. Gain +1 Blood protection. When a nearby ally is attacked and you're ready to defend them, their Blood Protection increases by 1.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.42d97ad6wn9ck55b",
+            "Compendium.heart.heart.98aac3b49gzonvfd",
+            "Compendium.heart.heart.fidiyhed399lb506"
+        ]
+    },
+    "_key": "!items!y3gc5p2cfkoboawc",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

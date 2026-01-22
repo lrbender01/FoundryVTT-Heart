@@ -1,0 +1,14 @@
+{
+    "_id": "gxawem45lqbv7lxc",
+    "name": "Take The Edge Off",
+    "type": "fallout",
+    "system": {
+        "description": "You can't get your head right until you have a drink (or something stronger). Until you reach a landmark with access to intoxicants and render yourself insensible, roll two dice when you mark stress to Mind and pick the higher. Can be upgraded to ADDICT. [Ongoing]",
+        "resistance": "mind",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!gxawem45lqbv7lxc",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

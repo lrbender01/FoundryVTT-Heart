@@ -1,0 +1,14 @@
+{
+    "_id": "h0f4de34x5cg2cz6",
+    "name": "Reputation",
+    "type": "fallout",
+    "system": {
+        "description": "Another delver has gotten wind of your successes (or your weaknesses) and they are coming for you. You are ambushed by a hunter seeking to claim your head and relieve you of your hard earned supplies. Remove this fallout once the fight is over. [Immediate]",
+        "resistance": "fortune",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!h0f4de34x5cg2cz6",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

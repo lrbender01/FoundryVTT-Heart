@@ -1,0 +1,17 @@
+{
+    "_id": "j1uhyo7olmjazjld",
+    "name": "Oath Of Tenacity",
+    "type": "ability",
+    "system": {
+        "description": "She laid a kss of stars and secrets upon your forehead, and you are infused with her tremendous determination. When you succeed at a Risky action, increase the size of the stress dice you inflict by 1 step. When you succeed at a Dangerous action, increase the size of the stress dice you inflict by 2 steps. You can choose to make an action Risky or Dangerous, even if it's Standard, to gain access to this benefit.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.xybbovz448jr8idz",
+            "Compendium.heart.heart.xag26aonyrrc2m6s",
+            "Compendium.heart.heart.57d3spkptrbjc4lj"
+        ]
+    },
+    "_key": "!items!j1uhyo7olmjazjld",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

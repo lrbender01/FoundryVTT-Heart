@@ -1,0 +1,12 @@
+{
+    "_id": "73d29pesdvew4m4s",
+    "name": "Put yourself in great danger to protect your companions.",
+    "type": "beat",
+    "system": {
+        "description": "Put yourself in great danger to protect your companions.",
+        "type": "minor"
+    },
+    "_key": "!items!73d29pesdvew4m4s",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

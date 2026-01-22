@@ -1,0 +1,17 @@
+{
+    "_id": "62i1ci4p2oojusjg",
+    "name": "Overclock",
+    "type": "ability",
+    "system": {
+        "description": "You push your Vermissian Plate up to, and honestly beyond, its limits. You may activate this ability at any time. When you do, make an immediate melee attack; your weapon gains the Brutal tag. After using the ability, mark D4 stress to Fortune as you push your luck and strain your engines.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.4s21emho6dmg33fu",
+            "Compendium.heart.heart.8n3y1lja0kllnwat",
+            "Compendium.heart.heart.64din2yqdeqkb59r"
+        ]
+    },
+    "_key": "!items!62i1ci4p2oojusjg",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

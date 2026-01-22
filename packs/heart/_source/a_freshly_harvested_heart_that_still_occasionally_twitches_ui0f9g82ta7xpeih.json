@@ -1,0 +1,14 @@
+{
+    "_id": "ui0f9g82ta7xpeih",
+    "type": "resource",
+    "name": "A freshly-harvested heart that still occasionally twitches",
+    "system": {
+        "active": true,
+        "domain": "wild",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!ui0f9g82ta7xpeih",
+    "img": "systems/heart/assets/resource.png",
+    "folder": "bDiHYHlOFLzWySfV"
+}

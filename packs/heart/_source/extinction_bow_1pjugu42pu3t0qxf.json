@@ -1,0 +1,17 @@
+{
+    "_id": "1pjugu42pu3t0qxf",
+    "name": "Extinction Bow",
+    "type": "ability",
+    "system": {
+        "description": "You carry a huge bow capable of launching specially- made arrows at your prey - the mark of a true heartsblooded hunter. When you take this ability, you gain access to (or build) an enormous ranged weapon with the following profile: (Kill D10, Tiring, Ranged, Expensive. )",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.aixpepnlg7ms9u1o",
+            "Compendium.heart.heart.8e5un7lh3c32xi34",
+            "Compendium.heart.heart.ufmoi8h1yd5uzhkz"
+        ]
+    },
+    "_key": "!items!1pjugu42pu3t0qxf",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

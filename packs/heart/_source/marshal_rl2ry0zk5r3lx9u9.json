@@ -1,0 +1,13 @@
+{
+    "_id": "rl2ry0zk5r3lx9u9",
+    "name": "Marshal",
+    "type": "ability",
+    "system": {
+        "description": "You find out what's wrong and do your level best to fix it; if you can get paid in the process, so much the better. Gain the Compel skill. Once per session, when you enter a landmark, you learn of an injustice, threat or danger that's worrying the people there. Some folks might be able to pay you if you help them.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!rl2ry0zk5r3lx9u9",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,12 @@
+{
+    "_id": "8uj10aed4j5x7yze",
+    "name": "Double-Barreled",
+    "type": "tag",
+    "system": {
+        "description": "As Reload, but you can use the item twice before reloading."
+    },
+    "effects": [],
+    "_key": "!items!8uj10aed4j5x7yze",
+    "folder": "y9uqxYDCoKXQtyQI",
+    "img": "systems/heart/assets/tag.png"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "eo9f9o1s03pm2hob",
+    "name": "Creative Book-Keeping",
+    "type": "ability",
+    "system": {
+        "description": "A flexible grasp on reality means you have something for every occasion on hand. Gain +2 Supplies Protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!eo9f9o1s03pm2hob",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

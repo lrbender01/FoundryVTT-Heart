@@ -1,0 +1,13 @@
+{
+    "_id": "uu3ad8ehvadfywb9",
+    "name": "Dimensional barometer",
+    "type": "equipment",
+    "system": {
+        "type": "delve",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!uu3ad8ehvadfywb9",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

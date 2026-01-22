@@ -1,0 +1,12 @@
+{
+    "_id": "f4zkzyv7kvmwaqhx",
+    "name": "An important or beloved NPC dies after you bring them into your master's schemes.",
+    "type": "beat",
+    "system": {
+        "description": "An important or beloved NPC dies after you bring them into your master's schemes.",
+        "type": "major"
+    },
+    "_key": "!items!f4zkzyv7kvmwaqhx",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

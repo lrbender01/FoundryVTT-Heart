@@ -1,0 +1,17 @@
+{
+    "_id": "sp5edtionkjoie9l",
+    "name": "Dragon-killer",
+    "type": "ability",
+    "system": {
+        "description": "You have been entrusted with a greatblade from the order's vaults - an ancient weapon designed to slay the fiercest abominations within the Vermissian network. A greatblade has two profiles: one when used against human-sized targets (Kill D6, Tiring), and one when used against targets significantly larger than yourself (Kill D10, Tiring).",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.f053kq8ojnta0esr",
+            "Compendium.heart.heart.enm1hag1zbnynsa2",
+            "Compendium.heart.heart.2qk5fik4n5sbu0tw"
+        ]
+    },
+    "_key": "!items!sp5edtionkjoie9l",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

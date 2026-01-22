@@ -1,0 +1,12 @@
+{
+    "_id": "9921cjp2tvd9ucjk",
+    "name": "Openly attack the enemies of your order.",
+    "type": "beat",
+    "system": {
+        "description": "Openly attack the enemies of your order.",
+        "type": "minor"
+    },
+    "_key": "!items!9921cjp2tvd9ucjk",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

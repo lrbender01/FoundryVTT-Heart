@@ -1,0 +1,15 @@
+{
+    "_id": "wp87jd2ddmsad97z",
+    "name": "Sacred Blade",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.4ydmpxw5udvitagy"
+        ]
+    },
+    "_key": "!items!wp87jd2ddmsad97z",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

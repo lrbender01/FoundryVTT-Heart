@@ -1,0 +1,12 @@
+{
+    "_id": "601kzuksr8fzc0nr",
+    "name": "Find a sanctuary where your masters cannot reach you.",
+    "type": "beat",
+    "system": {
+        "description": "Find a sanctuary where your masters cannot reach you.",
+        "type": "minor"
+    },
+    "_key": "!items!601kzuksr8fzc0nr",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

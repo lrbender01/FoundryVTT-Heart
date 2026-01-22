@@ -1,0 +1,16 @@
+{
+    "_id": "9i7al82i2h9gy0ai",
+    "name": "Hunting rifle",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.11h7qvhbw5qimlrr",
+            "Compendium.heart.heart.mks8z3ifbhf56vtc"
+        ]
+    },
+    "_key": "!items!9i7al82i2h9gy0ai",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

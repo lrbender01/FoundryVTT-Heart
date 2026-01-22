@@ -1,0 +1,15 @@
+{
+    "_id": "mnvbvc2ldnlf3npw",
+    "name": "Greatsword",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d10",
+        "tags": [
+            "Compendium.heart.heart.sh0xolgjz5bdjhdc"
+        ]
+    },
+    "_key": "!items!mnvbvc2ldnlf3npw",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

@@ -1,0 +1,17 @@
+{
+    "_id": "yrhj7epkmu6mp3z3",
+    "name": "Rite Of Vigilance",
+    "type": "ability",
+    "system": {
+        "description": "You look upon the world through the six sacred eyes of the Goddess and see beyond the realm of flesh and stone. When you attune your mind to the glory of the Moon Beneath, roll Discern+Religion. On a success, when you close your eyes, you can see the souls of creatures around you in your immediate area.These are visible regardless of physical obstructions.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.pv50rdm945fwnknc",
+            "Compendium.heart.heart.dd4al3gm9x4yiyyv",
+            "Compendium.heart.heart.zcvspqwdnjfnygt6"
+        ]
+    },
+    "_key": "!items!yrhj7epkmu6mp3z3",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

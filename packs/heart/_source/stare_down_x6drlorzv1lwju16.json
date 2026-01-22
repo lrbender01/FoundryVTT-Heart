@@ -1,0 +1,17 @@
+{
+    "_id": "x6drlorzv1lwju16",
+    "name": "Stare Down",
+    "type": "ability",
+    "system": {
+        "description": "You have a reputation as a terrifying enforcer; just looking at some folk is enough to get them to throw down their weapons. Your gaze functions as a weapon (Kill D6, ranged).It only works when your target can see you and if they have the capacity to be scared of you - so criminals are fair game, but heartsblood predators aren't. You can use this \"weapon\" in a haven or other landmark without causing a huge ruckus. Your gaze won't kill people - it's disheartening, and if you reduce an opponent's resistance to 0 with it they surrender, try to bargain their way out or trip and incapacitate themselves whilst fleeing.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.2flg2bkm4p33lxwq",
+            "Compendium.heart.heart.8i33gejj937pp030",
+            "Compendium.heart.heart.rxlyl6kcyrp32c9k"
+        ]
+    },
+    "_key": "!items!x6drlorzv1lwju16",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

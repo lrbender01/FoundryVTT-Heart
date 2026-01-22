@@ -1,0 +1,12 @@
+{
+    "_id": "axx14jrdxverd435",
+    "name": "Take Major Blood fallout.",
+    "type": "beat",
+    "system": {
+        "description": "Take Major Blood fallout.",
+        "type": "major"
+    },
+    "_key": "!items!axx14jrdxverd435",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

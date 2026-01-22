@@ -1,0 +1,13 @@
+{
+    "_id": "pv50rdm945fwnknc",
+    "name": "Hunter",
+    "type": "ability",
+    "system": {
+        "description": "When an ally acts on the information you give them as a result of this power and attacks the creatures you've seen, they roll with mastery on their first attack.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!pv50rdm945fwnknc",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

@@ -1,0 +1,14 @@
+{
+    "_id": "j6mqnwl6u6hkv4ol",
+    "name": "Broken",
+    "type": "fallout",
+    "system": {
+        "description": "An important item is damaged. You cannot use it until you take the time and resources to repair it. [Ongoing]",
+        "resistance": "fortune",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!j6mqnwl6u6hkv4ol",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

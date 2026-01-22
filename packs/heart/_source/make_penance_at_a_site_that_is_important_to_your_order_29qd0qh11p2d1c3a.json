@@ -1,0 +1,12 @@
+{
+    "_id": "29qd0qh11p2d1c3a",
+    "name": "Make penance at a site that is important to your order.",
+    "type": "beat",
+    "system": {
+        "description": "Make penance at a site that is important to your order.",
+        "type": "minor"
+    },
+    "_key": "!items!29qd0qh11p2d1c3a",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

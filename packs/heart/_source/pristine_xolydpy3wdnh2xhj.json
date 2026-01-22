@@ -1,0 +1,13 @@
+{
+    "_id": "xolydpy3wdnh2xhj",
+    "name": "Pristine",
+    "type": "ability",
+    "system": {
+        "description": "You are always clean and well-presented, even when you have been trudging through filth or battling noxious pitchkin in close quarters. When you arrive in a landmark after a delve, roll with mastery when you make a first impression.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!xolydpy3wdnh2xhj",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

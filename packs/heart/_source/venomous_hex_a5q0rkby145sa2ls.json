@@ -1,0 +1,13 @@
+{
+    "_id": "a5q0rkby145sa2ls",
+    "name": "Venomous Hex",
+    "type": "ability",
+    "system": {
+        "description": "You may replace the Spread tag with the Piercing tag when you use RELEASE THE SWARM.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!a5q0rkby145sa2ls",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

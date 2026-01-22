@@ -1,0 +1,17 @@
+{
+    "_id": "aaky0u9mhpz7tfo1",
+    "name": "Fire Of The Red King",
+    "type": "ability",
+    "system": {
+        "description": "You have tasted the dreams of the Red king: his breath as fire, his blood as molten gold. This spell causes your unarmed attacks to gain the Ranged tag as you conjure flames on the clothing and bodies of those nearby. Each successive unarmed attack you inflict on the same target increases the size of your stress dice against that target by one step until the end of the situation.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.2ufc8zxj8fsr0zua",
+            "Compendium.heart.heart.sroopkrwqeo7fo2a",
+            "Compendium.heart.heart.prfzxmbs0eib9s0w"
+        ]
+    },
+    "_key": "!items!aaky0u9mhpz7tfo1",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

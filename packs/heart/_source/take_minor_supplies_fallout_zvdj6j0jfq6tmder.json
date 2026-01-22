@@ -1,0 +1,12 @@
+{
+    "_id": "zvdj6j0jfq6tmder",
+    "name": "Take Minor Supplies fallout.",
+    "type": "beat",
+    "system": {
+        "description": "Take Minor Supplies fallout.",
+        "type": "minor"
+    },
+    "_key": "!items!zvdj6j0jfq6tmder",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

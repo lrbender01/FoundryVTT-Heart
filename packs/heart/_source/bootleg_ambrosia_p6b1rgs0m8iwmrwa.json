@@ -1,0 +1,19 @@
+{
+    "_id": "p6b1rgs0m8iwmrwa",
+    "name": "Bootleg ambrosia",
+    "type": "equipment",
+    "system": {
+        "type": "mend",
+        "resistances": [
+            "mind"
+        ],
+        "dieSize": "d6",
+        "tags": [
+            "Compendium.heart.heart.ay9rg035yy9du87q",
+            "Compendium.heart.heart.l4t4r02bixjp8joe"
+        ]
+    },
+    "_key": "!items!p6b1rgs0m8iwmrwa",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

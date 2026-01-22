@@ -1,0 +1,14 @@
+{
+    "_id": "4zmzsqb5anxopa57",
+    "name": "Defenceless",
+    "type": "fallout",
+    "system": {
+        "description": "Your shield shatters; your sword breaks when struck by an enemy; or your armour straps rip and come apart. Unable to hold your foes off for any longer, you are run through or mauled and left for dead. [Immediate]",
+        "resistance": "supplies",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!4zmzsqb5anxopa57",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

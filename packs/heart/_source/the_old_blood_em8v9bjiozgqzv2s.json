@@ -1,0 +1,13 @@
+{
+    "_id": "em8v9bjiozgqzv2s",
+    "name": "The Old Blood",
+    "type": "ability",
+    "system": {
+        "description": "You inherited the disease from an ancient bloodline; you are strange, and powerful, and can see echoes of things that others can't. Gain the Discern skill. When you observe someone for a few seconds, you can read their aura and discern their surface-level emotions - whether they're angry, happy, frustrated and soon.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!em8v9bjiozgqzv2s",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

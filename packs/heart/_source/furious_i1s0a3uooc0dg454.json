@@ -1,0 +1,14 @@
+{
+    "_id": "i1s0a3uooc0dg454",
+    "name": "Furious",
+    "type": "fallout",
+    "system": {
+        "description": "You're hurt, short-tempered and perceive sleights everywhere. You cannot help another character by adding a dice to their roll. [Ongoing]",
+        "resistance": "blood",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!i1s0a3uooc0dg454",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

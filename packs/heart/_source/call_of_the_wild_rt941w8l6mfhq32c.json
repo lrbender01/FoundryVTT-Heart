@@ -1,0 +1,13 @@
+{
+    "_id": "rt941w8l6mfhq32c",
+    "name": "Call Of The Wild",
+    "type": "ability",
+    "system": {
+        "description": "With an almighty howl or a resounding blast on your horn, you pitch the area around you into disarray. Gain the Wild domain. Once per session, you can summon a chaotic horde of beasts (or just one big one) that throws the area around you into bestial chaos to conceal an escape, make communication nigh-impossible or create a distraction.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!rt941w8l6mfhq32c",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

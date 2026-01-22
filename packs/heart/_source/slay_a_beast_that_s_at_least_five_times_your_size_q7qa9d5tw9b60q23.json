@@ -1,0 +1,12 @@
+{
+    "_id": "q7qa9d5tw9b60q23",
+    "name": "Slay a beast that's at least five times your size.",
+    "type": "beat",
+    "system": {
+        "description": "Slay a beast that's at least five times your size.",
+        "type": "major"
+    },
+    "_key": "!items!q7qa9d5tw9b60q23",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

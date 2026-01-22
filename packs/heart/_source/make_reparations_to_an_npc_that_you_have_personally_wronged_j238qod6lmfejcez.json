@@ -1,0 +1,12 @@
+{
+    "_id": "j238qod6lmfejcez",
+    "name": "Make reparations to an NPC that you have personally wronged.",
+    "type": "beat",
+    "system": {
+        "description": "Make reparations to an NPC that you have personally wronged.",
+        "type": "minor"
+    },
+    "_key": "!items!j238qod6lmfejcez",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

@@ -1,0 +1,13 @@
+{
+    "_id": "jkfdg51qxsnx09je",
+    "name": "Resilient",
+    "type": "ability",
+    "system": {
+        "description": "You can mark 6 total stress, instead of 4, before you lose access to your familiar for the remainder of the session.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!jkfdg51qxsnx09je",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

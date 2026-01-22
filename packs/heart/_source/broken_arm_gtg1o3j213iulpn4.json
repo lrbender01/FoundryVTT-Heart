@@ -1,0 +1,14 @@
+{
+    "_id": "gtg1o3j213iulpn4",
+    "name": "Broken Arm",
+    "type": "fallout",
+    "system": {
+        "description": "Your arm breaks under the strain, and splintered bone juts up through your skin. You can't use the arm until it heals, which will make some tasks Risky or Dangerous,and others impossible. This fallout can be downgraded to or upgraded from BATTERED. [Ongoing]",
+        "resistance": "blood",
+        "type": "major"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!gtg1o3j213iulpn4",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

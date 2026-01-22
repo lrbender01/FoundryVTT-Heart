@@ -1,0 +1,13 @@
+{
+    "_id": "64zvaoddu5ph35b7",
+    "name": "Not Yet",
+    "type": "ability",
+    "system": {
+        "description": "Your willpower, fuelled with guilt, is legendary. Once per session, activate this ability to avoid suffering negative effects from Blood or Mind fallout for the remainder of the situation.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!64zvaoddu5ph35b7",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

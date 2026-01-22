@@ -1,0 +1,14 @@
+{
+    "_id": "6nq6g1lyuwcqaze4",
+    "name": "Winded",
+    "type": "fallout",
+    "system": {
+        "description": "When you attack with melee weapons, decrease stress inflicted by one dice size.[Ongoing]",
+        "resistance": "blood",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!6nq6g1lyuwcqaze4",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

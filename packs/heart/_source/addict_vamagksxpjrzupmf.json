@@ -1,0 +1,13 @@
+{
+    "_id": "vamagksxpjrzupmf",
+    "name": "Addict",
+    "type": "ability",
+    "system": {
+        "description": "When you cast CRAVE, the target will desire the subject of your choosing until the end of the session. If they don't get what they want by the end of the session, they either descend into violence to acquire it or lose their mind in despair (GM's choice).",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!vamagksxpjrzupmf",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

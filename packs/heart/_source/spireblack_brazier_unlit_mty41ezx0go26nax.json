@@ -1,0 +1,13 @@
+{
+    "_id": "mty41ezx0go26nax",
+    "name": "Spireblack brazier (unlit)",
+    "type": "equipment",
+    "system": {
+        "type": "kill",
+        "dieSize": "d6",
+        "tags": []
+    },
+    "_key": "!items!mty41ezx0go26nax",
+    "img": "systems/heart/assets/equipment.png",
+    "folder": "35vReQEOJAJ1v9PN"
+}

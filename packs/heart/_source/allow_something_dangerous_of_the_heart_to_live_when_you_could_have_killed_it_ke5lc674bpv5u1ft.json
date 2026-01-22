@@ -1,0 +1,12 @@
+{
+    "_id": "ke5lc674bpv5u1ft",
+    "name": "Allow something dangerous of the Heart to live when you could have killed it.",
+    "type": "beat",
+    "system": {
+        "description": "Allow something dangerous of the Heart to live when you could have killed it.",
+        "type": "minor"
+    },
+    "_key": "!items!ke5lc674bpv5u1ft",
+    "img": "systems/heart/assets/beat.png",
+    "folder": "Df2JpffsuYJROfXg"
+}

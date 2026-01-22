@@ -1,0 +1,17 @@
+{
+    "_id": "ti5ely8vhng7azgx",
+    "name": "Sacred Geometry",
+    "type": "ability",
+    "system": {
+        "description": "Multiple futures swim about your head, and you pick that which is most advantageous; to an outside observer, you move unopposed and uncanny. When you are rolling to inflict stress on a delve or adversary, or remove stress from yourself or an ally, and you roll a 6 (a number sacred to Apiarists), roll an additional D6 and add it to your total.",
+        "type": "major",
+        "minorAbilities": [
+            "Compendium.heart.heart.9g5i4xhfvzjy85zl",
+            "Compendium.heart.heart.xolydpy3wdnh2xhj",
+            "Compendium.heart.heart.22e4gkl6b3u98n7v"
+        ]
+    },
+    "_key": "!items!ti5ely8vhng7azgx",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

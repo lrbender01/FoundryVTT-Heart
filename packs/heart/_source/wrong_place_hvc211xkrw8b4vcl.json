@@ -1,0 +1,14 @@
+{
+    "_id": "hvc211xkrw8b4vcl",
+    "name": "Wrong Place",
+    "type": "fallout",
+    "system": {
+        "description": "You accidentally take a fatal blow meant for someone else. They are unharmed; you die. [Immediate]",
+        "resistance": "fortune",
+        "type": "critical"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!hvc211xkrw8b4vcl",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

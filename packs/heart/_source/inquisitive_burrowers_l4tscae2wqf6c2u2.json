@@ -1,0 +1,13 @@
+{
+    "_id": "l4tscae2wqf6c2u2",
+    "name": "Inquisitive Burrowers",
+    "type": "ability",
+    "system": {
+        "description": "RELEASE THE SWARM gains the Brutal tag.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!l4tscae2wqf6c2u2",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

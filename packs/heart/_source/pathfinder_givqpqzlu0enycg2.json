@@ -1,0 +1,13 @@
+{
+    "_id": "givqpqzlu0enycg2",
+    "name": "Pathfinder",
+    "type": "ability",
+    "system": {
+        "description": "When you attempt to establish a connection on a delve, roll with mastery.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!givqpqzlu0enycg2",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

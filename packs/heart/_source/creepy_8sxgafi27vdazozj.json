@@ -1,0 +1,14 @@
+{
+    "_id": "8sxgafi27vdazozj",
+    "name": "Creepy",
+    "type": "fallout",
+    "system": {
+        "description": "You react in a strange way that weirds out your friends - tell us how. Any friendly character who sees you do it marks D4 stress to Mind. [Immediate]",
+        "resistance": "mind",
+        "type": "minor"
+    },
+    "effects": [],
+    "img": "systems/heart/assets/fallout.png",
+    "_key": "!items!8sxgafi27vdazozj",
+    "folder": "l7pxZoNF1qlTw2gA"
+}

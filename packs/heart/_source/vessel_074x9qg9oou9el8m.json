@@ -1,0 +1,13 @@
+{
+    "_id": "074x9qg9oou9el8m",
+    "name": "Vessel",
+    "type": "ability",
+    "system": {
+        "description": "You let the energies of the Heart wash through you and fill you with glory, rather than struggling against them. Gain +2 Echo protection.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!074x9qg9oou9el8m",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

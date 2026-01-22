@@ -1,0 +1,13 @@
+{
+    "_id": "a8varahhw5uoopjh",
+    "name": "Crucible",
+    "type": "ability",
+    "system": {
+        "description": "You bring the energy of the Heart inside yourself and transmute it into crimson power. At any time, roll a D6. If it's equal to or under your current Echo stress, clear that much stress from Echo and roll with mastery on your next action. If it's over your current Echo stress, add that much stress to Echo.",
+        "type": "core",
+        "minorAbilities": []
+    },
+    "_key": "!items!a8varahhw5uoopjh",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}

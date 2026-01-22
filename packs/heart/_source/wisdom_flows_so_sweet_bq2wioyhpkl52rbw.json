@@ -1,0 +1,13 @@
+{
+    "_id": "bq2wioyhpkl52rbw",
+    "name": "Wisdom Flows So Sweet",
+    "type": "ability",
+    "system": {
+        "description": "Gain access to one of the following skills: Compel, Delve, Discern, Endure, Hunt, Kill, Mend, Sneak. You can take this advance more than once.",
+        "type": "minor",
+        "minorAbilities": []
+    },
+    "_key": "!items!bq2wioyhpkl52rbw",
+    "img": "systems/heart/assets/ability.png",
+    "folder": "5P3mjIvR29OhyR6l"
+}
