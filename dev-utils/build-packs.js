@@ -266,7 +266,7 @@ Promise.all(paths.map((filename) => {
                 "name": type,
                 "label": type.replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); }),
                 "system": "heart",
-                "path": `./packs/${type}.db`,
+                "path": `./packs/${type}`,
                 "type": "Item",
                 "entity": "Item",
             });
