@@ -56,6 +56,76 @@
         align-items: center
         justify-content: center
 
+// Skills + Domains management popups — shared shell since structure is identical.
+// Added in Phase 2A.3 (2026-06-12). Row + knack-input styling is hoisted to
+// global rules below (.skill-row / .domain-row / .knack-input) so the same
+// styling drives the Skills & Domains tab on the character sheet (Phase 2A.4).
+.skills-manager, .domains-manager
+    padding: 0.75em 1em
+
+    .section
+        margin-bottom: 1em
+
+        h3
+            font-family: 'Mosherif'
+            font-size: 1.4em
+            color: util.$red
+            border-bottom: 1px solid util.$red-transparent
+            padding-bottom: 0.25em
+            margin: 0 0 0.5em 0
+
+            &.faded
+                color: util.$grey
+
+        .grid-2.auto-first-col
+            gap: 0.5em
+
+// Shared row styling for EDIT contexts — used by management popups (grid-2
+// cells) AND by the Skills & Domains tab (subcolumn grid cells). Each row is
+// a flex container for checkbox + label inside its grid cell.
+// Distinct class from .skill-row / .domain-row (which the Character tab uses
+// for read-only DISPLAY of selected skills with click-to-roll dice).
+.skill-edit-row, .domain-edit-row
+    display: flex
+    align-items: center
+    gap: 0.5em
+    padding: 0.15em 0
+
+    &.selected
+        font-weight: 600
+
+    &.unselected
+        font-weight: 400
+        color: util.$grey
+
+    input[type="checkbox"]
+        transform: scale(1.2)
+        margin: 0 0.5em 0 0
+        flex: 0 0 auto
+
+    .skill-name, .domain-name
+        font-family: 'Alegreya'
+        flex: 1 1 auto
+        min-width: 0
+
+// Knack inputs — both textarea (multi-line wrap) and legacy text input.
+// `.knack-input` class on the element drives the styling regardless of tag.
+textarea.knack-input,
+input[type="text"].knack-input
+    width: 100%
+    box-sizing: border-box
+    padding: 0.3em 0.5em
+    border: 1px solid util.$grey
+    border-radius: 0.25em
+    font-family: 'Alegreya'
+    font-size: 0.95em
+    min-height: 1.8em
+    resize: vertical
+
+    &:focus
+        outline: none
+        border-color: util.$red
+
 .active-beats
     display: flex
     flex-flow: row wrap

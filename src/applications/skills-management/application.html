@@ -3,11 +3,11 @@
       <h3 class="center">{{localizeHeart "skill" "label-multiple"}}</h3>
       <h3 class="faded">{{localizeHeart "skill" "knack" "label-multiple"}}</h3>
       {{#each skills as |skill name|}}
-      <div class="flexrow">
+      <div class="skill-edit-row {{#if skill.value}}selected{{else}}unselected{{/if}}">
         <input type="checkbox" name="system.skills.{{name}}.value" {{checked skill.value}} />
-        <span class="bold">{{localizeHeart "skill" name}}</span>
+        <span class="skill-name">{{localizeHeart "skill" name}}</span>
       </div>
-      <input type="text" name="system.skills.{{name}}.knack" value="{{skill.knack}}" />
+      <textarea class="knack-input" name="system.skills.{{name}}.knack" rows="1">{{skill.knack}}</textarea>
       {{/each}}
     </div>
   </div>

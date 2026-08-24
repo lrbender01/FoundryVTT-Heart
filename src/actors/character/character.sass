@@ -22,25 +22,26 @@ $container-title-bg: white
 
 %header-container-style
   border: 2px solid white
-  border-radius: 8px
+  border-radius: 0.5em
   background-color: transparent
-  padding: 10px
-  height: 90px
-  max-height: 90px
+  padding: 0.625em
+  height: 5.625em
+  max-height: 5.625em
+  box-sizing: border-box
 
 %header-input-style
   background-color: rgba(0,0,0,0.25)
   border: 1px solid white
-  border-radius: 5px
+  border-radius: 0.3125em
   color: white
-  padding-left: 10px
-  padding-right: 10px
-  height: 30px
-  min-width: 150px
+  padding-left: 0.625em
+  padding-right: 0.625em
+  height: 1.875em
+  min-width: 0
   width: 100%
-  max-height: 30px
+  max-height: 1.875em
   font-family: 'Alegrey'
-  font-size: 16px
+  font-size: 1em
   box-sizing: border-box
   &::placeholder
     color: white
@@ -188,47 +189,51 @@ $container-title-bg: white
 .character-header
   z-index: 1
   display: flex
+  flex-wrap: nowrap
   justify-content: flex-start
   align-items: center
-  padding: 30px
+  gap: 1em
+  padding: 1.875em
   background-color: transparent
   background-image: url('../../../static/assets/ui/header_background.webp')
   mask-image: url('../../../static/assets/ui/header_nav.svg')
-  mask-size: auto 180px
+  mask-size: auto 11.25em
   mask-repeat: repeat-x
   mask-position: -0.5px top
   margin-bottom: 1rem
-  min-height: 180px
-  max-height: 180px
+  min-height: 11.25em
+  max-height: 11.25em
 
-// Header Columns
+// Header Columns — generic shrink-with-priority base
+// Each variant below overrides `flex` weights so Name dominates Pronouns,
+// Roll buttons keep min-width to avoid clipping mid-word.
 .header-col
-  flex: 1
-  &:not(:last-child)
-    margin-right: 2rem
+  flex: 1 1 auto
+  min-width: 0
 
-// Portrait Container
-.portrait
-  min-width: 90px
-  max-width: 90px
+// Portrait Container — fixed size (it's an image; don't shrink)
+.header-col.portrait
+  flex: 0 0 auto
+  min-width: 5.625em
+  max-width: 5.625em
   img
     background-color: black
-    min-width: 90px
-    min-height: 90px
-    max-width: 90px
-    max-height: 90px
+    width: 5.625em
+    height: 5.625em
     border-radius: 50%
     border: 2px solid white
     object-fit: cover
 
-// Identity Container
-.identity-container
+// Identity Container — Name dominates Pronouns (3fr vs 1fr).
+// Container takes a dominant share of the header's flex width.
+.header-col.identity-container
   @extend %header-container-style
   display: grid
-  grid-template-columns: auto 1fr 1fr
+  grid-template-columns: auto 3fr 1fr
   gap: 0.5rem 1rem
-  width: 400px
-  max-width: 400px
+  flex: 3 1 16em
+  min-width: 10em
+  max-width: 28em
 
   // Row 1: Name, Name Input, Pronouns Input
   .name-label
@@ -249,10 +254,10 @@ $container-title-bg: white
     grid-column: 3
     grid-row: 1
     @extend %header-input-style
-    min-width: 80px
     overflow: hidden
     text-overflow: ellipsis
     white-space: nowrap
+    min-width: 0
 
     &::placeholder
       color: rgba(255, 255, 255, 0.5)
@@ -267,22 +272,23 @@ $container-title-bg: white
     grid-column: 2 / span 2
     grid-row: 2
     @extend %header-input-style
-    min-width: 80px
     overflow: hidden
     text-overflow: ellipsis
     white-space: nowrap
+    min-width: 0
 
     &::placeholder
       color: rgba(255, 255, 255, 0.5)
 
-// Class & Calling Container
-.class-calling-container
+// Class & Calling Container — shrinks with content, em-based min/max.
+.header-col.class-calling-container
   @extend %header-container-style
   display: grid
   grid-template-columns: auto 1fr
   gap: 0.5rem 1rem
-  width: 300px
-  max-width: 300px
+  flex: 2 1 14em
+  min-width: 8em
+  max-width: 22em
   @extend %item-input
 
   // Row 1: Class Label & Content
@@ -354,6 +360,7 @@ $container-title-bg: white
     font-family: $label-font
     font-size: 26px
     color: white
+    white-space: nowrap
 
     &:hover
       @include active-tab(util.$red, white)
@@ -361,14 +368,16 @@ $container-title-bg: white
   a:active, a.active
     @include active-tab(util.$red, white)
 
-// Roll Buttons Container
-.roll-buttons-container
+// Roll Buttons Container — flex weight keeps full "ROLL STRESS" / "ROLL FALLOUT"
+// labels from clipping mid-word at narrow widths.
+.header-col.roll-buttons-container
   @extend %header-container-style
   display: grid
-  grid-template-columns: auto 1fr
-  gap: 0.5rem 1rem
-  width: 400px
-  max-width: 400px
+  grid-template-columns: 1fr 1fr
+  gap: 0.5rem 0.5rem
+  flex: 2 1 18em
+  min-width: 12em
+  max-width: 28em
 
 // Heart Button Styles
 .header-col.heart
@@ -501,9 +510,9 @@ $container-title-bg: white
   font-weight: 300
   display: inline-block
   max-width: 75%
-  overflow: hidden
-  white-space: nowrap
-  text-overflow: ellipsis
+  white-space: normal
+  overflow-wrap: break-word
+  word-break: break-word
   vertical-align: middle
   padding: -10px 0 10px 0
 

@@ -12,6 +12,9 @@ export default class SkillsManagementApplication extends HeartApplication {
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
             template: applicationHTML.path,
+            width: 520,
+            height: "auto",
+            resizable: true,
         });
     }
 

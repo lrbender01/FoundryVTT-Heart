@@ -3,11 +3,11 @@
       <h3 class="center">{{localizeHeart "domain" "label-multiple"}}</h3>
       <h3 class="faded">{{localizeHeart "domain" "knack" "label-multiple"}}</h3>
       {{#each domains as |domain name|}}
-      <div class="flexrow">
+      <div class="domain-edit-row {{#if domain.value}}selected{{else}}unselected{{/if}}">
         <input type="checkbox" name="system.domains.{{name}}.value" {{checked domain.value}} />
-        <span class="bold">{{localizeHeart "domain" name}}</span>
+        <span class="domain-name">{{localizeHeart "domain" name}}</span>
       </div>
-      <input type="text" name="system.domains.{{name}}.knack" value="{{domain.knack}}" />
+      <textarea class="knack-input" name="system.domains.{{name}}.knack" rows="1">{{domain.knack}}</textarea>
       {{/each}}
     </div>
   </div>
