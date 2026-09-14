@@ -221,6 +221,29 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
             // Render the compendium
             pack.render(true);
         });
+
+        // Like open-compendium, but finds the first Item compendium that
+        // PROVIDES a given item type instead of hardcoding a pack id. Lets
+        // content modules (e.g. fvtt-heart-content's ancestries) supply types
+        // the system doesn't ship packs for.
+        html.find('[data-action=open-type-compendium]').click(async ev => {
+            const type = $(ev.currentTarget).data('itemType');
+            if (!type) {
+                console.error("No item type specified in the data-item-type attribute.");
+                return;
+            }
+
+            for (const pack of game.packs) {
+                if (pack.metadata.type !== 'Item') continue;
+                const index = await pack.getIndex();
+                if (index.some(entry => entry.type === type)) {
+                    pack.render(true);
+                    return;
+                }
+            }
+
+            ui.notifications.warn(`No compendium provides "${type}" items. Enable a content module that ships them.`);
+        });
     }
 
     async _onDragStart(event) {

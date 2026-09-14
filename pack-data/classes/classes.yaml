@@ -562,6 +562,7 @@ heretic:
         name: class.heretic.abilities.core.ministrations.name
         description: class.heretic.abilities.core.ministrations.description
     minor:
+      blessed_deprivation:
       grave_duty:
       the_goddess_gifts:
       the_left_hand_of_the_goddess:
@@ -619,7 +620,7 @@ cleaver:
           type: kill
       group_1:
         cleaver:
-          dice: d6
+          dice: d8
           type: kill
           tags:
             - brutal
@@ -773,6 +774,8 @@ hound:
     domain: haven
     resource:
       bottle_of_rotgut_liquor:
+        dice: d6
+        domain: haven
     equipment:
       group_1:
         standard_issue_legrande_rifle:
@@ -811,6 +814,7 @@ hound:
       close_quarters:
       custodian:
       echoes_of_the_33rd:
+      hard_as_nails:
       kill_count:
       liquid_courage:
       marshal:
@@ -916,6 +920,7 @@ incarnadine:
       crave:
         nested_abilities:
           addict:
+          viral:
           conditioning:
       debtors_reds:
         nested_abilities:
@@ -963,7 +968,7 @@ witch:
         physikers_bag:
           type: mend
           resistances:
-            blood
+            - blood
           dice: d6
   abilities:
     core:

@@ -92,39 +92,24 @@ Heart uses **webpack + sass** (the modern pure-JS sass, NOT node-sass — briefi
 | `build-manifest` | `node dev-utils/build-manifest.js <version>`. Generates `dist/system.json` from `src/manifest.json` + `foundryvtt.config.js`.             |
 | `build-template` | `node dev-utils/build-template.js`. Merges all `src/**/template.json` into `dist/template.json`.                                          |
 | `build-packs`    | `node dev-utils/build-packs.js`. Compiles `pack-data/<type>/<type>.yaml` into LevelDB packs at `dist/packs/<type>/`.                      |
-| `build-local`    | Full pipeline. **NOT Windows-compatible** — uses `bash -c` + Unix `cp -r`. Replaced by the PowerShell sequence below.                     |
+| `build-all`      | **Full pipeline, cross-platform (2026-08-24).** empty-dist → build-prod → build-manifest (version hardcoded here; bump on release) → build-template → build-packs → copy-static. Use this.  |
+| `build-local`    | Alias for `build-all` (kept for muscle memory). The old Unix-only version + the hardcoded-path `relink` script were removed 2026-08-24.    |
 
 **Note: there is NO `npm run build` script.** Old plan documents that said to run `npm run build` were wrong; that errors with "Missing script: build". Use `build-prod` for the webpack step.
 
 **Note: there is NO separate `heart.css` output.** Webpack uses `style-loader` (CSS injected at runtime via JS), so all CSS is bundled INTO `heart.js`. Old plan documents claiming a `heart.css` artifact were wrong.
 
-### Windows-compatible full build (replaces `build-local`)
+### Full build (cross-platform since 2026-08-24)
 
-Run from inside `packages/fvtt-heart-system/` in PowerShell:
+Run from inside `packages/fvtt-heart-system/`:
 
-```powershell
-# 1. Empty dist/
-if (Test-Path dist) { Remove-Item dist -Recurse -Force }
-New-Item -ItemType Directory -Path dist | Out-Null
-
-# 2. Build webpack (production minified)
-npm run build-prod
-
-# 3. Generate system.json (pick a version string; 0.10.5-pr94 was Phase 0's choice)
-npm run build-manifest -- 0.10.5-pr94
-
-# 4. Generate template.json (merges all src/**/template.json — emits "key already defined" warnings; harmless)
-npm run build-template
-
-# 5. Compile compendium packs (writes dist/packs/<type>/ as LevelDB directories)
-npm run build-packs
-
-# 6. Copy LICENSE + static/* into dist/ (replaces the Unix cp -r step)
-Copy-Item LICENSE dist/ -Force
-Copy-Item static/* dist/ -Recurse -Force
+```
+npm run build-all
 ```
 
-A Node-based replacement for `build-local` (so the full pipeline lives in `package.json`) is a Phase 2 task. The script needs Node equivalents for `empty-dist` (Unix `rm -rf dist/*`) and `copy-static` (Unix `cp -r`), plus removal of the hard-coded Linux-path `relink` step.
+`empty-dist` and `copy-static` are now Node scripts (`dev-utils/empty-dist.js`, `dev-utils/copy-static.js`); the hardcoded-Linux-path `relink` script was dropped. The manifest version string is hardcoded in the `build-all` script line in package.json - bump it there on release. NEVER run `build-prod` alone and reload Foundry: webpack wipes dist/, and skipping `build-template` leaves a stale `Item.types` (symptom: new item types silently invisible - unrenderable sheets, hidden compendium docs, refused drops).
+
+From the monorepo root, `npm run build:heart` chains this with the heart-content and heart-toolkit pack builds (Foundry must be at the Setup screen).
 
 ### Build outputs (`dist/`)
 
@@ -263,6 +248,16 @@ The 11-test discovery audit of vanilla Heart was **intentionally skipped** to sa
 
 ---
 
+## Ancestry item type (added 2026-08-24)
+
+Registered the `ancestry` item type that upstream half-built (`parseAncestries` in build-packs.js and the character proxy `ancestry` getter existed; the type itself didn't). No book text in any of this - safe to push to the public fork. Consumed by `fvtt-heart-content`'s core-items pack.
+
+- **Type**: `src/items/ancestry/{template.json,sheet.js,sheet.html}` - has_description only, monument.svg icon, base-sheet partial (renders the standard name + description-editor item sheet). `Item.types` picks it up automatically via build-template's key derivation - a stale `dist/template.json` means the type doesn't exist and ancestry items neither render nor drop; ALWAYS run the full build pipeline.
+- **Proxy fix**: `src/actors/character/proxy.js` ancestry getter used `actor.find` (upstream bug; always undefined) - now `actor.items.find`.
+- **Header slot (full class/calling parity)**: `src/actors/character/sheet.html` identity container Row 2 renders an item slot (name + eye/trash icons, `.ancestry-content` in character.sass) when an ancestry item is attached; when empty (owner view), a placeholder prompt + "+" button. The "+" uses a new generic `open-type-compendium` action in `src/actors/base/sheet.js` that opens the first Item compendium whose index contains the requested type - so the fork never hardcodes a content-module pack id, and any module providing ancestry items works. If `system.ancestry` holds legacy typed text with no item, the text shows in the slot. The free-text input was removed from the template (`.ancestry-input` sass rule retained but unused). `sheet.js` getData supplies `ancestryItem`.
+- **Sync hooks** in `src/index.js`: `createItem` keeps at most one ancestry item per character (new replaces old, mirroring class/calling) and mirrors the item name into `system.ancestry`; `deleteItem` clears the field on genuine removal (not during replace-on-drop).
+- **Lang**: `heart.ancestry.label-single/-multiple` in en/es/it/pt.
+
 ## Phase 2 System Polish
 
 Closes known gaps from PR #94, plus quality-of-life improvements discovered during Phase 0.
@@ -277,7 +272,7 @@ Closes known gaps from PR #94, plus quality-of-life improvements discovered duri
 
 ### From Phase 0 discoveries
 
-6. **Add Windows-compatible `build-local` Node replacement.** Write `dev-utils/empty-dist.js` and `dev-utils/copy-static.js` using Node `fs` so the full pipeline can run from a single `npm run` call regardless of platform. Drop the hardcoded-Linux-path `relink` step.
+6. ~~**Add Windows-compatible `build-local` Node replacement.**~~ ✓ Done 2026-08-24 - `dev-utils/empty-dist.js` + `dev-utils/copy-static.js`, `build-all` script, `relink` dropped. See §Build System.
 7. **Investigate `static/packs/macros.db` content.** Phase 0 verified the macros pack APPEARED in the compendium list with non-zero count; deeper content inspection (macro names, payloads) was not done. If the legacy NeDB file is broken in Foundry v12, regenerate as LevelDB.
 
 ### Maintenance
@@ -322,8 +317,7 @@ Closes known gaps from PR #94, plus quality-of-life improvements discovered duri
 
 ### From Phase 0 (2026-06-12)
 
-- **`build-local` script is Unix-only** (uses `bash -c`, `cp -r`). Phase 2 task: add Node-based replacement. Workaround documented in "Build System" above.
-- **`relink` script has a hardcoded Linux-style path** (`C:/Data/FoundryDev/...`). Drop entirely; the symlink is created manually per user setup.
+- ~~**`build-local` script is Unix-only**~~ Resolved 2026-08-24: Node-based `build-all` pipeline (see §Build System); `relink` dropped.
 - **`heart.css` does not exist as a separate file.** Webpack `style-loader` injects CSS at runtime via JS. The original `package.json` `copy-static` script's comment about copying `heart.css` was vestigial; the actual artifact is just `heart.js` plus auxiliary assets.
 - **macros.db legacy NeDB pack** — appears in compendium list but contents not deeply verified. May need regeneration if Foundry v12 rejects NeDB format.
 - **CLAUDE.md in this directory is untracked in both the inner repo and the outer (outer treats this dir as submodule).** Decide whether to commit it to the fork's history (recommended — it IS the fork's architecture doc) or leave it untracked.

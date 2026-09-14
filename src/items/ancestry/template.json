@@ -1,0 +1,7 @@
+{
+    "Item": {
+        "ancestry": {
+            "templates": ["has_description"]
+        }
+    }
+}

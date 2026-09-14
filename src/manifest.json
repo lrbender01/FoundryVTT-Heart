@@ -10,6 +10,20 @@
             "entity": "Macro"
         }
     ],
+    "packFolders": [
+        {
+            "name": "Heart - Core Options",
+            "sorting": "a",
+            "color": "#7a2f2f",
+            "packs": ["classes", "callings"]
+        },
+        {
+            "name": "Heart - System Reference",
+            "sorting": "a",
+            "color": "#3d1f1f",
+            "packs": ["fallouts", "tags", "macros"]
+        }
+    ],
     "languages": [
         {
             "lang": "en",

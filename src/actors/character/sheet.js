@@ -153,12 +153,14 @@ export default class CharacterSheet extends HeartActorSheet {
         const data = super.getData();
         const callingItem = this.actor.proxy.calling;
         const classItem = this.actor.proxy.class;
+        const ancestryItem = this.actor.proxy.ancestry;
         data.editable = this.actor.isOwner || game.user.isGM;
         data.user = game.user;
         data.pronouns = this.actor.system.pronouns || "";
         data.ancestry = this.actor.system.ancestry || "";
         data.callingItem = callingItem;
         data.classItem = classItem;
+        data.ancestryItem = ancestryItem;
         data.showTextboxesBelowItems = game.settings.get('heart', 'showTextboxesBelowItems');
         data.showTotalStress = game.settings.get('heart', 'showTotalStress');
         data.showStressInputBox = game.settings.get('heart', 'showStressInputBox');

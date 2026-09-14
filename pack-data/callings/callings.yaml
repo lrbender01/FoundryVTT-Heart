@@ -129,6 +129,7 @@ forced:
       - "calling.forced.beats.minor.16"
       - "calling.forced.beats.minor.17"
       - "calling.forced.beats.minor.18"
+      - "calling.forced.beats.minor.19"
     major:
       - "calling.forced.beats.major.0"
       - "calling.forced.beats.major.1"

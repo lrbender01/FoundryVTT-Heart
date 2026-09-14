@@ -259,12 +259,23 @@ Promise.all(paths.map((filename) => {
         return f.compilePack(`${tmp}/${type}/`, `./${target}/${type}`)
     });
 
+    // Sidebar labels carry a short book postfix ("Classes - Core" here,
+    // "Classes - W&M" in the fvtt-heart-content module) so the two packs stay
+    // distinguishable in search results; the packFolders in src/manifest.json
+    // carry the broader taxonomy. Label style decided 2026-08-25 (3rd pass).
+    const PACK_LABELS = {
+        classes: "Classes - Core",
+        callings: "Callings - Core",
+        fallouts: "Fallouts",
+        tags: "Tags",
+        ancestries: "Ancestries",
+    };
     if(json.packs.find((e) => e.name === type) === undefined) {
-        console.warn(`Adding ${type}.db to system.json`);
+        console.warn(`Adding ${type} pack to system.json`);
         json.packs.push(
             {
                 "name": type,
-                "label": type.replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); }),
+                "label": PACK_LABELS[type] || type.replace(/\w\S*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); }),
                 "system": "heart",
                 "path": `./packs/${type}`,
                 "type": "Item",

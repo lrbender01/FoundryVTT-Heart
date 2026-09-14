@@ -280,6 +280,31 @@ $container-title-bg: white
     &::placeholder
       color: rgba(255, 255, 255, 0.5)
 
+  // Ancestry item slot - mirrors .class-content styling in the header grid
+  .ancestry-content
+    grid-column: 2 / span 2
+    grid-row: 2
+    @extend %header-input-style
+    display: flex
+    align-items: center
+    gap: 0.5rem
+    min-width: 0
+
+    .name
+      flex: 1 1 auto
+      min-width: 0
+      overflow: hidden
+      text-overflow: ellipsis
+      white-space: nowrap
+
+      &.placeholder
+        opacity: 0.6
+
+    .right
+      flex: 0 0 auto
+      display: flex
+      gap: 0.4rem
+
 // Class & Calling Container — shrinks with content, em-based min/max.
 .header-col.class-calling-container
   @extend %header-container-style

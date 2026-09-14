@@ -68,9 +68,37 @@
         <input class="name-input" name="name" value="{{actor.name}}" />
         <input class="pronouns-input" name="pronouns" value="{{actor.system.pronouns}}"
           placeholder="{{localizeHeart 'character' 'pronouns'}}" />
-        <!-- Row 2: Ancestry -->
+        <!-- Row 2: Ancestry - item slot when an ancestry item is attached,
+             free-text input otherwise (both write system.ancestry) -->
         <label class="ancestry-label">{{localizeHeart "character" "ancestry"}}</label>
-        <input class="ancestry-input" name="ancestry" placeholder="{{localizeHeart 'character' 'ancestry-placeholder'}}" value="{{actor.system.ancestry}}" />
+        {{#if ancestryItem}}
+        <div data-item-id="{{ancestryItem.uuid}}" class="ancestry-content flexrow item non-draggable">
+          <div class="name">{{localizeHeart ancestryItem.name}}</div>
+          <div class="right">
+            <a data-action="view" title="{{localizeHeart 'base' 'view'}}">
+              <span class="fas fa-eye"></span>
+            </a>
+            {{#if ancestryItem.isOwner}}
+            <a data-action="delete" title="{{localizeHeart 'base' 'delete'}}">
+              <span class="fas fa-trash"></span>
+            </a>
+            {{/if}}
+          </div>
+        </div>
+        {{else}}
+        {{#if actor.isOwner}}
+        <div class="ancestry-content flexrow item non-draggable">
+          <div class="name {{#unless actor.system.ancestry}}placeholder{{/unless}}">
+            {{#if actor.system.ancestry}}{{actor.system.ancestry}}{{else}}{{localizeHeart "character" "ancestry-prompt"}}{{/if}}
+          </div>
+          <div class="right">
+            <a data-action="open-type-compendium" data-item-type="ancestry">
+              <span class="fas fa-plus white"></span>
+            </a>
+          </div>
+        </div>
+        {{/if}}
+        {{/if}}
       </div>
 
       <!-- Column 3: Class and Calling -->

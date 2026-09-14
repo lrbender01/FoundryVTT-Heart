@@ -14,7 +14,7 @@ export default {
                 }
 
                 if (name === 'ancestry') {
-                    const ancestry = actor.find(x => x.type === 'ancestry');
+                    const ancestry = actor.items.find(x => x.type === 'ancestry');
                     return ancestry;
                 }
 

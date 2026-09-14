@@ -10,7 +10,19 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
 
 ### Changed
 
-- (Future entries land here)
+- **Compendium sidebar organization (2026-08-25).** System packs now group into two sidebar folders (`packFolders` in `src/manifest.json`): "Heart - Core Options" (Classes, Callings) and "Heart - System Reference" (Fallouts, Tags, Useful Heart Macros). Labels stay unqualified; the folder taxonomy pairs with the fvtt-heart-content module's "Heart - Expanded Options" / future "Heart - GM Content" so the four folders alphabetically sort into reading order. Presentation-only; pack names/ids unchanged, so no compendium UUIDs break.
+
+### Fixed
+
+- **Pack-data content audit (2026-08-25).** Audited the classes/callings packs against the source books (via user-supplied condensed reference + PDF text-layer extraction). Six upstream data bugs fixed in `pack-data/`:
+  - Cleaver's cleaver weapon was `D6`; the book says **Kill D8** (Brutal, Tiring).
+  - Heretic was missing the minor ability **Blessed Deprivation** (text already existed in lang files; the yaml entry was absent so it never packed).
+  - Hound was missing the minor ability **Hard As Nails** (same pattern).
+  - Hound's class resource (Bottle of rotgut liquor) was missing its `dice`/`domain` (**D6 Haven**).
+  - Incarnadine's Crave was missing its **Viral** nested upgrade (lang text existed; yaml entry absent).
+  - Witch's Physiker's Bag `resistances` was a scalar (`blood`) instead of a list, producing a malformed string instead of `["blood"]` in packed data.
+  - Forced calling had 19 minor beats instead of 20: `beats.minor.3` in `en.json` was two book beats merged into one string. Split into `minor.3` + new `minor.19` (pt.json already had the correct first half) and added the new key to `callings.yaml`.
+- All fixes are data-layer only (no book text added beyond what upstream's lang files already publish) - safe for the public fork. Requires `npm run build-all` to re-pack.
 
 ---
 

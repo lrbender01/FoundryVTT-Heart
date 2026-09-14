@@ -269,6 +269,31 @@ Hooks.on('preCreateActor', function(document, data, options, userId) {
     });
 });
 
+// An actor holds at most one ancestry item; dropping a new one replaces the
+// old (mirroring the class/calling behavior in the character sheet) and keeps
+// the header's system.ancestry text field in sync with the item name.
+Hooks.on('createItem', async function(item, options, userId) {
+    if (game.user.id !== userId) return;
+    const actor = item.actor;
+    if (item.type !== 'ancestry' || !actor || actor.type !== 'character') return;
+    const stale = actor.itemTypes.ancestry.filter(x => x.id !== item.id);
+    if (stale.length > 0) {
+        await actor.deleteEmbeddedDocuments('Item', stale.map(x => x.id));
+    }
+    await actor.update({ 'system.ancestry': item.name });
+});
+
+// Deleting the ancestry item (header trash icon) clears the synced text field,
+// but only when the deletion wasn't part of a replace-on-drop.
+Hooks.on('deleteItem', async function(item, options, userId) {
+    if (game.user.id !== userId) return;
+    const actor = item.actor;
+    if (item.type !== 'ancestry' || !actor || actor.type !== 'character') return;
+    if (actor.itemTypes.ancestry.length === 0 && actor.system.ancestry === item.name) {
+        await actor.update({ 'system.ancestry': '' });
+    }
+});
+
 if (module.hot) {
     module.hot.accept();
 
