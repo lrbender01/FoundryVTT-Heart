@@ -115,6 +115,14 @@ export default class CharacterSheet extends HeartActorSheet {
             // Sanity check: Prevent duplication of items
             const existingItem = this.actor.items.find(i => i.name === itemData.name && i.type === itemData.type);
             if (existingItem) {
+                // Generic items stack: dropping a second copy (e.g. rolling
+                // the same keepsake twice) bumps the quantity instead.
+                if (itemData.type === 'item') {
+                    const current = Number(existingItem.system.quantity) || 1;
+                    const added = Number(itemData.system.quantity) || 1;
+                    await existingItem.update({ 'system.quantity': current + added });
+                    return existingItem;
+                }
                 console.warn(`Duplicate item detected: ${itemData.name}. Skipping creation.`);
                 return;
             }
@@ -133,7 +141,10 @@ export default class CharacterSheet extends HeartActorSheet {
                 });
             }
 
-            itemData.system.active = true;
+            // Generic items have no active flag; everything else lands active.
+            if (itemData.type !== 'item') {
+                itemData.system.active = true;
+            }
         }
 
         return super._onDropItemCreate(itemData);

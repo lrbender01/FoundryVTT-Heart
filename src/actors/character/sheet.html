@@ -319,6 +319,15 @@
               </div>
             </div>
 
+            <!-- Items (generic, no roll automation: trinkets, keepsakes, loot) -->
+            <div class="character-tab-container items-container">
+              <div class="container-title">{{localizeHeart "character" "items-heading"}} {{#if actor.isOwner}}<a data-action="add" data-type="item"><span class="addItem">+</span></a>{{/if}}
+              </div>
+              <div class="container-content">
+                {{> characterTabItemList type="item" list=(lookup actor.itemTypes "item")}}
+              </div>
+            </div>
+
             <!-- Inactive Items -->
             <div class="character-tab-container inactive-items-container">
               <div class="container-title">{{localizeHeart "character" "inactive-items-heading"}}</div>
@@ -370,7 +379,75 @@
       <!-- ===== BIOGRAPHY TAB ===== -->
       <section class="tab" data-tab="biography">
         <div class="biography-tab">
-          <!-- Biography Content -->
+          <!-- Ancestry: description + answerable questions (same shape as calling) -->
+          <div class="character-tab-container ancestry-container">
+            {{#if ancestryItem}}
+            <div data-item-id="{{ancestryItem.uuid}}" data-document-id="{{ancestryItem.uuid}}">
+              <div class="heart sheet base Item ancestry {{cssClass}} editable">
+                <div class="container-title">
+                  {{localizeHeart "character" "ancestry"}}: {{localizeHeart ancestryItem.name}}
+                  <a data-action="view">
+                    <span class="fas fa-edit clickable section-button"></span>
+                  </a>
+                </div>
+                <div class="section bio-items">
+                  <div class="bio-description">
+                    {{{localizeHeart ancestryItem.system.description}}}
+                  </div>
+                  {{#each ancestryItem.system.questions as |question id|}}
+                  <div class="question editable">
+                    <strong>{{{localizeHeart question.question}}}</strong>
+                    {{#if question.answer}}
+                    {{editor question.answer button=false editable=false}}
+                    {{else}}
+                    <div class="answer-prompt">
+                      {{localizeHeart "ancestry" "questions" "sheet-prompt"}}
+                    </div>
+                    {{/if}}
+                  </div>
+                  {{/each}}
+                </div>
+              </div>
+            </div>
+            {{else}}
+            <div class="container-title">
+              <a data-action="open-type-compendium" data-item-type="ancestry">
+                {{localizeHeart "character" "ancestry-prompt"}} <span
+                  class="fas fa-plus clickable section-button"></span>
+              </a>
+            </div>
+            {{/if}}
+          </div>
+
+          <!-- Class: description only (classes have no questions) -->
+          <div class="character-tab-container class-container">
+            {{#if classItem}}
+            <div data-item-id="{{classItem.uuid}}" data-document-id="{{classItem.uuid}}">
+              <div class="heart sheet base Item class {{cssClass}} editable">
+                <div class="container-title">
+                  {{localizeHeart "character" "class"}}: {{localizeHeart classItem.name}}
+                  <a data-action="view">
+                    <span class="fas fa-edit clickable section-button"></span>
+                  </a>
+                </div>
+                <div class="section bio-items">
+                  <div class="bio-description">
+                    {{{localizeHeart classItem.system.description}}}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {{else}}
+            <div class="container-title">
+              <a data-action="open-compendium" data-compendium="heart.classes">
+                {{localizeHeart "character" "class-prompt"}} <span
+                  class="fas fa-plus clickable section-button"></span>
+              </a>
+            </div>
+            {{/if}}
+          </div>
+
+          <!-- Calling: description + answerable questions -->
           <div class="character-tab-container questions-container">
             <!-- Check if there are any items of type "calling" -->
             {{#if (some actor.items "type calling")}}

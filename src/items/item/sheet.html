@@ -1,0 +1,10 @@
+{{#> "heart:items/base/sheet.html" type="item"}}
+<div class="grid-2 auto-first-col place-center" style="flex: auto 0 0">
+    <label>{{localizeHeart "item" "quantity"}}</label>
+    {{#if editable}}
+    <input type="number" name="system.quantity" value="{{system.quantity}}" min="0" step="1" />
+    {{else}}
+    {{system.quantity}}
+    {{/if}}
+</div>
+{{/ "heart:items/base/sheet.html"}}

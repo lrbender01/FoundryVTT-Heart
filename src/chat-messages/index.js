@@ -217,109 +217,64 @@ function activateListeners(html) {
     dragDrop.bind(html.get(0));
 }
 
-// overridden to allow replacing "content anchors" with previews
+// Overridden so Item content links render as draggable item previews (the
+// chat log's dragDrop above picks them up) instead of plain anchors.
+//
+// Hardened 2026-09-29: the upstream WIP only handled @Item[...] and the
+// legacy @Compendium[...] forms. An @UUID[...] link - which is what
+// RollTable draws and every modern journal link emit - fell through with no
+// document and threw on `doc.documentName`, killing enrichment for the whole
+// message. Now every link type resolves via fromUuid; anything that is not a
+// resolvable Item with a preview partial falls back to Foundry's default.
 class HeartTextEditor extends TextEditor {
     static async _createContentLink(match, { relativeTo } = {}) {
+        const [type, target] = match.slice(1, 3);
 
-        /// THIS IS WIP
-
-        console.log("Match array:", match);
-        const [type, target, hash, name] = match.slice(1, 5);
-
-        console.log("Target UUID:", target); // Debugging
-
-        let uuid = target;
-
-        let doc;
-
-        // Check if the target is a compendium reference
-        switch (type)
-        {
-            case "Compendium":
-                
-                const item = await this._createCompendiumLink(uuid);
-
-                console.log("resolved compendium item");
-                console.log(item);
-
-                return item;
-            case "Item":
-                uuid = `Item.`.concat(uuid);
-                doc = await fromUuid(uuid);
-                // If the target is a UUID, return it directly
-                break;
+        let doc = null;
+        try {
+            switch (type) {
+                case "UUID":
+                    doc = await fromUuid(target, { relative: relativeTo });
+                    break;
+                case "Compendium":
+                    doc = await fromUuid(`Compendium.${target}`);
+                    break;
+                case "Item":
+                    doc = await fromUuid(`Item.${target}`);
+                    break;
+            }
+        } catch (err) {
+            console.warn(`heart | could not resolve content link ${type}[${target}]`, err);
+            doc = null;
         }
 
-        console.log("Constructed UUID:", uuid);
-
-        console.log("Document:", doc);
-        console.log("Document Name:", doc.documentName);
-
-        if (doc && doc.documentName === "Item") {
-            const data = await doc.sheet.getData();
-
-            console.log(data);
-
-            const innerHTML = Handlebars.partials[`heart:items/${doc.type}/preview.html`](data, {
-                allowedProtoProperties: {
-                    uuid: true,
-                    childrenTypes: true,
-                    isOwner: true
-                }
-            });
-            const div = document.createElement('div');
-            div.innerHTML = innerHTML;
-            div.classList.add('heart', 'sheet');
-            return div;
+        const partial = doc?.documentName === "Item"
+            ? Handlebars.partials[`heart:items/${doc.type}/preview.html`]
+            : undefined;
+        if (partial) {
+            try {
+                return await this._renderItemPreview(doc, partial);
+            } catch (err) {
+                console.warn(`heart | item preview failed for ${doc.uuid}; using the default link`, err);
+            }
         }
-    
-        // Fallback to the default behavior if the document cannot be resolved
+
         return super._createContentLink(match, { relativeTo });
-        
     }
 
-    static async _createCompendiumLink(uuid)
-    {
-        try {
-            // Split the UUID into parts
-            const parts = uuid.split('.');
-            if (parts.length !== 3) {
-                throw new Error(`Invalid UUID format: ${uuid}`);
+    static async _renderItemPreview(item, partial) {
+        const data = await item.sheet.getData();
+        const innerHTML = partial(data, {
+            allowedProtoProperties: {
+                uuid: true,
+                childrenTypes: true,
+                isOwner: true
             }
-
-            // Combine the first two parts as the compendium name and use the third part as the entry ID
-            const compendiumName = `${parts[0]}.${parts[1]}`;
-            const entryId = parts[2];
-
-            console.log("compendiumName: " + compendiumName);
-            console.log("entryId: " + entryId);
-
-            const item = await fromUuid(`Compendium.${compendiumName}.${entryId}`);
-
-            console.log(item);
-
-            if (item && item.documentName === "Item") {
-                const data = await item.sheet.getData();
-    
-                console.log(data);
-    
-                const innerHTML = Handlebars.partials[`heart:items/${item.type}/preview.html`](data, {
-                    allowedProtoProperties: {
-                        uuid: true,
-                        childrenTypes: true,
-                        isOwner: true
-                    }
-                });
-                const div = document.createElement('div');
-                div.innerHTML = innerHTML;
-                div.classList.add('heart', 'sheet');
-                return div;
-            }
-
-        } catch (err) {
-            console.error("Error resolving Compendium document:", err);
-            return null;
-        }
+        });
+        const div = document.createElement('div');
+        div.innerHTML = innerHTML;
+        div.classList.add('heart', 'sheet');
+        return div;
     }
 }
 

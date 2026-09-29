@@ -8,6 +8,15 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
 
 ## [Unreleased]
 
+### Added
+
+- **Generic `item` type (2026-09-29).** A new Item type "Item" for anything a character carries that has no roll automation (trinkets, keepsakes, loot): name, image, description, quantity. Own sheet (base sheet + quantity), own preview row (quantity badge when > 1), and an "Items" container on the character sheet's Character tab beside Equipment and Resources. Dropping a second copy of an Item with the same name onto a character stacks the quantity instead of being rejected as a duplicate. Generic items are not given the `active` flag on drop.
+- **Ancestry questions (2026-09-29).** Ancestry items now carry `system.questions` (`{ <id>: { question, answer } }`) with the same add/delete/answer UI as callings. The character sheet's Biography tab shows Ancestry (description + answerable questions) and Class (description) blocks above the existing Calling block, each with an edit shortcut and a compendium prompt when the slot is empty. Ancestry items authored before this change have no questions until re-imported.
+
+### Fixed
+
+- **Content-link enrichment for `@UUID[...]` (2026-09-29).** The chat/text-editor override that renders Item links as previews only handled `@Item[...]` and legacy `@Compendium[...]`; any `@UUID[...]` link (RollTable draws, modern journal links) fell through with an unresolved document and threw, which broke enrichment of the whole message. All link forms now resolve via `fromUuid`, Items with a preview partial render as draggable previews, everything else uses Foundry's default link. Debug logging removed.
+
 ### Changed
 
 - **Compendium sidebar organization (2026-08-25).** System packs now group into two sidebar folders (`packFolders` in `src/manifest.json`): "Heart - Core Options" (Classes, Callings) and "Heart - System Reference" (Fallouts, Tags, Useful Heart Macros). Labels stay unqualified; the folder taxonomy pairs with the fvtt-heart-content module's "Heart - Expanded Options" / future "Heart - GM Content" so the four folders alphabetically sort into reading order. Presentation-only; pack names/ids unchanged, so no compendium UUIDs break.

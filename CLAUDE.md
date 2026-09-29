@@ -275,6 +275,12 @@ Closes known gaps from PR #94, plus quality-of-life improvements discovered duri
 6. ~~**Add Windows-compatible `build-local` Node replacement.**~~ ✓ Done 2026-08-24 - `dev-utils/empty-dist.js` + `dev-utils/copy-static.js`, `build-all` script, `relink` dropped. See §Build System.
 7. **Investigate `static/packs/macros.db` content.** Phase 0 verified the macros pack APPEARED in the compendium list with non-zero count; deeper content inspection (macro names, payloads) was not done. If the legacy NeDB file is broken in Foundry v12, regenerate as LevelDB.
 
+### Landed 2026-09-29 (content-driven sheet work)
+
+- **Generic `item` type** (`src/items/item/`): `has_description` + `quantity`. Base sheet plus a quantity field; preview row shows `xN` when quantity > 1. Character sheet gained an "Items" container (Character tab, under Resources) listing `actor.itemTypes.item`. `_onDropItemCreate` stacks same-name generic items by bumping quantity and does NOT set `active` on them (they have no such field, so they never appear in the Inactive Items box).
+- **Ancestry questions**: `src/items/ancestry/template.json` now has `questions: {}`; the sheet is a real class (add/delete-question listeners copied from calling). Biography tab renders Ancestry (with answer editors) and Class blocks above Calling using shared `.bio-description` / `.bio-items` styles in `character.sass`. fvtt-heart-content's `expandAncestry` emits the questions map (same shape as callings).
+- **Content-link fix** (`src/chat-messages/index.js`): `HeartTextEditor._createContentLink` resolves `@UUID`, `@Compendium` and `@Item` via `fromUuid`, renders Item previews when a `heart:items/<type>/preview.html` partial exists, and otherwise defers to Foundry. The upstream WIP threw on `@UUID` links, which is what compendium-linked RollTable results emit.
+
 ### Maintenance
 
 8. **Maintain CHANGELOG.md** — see [packages/fvtt-heart-system/CHANGELOG.md](CHANGELOG.md).
@@ -320,6 +326,7 @@ Closes known gaps from PR #94, plus quality-of-life improvements discovered duri
 - ~~**`build-local` script is Unix-only**~~ Resolved 2026-08-24: Node-based `build-all` pipeline (see §Build System); `relink` dropped.
 - **`heart.css` does not exist as a separate file.** Webpack `style-loader` injects CSS at runtime via JS. The original `package.json` `copy-static` script's comment about copying `heart.css` was vestigial; the actual artifact is just `heart.js` plus auxiliary assets.
 - **macros.db legacy NeDB pack** — appears in compendium list but contents not deeply verified. May need regeneration if Foundry v12 rejects NeDB format.
+- **Nested `<form>` in the Biography calling block** (`sheet.html`) - the calling block wraps itself in a second `<form>` inside the sheet form; browsers drop the inner tag so it works by accident. The 2026-09-29 ancestry/class blocks use `<div>`s with the same classes; convert the calling block when next touched.
 - **CLAUDE.md in this directory is untracked in both the inner repo and the outer (outer treats this dir as submodule).** Decide whether to commit it to the fork's history (recommended — it IS the fork's architecture doc) or leave it untracked.
 
 ### No plans for

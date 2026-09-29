@@ -1,8 +1,8 @@
 {
     "Item": {
-        "ancestry": {
+        "item": {
             "templates": ["has_description"],
-            "questions": {}
+            "quantity": 1
         }
     }
 }
