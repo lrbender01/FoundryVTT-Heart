@@ -1,87 +1,146 @@
-{{#*inline "beatSection"}}
-<h2>
-    {{localizeHeart "beat" (join "" type "-beat") "label-multiple"}}
-    {{#if user.isGM }}
-    <a class="right" data-action="add-child" data-type="beat" data-data='{"type": "{{type}}"}'><span class="fas fa-plus"></span> {{localizeHeart "beat" (join "" type "-beat") "add"}}</a>
+{{!--
+  Calling sheet (2026-09-29, approved "Heart Interface Sweep" v2). Shared item
+  chrome with two tabs:
+    Overview - Active Beats first (a character chases two at a time, so both
+               player and GM see them first; a quiet line offers another pick
+               while fewer than two are active), then description, core
+               ability and questions
+    Beats    - full-width minor / major / zenith sections, two beats per
+               row, each (on a character) with stacked Activate / Complete
+               buttons (items/beat/actions.*)
+--}}
+{{#*inline "beatList"}}
+<div class="character-tab-container beats-{{type}}">
+  <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "beat"}}}</span>{{title}} <span class="panel-count">{{done}} / {{beats.length}}</span>
+    {{#if user.isGM}}
+    <a class="panel-add" data-action="create-beat" data-level="{{type}}" title="{{localizeHeart 'beat' 'custom' 'add'}}"><span class="fas fa-plus"></span></a>
     {{/if}}
-</h2>
-<div class="item-list">
-    {{#each beats as |beat|}}
-        {{> "heart:items/beat/preview.html" item=beat showActivate=isOwner showComplete=isOwner showDelete=../user.isGM}}
-    {{/each}}
+  </div>
+  <div class="container-content">
+    <div class="tab-item-list beats-grid">
+      {{#each beats as |beat|}}
+      {{> "heart:items/beat/preview.html" item=beat showBeatActions=../item.isOwned hideLevel=true showDelete=../user.isGM}}
+      {{/each}}
+    </div>
+  </div>
 </div>
 {{/inline}}
 
-<form class="heart sheet base Item calling {{cssClass}} editable" autocomplete="off">
-    <h1>
-        {{#if (and editable (not item.isOwned))}}
-        <input name="name" value="{{localizeHeart item.name}}"/>
-        {{else}}
-        {{localizeHeart item.name}}
-        {{/if}}
-    </h1>
-    <div class="description">
-        {{#if (and editable (not item.isOwned))}}
-        {{editor (localizeHeart system.description) target="system.description" button=true editable=editable owner=owner}}
-        {{else}}
-        {{{localizeHeart system.description}}}
-        {{/if}}
-    </div>
+{{#> "heart:items/base/sheet.html" type="calling" hideToggles=true}}
+  {{!-- Header (2026-09-30 review): finished beats in total, then progress
+       per severity; custom beats included --}}
+  {{#*inline "item-stats"}}
+  <span class="stat stat-total"><b>{{localizeHeart "beat" "completed-beats"}}</b> <span class="v">{{completedBeats}}</span></span>
+  <span class="stat"><b>{{localizeHeart "beat" "level" "minor"}}</b> <span class="v">{{minorDone}}</span> / {{minorBeats.length}}</span>
+  <span class="stat"><b>{{localizeHeart "beat" "level" "major"}}</b> <span class="v">{{majorDone}}</span> / {{majorBeats.length}}</span>
+  <span class="stat"><b>{{localizeHeart "beat" "level" "zenith"}}</b> <span class="v">{{zenithDone}}</span> / {{zenithBeats.length}}</span>
+  {{/inline}}
 
-    <h4>
-        {{localizeHeart "calling" "questions" "prompt"}}
-        {{#if user.isGM }}
-        <a class="right" data-action="add-question"><span class="fas fa-plus"></span> {{localizeHeart "calling" "questions" "add"}}</a>
+  {{#*inline "item-tabs"}}
+  <nav class="character-nav-tabs tabs" data-group="primary">
+    <a class="item" data-tab="overview">{{localizeHeart "item-sheet" "overview"}}</a>
+    <a class="item" data-tab="beats">{{localizeHeart "beat" "label-multiple"}}</a>
+  </nav>
+  {{/inline}}
+
+  <!-- ===== OVERVIEW ===== -->
+  <section class="item-tab" data-tab="overview">
+    {{#if item.isOwned}}
+    <div class="character-tab-container active-beats-container">
+      <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "beat"}}}</span>{{localizeHeart "beat" "active" "label-multiple"}} <span class="panel-count">{{activeBeats.length}} / 2</span>
+        {{#if beatsWarning}}<a class="heart-warn" data-action="show-beats-tab" title="{{beatsWarning}}">!</a>{{/if}}
+      </div>
+      <div class="container-content">
+        <div class="tab-item-list">
+          {{#each activeBeats as |beat|}}
+          {{> "heart:items/beat/preview.html" item=beat showBeatActions=true}}
+          {{/each}}
+        </div>
+        {{#if (lt activeBeats.length 2)}}
+        <div class="beat-slots">{{beatSlots}}</div>
         {{/if}}
-    </h4>
-    <ul>
-    {{#each system.questions as |question id|}}
-        <li data-id="{{id}}">
-            <div class="flexrow">
-                {{#if ../item.isOwned}}
-                <div>
-                    <div class="question">{{{localizeHeart question.question}}}</div>
-                    {{#if ../editable}}
-                    {{editor question.answer target=(join "." "system.questions" id "answer") button=true editable=../editable owner=owner}}
-                    {{else}}
-                    <div>{{{localizeHeart question.answer}}}</div>
-                    {{/if}}
-                </div>
+      </div>
+    </div>
+    {{/if}}
+
+    <div class="item-cols even">
+      <div class="column">
+        {{#if (and editable (not item.isOwned))}}
+        {{> "heart:items/base/description.html"}}
+        {{else}}
+        <div class="character-tab-container description-panel">
+          <div class="container-title">{{localizeHeart "item-sheet" "description"}}</div>
+          <div class="container-content calling-text">{{{localizeHeart system.description}}}</div>
+        </div>
+        {{/if}}
+
+        <div class="character-tab-container core-ability-container">
+          <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "ability"}}}</span>{{localizeHeart "calling" "core-ability" "label-single"}}
+            {{#if user.isGM}}<a class="panel-add" data-action="add-child" data-type="ability" data-data='{"active": true}' title="{{localizeHeart 'calling' 'core-ability' 'add'}}"><span class="fas fa-plus"></span></a>{{/if}}
+          </div>
+          <div class="container-content">
+            <div class="tab-item-list">
+              {{#each childrenTypes.ability as |ability|}}
+              {{> "heart:items/ability/preview.html" item=ability showActivate=false showDelete=../user.isGM}}
+              {{/each}}
+            </div>
+          </div>
+        </div>
+
+        <!-- Trinket (2026-09-30 review): its own section under the core
+             ability; rolled once, into the character's items -->
+        {{#if item.isEmbedded}}
+        <div class="character-tab-container trinket-container">
+          <div class="container-title">{{localizeHeart "trinket" "trinket"}}</div>
+          <div class="container-content">
+            <div class="trinket-row in-sheet" data-trinket-of="{{item.uuid}}">
+              {{#if trinketItem}}
+              {{!-- the rolled item as a normal item row (icon, name, open) --}}
+              <div class="tab-item-list">{{> "heart:items/item/preview.html" item=trinketItem showDelete=false}}</div>
+              {{else if item.flags.heart.trinket}}
+              <a class="trinket-name" data-action="view-trinket" data-uuid="{{item.flags.heart.trinket.uuid}}">{{item.flags.heart.trinket.name}}</a>
+              {{else if item.isOwner}}
+              <button type="button" class="trinket-roll" data-action="roll-trinket"><span class="fas fa-dice-d20"></span> {{localizeHeart "trinket" "roll-trinket"}}</button>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+        {{/if}}
+      </div>
+
+      <div class="column">
+        <div class="character-tab-container questions-container">
+        <div class="container-title">{{localizeHeart "item-sheet" "questions"}}</div>
+        <div class="container-content">
+          <div class="questions-prompt">{{localizeHeart "item-sheet" "calling-questions-prompt"}}</div>
+          <ol class="question-list">
+          {{#each system.questions as |question id|}}
+            <li data-id="{{id}}">
+              <div class="question">{{{localizeHeart question.question}}}{{#if (and ../item.isOwned ../editable)}}<a class="answer-edit" data-action="edit-answer" title="{{localizeHeart 'item-sheet' 'answer'}}"><span class="fas fa-edit"></span></a>{{/if}}</div>
+              {{#if ../item.isOwned}}
+              <div class="answer">
+                {{#unless question.answer}}<div class="answer-placeholder">{{localizeHeart "item-sheet" "no-answer"}}</div>{{/unless}}
+                {{#if ../editable}}
+                {{editor question.answer target=(join "." "system.questions" id "answer") button=true editable=../editable owner=../owner}}
                 {{else}}
-                    {{#if ../editable}}
-                    <div class="question">
-                        {{editor (localizeHeart question.question) target=(join "." "system.questions" id "question") button=true editable=../editable owner=owner}}
-                    </div>
-                    {{else}}
-                    <div>{{{localizeHeart question.question}}}</div>
-                    {{/if}}
+                {{{question.answer}}}
                 {{/if}}
-                {{#if user.isGM }}
-                <a class="action" data-action="delete-question"><span class="fas fa-trash"></span> {{localizeHeart "calling" "questions" "delete"}}</a>
-                {{/if}}
-            </div>    
-        </li>
-    {{/each}}
-    </ul>
-
-
-    <h2>
-        {{#if (eq system.abilities.length 1)}}
-            {{localizeHeart "calling" "core-ability" "label-single"}}
-        {{else}}
-            {{localizeHeart "calling" "core-ability" "label-multiple"}}
-        {{/if}}
-        {{#if user.isGM }}
-        <a class="right" data-action="add-child" data-type="ability" data-data='{"active": true}'><span class="fas fa-plus"></span> {{localizeHeart "calling" "core-ability" "add"}}</a>
-        {{/if}}
-    </h2>
-    <div class="item-list">
-        {{#each childrenTypes.ability as |ability|}}
-            {{> "heart:items/ability/preview.html" item=ability showActivate=true showDelete=../user.isGM}}
-        {{/each}}
+              </div>
+              {{/if}}
+            </li>
+          {{/each}}
+          </ol>
+        </div>
+      </div>
+      </div>
     </div>
+  </section>
 
-    {{> beatSection beats=minorBeats type="minor"}}
-    {{> beatSection beats=majorBeats type="major"}}
-    {{> beatSection beats=zenithBeats type="zenith"}}
-</form>
+  <!-- ===== BEATS ===== -->
+  <!-- Full-width tier sections, beats two to a row inside (2026-09-29 review) -->
+  <section class="item-tab" data-tab="beats">
+    {{> beatList beats=minorBeats type="minor" done=minorDone title=(localizeHeart "beat" "minor-beat" "label-multiple")}}
+    {{> beatList beats=majorBeats type="major" done=majorDone title=(localizeHeart "beat" "major-beat" "label-multiple")}}
+    {{> beatList beats=zenithBeats type="zenith" done=zenithDone title=(localizeHeart "beat" "zenith-beat" "label-multiple")}}
+  </section>
+{{/ "heart:items/base/sheet.html"}}

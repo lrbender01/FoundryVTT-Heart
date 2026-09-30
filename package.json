@@ -8,9 +8,8 @@
     "copy-static": "node ./dev-utils/copy-static.js",
     "build-code": "webpack --mode development",
     "build-manifest": "node ./dev-utils/build-manifest.js",
-    "build-packs": "node ./dev-utils/build-packs.js",
     "build-template": "node ./dev-utils/build-template.js",
-    "build-all": "npm run empty-dist && npm run build-prod && npm run build-manifest -- 0.10.5-pr94 && npm run build-template && npm run build-packs && npm run copy-static",
+    "build-all": "npm run empty-dist && npm run build-prod && npm run build-manifest -- 0.10.5-pr94 && npm run build-template && npm run copy-static",
     "build-local": "npm run build-all",
     "build-prod": "webpack --mode production",
     "launch": "npm run build-local && npx fvtt package workon heart --type System && npx fvtt launch"

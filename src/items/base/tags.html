@@ -1,0 +1,16 @@
+{{!-- Tags panel shared by equipment and resource sheets; each tag shows
+     its rule text inline (showNote). --}}
+<div class="character-tab-container tags-container">
+  <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "tag"}}}</span>{{localizeHeart "item-sheet" "tags"}}
+    {{#if user.isGM}}<a class="panel-add" data-action="add-child" data-type="tag" title="{{localizeHeart 'tag' 'add'}}"><span class="fas fa-plus"></span></a>{{/if}}
+  </div>
+  <div class="container-content">
+    <div class="tab-item-list">
+      {{#each childrenTypes.tag as |tag|}}
+      {{> "heart:items/tag/preview.html" item=tag showActivate=false showDelete=../item.isOwner showNote=true}}
+      {{else}}
+      <div class="muted-note">-</div>
+      {{/each}}
+    </div>
+  </div>
+</div>

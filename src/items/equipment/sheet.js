@@ -47,6 +47,16 @@ export default class extends HeartItemSheet {
     activateListeners(html) {
         super.activateListeners(html);
 
+        // Resistance chips (2026-09-29): click toggles that resistance in or
+        // out of system.resistances
+        html.find('[data-action=toggle-resistance][data-value]').click(ev => {
+          ev.preventDefault();
+          const value = ev.currentTarget.dataset.value;
+          const current = Array.isArray(this.item.system.resistances) ? [...this.item.system.resistances] : [];
+          const next = current.includes(value) ? current.filter(r => r !== value) : [...current, value];
+          this.item.update({ 'system.resistances': next });
+        });
+
         html.find('.ordered-checkable-box:not(.checked)').click(ev => {
           ev.preventDefault();
           const element = ev.currentTarget;

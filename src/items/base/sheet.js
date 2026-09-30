@@ -1,6 +1,32 @@
 import sheetHTML from './sheet.html';
 import HeartSheetMixin from '../../common/sheet';
 import './preview.sass';
+import './item-sheet.sass';
+import { highlightRendered } from '../../common/terms';
+import { iconFor } from '../../common/icons';
+import { activateBeatListeners } from '../beat/actions';
+import { activateTrinketListeners } from '../trinkets';
+
+let measureContext;
+
+// Size an input to its text (or placeholder) in its own font; refits as the
+// user types and once the display font has loaded
+function fitNameField(input) {
+    if (!input) return;
+    const fit = () => {
+        const cs = getComputedStyle(input);
+        measureContext ??= document.createElement('canvas').getContext('2d');
+        measureContext.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        let text = input.value || input.placeholder || '';
+        if (cs.textTransform === 'uppercase') text = text.toUpperCase();
+        const spacing = (parseFloat(cs.letterSpacing) || 0) * text.length;
+        const pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+        input.style.width = `${Math.ceil(measureContext.measureText(text).width + spacing + pad + 8)}px`;
+    };
+    fit();
+    input.addEventListener('input', fit);
+    document.fonts?.ready.then(fit);
+}
 
 export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
     static get type() { return 'base'; }
@@ -8,6 +34,15 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
     static get defaultOptions() {
         const defaultOptions = super.defaultOptions;
         return foundry.utils.mergeObject(defaultOptions, {
+            // Shared item chrome (2026-09-29): full-bleed header, readable size
+            classes: [...defaultOptions.classes, 'heart-item-sheet'],
+            width: 720,
+            // fits its content (fallout / tag / beat sheets were mostly empty
+            // space at a fixed 600px); long sheets set their own height
+            height: 'auto',
+            // keep the scroll position across re-renders (pursuing a beat on
+            // the calling's Beats tab jumped back to the top, 2026-09-30)
+            scrollY: ['.window-content', '.item-body'],
             dragDrop: defaultOptions.dragDrop.concat([{ dragSelector: ".item", dropSelector: null }])
         });
     }
@@ -43,6 +78,100 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
        
         super.activateListeners(html);
 
+        // ---- shared item chrome (2026-09-29) ----
+        // Game terms (skills, domains, resistances, fallout, protection, dice)
+        // highlighted in the DISPLAYED descriptions; editing uses stored data.
+        highlightRendered(html[0], '.editor-panel .editor-content, .class-description, .calling-text');
+
+        // The name field is as wide as its text, so the header chips sit
+        // right after the name instead of a fixed field width away
+        // (2026-09-30 review)
+        fitNameField(html.find('input.item-name')[0]);
+
+        // Question answers (ancestry, calling): the small pencil after a
+        // question opens that answer's editor, taller than the resting view
+        // (Foundry sizes the editor from the element when it opens).
+        html.find('[data-action=edit-answer]').click(ev => {
+            ev.preventDefault();
+            const li = ev.currentTarget.closest('li');
+            if (!li) return;
+            li.classList.add('editing');
+            const button = li.querySelector('.answer .editor-edit');
+            if (button) button.click();
+        });
+        // Tabs (only sheets that render a .character-nav-tabs strip)
+        const tabs = html.find('.character-nav-tabs a[data-tab]');
+        if (tabs.length) {
+            const show = (tab) => {
+                this._activeTab = tab;
+                tabs.each((i, el) => $(el).toggleClass('active', el.dataset.tab === tab));
+                html.find('.item-tab[data-tab]').each((i, el) => $(el).toggle(el.dataset.tab === tab));
+            };
+            show(this._activeTab ?? tabs.first().data('tab'));
+            tabs.click(ev => { ev.preventDefault(); show(ev.currentTarget.dataset.tab); });
+        }
+
+        // Beat Activate / Complete buttons (rows on the calling, the beat's
+        // own header) - rules in items/beat/actions.js
+        activateBeatListeners(html);
+        // ancestry / calling header: Roll keepsake / trinket (items/trinkets.js)
+        activateTrinketListeners(html);
+
+        // Abilities on a character's class (2026-09-30): Learn is permanent
+        // for players (no confirmation, per Luke); the GM can un-learn one
+        html.find('[data-action=ability-unlock]').click(async ev => {
+            ev.preventDefault();
+            const ability = await fromUuid(ev.currentTarget.closest('[data-item-id]').dataset.itemId);
+            if (!ability) return;
+            // a major ability's option needs the major ability learned first
+            const parent = ability.parentItem;
+            if (parent?.type === 'ability' && !parent.system.active) {
+                ui.notifications.warn(game.i18n.localize('heart.ability.parent-first'));
+                return;
+            }
+            await ability.update({ 'system.active': true });
+        });
+        html.find('[data-action=ability-lock]').click(async ev => {
+            ev.preventDefault();
+            if (!game.user.isGM) return;
+            const ability = await fromUuid(ev.currentTarget.closest('[data-item-id]').dataset.itemId);
+            await ability?.update({ 'system.active': false });
+        });
+
+        // Header chips that flip a boolean (Active, Complete)
+        html.find('[data-action=toggle-field][data-field]').click(ev => {
+            ev.preventDefault();
+            const field = ev.currentTarget.dataset.field;
+            this.item.update({ [field]: !foundry.utils.getProperty(this.item, field) });
+        });
+
+        // Header die: roll this item's die
+        html.find('[data-action=item-roll-self]').click(async ev => {
+            ev.preventDefault();
+            const roll = game.heart.rolls.ItemRoll.build({ item: this.item }, {}, { stepIncrease: ev.shiftKey && !ev.altKey, stepDecrease: ev.altKey && !ev.shiftKey });
+            await roll.evaluate();
+            roll.toMessage({
+                flavor: `${iconFor(this.item.img)}${localizeHeart(this.item.name)} (<span class="item-type">${this.item.type}</span>)`,
+                speaker: ChatMessage.getSpeaker({ actor: this.item.actor })
+            });
+        });
+
+        // Pencil in a panel title opens that panel's editor (native click:
+        // jQuery .trigger() skips the default on <a>)
+        html.find('[data-action=edit-editor]').click(ev => {
+            ev.preventDefault();
+            const button = $(ev.currentTarget).closest('.editor-panel').find('.editor-edit').get(0);
+            if (button) button.click();
+        });
+
+        // Quantity stepper (generic items)
+        html.find('[data-action=qty-step]').click(ev => {
+            ev.preventDefault();
+            const step = Number(ev.currentTarget.dataset.step) || 0;
+            const next = Math.max(0, (Number(this.item.system.quantity) || 0) + step);
+            this.item.update({ 'system.quantity': next });
+        });
+
         html.find('[data-action=add-child][data-type]').click(ev => {
             const target = $(ev.currentTarget);
             const documentName = target.data('document-name') || 'Item';
@@ -50,7 +179,9 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
             let itemData = target.data('data') || {};
 
             const data = { documentName, type: type, name: `New ${type}`, system: itemData };
-            this.item.addChildren([data]);
+            // open the new child's sheet to name and fill it (addChildren
+            // gives the data its id); it is already listed in its section
+            this.item.addChildren([data]).then(() => this.item.children?.get(data._id)?.sheet.render(true));
         });
 
         html.find('[data-item-id] [data-action=view]').click(async ev => {
@@ -139,6 +270,16 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
           map[fallout_level] = game.i18n.localize(`heart.fallout.level.${fallout_level}`);
           return map;
         }, {});
+
+        data.ability_tiers = ['core', 'minor', 'major', 'zenith'].reduce((map, tier) => {
+          map[tier] = tier === 'core' ? game.i18n.localize('heart.item-sheet.core') : game.i18n.localize(`heart.ability.type.${tier}`);
+          return map;
+        }, {});
+
+        // "Crawler", "Vess Harrowmere"... shown after the type in the header
+        data.parentName = this.item.parentItem ? localizeHeart(this.item.parentItem.name) : (this.item.actor?.name ?? '');
+        data.editable = this.isEditable;
+        data.owner = this.item.isOwner;
 
         data.children = this.children;
         data.childrenTypes = this.childrenTypes;

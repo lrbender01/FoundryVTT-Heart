@@ -1,10 +1,11 @@
 @use '../util'
     
 .heart.sheet
-    background: white
+    background: util.$bg
+    color: util.$text
     img.profile
         flex-grow: 1
-        background: rgba(0, 0, 0, 0.5)
+        background: util.$sunken
         cursor: pointer
 
     .text
@@ -13,10 +14,8 @@
         flex-flow: column
 
     .subtitle
-        color: util.$red-black
-        font-size: 1.2em
-        text-transform: uppercase
-        font-style: italic
+        @include util.text-label
+        color: util.$muted
         align-self: top
         flex-grow: 0
         text-align: center
@@ -25,7 +24,7 @@
         @include util.notepad
 
     .item-list
-        font-size: 1.2em
+        font-size: util.$fs-body
 
         
     &.base
@@ -35,14 +34,14 @@
             flex-flow: row wrap
             place-items: center
             place-content: center
-            background: util.$bg-for-red
+            background: util.$surface
         
         .info > *
             flex: 0% 1 1
 
         img.profile
             flex-grow: 1
-            background: rgba(0, 0, 0, 0.5)
+            background: util.$sunken
             cursor: pointer
             max-height: 6em
 
@@ -54,22 +53,18 @@
         input[name=name]
             grid-area: 1 / 2 / 2 / 3
             flex-grow: 0
-            font-size: 2em
+            @include util.text-display
             border: 0
             align-self: bottom
             text-align: center
             background: none
-            color: util.$red
-            font-weight: bold
-
-
+            color: util.$red-bright
 
     h1, h2, h3, h4
-        font-family: 'Mosherif'
-        color: black
-        font-size: 2em
+        @include util.text-section
+        color: util.$text
         
         .right
             float: right
-            font-family: Alegreya
-            font-size: 0.8em
+            font-family: util.$font-body
+            font-size: util.$fs-body

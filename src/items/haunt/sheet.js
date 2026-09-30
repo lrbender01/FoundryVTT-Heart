@@ -6,7 +6,7 @@ import './sheet.sass';
 
 const data = Object.freeze({
     type: Object.keys(templateJSON.Item)[0],
-    img: 'systems/heart/assets/prayer.svg',
+    img: 'systems/heart/assets/icons/items/haunt.svg',
     template: sheetHTML.path,
 });
 
@@ -49,7 +49,8 @@ export default class extends HeartItemSheet {
             const target = parent.dataset.target;
 
             const data = {};
-            if (index + 1 === foundry.utils.getProperty(this.item.data, target)) {
+            // (was this.item.data - undefined on v12, so a second click never cleared)
+            if (index + 1 === Number(foundry.utils.getProperty(this.item, target))) {
                 data[target] = index;
             } else {
                 data[target] = index + 1;

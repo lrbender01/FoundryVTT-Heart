@@ -1,12 +1,24 @@
 {{#> "heart:items/base/sheet.html" type="ability"}}
+  {{#*inline "item-stats"}}
+  <span class="stat"><b>{{localizeHeart "item-sheet" "tier"}}</b>
+    {{#if editable}}<select name="system.type">{{selectOptions ability_tiers selected=system.type}}</select>{{else}}<span class="v">{{lookup ability_tiers system.type}}</span>{{/if}}
+  </span>
+  {{/inline}}
 
-<div>
-    {{#each item.proxy.abilities as |ability|}}
-        {{> "heart:items/ability/preview.html" document=../document item=ability}}
-    {{/each}}
-    {{#if user.isGM }}
-    <a data-action="add-child" data-type="ability" data-data='{"type": "minor", "name": "New Ability"}'><span class="fas fa-plus"></span> {{localizeHeart "ability" "add-child-ability"}}</a>
-    {{/if}}
-</div>
+  {{> "heart:items/base/description.html"}}
 
-{{/ "heart:items/base/sheet.html" }}
+  {{#if (or item.proxy.abilities.length user.isGM)}}
+  <div class="character-tab-container upgrades-container">
+    <div class="container-title">{{localizeHeart "item-sheet" "upgrades"}}
+      {{#if user.isGM}}<a class="panel-add" data-action="add-child" data-type="ability" data-data='{"type": "minor", "name": "New Ability"}' title="{{localizeHeart 'ability' 'add-child-ability'}}"><span class="fas fa-plus"></span></a>{{/if}}
+    </div>
+    <div class="container-content">
+      <div class="tab-item-list">
+        {{#each item.proxy.abilities as |ability|}}
+        {{> "heart:items/ability/preview.html" document=../document item=ability showActivate=true}}
+        {{/each}}
+      </div>
+    </div>
+  </div>
+  {{/if}}
+{{/ "heart:items/base/sheet.html"}}

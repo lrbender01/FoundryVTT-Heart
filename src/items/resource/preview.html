@@ -1,15 +1,6 @@
-{{#> "heart:items/base/preview.html" showActivate=true showComplete=false}}
-    <strong>{{localizeHeart item.name}}</strong>
-    (<a data-action="item-roll"><span class="sheetD10 black"></span></span> <strong>{{item.system.die_size}}</strong></a>
-    {{localizeHeart "domain" item.system.domain}}
-    )
-    {{#if item.childrenTypes.tag}}
-    <span class="fas fa-tag"></span>
-    {{/if}}
-    {{#each item.childrenTypes.tag as |tag|}}
-        <a data-action="view" data-item-id="{{tag.uuid}}" title="{{localizeHeart 'base' 'view'}}">
-            {{localizeHeart tag.name}}
-        </a>
-        {{#unless @last}}, {{/unless}}
-    {{/each}}
+{{#> "heart:items/base/preview.html" showActivate=(not hideActivate) showComplete=false}}
+    <strong>{{{heartIcon item.img}}}{{localizeHeart item.name}}</strong>
+    <span class="item-stats">(<span class="item-skill">{{localizeHeart "domain" item.system.domain}}</span> <a class="item-roll" data-action="item-roll"><span class="sheetD10 red"></span>{{item.system.die_size}}</a>)</span>
+    {{~#if item.childrenTypes.tag}} <span class="item-tags">{{{heartGlyph "item" "tag"}}}{{#each item.childrenTypes.tag as |tag|}} <a class="item-tag" data-action="view" data-item-id="{{tag.uuid}}" title="{{localizeHeart 'base' 'view'}}">{{localizeHeart tag.name}}</a>{{#unless @last}},{{/unless}}{{/each}}</span>{{/if}}
+    {{#if showNote}}{{#if item.system.description}}<div class="item-note">{{{heartTerms (localizeHeart item.system.description)}}}</div>{{/if}}{{/if}}
 {{/ "heart:items/base/preview.html"}}

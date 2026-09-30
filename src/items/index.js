@@ -95,12 +95,16 @@ class HeartItem extends Item {
     }
 
     _onUpdate(data, options, userId) {
-        // Refresh the "item.children" compendium and re-render any
-        // documents when we update them
-        super._onUpdate(data, options, userId);
+        // Refresh the child documents FIRST (2026-09-30 fix): Foundry's own
+        // _onUpdate re-renders this item's sheet (and its actor's), and an
+        // AppV1 sheet ignores a second render request while one is running,
+        // so refreshing afterwards left the calling sheet showing stale beats
+        // (Activate / Finish in its Overview "didn't take" until the next
+        // update). refreshChildren's body is synchronous.
         if (data.system && data.system.children) {
             this.refreshChildren();
         }
+        super._onUpdate(data, options, userId);
     }
 
     async update(data = {}, context = {}) {

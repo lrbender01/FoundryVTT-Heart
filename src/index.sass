@@ -1,16 +1,38 @@
 @use './util'
-@import url('https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,600;1,400&display=swap')
+@use './theme'
+// Fonts (2026-09-29 type pass): bundled, so they work offline and bold /
+// italic are real weights instead of browser-faked ones. Alegreya + Alegreya
+// SC are SIL OFL (fonts/alegreya/OFL.txt); latin subset from Fontsource.
+@mixin face($family, $file, $weight, $style: normal)
+    @font-face
+        font-family: $family
+        src: url('fonts/alegreya/#{$file}.woff2') format('woff2')
+        font-weight: $weight
+        font-style: $style
+        font-display: swap
 
-@font-face
-    font-family: 'MelmaCracked'
-    src: url(fonts/melma/MelmaCracked.ttf)
+@include face('Alegreya', 'alegreya-latin-400-normal', 400)
+@include face('Alegreya', 'alegreya-latin-500-normal', 500)
+@include face('Alegreya', 'alegreya-latin-700-normal', 700)
+@include face('Alegreya', 'alegreya-latin-400-italic', 400, italic)
+@include face('Alegreya', 'alegreya-latin-700-italic', 700, italic)
+@include face('Alegreya SC', 'alegreya-sc-latin-400-normal', 400)
+@include face('Alegreya SC', 'alegreya-sc-latin-500-normal', 500)
+@include face('Alegreya SC', 'alegreya-sc-latin-700-normal', 700)
 
 @font-face
     font-family: 'Mosherif'
     src: url(fonts/mosherif/Mosherif.ttf)
 
 .title-font
-    font-family: 'Mosherif'
+    font-family: util.$font-display
+
+// No lines under headings anywhere while Heart is loaded (decided
+// 2026-09-29): Foundry core underlines h1-h3 (sheets, journals, dialogs) and
+// Heart's own dialogs ruled their section h3s. !important is deliberate - it
+// has to beat core's higher-specificity journal/application selectors too.
+:is(h1, h2, h3, h4, h5, h6)
+    border-bottom: none !important
 
 input.hidden
     display: none !important
@@ -26,9 +48,8 @@ input.toggle-display
         transition: max-height 0.2s ease-in
 
 .toggle-button
-    font-family: 'Mosherif'
-    color: black
-    font-size: 1.5em
+    @include util.text-section
+    color: util.$text
     text-align: center
     display: flex
     flex-flow: row wrap
@@ -36,73 +57,39 @@ input.toggle-display
     padding: 0.2em
     margin: 0.3em 0
     border-radius: 0.2em
-    background: util.$white
-    border: 3px solid util.$black
+    background: util.$surface
+    border: 3px solid util.$red-mid
     cursor: pointer
 
-.chat-message
-    background: util.$red
-    color: util.$white
-    border-color: util.$bg-for-red
-
-    .message-header
-        color: util.$white
-
-    .dice-roll
-        .dice-formula, .dice-total
-            background: util.$white
-            color: util.$red
-            border-color: util.$bg-for-red
-
-        .dice-formula
-            background: util.$black
-            color: white
-
-        .dice
-            .part-header
-                border-bottom-color: util.$white
-
-                .part-formula
-                    text-transform: uppercase
-
-            .dice-rolls .roll.discarded
-                filter: sepia(0.5) contrast(0.75) opacity(0.5)
-
-    .message-content + .message-content
-        margin-top: 0.5em
-
-.chat-message .heart
-    button
-        background: util.$bg-for-red
-        color: util.$white
-
-        .fas
-            padding: 0 0.5em
-
-    button + button
-            margin-top: 0.2em
+// (Chat card styling lives in chat-messages/chat-message.sass; the duplicate
+// block that used to sit here was folded into it 2026-09-29.)
 
 .heart
-    font-family: 'Alegreya', serif
+    font-family: util.$font-body
 
-    input
+// Body size at the root of every Heart sheet and dialog (Foundry's window
+// default is 14px); chat cards keep the narrow chat log's own size
+.heart.sheet, form.heart.item-sheet, .heart.form
+    font-size: util.$fs-body
+
+    input, select, textarea
         font-family: inherit
 
+    // Buttons speak in the chip face (they choose / do something)
     button
-        font-family: 'Alegreya'
-        background: util.$red
-        color: util.$white
-        border-color: util.$red-black
-
-        font-size: 1rem
-        text-transform: uppercase
-        font-weight: bold
+        @include util.text-chip
+        background: util.$red-deep
+        color: util.$on-red
+        border-color: util.$red-mid
         cursor: pointer
+
+        &:hover
+            background: util.$red-mid
 
     &.buttons
         display: flex
         flex-flow: row wrap
-        background: util.$black
+        background: util.$sunken
 
         & > *
             flex: 50px 1 0
@@ -111,7 +98,9 @@ input.toggle-display
     table
         border: 0
 
-    // Base (unchecked) styling
+    // Marks: one rule everywhere (2026-09-29) - grey outline when empty,
+    // bright-red fill when marked. Stress boxes and checkboxes follow it; the
+    // protection shields use the same two colours on their shield shape.
     .ordered-checkable-box
         $size: 10px
         flex: $size 0 0
@@ -122,13 +111,13 @@ input.toggle-display
             width: $size
             height: $size
             cursor: pointer
-            border: 1px solid util.$black
+            border: 1px solid util.$mark-empty
             border-radius: 3px
             background-color: transparent
 
-        // When checked
         &.checked::after
-            background-color: util.$black
+            background-color: util.$mark-on
+            border-color: util.$mark-on
 
     input[type=checkbox]
         $size: 10px
@@ -137,40 +126,80 @@ input.toggle-display
         display: inline-block
         width: $size
         height: $size
-        border: 1px solid util.$black
+        border: 1px solid util.$mark-empty
         border-radius: 3px
         background-color: transparent
         margin: 0 2px
         box-sizing: content-box
 
-        &:disabled:checked
-            background-color: util.$disabled-and-checked
-
         &:checked
-            background-color: util.$black
+            background-color: util.$mark-on
+            border-color: util.$mark-on
 
         &:disabled
-            background-color: util.$disabled 0%
+            background-color: util.$disabled
             cursor: not-allowed
 
-        &.invert
-            border-color: util.$white
-            &:checked
-                background-color: util.$white
+        &:disabled:checked
+            background-color: util.$muted
 
+        &.invert
+            border-color: util.$header-fg
+            &:checked
+                background-color: util.$header-fg
+
+    // Gap between the two groups of five (was 1rem; tightened 2026-09-29)
     .ordered-checkable-box:nth-of-type(5)
-        margin-right: 1rem
+        margin-right: 0.45rem
+
+    // Provisions track (2026-09-30): shown, never clicked (marks go through
+    // the party API); two rows of ten; boxes from the Critical line (13) on
+    // have a red outline, with a red tick before the first of them
+    .ordered-checkable-box.readonly
+        pointer-events: none
+
+        &::after
+            cursor: default
+
+    .prov-row
+        display: flex
+        align-items: center
+        gap: 0.2rem
+
+        .ordered-checkable-box
+            display: block
+            line-height: 0
+            position: relative
+
+            &::after
+                display: block
+
+    .ordered-checkable-box.critical:not(.checked)::after
+        border-color: util.$red-mid
+
+    .ordered-checkable-box.critical-start::before
+        content: ''
+        position: absolute
+        left: -3px
+        top: -3px
+        bottom: -3px
+        width: 2px
+        border-radius: 1px
+        background: util.$red-bright
 
     input[type=checkbox]:nth-of-type(5)
-        margin-right: 1rem
+        margin-right: 0.45rem
 
+    // Historic "red" stress track variant: now identical to the base marks
+    // (Luke preferred grey empties over red outlines when reviewing the preview)
     .red
         .ordered-checkable-box
-            &::after, &.checked:after
-                border-color: util.$red
+            &::after
+                border-color: util.$mark-empty
 
             &.checked::after
-                background-color: util.$red
+                background-color: util.$mark-on
+                border-color: util.$mark-on
 
 .window-app .window-content
     padding: 0
@@ -202,3 +231,69 @@ input.toggle-display
     flex-wrap: wrap
     gap: 5px 10px
     justify-content: flex-start
+
+// Icons (2026-09-30, common/icons.js): white-on-transparent SVG glyphs
+// painted in the current text colour through a mask, so they follow the
+// text in both colour schemes.
+// Soft halo (2026-09-30, Luke): every glyph gets a soft outline in the
+// colour opposite the glyph (--heart-glyph-halo, theme.sass). A filter on
+// a masked element is masked away with it (filters run before masks), so
+// the mask lives on ::before and the halo filter on the span itself.
+.heart-glyph
+    position: relative
+    display: inline-block
+    flex: 0 0 auto
+    width: 1em
+    height: 1em
+    vertical-align: -0.14em
+    margin-right: 0.3em
+    filter: drop-shadow(0 0 1px var(--heart-glyph-halo)) drop-shadow(0 0 1px var(--heart-glyph-halo))
+
+    &::before
+        content: ''
+        position: absolute
+        inset: 0
+        background-color: currentColor
+        -webkit-mask: var(--glyph) center / contain no-repeat
+        mask: var(--glyph) center / contain no-repeat
+
+// The same halo on glyph files shown as plain images anywhere in Foundry
+// (sidebar and compendium lists, portraits, chat): these are always the
+// white files, so the halo is always dark. Covers the system's icons and
+// fvtt-heart-content's (both live under assets/icons/).
+img[src*="/assets/icons/"]
+    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.9))
+
+// an icon and its word never split across lines
+:is(span, a, label, button, div, h3, h4):has(> .heart-glyph, > .heart-item-thumb)
+    white-space: nowrap
+
+.heart-item-thumb
+    width: 1.2em
+    height: 1.2em
+    object-fit: contain
+    vertical-align: -0.25em
+    margin-right: 0.3em
+
+// Item-type glyph before a section title (ability / beat / haunt / tag,
+// 2026-09-30): the size of the title's eye and "+" icons
+.container-title .title-glyph
+    display: inline-flex
+    align-self: center
+    font-size: 18px
+    line-height: 1
+
+    .heart-glyph
+        margin-right: 0
+
+// Fallout rows: severity glyph, resistance glyph, name (tooltips name them)
+.fallout-title .fallout-glyph
+    display: inline-flex
+    vertical-align: -0.1em
+
+    .heart-glyph
+        margin-right: 0.25em
+
+.fallout-title .fallout-extra
+    font-weight: normal
+    color: var(--heart-muted)

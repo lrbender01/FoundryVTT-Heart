@@ -4,11 +4,12 @@
             "domains": "",
             "description": "",
             "haunts": [],
-            "potentialPlots":"",
+            "potentialPlots": "",
             "resources": [],
             "specialRules": "",
             "stress": "d4",
-            "tier":""
+            "tier": "",
+            "notes": ""
         }
     }
 }

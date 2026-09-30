@@ -3,27 +3,21 @@
 .heart.sheet.actor
 
     h2
-        font-family: 'Mosherif'
-        font-size: 2em
-        text-transform: uppercase
-        color: util.$red
+        @include util.text-display
+        color: util.$red-bright
         border: 0
-        font-weight: bold
         margin: 0
         padding: 0
         flex-grow: 0
 
         &> div
-            font-size: 1rem
-            color: util.$black
+            font-size: util.$fs-body
+            color: util.$text
 
     h3
-        font-family: 'Mosherif'
-        font-size: 1.5em
-        text-transform: uppercase
-        color: util.$red
+        @include util.text-section
+        color: util.$red-bright
         border: 0
-        font-weight: bold
         margin: 0
         padding: 0
         flex-grow: 0
@@ -34,7 +28,7 @@
     &.base
         img.profile
             flex-grow: 1
-            background: rgba(0, 0, 0, 0.5)
+            background: util.$sunken
             cursor: pointer
             max-height: 6em
 
@@ -46,19 +40,16 @@
         input[name=name]
             grid-area: 1 / 2 / 2 / 3
             flex-grow: 0
-            font-size: 2em
+            @include util.text-display
             border: 0
             align-self: bottom
             text-align: center
             background: none
-            color: util.$red
-            font-weight: bold
+            color: util.$red-bright
 
         .actor-type
-            color: util.$red-black
-            font-size: 1.2em
-            text-transform: uppercase
-            font-style: italic
+            @include util.text-label
+            color: util.$muted
             align-self: top
             flex-grow: 0
             text-align: center

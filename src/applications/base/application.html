@@ -11,7 +11,7 @@
     {{#if showRoll }}
     <div class="wide grid-2">
         <button data-action='cancel'><span class="fas fa-times"></span> {{localizeHeart 'cancel'}}</button>
-        <button data-action='submit'><span class="fas fa-dice"></span> {{localizeHeart 'roll'}}</button>
+        <button data-action='submit' class="primary"><span class="fas {{#if submitIcon}}{{submitIcon}}{{else}}fa-dice{{/if}}"></span> {{#if submitLabel}}{{submitLabel}}{{else}}{{localizeHeart 'roll'}}{{/if}}</button>
     </div>
     {{/if}}
 </form>

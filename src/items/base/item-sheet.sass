@@ -1,0 +1,409 @@
+@use '../../util'
+
+// ============================================================================
+// SHARED ITEM SHEET CHROME (2026-09-29, approved "Heart Interface Sweep")
+// ============================================================================
+// Compact version of the actor sheets' torn header, stat chips for the type's
+// key values, the same tab strip (.character-nav-tabs) and titled containers
+// (.character-tab-container) as the actor sheets.
+
+$head-height: 104px
+$icon: 66px
+
+// Full-bleed like the actor sheets
+.heart-item-sheet .window-content
+    padding: 0
+
+    > *
+        padding: 0
+        background-color: util.$bg
+        color: util.$text
+
+form.heart.item-sheet
+    display: flex
+    flex-direction: column
+    min-height: 100%
+    background: util.$bg
+    color: util.$text
+
+    // Children of the form get "flex: 1" from a shared rule; pin the header,
+    // tab strip and no-tabs spacer to their own size or the empty spacer grows
+    // into a large gap above the body (found in the 2026-09-29 review).
+    > .item-header, > .item-no-tabs, > .character-nav-tabs
+        flex: 0 0 auto
+
+    // ---------- header ----------
+    .item-header
+        position: relative
+        z-index: 1
+        display: flex
+        // never wrap: a wrapped chip row falls under the torn-edge mask and
+        // is clipped in narrow windows; the name shrinks and wraps instead
+        flex-wrap: nowrap
+        align-items: flex-start
+        gap: 10px
+        padding: 10px 14px 0
+        min-height: $head-height
+        box-sizing: border-box
+        background-color: transparent
+        background-image: url('../../../static/assets/ui/header_background.webp')
+        background-size: cover
+        mask-image: url('../../../static/assets/ui/header_nav.svg')
+        mask-size: auto $head-height
+        mask-repeat: repeat-x
+        mask-position: -0.5px top
+
+    .item-icon
+        flex: 0 0 $icon
+        width: $icon
+        height: $icon
+        border-radius: 8px
+        border: 2px solid util.$header-fg
+        background: #000
+        object-fit: cover
+        box-sizing: border-box
+        cursor: pointer
+
+    // Name block and stat chips sit together on the left (2026-09-29 review)
+    .item-ident
+        flex: 0 1 auto
+        min-width: 0
+        max-width: 45%
+        display: grid
+        gap: 3px
+
+    // (selector outranks the old common/sheet.sass ".heart.sheet.base
+    // input[name=name]" rule, which centred the name and moved it above the
+    // type line)
+    input.item-name[name=name]
+        grid-area: auto
+        align-self: auto
+        text-align: left
+        // sheet.js sets the width to the text; never past the name block
+        width: 100%
+        max-width: 100%
+        min-width: 3em
+        @include util.text-display
+        color: util.$header-fg
+
+    .item-name
+        @include util.text-display
+        line-height: 1.05
+        height: auto
+        color: util.$header-fg
+        background: transparent
+        border: 0
+        border-bottom: 1px dashed rgba(244, 238, 232, 0.35)
+        border-radius: 0
+        padding: 0 0 2px
+
+        // read-only (not disabled) when the sheet can't be edited, so the
+        // name can still be selected and copied (2026-09-30)
+        user-select: text
+
+        &[readonly], &:disabled
+            border-bottom-color: transparent
+            color: util.$header-fg
+
+    .item-type
+        @include util.text-label
+        color: util.$header-fg
+        opacity: 0.75
+
+    // Chips stack in two rows, flowing into a second column when needed.
+    // Header only: equipment / resource ROWS inside a sheet also have an
+    // .item-stats span ("(Kill d6)"), which this grid scrambled (review round 2).
+    .item-header > .item-stats
+        flex: 0 0 auto
+        display: grid
+        grid-auto-flow: column
+        grid-template-rows: repeat(2, auto)
+        justify-content: start
+        align-content: start
+        gap: 6px 8px
+        margin-left: 8px
+        min-width: 0
+
+    // ---------- stat chips ----------
+    .stat
+        display: inline-flex
+        align-items: center
+        gap: 7px
+        height: 36px
+        padding: 0 11px
+        border: 1px solid util.$header-fg
+        border-radius: 5px
+        background: util.$header-field-bg
+        color: util.$header-fg
+        font-size: util.$fs-body
+        white-space: nowrap
+        box-sizing: border-box
+
+        // field name in the display face, sized to sit level with its value
+        b
+            font-family: util.$font-display
+            font-weight: normal
+            font-size: util.$fs-chip-mosherif
+            letter-spacing: util.$track-display
+
+        .v
+            color: util.$red-bright
+            font-weight: bold
+            font-size: util.$fs-body
+
+        select, input
+            height: 26px
+            width: auto
+            min-width: 0
+            padding: 0 2px
+            border: 0
+            background: transparent
+            color: util.$red-bright
+            font-weight: bold
+            font-size: util.$fs-body
+
+            option
+                background: util.$surface
+                color: util.$text
+
+        input[type="number"]
+            width: 3em
+            text-align: center
+
+        a
+            color: util.$header-fg
+
+            &:hover
+                color: util.$red-bright
+
+        .sheetD10
+            margin: 0
+            background-color: util.$red-bright
+
+        &.toggle
+            cursor: pointer
+
+            &.on
+                background: util.$red-deep
+                border-color: util.$red-mid
+
+        .ordered-checkable-box
+            display: block
+            line-height: 0
+
+            &::after
+                display: block
+                box-sizing: border-box
+                width: 12px
+                height: 12px
+
+    // ---------- tabs (reuses the actor tab strip) ----------
+    .character-nav-tabs
+        margin-top: -18px
+
+    .item-no-tabs
+        height: 6px
+
+    // ---------- body ----------
+    .item-body
+        flex: 1 1 auto
+        padding: 18px 12px 14px
+        box-sizing: border-box
+        display: flex
+        flex-direction: column
+        gap: 1.15rem
+
+    .item-tab
+        display: flex
+        flex-direction: column
+        gap: 1.15rem
+
+    .item-cols
+        display: grid
+        grid-template-columns: minmax(0, 300px) minmax(0, 1fr)
+        gap: 1.15rem 12px
+        align-items: start
+
+        &.even
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
+
+        > .column
+            display: flex
+            flex-direction: column
+            gap: 1.15rem
+            min-width: 0
+
+    .character-tab-container
+        min-width: 0
+
+    // pencil in a panel title opens that panel's editor (other editors, e.g.
+    // ancestry answers, keep Foundry's own button)
+    .editor-panel .editor .editor-edit
+        display: none
+
+    .editor-panel .editor-content
+        min-height: 2em
+
+    // rows inside item sheets use the compact character-sheet spacing
+    .item-list, .tab-item-list
+        font-size: util.$fs-body
+
+        .item.preview
+            margin: 0.3em 0
+            padding: 0.3em 0.5em
+
+            &:first-child
+                margin-top: 0
+
+    // toggle chips in the body (equipment resistances)
+    .chips
+        display: flex
+        flex-wrap: wrap
+        gap: 5px
+
+        .chip
+            @include util.text-chip
+            padding: 3px 12px 2px
+            border-radius: 5px
+            background: util.$sunken
+            border: 1px solid util.$line
+            color: util.$text
+            cursor: pointer
+
+            &.on
+                background: util.$red-deep
+                border-color: util.$red-mid
+                color: util.$on-red
+
+    // "+" in panel titles: small, not title-sized (2026-09-29 review)
+    .panel-add
+        color: util.$text
+        margin-left: 6px
+        font-size: 16px
+        vertical-align: 4px
+
+        &:hover
+            color: util.$red-bright
+
+    .panel-count
+        font-family: util.$font-body
+        font-size: util.$fs-secondary
+        letter-spacing: 0
+        color: util.$muted
+        margin-left: 4px
+
+    .muted-note
+        @include util.text-secondary
+
+    // haunt services: roll, resistance, die, delete on one line
+    .service-row
+        display: flex
+        align-items: center
+        gap: 6px
+
+        & + .service-row
+            margin-top: 5px
+
+        select
+            flex: 1 1 auto
+            width: auto
+            min-width: 0
+
+        .service-delete
+            color: util.$muted
+
+            &:hover
+                color: util.$red-bright
+
+    .haunt-track
+        display: inline-flex
+        gap: 2px
+
+    // Questions (ancestry, calling): read-only, dense, thin red separators
+    .questions-prompt
+        @include util.text-secondary
+        padding-bottom: 0.4em
+        margin-bottom: 0.1em
+        border-bottom: 1px solid util.$line
+
+    .question-list
+        list-style: none
+        margin: 0
+        padding: 0
+
+        li
+            padding: 0.45em 0
+
+            & + li
+                border-top: 1px solid util.$red-mid
+
+        .question
+            font-weight: bold
+            color: util.$text
+
+            // inline so the pencil sits right after the question's last word
+            p
+                display: inline
+                margin: 0
+
+        li.editing .answer-placeholder
+            display: none
+
+        .answer-edit
+            font-size: 13px
+            margin-left: 6px
+            color: util.$muted
+
+            &:hover
+                color: util.$red-bright
+
+        // answers read as the player's voice: italic, set apart from the
+        // bold question (2026-09-29 review round 2)
+        .answer
+            margin-top: 0.25em
+            font-style: italic
+
+            // the pencil after the question replaces Foundry's floating button
+            .editor-edit
+                display: none
+
+            .editor-content
+                min-height: 1.5em
+
+        // while an answer is being edited, give the editor room to write
+        li.editing .answer
+            .editor-content, .ProseMirror, .tox-tinymce, .tox-edit-area
+                min-height: 12em !important
+
+        .answer-placeholder
+            @include util.text-secondary
+
+    // keepsake / trinket roll inside an ancestry or calling sheet body
+    .trinket-row.in-sheet
+        margin: 0 0 1.1rem
+
+        .trinket-roll
+            width: 100%
+            justify-content: center
+            display: flex
+            align-items: center
+            gap: 8px
+            padding: 6px 12px 5px
+            font-size: util.$fs-body
+
+    // the Keepsake (ancestry) / Trinket (calling) section: the roll or the
+    // rolled item fills the row (2026-09-30 review)
+    .trinket-container .trinket-row.in-sheet
+        margin: 0
+
+        // the rolled item row spans the section, like an Items row
+        > .tab-item-list
+            flex: 1 1 100%
+            min-width: 0
+            font-size: util.$fs-body
+
+            .item.preview
+                margin: 0
+
+        .trinket-name
+            font-weight: bold

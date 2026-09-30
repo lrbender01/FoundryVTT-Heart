@@ -1,6 +1,7 @@
 import sheetHTML from './sheet.html';
 import templateJSON from './template.json';
 import HeartItemSheet from '../base/sheet';
+import { needsEquipmentPick } from './equipment';
 
 import './sheet.sass';
 
@@ -12,6 +13,15 @@ const data = Object.freeze({
 
 export default class extends HeartItemSheet {
     static get type() { return data.type; }
+
+    // Open wide enough to read (was Foundry's 560px item default); slightly
+    // narrower than the 1250px character sheet (2026-09-29).
+    static get defaultOptions() {
+        return foundry.utils.mergeObject(super.defaultOptions, {
+            width: 1050,
+            height: 900,
+        });
+    }
 
     get template() {
         return data.template;
@@ -27,6 +37,38 @@ export default class extends HeartItemSheet {
         data.minorAbilities = this.item.children.filter(x => x.type === 'ability' && x.system.type === 'minor');
         data.majorAbilities = this.item.children.filter(x => x.type === 'ability' && x.system.type === 'major');
         data.zenithAbilities = this.item.children.filter(x => x.type === 'ability' && x.system.type === 'zenith');
+
+        // Equipment choices (2026-09-29 review): "core" is "You get"; every
+        // other group is one option of a pick-one choice, clustered by name
+        // prefix ("group_1..3" -> one choice; Blightborn's "weapon_*" and
+        // "kit_*" -> two). Each choice renders as ONE section of options.
+        const groups = this.item.system.equipment_groups ?? [];
+        const active = new Set([...(this.item.system.active_equipment_groups ?? []), this.item.system.active_equipment_group].filter(Boolean));
+        const equipment = this.item.children.filter(x => x.type === 'equipment');
+        const option = (id) => ({ id, active: active.has(id), items: equipment.filter(e => e.system.group === id) });
+        data.youGet = groups.includes('core') ? option('core') : null;
+        data.needsEquipment = needsEquipmentPick(this.item);
+        const choices = new Map();
+        for (const id of groups) {
+            if (id === 'core') continue;
+            const key = id.replace(/[_-]?\d+$/, '') || id;
+            if (!choices.has(key)) choices.set(key, []);
+            choices.get(key).push(option(id));
+        }
+        // Once a character picks an option it is locked (2026-09-30 review):
+        // the others stay listed but ghosted and unpickable; the GM can
+        // still change it
+        const owned = this.item.isEmbedded || this.item.isChild;
+        data.pickOnes = [...choices.entries()].map(([key, options]) => {
+            const picked = owned && options.some(o => o.active);
+            return {
+                key,
+                label: key === 'group' ? '' : key.replace(/_/g, ' '),
+                picked,
+                locked: picked && !game.user.isGM,
+                options: options.map(o => ({ ...o, ghost: picked && !o.active })),
+            };
+        });
         return data;
     }
 
@@ -62,7 +104,20 @@ export default class extends HeartItemSheet {
             const target = $(ev.currentTarget);
             const groupId = target.closest('[data-group-id]').data('groupId');
             const activeGroupId = this.item.system.active_equipment_group;
-            
+
+            // On a character the pick is final: say so and ask first
+            if (this.item.isEmbedded || this.item.isChild) {
+                const names = this.item.children
+                    .filter(x => x.type === 'equipment' && x.system.group === groupId)
+                    .map(x => localizeHeart(x.name));
+                const esc = (t) => Handlebars.escapeExpression(String(t ?? ''));
+                const ok = await Dialog.confirm({
+                    title: game.i18n.localize('heart.class.equipment.confirm-title'),
+                    content: `<p>${esc(game.i18n.format('heart.class.equipment.confirm-body', { items: names.join(', ') }))}</p>`,
+                });
+                if (!ok) return;
+            }
+
             const childrenUpdates = {};
 
             const previousEquipmentGroups = [...this.item.system.active_equipment_groups];
@@ -92,6 +147,8 @@ export default class extends HeartItemSheet {
         });
 
         html.find('[data-group-id] [data-action=deactivate-group]').click(async ev => {
+            // a character's pick is locked; only the GM can take it back
+            if ((this.item.isEmbedded || this.item.isChild) && !game.user.isGM) return;
             const target = $(ev.currentTarget);
             const groupId = target.closest('[data-group-id]').data('groupId');
 

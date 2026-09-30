@@ -3,7 +3,7 @@ import templateJSON from './template.json';
 
 const data = Object.freeze({
     type: Object.keys(templateJSON.Item)[0],
-    img: 'systems/heart/assets/ore.svg',
+    img: 'systems/heart/assets/icons/items/tag.svg',
     template: sheetHTML.path,
 });
 

@@ -1,65 +1,104 @@
 @use '../util'
 
+// Chat cards (2026-09-29): charcoal card, mid-red border, deep-red speaker
+// bar - so a bright-red result (fallout!) stands out instead of every roll
+// looking equally urgent. Consolidates the duplicate block that used to live
+// in index.sass.
+// Card edge (2026-09-30, Luke): solid black on every card. !important beats
+// the inline player-colour border a chat-portrait module paints on the card;
+// the player's colour stays on the avatar at the top only.
 .chat-message
-    background: util.$red
-    color: util.$white
-    border-color: util.$bg-for-red
+    background: util.$surface
+    color: util.$text
+    border: 1px solid #000 !important
+    border-radius: 6px
 
-    .heart.sheet 
+    .heart.sheet
         background: none
-        color: util.$black
-    
+        color: util.$text
+
     .item-type
         text-transform: capitalize
 
     .message-header
-        color: util.$white
+        background: util.$red-deep
+        color: util.$on-red
+        margin: -5px -5px 5px
+        padding: 3px 6px
+        border-radius: 5px 5px 0 0
+
+        .message-sender, .message-metadata, a
+            color: util.$on-red
+
+    .flavor-text
+        color: util.$muted
 
     .dice-roll
         .dice-formula, .dice-total
-            background: util.$white
-            color: util.$red
-            border-color: util.$bg-for-red
+            background: util.$sunken
+            color: util.$text
+            border-color: util.$line
 
         .dice-formula
-            background: util.$black
-            color: white
+            color: util.$muted
             font-size: 1.2em
             padding: 0.2em
-    
+
         .dice
             .part-header
-                border-bottom-color: util.$white
+                border-bottom-color: util.$line
 
                 .part-formula
                     text-transform: uppercase
 
             .dice-rolls .roll.discarded
-                filter: sepia(0.5) contrast(0.75) opacity(0.5)
-    
+                filter: opacity(0.45)
+
+            .dice-rolls .roll.max
+                color: util.$red-bright
+
     .message-content + .message-content
         margin-top: 0.5em
+
+// Whispers and blind rolls: a recessed card (core painted these with light
+// tints meant for parchment); same solid black edge as every card
+.chat-message.whisper, .chat-message.blind
+    background: util.$sunken
+    color: util.$text
+
+    .message-header
+        color: util.$on-red
+
+.chat-message.emote
+    background: util.$surface
+    color: util.$text
 
 .chat-message .heart
     h1
         border: 0
         text-align: center
-        
+        color: util.$red-bright
+
     button
-        background: util.$bg-for-red
-        color: util.$white
+        background: util.$red-deep
+        color: util.$on-red
+        border: 1px solid util.$red-mid
+
+        &:hover
+            background: util.$red-mid
 
         .fas
             padding: 0 0.5em
-    
+
     button + button
         margin-top: 0.2em
 
 .chat-message .roll-request
-    background: util.$black
+    background: util.$sunken
+    color: util.$text
     padding: 1em
     border-radius: 0.5em
-    font-size: 1.1em
+    font-size: util.$fs-body
 
     label
         display: flex
@@ -68,7 +107,7 @@
         place-content: end
 
     select
-        color: util.$white
+        color: util.$text
         appearance: none
         width: 100%
         overflow: auto
@@ -76,7 +115,8 @@
         option
             appearance: none
             text-align: center
-            background: util.$black
+            background: util.$surface
+            color: util.$text
 
     button > *
         text-overflow: ellipsis
@@ -90,16 +130,147 @@
                 width: 100%
                 object-fit: contain
                 border: 0
-                background: rgba(0, 0, 0, 0.5)
+                background: util.$sunken
                 padding: 0
                 margin: 0
                 border-radius: 0
 
-.chat-message.whisper
-    color: util.$black
-
-    .message-header
-        color: util.$black
-
 .resistance-text
     text-transform: capitalize
+
+// ============================================================================
+// Roll cards (2026-09-29, approved sweep): summary, dice faces, outcome word,
+// labelled buttons. Shared by the Heart, stress and fallout rolls.
+// ============================================================================
+.chat-message .dice-roll
+    .dice-flavor
+        color: util.$muted
+        font-size: util.$fs-secondary
+
+    // everything on the card centred in the narrow chat log (2026-09-30)
+    .roll-summary
+        color: util.$muted
+        font-size: util.$fs-secondary
+        text-align: center
+        margin-bottom: 6px
+
+    .roll-faces
+        display: flex
+        flex-wrap: wrap
+        justify-content: center
+        gap: 6px
+        margin-bottom: 6px
+
+    .roll-face
+        min-width: 30px
+        height: 30px
+        font-size: util.$fs-body
+        padding: 0 5px
+        box-sizing: border-box
+        border-radius: 5px
+        border: 1px solid util.$line
+        background: util.$sunken
+        color: util.$muted
+        display: inline-grid
+        place-items: center
+        font-weight: bold
+        font-variant-numeric: tabular-nums
+
+        &.kept
+            border-color: util.$red-bright
+            color: util.$red-bright
+
+    .roll-outcome
+        @include util.text-section
+        line-height: 1.1
+        text-align: center
+        margin: 2px 0 4px
+        color: util.$text
+
+        &.bad
+            color: util.$red-bright
+
+        &.crit
+            color: util.$text
+            text-decoration: underline
+            text-decoration-color: util.$red-bright
+            text-underline-offset: 4px
+
+    // dice the difficulty removed (2026-09-30)
+    .roll-face.removed
+        text-decoration: line-through
+        opacity: 0.5
+
+    // "Vess doesn't have Hunt: no die", "Tired: ...", crit reminder
+    .roll-note
+        font-size: util.$fs-secondary
+        font-style: italic
+        color: util.$muted
+        text-align: center
+        margin: 0 0 4px
+
+        &.center
+            text-align: center
+
+    // stress card: who took how much
+    .stress-applied
+        list-style: none
+        margin: 4px 0
+        padding: 0
+        font-size: util.$fs-secondary
+
+        li
+            padding: 1px 0
+
+            &.blocked
+                color: util.$muted
+
+        .muted
+            color: util.$muted
+
+    // "Helped by X, Y. They take the same stress." under the outcome
+    .roll-helpers
+        text-align: center
+        font-size: util.$fs-secondary
+        color: util.$muted
+        margin: 2px 0 4px
+
+        strong
+            color: util.$text
+
+    .roll-buttons
+        display: flex
+        flex-wrap: wrap
+        gap: 5px
+        margin-top: 6px
+
+        button
+            flex: 1 1 auto
+            width: auto
+            margin: 0
+            padding: 3px 10px
+            @include util.text-chip
+            font-size: util.$fs-body
+
+// Plain Foundry rolls (item rolls use the core roll template): the total as a
+// big word like the Heart cards
+.chat-message .dice-roll .dice-total
+    @include util.text-section
+
+// Roll request card
+.chat-message .roll-request
+    h1
+        @include util.text-section
+        color: util.$text
+
+    label.title-font
+        @include util.text-label
+        color: util.$muted
+
+    select
+        background: util.$surface
+        border: 1px solid util.$line
+        border-radius: 4px
+
+    .wide button
+        margin-top: 4px

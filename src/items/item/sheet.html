@@ -1,10 +1,11 @@
 {{#> "heart:items/base/sheet.html" type="item"}}
-<div class="grid-2 auto-first-col place-center" style="flex: auto 0 0">
-    <label>{{localizeHeart "item" "quantity"}}</label>
-    {{#if editable}}
-    <input type="number" name="system.quantity" value="{{system.quantity}}" min="0" step="1" />
-    {{else}}
-    {{system.quantity}}
-    {{/if}}
-</div>
+  {{#*inline "item-stats"}}
+  <span class="stat"><b>{{localizeHeart "item-sheet" "qty"}}</b>
+    {{#if editable}}<a data-action="qty-step" data-step="-1" title="-1">&minus;</a>{{/if}}
+    <input type="number" name="system.quantity" value="{{system.quantity}}" min="0" step="1" {{#unless editable}}disabled{{/unless}} />
+    {{#if editable}}<a data-action="qty-step" data-step="1" title="+1">+</a>{{/if}}
+  </span>
+  {{/inline}}
+
+  {{> "heart:items/base/description.html"}}
 {{/ "heart:items/base/sheet.html"}}

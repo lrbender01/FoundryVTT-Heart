@@ -41,6 +41,12 @@ export default {
                     resources.push(...actor.items.filter(isActiveResource));
                     return resources;
                 }
+
+                // Gear the book lists at a landmark (2026-09-29): active
+                // equipment items, shown in their own panel when present
+                if (name === 'equipment') {
+                    return actor.items.filter(item => item.type === 'equipment' && (item.system.active ?? true));
+                }
             }
         });
     }

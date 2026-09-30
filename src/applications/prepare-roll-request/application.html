@@ -1,10 +1,12 @@
-{{#> "heart:applications/base/application.html" type="prepare-roll-request" showRoll=true}}
+{{#> "heart:applications/base/application.html" type="prepare-roll-request" showRoll=true submitLabel=(localizeHeart "applications" "prepare-roll-request" "send") submitIcon="fa-comment"}}
 <label>
     {{localizeHeart "difficulty" "label-single"}}
 </label>
-<select name="difficulty">
-    {{selectOptions difficulties}}
-</select>
+<div class="chip-set">
+    {{#each difficulties as |label value|}}
+    <label class="chip-toggle"><input type="radio" name="difficulty" value="{{value}}" {{#if @first}}checked{{/if}} /><span>{{label}}</span></label>
+    {{/each}}
+</div>
 
 <label>
     {{localizeHeart "character" "label-multiple"}}

@@ -1,89 +1,60 @@
 @use '../../util'
 
-form.heart.calling
-    display: block
-    font-size: 1.1em
-    background: util.$white
+// Calling sheet (2026-09-29): layout comes from the shared item chrome
+// (items/base/item-sheet.sass); this file styles the calling-only pieces.
+form.heart.item-sheet.calling
 
-    h1, h2
-        font-family: 'Mosherif'
-        
+    // Header (2026-09-30 review): "Completed Beats" on its own row, the
+    // three severities side by side under it
+    .item-header > .item-stats
+        grid-auto-flow: row
+        grid-template-rows: none
+        grid-template-columns: repeat(3, auto)
 
-    h1, h2, h3
-        text-transform: uppercase
-    
-    h4
-        font-weight: bold
+        .stat-total
+            grid-column: 1 / -1
+            justify-self: start
 
-    
-    h1, h2, h3, h4
-        border: 0
-        margin: 0
-        flex: auto 0 0
+        // counts in the header's white, not red (2026-09-30 review)
+        .stat .v
+            color: util.$header-fg
 
-        .right
-            float: right
-            font-family: Alegreya
-            font-size: 0.8em
+    .active-beats-container
+        .beats-hint
+            margin-top: 6px
+            @include util.text-secondary
 
-    h1
-        background: util.$red
-        color: util.$white
-        padding: 0.2em
+    .calling-text
+        p
+            margin: 0
 
-        input
-            color: util.$white !important
-            border: 0
-            width: 100%
-            font-size: 1em !important
-            text-align: left !important
+            & + p
+                margin-top: 0.75em
 
-    h2
-        color: util.$red
-        padding: 0.2em 0
+    // Beats: two to a row inside each full-width tier section
+    .beats-grid
+        display: grid
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
+        gap: 5px 8px
 
-    .description
-        flex: auto 0 0
-        font-size: 1.2em
-        font-style: italic
-        padding: 0 1em
-        margin: 0.5em
+        > .item.preview
+            margin: 0
 
-        .editor-content
-            font-size: 1.7em !important
-            line-height: 1em
-            background: rgba(0, 0, 0, 0.1)
-            min-height: 6.5em
-            padding: 0.5em
-            text-align: center
+    // Beats tab (2026-09-30 review): Activate over Finish, so the beat text
+    // gets the width; the Minor / Major / Zenith titles stick to the top of
+    // the window while their section scrolls past
+    .item-tab[data-tab=beats]
+        .beat-actions
+            flex-direction: column
+            align-items: stretch
 
-    li .action
-        padding: 0.2em
+        .character-tab-container
+            > .container-title
+                position: sticky
+                top: 0
+                z-index: 3
+                width: fit-content
+                margin: calc(-0.6rem - 16px) 0 4px 0.75rem
 
-    .action
-        flex: auto 0 0
-
-    p
-        margin: 0
-        & + p
-            margin-top: 0.2em
-
-    .flexrow
-        align-content: center
-
-    .right
-        flex: auto 0 0
-
-    .question
-        font-weight: bold
-        font-style: italic
-
-        
-        .editor-content
-            min-height: 7em !important
-
-        
-    .name
-        text-transform: uppercase
-        font-weight: bold
-        color: util.$red
+            > .container-content
+                margin-top: 0

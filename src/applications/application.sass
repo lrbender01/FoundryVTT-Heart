@@ -8,50 +8,53 @@
         justify-content: start
 
         .option
-            color: util.$black
-            font-family: 'Alegreya'
-            border: 1px solid util.$black
+            @include util.text-chip
+            color: util.$text
+            border: 1px solid util.$line
             border-radius: 5px
-            background: util.$white
+            background: util.$sunken
             margin: 2px
             padding: 4px
             display: inline-block
-            text-transform: uppercase
 
     input:checked + .option
-        background: util.$red
-        color: util.$white
+        background: util.$red-deep
+        border-color: util.$red-mid
+        color: util.$on-red
 
 .heart.form
     .window-content
-        background: util.$white
+        background: util.$bg
+        color: util.$text
 
+    // field names in forms; chips style their own span
     label
         font-weight: bold
-        font-family: 'Mosherif'
+        font-family: util.$font-body
         display: flex
         align-items: center
         justify-content: start
         text-align: left
 
     label.requirement-label
-        font-size: 20px
+        @include util.text-section
 
     .description
         text-align: center
-        font-size: 14px
+        font-size: util.$fs-body
+        line-height: 1.35
 
     .custom-description
-        font-family: 'Mosherif'
-        font-size: 30px
+        @include util.text-display
         text-align: center
-        color: white
-        background-color: util.$red
+        color: util.$on-red
+        background-color: util.$red-deep
         text-shadow: 0 0 transparent !important
         padding: 5px 50px
+        // (the gradient below is a MASK shape, not a colour)
         mask: radial-gradient(8px at 20px 20px, transparent 98%, black) -20px -20px
         margin: 0 auto
-        height: 30px
+        min-height: 30px
         display: flex
         align-items: center
         justify-content: center
@@ -60,25 +63,53 @@
 // Added in Phase 2A.3 (2026-06-12). Row + knack-input styling is hoisted to
 // global rules below (.skill-row / .domain-row / .knack-input) so the same
 // styling drives the Skills & Domains tab on the character sheet (Phase 2A.4).
+// (window-content prefix: outranks the global ".window-content > *" padding)
+.window-app .window-content > :is(.skills-manager, .domains-manager)
+    padding: 6px 12px 10px
+
 .skills-manager, .domains-manager
-    padding: 0.75em 1em
-
+    // no padding from the global .section rule (landmark.sass)
     .section
-        margin-bottom: 1em
+        padding: 0
+        margin: 0 0 0.6em
 
+        // Column heads as small labels (2026-09-30 review: the section-size
+        // heading row was mostly whitespace)
         h3
-            font-family: 'Mosherif'
-            font-size: 1.4em
-            color: util.$red
-            border-bottom: 1px solid util.$red-transparent
-            padding-bottom: 0.25em
-            margin: 0 0 0.5em 0
+            @include util.text-label
+            color: util.$muted
+            padding: 0
+            margin: 0
+            line-height: 1.2
 
-            &.faded
-                color: util.$grey
+            &.center
+                text-align: left
 
         .grid-2.auto-first-col
-            gap: 0.5em
+            gap: 0.35em 0.6em
+            margin-top: 0
+
+    // the skill / domain glyph between the tick and the name
+    .trait-glyph
+        display: inline-flex
+        flex: 0 0 auto
+        font-size: 20px
+
+        .heart-glyph
+            margin-right: 0
+
+    .unselected .trait-glyph
+        opacity: 0.55
+
+    // Save / Cancel (2026-09-29)
+    .manager-buttons
+        display: grid
+        grid-template-columns: 1fr 1fr
+        gap: 0.5em
+        margin-top: 0.5em
+
+        button
+            margin: 0
 
 // Shared row styling for EDIT contexts — used by management popups (grid-2
 // cells) AND by the Skills & Domains tab (subcolumn grid cells). Each row is
@@ -96,7 +127,7 @@
 
     &.unselected
         font-weight: 400
-        color: util.$grey
+        color: util.$muted
 
     input[type="checkbox"]
         transform: scale(1.2)
@@ -104,7 +135,7 @@
         flex: 0 0 auto
 
     .skill-name, .domain-name
-        font-family: 'Alegreya'
+        font-family: util.$font-body
         flex: 1 1 auto
         min-width: 0
 
@@ -115,40 +146,334 @@ input[type="text"].knack-input
     width: 100%
     box-sizing: border-box
     padding: 0.3em 0.5em
-    border: 1px solid util.$grey
+    border: 1px solid util.$line
     border-radius: 0.25em
-    font-family: 'Alegreya'
-    font-size: 0.95em
+    background: util.$sunken
+    color: util.$text
+    font-family: util.$font-body
+    font-size: util.$fs-body
     min-height: 1.8em
     resize: vertical
 
     &:focus
         outline: none
-        border-color: util.$red
+        border-color: util.$red-bright
 
-.active-beats
+// Beat Tracker (2026-09-29): titled container per character, beat rows inside
+form.heart.form.beat-tracker
     display: flex
-    flex-flow: row wrap
-    justify-content: center
+    flex-direction: column
+    gap: 8px
+    padding: 4px 2px
 
-    .character-box
-        border: 1px solid util.$black
-        border-radius: 0.5em
-        margin: 0.5em
+    .tracker-hint
+        @include util.text-secondary
+
+    .tracker-character
+        margin: 0
+
+        .container-title a
+            color: util.$text
+
+            &:hover
+                color: util.$red-bright
+
+        .tracker-calling
+            margin-left: 8px
+            font-family: util.$font-body
+            font-size: util.$fs-secondary
+            letter-spacing: 0
+            color: util.$muted
+
+        .tab-item-list .item.preview + .item.preview
+            margin-top: 4px
+
+    .tracker-empty
+        margin: 0
+        @include util.text-secondary
+
+#controls, .directory
+    .heart-beat-tracker-button
+        flex: 1 0 100%
+
+// ============================================================================
+// Character Options picker (2026-09-29)
+// ============================================================================
+.heart-options-browser .window-content
+    background: util.$bg
+    color: util.$text
+    padding: 0
+
+.options-browser
+    display: flex
+    flex-direction: column
+    gap: 0.5rem
+    padding: 10px 12px
+    height: 100%
+    box-sizing: border-box
+
+    input[type="search"]
+        flex: 0 0 auto
+        height: 30px
+        background: util.$sunken
+        color: util.$text
+        border: 1px solid util.$line
+        border-radius: 5px
+        padding: 0 0.6em
+
+    .options-current
+        color: util.$muted
+
+        strong
+            color: util.$text
+
+    // Cards (2026-09-30 review): one grid in source order (core book, then
+    // Ways and Means, by page), each a large glyph, the name and a two-
+    // sentence pitch (fvtt-heart-content flags), Preview and Choose
+    .options-list
+        flex: 1 1 auto
+        overflow-y: auto
+        padding-right: 2px
+
+    .option-cards
+        display: grid
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))
+        gap: 10px
+
+    .option-card
         display: flex
         flex-direction: column
-        align-items: flex-start
+        gap: 6px
+        padding: 10px 12px 10px
+        border: 1px solid util.$line
+        border-radius: 8px
+        background: util.$sunken
 
-        .character-header
-            background: util.$red
-            color: util.$white
-            padding: 0.5em
-            width: 100%
-            box-sizing: border-box
-            font-size: 1.2em
+        &:hover
+            border-color: util.$red-mid
 
-        .char-active-beats
-            padding: 0 0.5em
-            display: flex
-            flex-direction: column
-            justify-content: center
+            .option-glyph
+                color: util.$red-bright
+
+        &.is-current
+            border-color: util.$red-bright
+
+    .option-head
+        display: flex
+        align-items: center
+        gap: 12px
+        min-width: 0
+
+    .option-glyph
+        flex: 0 0 auto
+        display: inline-flex
+        font-size: 56px
+        line-height: 1
+        color: util.$text
+
+        .heart-glyph, .heart-item-thumb
+            margin: 0
+
+    .option-name
+        @include util.text-section
+        line-height: 1.05
+        color: util.$text
+        cursor: pointer
+        overflow-wrap: anywhere
+
+        &:hover
+            color: util.$red-bright
+
+    .option-pitch
+        flex: 1 1 auto
+        margin: 0
+        font-size: util.$fs-secondary
+        line-height: 1.35
+        color: util.$text
+
+    .option-actions
+        display: flex
+        align-items: center
+        justify-content: flex-end
+        gap: 10px
+
+        .option-preview
+            color: util.$muted
+
+            &:hover
+                color: util.$red-bright
+
+        .option-choose
+            flex: 0 0 auto
+            width: auto
+            margin: 0
+            padding: 2px 14px
+            background: util.$red-deep
+            color: util.$on-red
+            border: 1px solid util.$red-mid
+            @include util.text-chip
+
+            &:hover
+                background: util.$red-mid
+
+    .options-empty
+        @include util.text-secondary
+
+// ============================================================================
+// Chip choices in dialogs (2026-09-29, approved sweep): roll prompt, GM roll
+// request. A hidden radio / checkbox + a span styled as a chip, so the form
+// data stays exactly what the old selects produced.
+// ============================================================================
+.heart.form
+    .requirement-list
+        display: flex
+        flex-direction: column
+        gap: 0.7rem
+        margin: 0.4rem 0 0.2rem
+
+    .requirement-title
+        @include util.text-label
+        color: util.$muted
+        margin-bottom: 4px
+
+    button.primary
+        background: util.$red-deep
+        border-color: util.$red-mid
+        color: util.$on-red
+
+// Roll / Roll with Mastery prompt (2026-09-29 review round 2): legible at a
+// glance - larger description, headings and chips; the window grows to fit.
+.app.requirement
+    .description
+        margin-bottom: 0.3rem
+
+    .requirement-list
+        gap: 1rem
+
+    .requirement-title
+        margin-bottom: 6px
+
+    .requirement-hint
+        @include util.text-secondary
+        margin: -2px 0 6px
+
+    // (.heart.form in the selector: outranks the shared chip rules below)
+    .heart.form .chip-set
+        gap: 7px
+
+    .heart.form .chip-toggle span
+        line-height: 1.2
+        padding: 6px 16px 3px
+        border-radius: 6px
+
+    .heart.form button
+        height: 42px
+        line-height: 1
+        padding: 0
+        align-self: end
+
+.heart.form, .chat-message
+    .chip-set
+        display: flex
+        flex-wrap: wrap
+        gap: 5px
+
+        &.segmented
+            gap: 0
+
+            .chip-toggle span
+                border-radius: 0
+                border-right-width: 0
+
+            .chip-toggle:first-child span
+                border-radius: 6px 0 0 6px
+
+            .chip-toggle:last-child span
+                border-radius: 0 6px 6px 0
+                border-right-width: 1px
+
+    .chip-toggle
+        display: inline-flex
+        margin: 0
+        cursor: pointer
+
+        input
+            position: absolute
+            opacity: 0
+            width: 1px
+            height: 1px
+            pointer-events: none
+
+        span
+            @include util.text-chip
+            padding: 3px 11px 1px
+            border-radius: 5px
+            border: 1px solid util.$line
+            background: util.$sunken
+            color: util.$text
+
+        &:hover span
+            border-color: util.$red-mid
+
+        input:checked + span
+            background: util.$red-deep
+            border-color: util.$red-mid
+            color: util.$on-red
+
+        input:focus-visible + span
+            outline: 2px solid util.$red-bright
+            outline-offset: 1px
+
+// Knack boxes that can't take input yet (skill/domain not ticked)
+textarea.knack-input:disabled
+    opacity: 0.45
+    cursor: not-allowed
+
+// Named-button confirmations (fallout / clear stress)
+.heart-confirm
+    .dialog-content
+        p
+            margin: 0 0 0.4em
+
+        b.resistance
+            color: util.$red-bright
+
+    .dialog-buttons button
+        @include util.text-chip
+
+        &[data-button="clear"]
+            background: util.$red-deep
+            border-color: util.$red-mid
+            color: util.$on-red
+
+// Startup / changelog dialog
+.heart-changelog
+    h2
+        @include util.text-display
+        color: util.$text
+
+    .version-tabs
+        gap: 4px
+        margin-bottom: 0.5em
+
+        .item
+            @include util.text-chip
+            padding: 2px 10px
+            border: 1px solid util.$line
+            border-radius: 5px
+            background: util.$sunken
+            color: util.$text
+
+            &.active
+                background: util.$red-deep
+                border-color: util.$red-mid
+                color: util.$on-red
+
+    h3
+        @include util.text-section
+        color: util.$red-bright
+        margin: 0.5em 0 0.2em
+
+    ul
+        margin: 0
+        padding-left: 1.2em

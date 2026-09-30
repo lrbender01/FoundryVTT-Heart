@@ -1,3 +1,4 @@
 {{#> "heart:items/base/preview.html" }}
-    {{localizeHeart item.name}}
+    <strong>{{localizeHeart item.name}}</strong>
+    {{#if showNote}}{{#if item.system.description}}<div class="item-note">{{{heartTerms (localizeHeart item.system.description)}}}</div>{{/if}}{{/if}}
 {{/ "heart:items/base/preview.html"}}

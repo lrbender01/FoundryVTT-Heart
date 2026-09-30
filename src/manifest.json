@@ -12,18 +12,21 @@
     ],
     "packFolders": [
         {
-            "name": "Heart - Core Options",
-            "sorting": "a",
-            "color": "#7a2f2f",
-            "packs": ["classes", "callings"]
-        },
-        {
-            "name": "Heart - System Reference",
+            "name": "Heart - System",
             "sorting": "a",
             "color": "#3d1f1f",
-            "packs": ["fallouts", "tags", "macros"]
+            "packs": ["macros"]
         }
     ],
+    "relationships": {
+        "recommends": [
+            {
+                "id": "fvtt-heart-content",
+                "type": "module",
+                "reason": "All game text (classes, callings, fallouts, tags, ancestries, equipment, adversaries, landmarks, tables) lives in the content module since 2026-09-30; the system ships no book content."
+            }
+        ]
+    },
     "languages": [
         {
             "lang": "en",

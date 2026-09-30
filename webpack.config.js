@@ -22,6 +22,11 @@ module.exports = (env, argv) => {
             clean: true,
             publicPath: publicPath,
         },
+        // Size hints target sites downloaded over the network; Foundry loads
+        // heart.js and the fonts from local disk, so the warnings are noise.
+        performance: {
+            hints: false,
+        },
         optimization: {
             minimize: false, //true,
             minimizer: [new TerserPlugin({

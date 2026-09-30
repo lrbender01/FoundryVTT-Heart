@@ -1,10 +1,46 @@
+@use '../../util'
+
 .item.preview
     position: relative
-    border: 1px solid rgba(99, 0, 0, 0.4)
+    border: 1px solid util.$line
     border-radius: 5px
-    background: rgb(255, 254, 254)
+    background: util.$sunken
+    color: util.$text
     padding: 0.5em
     margin: 0.5em 0
+
+    // Equipment / resource rows: the skill or domain and the rollable die read
+    // in the accent red, tags in italics (2026-09-29)
+    .item-skill, .item-roll
+        color: util.$red-bright
+
+    .item-roll
+        font-weight: bold
+        white-space: nowrap
+
+        // the shared dice icon carries a 5px left margin for header buttons;
+        // inside a row it hugs its number instead
+        .sheetD10
+            margin: 0 0.15em 0 0
+
+    .item-tags
+        .fas
+            margin-right: 0.1em
+
+    // tag names are game terms: bold red like every term, no italic
+    .item-tag
+        font-weight: bold
+        color: util.$red-bright
+
+    // Optional one-line note under a row (adversary Loot shows each
+    // resource's description this way)
+    .item-note
+        color: util.$muted
+        font-size: util.$fs-secondary
+        margin-top: 0.15em
+
+        p
+            margin: 0
 
     .actionbar
         float: right
@@ -13,10 +49,162 @@
             transform: scale(1.05)
 
     h1, h2, h3, h4
-        font-family: 'Mosherif'
-        color: black
+        font-family: util.$font-display
+        font-weight: normal
+        color: util.$text
         
         .right
             float: right
-            font-family: Alegreya
-            font-size: 0.8em
+            font-family: util.$font-body
+            font-size: util.$fs-secondary
+
+// Beat rows (2026-09-29 review): level, text, and stacked Activate / Complete
+// buttons (items/beat/actions.html). No checkbox. A completed beat is greyed
+// out entirely, its term highlights included.
+.item.preview.beat
+    .beat-row
+        display: flex
+        align-items: center
+        gap: 8px
+
+        &.done
+            .beat-level, .beat-text, .beat-text .heart-term
+                color: util.$muted
+
+    .beat-level
+        flex: 0 0 auto
+        color: util.$red-bright
+        font-weight: bold
+
+    .beat-text
+        flex: 1 1 auto
+        min-width: 0
+
+        p
+            margin: 0
+
+// Activate and Complete side by side (2026-09-30 review)
+.beat-actions
+    flex: 0 0 auto
+    display: flex
+    flex-wrap: nowrap
+    align-items: flex-start
+    gap: 4px
+
+    .beat-chip
+        @include util.text-chip
+        font-size: util.$fs-secondary
+        line-height: 1.2
+        text-align: center
+        padding: 2px 8px 1px
+        border-radius: 5px
+        border: 1px solid util.$line
+        background: util.$bg
+        color: util.$text
+        white-space: nowrap
+        cursor: pointer
+
+        &:hover
+            border-color: util.$red-mid
+            color: util.$red-bright
+
+        // chasing it now
+        &.on
+            background: util.$red-deep
+            border-color: util.$red-mid
+            color: util.$on-red
+
+        // Finished: green, filled (the row itself greys out); click to undo.
+        // Finish (available) stays neutral like Activate.
+        &.done
+            background: util.$good-deep
+            border-color: util.$good
+            color: util.$good
+
+        // not available yet (Complete before Activate, Activate after done)
+        &.disabled
+            opacity: 0.4
+            cursor: not-allowed
+
+            &:hover
+                border-color: util.$line
+                color: util.$text
+
+        &.static
+            cursor: default
+
+// counts beside container titles ("1 / 2") on actor sheets too
+.heart .container-title .panel-count
+    font-family: util.$font-body
+    font-size: util.$fs-secondary
+    letter-spacing: 0
+    color: util.$muted
+    margin-left: 4px
+
+// "1 of 2 beats active. Choose another" - a quiet line, not an alarm
+.beat-slots
+    margin-top: 6px
+    font-size: util.$fs-secondary
+    color: util.$muted
+
+    a
+        color: util.$text
+        text-decoration: underline
+        text-decoration-color: util.$red-mid
+        text-underline-offset: 3px
+
+        &:hover
+            color: util.$red-bright
+
+// Ability lock state on a character's class (2026-09-30): Locked / Unlock
+// / Unlocked, beside the ability's name
+.item.preview.ability .lock-chip
+    display: inline-block
+    margin-left: 8px
+    @include util.text-chip
+    font-size: util.$fs-secondary
+    line-height: 1.2
+    padding: 2px 8px 1px
+    border-radius: 5px
+    border: 1px solid util.$line
+    background: util.$bg
+    color: util.$muted
+    vertical-align: 2px
+    white-space: nowrap
+
+    // Learn: neutral like Finish
+    &[data-action=ability-unlock]
+        color: util.$text
+        cursor: pointer
+
+        &:hover
+            border-color: util.$red-mid
+            color: util.$red-bright
+
+    // Learned: green like Finished
+    &.unlocked
+        background: util.$good-deep
+        border-color: util.$good
+        color: util.$good
+
+    &[data-action=ability-lock]
+        cursor: pointer
+
+    // not yet (the major ability isn't learned)
+    &.disabled
+        color: util.$text
+        opacity: 0.4
+        cursor: not-allowed
+
+// A major ability's options: columns beneath it, as many as fit
+.item.preview.ability .nested-abilities
+    display: grid
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr))
+    gap: 6px
+    margin-top: 6px
+
+    &:empty
+        display: none
+
+    > .item.preview
+        margin: 0

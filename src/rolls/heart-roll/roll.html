@@ -1,18 +1,30 @@
+{{!-- Heart roll card (2026-09-30 rebuild): summary, the dice faces (the die
+     actually kept in red, dice the difficulty removed struck through, hover a
+     face for its source), notes (a skill the roller lacks, Tired...), the
+     outcome word, helpers, and Take stress on a result that costs stress. --}}
 <form class="dice-roll heart heart-roll">
     <input type="hidden" name="character" value="{{character}}"/>
     {{#if flavor}}
     <div class="dice-flavor">{{flavor}}</div>
     {{/if}}
     <div class="dice-result">
-        <div class="dice-formula">{{description}}</div>
-        {{{tooltip}}}
-        <div class="flexrow">
-            <h4 class="dice-total text">{{localizeHeart "result" result}}</h4>
-            {{#if (and showStressRollButton (lookup (getActor character) "isOwner"))}}
-            <button class="icon-button" data-action='roll-stress' title="{{localizeHeart 'rolls' 'stress-roll' 'action'}}">
-                <span class="fas fa-dice"></span>
-            </button>
-            {{/if}}
+        <div class="roll-summary">{{description}}</div>
+        {{#if faces.length}}
+        <div class="roll-faces">
+            {{#each faces as |face|}}<span class="roll-face {{#if face.kept}}kept{{/if}} {{#if face.removed}}removed{{/if}}" title="{{face.flavor}}">{{face.result}}</span>{{/each}}
         </div>
+        {{/if}}
+        {{#each notes as |note|}}<div class="roll-note">{{note}}</div>{{/each}}
+        {{{tooltip}}}
+        <div class="roll-outcome {{outcomeClass}}">{{localizeHeart "result" result}}</div>
+        {{#if criticalSuccess}}<div class="roll-note center">{{localizeHeart "rolls" "roll" "crit-step-up"}}</div>{{/if}}
+        {{#if helperNames}}
+        <div class="roll-helpers"><span class="fas fa-hands-helping"></span> {{localizeHeart "helper" "card"}} <strong>{{helperNames}}</strong>. {{localizeHeart "helper" "card-stress"}}</div>
+        {{/if}}
+        {{#if (and showStressRollButton (lookup (getActor character) "isOwner"))}}
+        <div class="roll-buttons">
+            <button type="button" data-action='roll-stress'><span class="fas fa-heart-broken"></span> {{localizeHeart 'rolls' 'roll' 'take-stress'}}</button>
+        </div>
+        {{/if}}
     </div>
 </form>

@@ -1,2 +1,13 @@
-{{#> "heart:items/base/sheet.html" type="beat"}}
-{{/ "heart:items/base/sheet.html" }}
+{{!-- Beat sheet: level chip, and on a character the same Activate /
+     Complete buttons as the rows (the generic header toggles would skip the
+     beat rules, so they are hidden). --}}
+{{#> "heart:items/base/sheet.html" type="beat" hideToggles=true}}
+  {{#*inline "item-stats"}}
+  <span class="stat"><b>{{localizeHeart "item-sheet" "level"}}</b>
+    {{#if editable}}<select name="system.type">{{selectOptions beat_levels selected=system.type}}</select>{{else}}<span class="v">{{lookup beat_levels system.type}}</span>{{/if}}
+  </span>
+  {{#if (or item.isEmbedded item.isChild)}}{{> "heart:items/beat/actions.html" item=item}}{{/if}}
+  {{/inline}}
+
+  {{> "heart:items/base/description.html" panelTitle=(localizeHeart "item-sheet" "beat")}}
+{{/ "heart:items/base/sheet.html"}}

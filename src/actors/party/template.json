@@ -1,0 +1,10 @@
+{
+    "Actor": {
+        "party": {
+            "provisions": {"value": 0, "max": 20},
+            "quartermaster": "",
+            "members": [],
+            "notes": ""
+        }
+    }
+}

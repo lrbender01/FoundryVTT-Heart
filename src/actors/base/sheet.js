@@ -1,6 +1,7 @@
 import './sheet.sass';
 import sheetHTML from './sheet.html';
 import HeartSheetMixin from '../../common/sheet';
+import { iconFor } from '../../common/icons';
 
 export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
     static get type() { return 'base'; }
@@ -81,92 +82,44 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
           await roll.evaluate();
 
           roll.toMessage({
-              flavor: `${localizeHeart(item.name)} (<span class="item-type">${item.type}</span>)`,
+              // the item's own icon leads the card (2026-09-30)
+              flavor: `${iconFor(item.img)}${localizeHeart(item.name)} (<span class="item-type">${item.type}</span>)`,
               speaker: {actor: this.actor.id}
           });
         });
       
-        html.find('[data-action=roll]').click(async ev => {
-            const roll = await  game.heart.rolls.HeartRoll.build({
-                character: this.actor.id
-            });
+        // Heart rolls (2026-09-30 rebuild): every entry point opens the
+        // actor-aware roll prompt, preselecting what was clicked. A knack is
+        // shown there as a suggestion, never forced as mastery (HCB p.9).
+        // Closing the prompt posts nothing. Dice So Nice animates the pool as
+        // the card is created (roll.toMessage).
+        const heartRoll = async (preset = {}) => {
+            const roll = await game.heart.rolls.HeartRoll.build({ character: this.actor.id, ...preset });
+            if (!roll) return;
+            await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this.actor }) });
+        };
 
-            roll.toMessage({
-                speaker: {actor: this.actor.id}
-            });
+        html.find('[data-action=roll]').click(ev => {
+            ev.preventDefault();
+            heartRoll();
         });
 
         html.find('[data-action=stress-roll]').click(async ev => {
-            const target = $(ev.currentTarget); // The clicked element
-            const resistance = target.data('resistance'); // Get the resistance from the data attribute
-
-            const roll = await game.heart.rolls.StressRoll.build({
-                character: this.actor.id,
-                resistance: resistance // Pass the resistance to the roll
-            });
-
-            roll.toMessage({
-                speaker: { actor: this.actor.id },
-                flavor: resistance ? `Resistance: ${resistance}` : undefined // Optional: Add resistance info to the message
-            });
+            ev.preventDefault();
+            const resistance = ev.currentTarget.dataset.resistance || undefined;
+            const roll = await game.heart.rolls.StressRoll.build({ character: this.actor.id, resistance });
+            if (!roll) return;
+            await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this.actor }) });
         });
 
-        html.find('[data-action=skill-roll]').click(async ev => {
-
-            const target = $(ev.currentTarget);
-            const skill = target.data('skill');
-            const knack = target.data('knack');
-
-            let descriptionParts = [];
-            descriptionParts.push(knack 
-                ? game.i18n.localize(`heart.mastery.label`) 
-                : game.i18n.localize(`heart.perform.roll`));
-            if (skill) descriptionParts.push(game.i18n.localize(`heart.skill.${skill}`));
-            
-            const flavor = descriptionParts.length > 0
-                ? game.i18n.format("heart.applications.prepare-roll.custom-description", { description: descriptionParts.join(" ") })
-                : game.i18n.localize("heart.applications.prepare-roll.description");
-
-            const roll = await game.heart.rolls.HeartRoll.build({
-                character: this.actor.id,
-                skill: skill,
-                ...(knack && { mastery: knack }),
-                flavor: flavor
-            });
-
-            roll.toMessage({
-                speaker: { actor: this.actor.id },
-                flavor: skill ? `Skill: ${skill}` : undefined
-            });
+        html.find('[data-action=skill-roll]').click(ev => {
+            ev.preventDefault();
+            heartRoll({ skill: ev.currentTarget.dataset.skill });
         });
 
-        html.find('[data-action=domain-roll]').click(async ev => {
-
-            const target = $(ev.currentTarget);
-            const domain = target.data('domain');
-            const knack = target.data('knack');
-
-            let descriptionParts = [];
-            descriptionParts.push(knack 
-                ? game.i18n.localize(`heart.mastery.label`) 
-                : game.i18n.localize(`heart.perform.roll`));
-            if (domain) descriptionParts.push(game.i18n.localize(`heart.domain.${domain}`));
-            
-            const flavor = descriptionParts.length > 0
-                ? game.i18n.format("heart.applications.prepare-roll.custom-description", { description: descriptionParts.join(" ") })
-                : game.i18n.localize("heart.applications.prepare-roll.description");
-
-            const roll = await game.heart.rolls.HeartRoll.build({
-                character: this.actor.id,
-                domain: domain,
-                ...(knack && { mastery: knack }),
-                flavor: flavor
-            });
-
-            roll.toMessage({
-                speaker: { actor: this.actor.id },
-                flavor: domain ? `Domain: ${domain}` : undefined
-            });
+        html.find('[data-action=domain-roll]').click(ev => {
+            ev.preventDefault();
+            heartRoll({ domain: ev.currentTarget.dataset.domain });
         });
         
         
@@ -222,10 +175,11 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
             pack.render(true);
         });
 
-        // Like open-compendium, but finds the first Item compendium that
-        // PROVIDES a given item type instead of hardcoding a pack id. Lets
-        // content modules (e.g. fvtt-heart-content's ancestries) supply types
-        // the system doesn't ship packs for.
+        // Like open-compendium, but opens EVERY Item compendium that provides
+        // the given item type instead of a hardcoded pack id - so "Select a
+        // Class" shows the core book AND Ways & Means packs together
+        // (2026-09-29), and content modules can supply types the system
+        // doesn't ship packs for (e.g. ancestries).
         html.find('[data-action=open-type-compendium]').click(async ev => {
             const type = $(ev.currentTarget).data('itemType');
             if (!type) {
@@ -233,14 +187,17 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
                 return;
             }
 
+            let opened = 0;
             for (const pack of game.packs) {
                 if (pack.metadata.type !== 'Item') continue;
+                if (!pack.visible) continue;
                 const index = await pack.getIndex();
                 if (index.some(entry => entry.type === type)) {
                     pack.render(true);
-                    return;
+                    opened++;
                 }
             }
+            if (opened > 0) return;
 
             ui.notifications.warn(`No compendium provides "${type}" items. Enable a content module that ships them.`);
         });

@@ -1,0 +1,248 @@
+@use '../../util'
+
+// Roll prompt (2026-09-30 rebuild, approved "Heart Roll Prompt" mock)
+.app.heart-roll-prompt
+    .window-content
+        background: util.$bg
+        color: util.$text
+        padding: 14px 16px 16px
+
+    .heart-roll-body
+        display: grid
+        gap: 14px
+        font-family: util.$font-body
+        font-size: util.$fs-body
+
+        section
+            margin: 0
+
+    .roll-banner
+        @include util.text-display
+        justify-self: center
+        text-align: center
+        background: util.$red-deep
+        color: util.$on-red
+        padding: 4px 34px
+        border-radius: 3px
+
+    .roll-who
+        text-align: center
+        font-size: util.$fs-secondary
+        color: util.$muted
+        margin-top: -6px
+
+        b
+            color: util.$text
+
+    .roll-label
+        @include util.text-label
+        color: util.$muted
+        margin-bottom: 5px
+
+        .why
+            font-family: util.$font-body
+            font-style: italic
+            text-transform: none
+            letter-spacing: 0
+            margin-left: 6px
+
+    .roll-chips
+        display: flex
+        flex-wrap: wrap
+        gap: 7px
+
+    .roll-chip
+        @include util.text-chip
+        width: auto
+        height: auto
+        margin: 0
+        line-height: 1.15
+        padding: 0.32em 0.8em 0.24em
+        border-radius: 6px
+        border: 1px solid util.$line
+        background: util.$sunken
+        color: util.$text
+        cursor: pointer
+
+        &:hover
+            border-color: util.$red-mid
+            background: util.$sunken
+
+        &.on
+            background: util.$red-deep
+            border-color: util.$red-mid
+            color: util.$on-red
+
+        // the roller doesn't have it: still pickable (a helper may), dashed
+        &.lack
+            border-style: dashed
+            color: util.$muted
+
+        &.lack.on
+            background: util.$sunken
+            border-color: util.$red-bright
+            color: util.$muted
+
+        // has it, but a fallout stops it adding a die (Tired / Clouded)
+        &.struck
+            text-decoration: line-through
+
+        // helper who can't help (or a third helper)
+        &.blocked
+            opacity: 0.45
+            cursor: not-allowed
+            text-decoration: line-through
+
+        // GM picking past the rules
+        &.override
+            border-style: dotted
+
+        .has
+            display: inline-block
+            width: 7px
+            height: 7px
+            margin: 0 0 3px 6px
+            border-radius: 50%
+            background: util.$red-bright
+            vertical-align: middle
+
+        .knack
+            font-size: 12px
+            margin-left: 4px
+            vertical-align: 2px
+
+    .roll-legend
+        display: flex
+        flex-wrap: wrap
+        gap: 4px 14px
+        margin-top: 6px
+        font-size: util.$fs-secondary
+        color: util.$muted
+
+        .has
+            display: inline-block
+            width: 7px
+            height: 7px
+            border-radius: 50%
+            background: util.$red-bright
+
+    .roll-hint
+        @include util.text-secondary
+        margin: 5px 0 0
+        line-height: 1.35
+
+        b
+            font-style: normal
+            color: util.$text
+
+        &.warn
+            color: util.$text
+
+    // the pool preview
+    .roll-pool
+        display: grid
+        gap: 8px
+        padding: 10px 12px
+        background: util.$sunken
+        border: 1px solid util.$line
+        border-left: 3px solid util.$red-mid
+        border-radius: 0 8px 8px 0
+
+    .pool-head
+        display: flex
+        flex-wrap: wrap
+        align-items: baseline
+        gap: 4px 12px
+
+    .pool-count
+        @include util.text-section
+
+    .pool-say
+        font-size: util.$fs-secondary
+        color: util.$muted
+
+    .pool-dice
+        display: flex
+        flex-wrap: wrap
+        gap: 8px
+
+    .pool-die
+        display: grid
+        justify-items: center
+        gap: 3px
+        min-width: 58px
+
+        .face
+            display: grid
+            place-items: center
+            width: 34px
+            height: 34px
+            border: 1.5px solid util.$text
+            border-radius: 7px
+            background: util.$surface
+            font-family: util.$font-label
+            font-size: 13px
+
+        // skill / domain dice show their glyph instead of "d10"
+        .face .heart-glyph
+            width: 20px
+            height: 20px
+            margin: 0
+
+        .src
+            font-size: 13px
+            color: util.$muted
+            text-align: center
+            line-height: 1.15
+
+        &.mastery .face
+            border-color: util.$red-bright
+            color: util.$red-bright
+
+        &.helper .face
+            border-style: dashed
+
+        &.fresh .face
+            border-color: util.$red-bright
+            background: util.$red-deep
+            color: util.$on-red
+
+    .pool-outcomes
+        display: grid
+        grid-template-columns: auto 1fr
+        gap: 1px 10px
+        font-size: util.$fs-secondary
+        color: util.$muted
+
+        b
+            color: util.$text
+            font-variant-numeric: tabular-nums
+
+        .bad
+            color: util.$red-bright
+
+    .roll-buttons
+        display: grid
+        grid-template-columns: 1fr 1.6fr
+        gap: 8px
+
+        button
+            @include util.text-chip
+            height: 44px
+            margin: 0
+            border-radius: 4px
+            cursor: pointer
+
+        .ghost
+            background: util.$sunken
+            border: 1px solid util.$line
+            color: util.$text
+
+        .primary
+            background: util.$red-deep
+            border: 1px solid util.$red-mid
+            color: util.$on-red
+
+            &:disabled
+                opacity: 0.45
+                cursor: not-allowed

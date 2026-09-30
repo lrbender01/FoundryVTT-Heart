@@ -5,7 +5,7 @@ const {mergeDeep} = require('./common');
 const paths = glob.globSync('./src/**/template.json');
 const templates = {};
 paths.forEach((path) => {
-    console.warn(`Adding template ${path}`);
+    console.log(`Adding template ${path}`);
     const content = fs.readFileSync(path);
     const template = JSON.parse(content);
     mergeDeep(templates, template);

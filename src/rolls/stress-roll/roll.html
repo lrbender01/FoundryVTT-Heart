@@ -1,23 +1,30 @@
+{{!-- Stress roll card (2026-09-30 rebuild): the stakes, the roll, who took
+     how much (less their Protection), and a fallout button per character who
+     took any. --}}
 <form class="dice-roll heart stress-roll">
     <input type="hidden" name="character" value="{{character}}"/>
     {{#if flavor}}
     <div class="dice-flavor">{{flavor}}</div>
     {{/if}}
     <div class="dice-result">
-        <div class="dice-formula">{{description}}</div>
+        <div class="roll-summary">{{description}}</div>
+        <div class="roll-faces"><span class="roll-face kept">{{total}}</span></div>
         {{{tooltip}}}
-        <div class="flexrow">
-            <h4 class="dice-total">{{total}} {{#if resistance}}{{titlecase (localizeHeart resistance)}}{{/if}} {{localizeHeart 'stress'}}</h4>
+        <div class="roll-outcome">{{total}} {{#if resistance}}{{{heartGlyph "resistance" resistance}}}{{titlecase (localizeHeart "resistance" resistance)}}{{/if}} {{localizeHeart 'stress'}}</div>
+        {{#if applied.length}}
+        <ul class="stress-applied">
+            {{#each applied as |a|}}<li class="{{#unless a.amount}}blocked{{/unless}}">{{a.line}}{{#if a.protectionNote}} <span class="muted">{{a.protectionNote}}</span>{{/if}}</li>{{/each}}
+        </ul>
+        {{/if}}
+        {{#if (or showTakeStressButton falloutFor.length)}}
+        <div class="roll-buttons">
             {{#if showTakeStressButton}}
-            <button class="icon-button" data-action="take-stress" title="{{localizeHeart 'rolls' 'stress-roll' 'take-stress' }}">
-                <span class="fas fa-heart-broken"></span>
-            </button>
+            <button type="button" data-action="take-stress"><span class="fas fa-heart-broken"></span> {{localizeHeart 'rolls' 'stress-roll' 'take-stress'}}</button>
             {{/if}}
-            {{#if showFalloutRollButton}}
-            <button class="icon-button" data-action="roll-fallout" title="{{localizeHeart 'rolls' 'fallout-roll' 'action' }}">
-                <span class="fas fa-radiation-alt"></span>
-            </button>
-            {{/if}}
+            {{#each falloutFor as |a|}}
+            <button type="button" data-action="roll-fallout" data-character="{{a.id}}"><span class="fas fa-radiation-alt"></span> {{localizeHeart 'rolls' 'fallout-roll' 'action'}}: {{a.name}}</button>
+            {{/each}}
         </div>
+        {{/if}}
     </div>
 </form>

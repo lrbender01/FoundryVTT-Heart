@@ -1,45 +1,17 @@
-{{#> "heart:items/base/preview.html" showActivate=true showComplete=false showDelete=true die_sizes=undefined resistances=undefined}}
-    <h4>
-        {{localizeHeart item.name}}
-    </h4>
-    <div class="section {{localizeHeart haunt upgradeTrack 'label-single'}}">
-        <h4>
-            {{localizeHeart "haunt" "upgradeTrack" "label-single"}}
-            <div class="right">
-                <a data-action="upgrade" data-type="haunt"><span class="fas fa-level-up-alt"></span>{{localizeHeart "haunt" "upgrade"}}</a>
-                <a data-action="downgrade" data-type="haunt"><span class="fas fa-level-down-alt"></span>{{localizeHeart "haunt" "downgrade"}}</a>
-            </div>
-        </h4>
-        <div class="red" data-target='system.upgradeTrack'>{{{ordered-checkable item.system.upgradeTrack 6}}}</div>
+{{!-- Compact haunt row (2026-09-29): name, services as rollable
+     "Resistance die" pairs, upgrade track with up / down. Services are edited
+     on the haunt's own sheet. --}}
+{{#> "heart:items/base/preview.html" showActivate=true showComplete=false showDelete=true}}
+    <strong>{{localizeHeart item.name}}</strong>
+    <div class="haunt-services">
+        {{#each item.system.resistances as |service id|}}
+        <a class="haunt-service" data-id="{{id}}" data-action="service-roll" title="{{localizeHeart 'perform' 'roll'}}"><span class="item-skill">{{localizeHeart "resistance" service.resistance}}</span> <span class="item-roll"><span class="sheetD10 red"></span>{{service.die_size}}</span></a>
+        {{/each}}
     </div>
-    
-    <div class="section {{localizeHeart haunt service 'label-multiple'}}">
-        <h4>
-            {{#if overrideTitle}}
-            {{overrideTitle}}
-            {{else}}
-            {{localizeHeart "haunt" "service" "label-multiple"}}
-            {{/if}}
-            <div class="right">
-                <a data-action="add-service" data-type="service"><span class="fas fa-plus"></span></a>
-            </div>
-        </h4>
-        
-        <div class="item-list">
-            {{#each item.system.resistances as |service id|}}
-                <div data-id="{{id}}">
-                    <a data-action="service-roll"><span class="fas fa-dice"></span></a>
-                    <select name="service-selector-die">
-                        {{selectOptions ../die_sizes selected=service.die_size}}
-                    </select>
-                    <select name="service-selector-resistance">
-                        {{selectOptions ../resistances selected=service.resistance}}
-                    </select>
-                    {{#if ../showDelete}}
-                    <a class="action right" data-action="delete-service"><span class="fas fa-trash"></span></a>
-                    {{/if}}
-                </div>
-            {{/each}}
-        </div>
+    <div class="haunt-upgrade">
+        <span>{{localizeHeart "haunt" "upgradeTrack" "label-single"}}</span>
+        <span class="haunt-track" data-target="system.upgradeTrack">{{{ordered-checkable item.system.upgradeTrack 6}}}</span>
+        <a data-action="upgrade" title="{{localizeHeart 'haunt' 'upgrade'}}"><span class="fas fa-level-up-alt"></span></a>
+        <a data-action="downgrade" title="{{localizeHeart 'haunt' 'downgrade'}}"><span class="fas fa-level-down-alt"></span></a>
     </div>
 {{/ "heart:items/base/preview.html"}}

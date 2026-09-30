@@ -1,6 +1,15 @@
+{{!-- Fallout row (2026-09-30 review): the severity glyph, then the
+     resistance glyph, then the name; the glyphs replace the old
+     "(Major Blood)" text and name themselves in their tooltips. A value
+     with no glyph (a custom resistance) still shows as text. --}}
 {{#> "heart:items/base/preview.html" }}
-    <h4>{{localizeHeart item.name}} ({{localizeHeart item.system.type}} {{localizeHeart item.system.resistance}})</h4>
+    <h4 class="fallout-title">
+        {{~#if (heartHasGlyph "severity" item.system.type)}}<span class="fallout-glyph" title="{{localizeHeart 'fallout' 'level' item.system.type}}">{{{heartGlyph "severity" item.system.type}}}</span>{{/if~}}
+        {{~#if (heartHasGlyph "resistance" item.system.resistance)}}<span class="fallout-glyph" title="{{localizeHeart 'resistance' item.system.resistance}}">{{{heartGlyph "resistance" item.system.resistance}}}</span>{{/if~}}
+        {{localizeHeart item.name}}
+        {{~#unless (heartHasGlyph "resistance" item.system.resistance)}}{{#if item.system.resistance}} <span class="fallout-extra">({{localizeHeart item.system.resistance}})</span>{{/if}}{{/unless~}}
+    </h4>
     <div>
-        {{{localizeHeart item.system.description}}}
+        {{{heartTerms (localizeHeart item.system.description)}}}
     </div>
 {{/ "heart:items/base/preview.html"}}

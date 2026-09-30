@@ -62,7 +62,7 @@
         {{#each characters as |character|}}
         {{#with (getActor character) as |actor|}}
         {{#if actor.isOwner}}
-            <button data-action="roll" data-character="{{character}}"> <span class="fas fa-dice"></span> {{actor.name}}</button>
+            <button data-action="roll" data-character="{{character}}"> <span class="fas fa-dice"></span> {{localizeHeart "applications" "prepare-roll-request" "roll-as"}} {{actor.name}}</button>
         {{/if}}
         {{/with}}
         {{/each}}

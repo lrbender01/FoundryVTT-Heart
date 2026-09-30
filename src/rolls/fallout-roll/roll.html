@@ -1,18 +1,18 @@
+{{!-- Fallout roll card (2026-09-29, approved sweep): fallout reads in bright
+     red; no fallout in the normal text colour. --}}
 <div class="dice-roll heart fallout-roll">
     {{#if flavor}}
     <div class="dice-flavor">{{flavor}}</div>
     {{/if}}
     <div class="dice-result">
-        <div class="dice-formula">{{description}}</div>
+        <div class="roll-summary">{{description}}</div>
+        <div class="roll-faces"><span class="roll-face kept">{{total}}</span></div>
         {{{tooltip}}}
-        <div class="flexrow">
-            <h4 class="dice-total text">{{localizeHeart 'rolls' 'fallout-roll' 'results' result}}</h4>
-            {{#if showClearStressButton}}
-            <button class="icon-button" data-action="clear-stress" title="{{localizeHeart 'rolls' 'fallout-roll' 'clear-stress' }}">
-                <span class="fas fa-refresh"></span>
-            </button>
-            {{/if}}
+        <div class="roll-outcome {{#unless (eq result "no-fallout")}}bad{{/unless}}">{{{heartGlyph "severity" severity}}}{{localizeHeart 'rolls' 'fallout-roll' 'results' result}}</div>
+        {{#if showClearStressButton}}
+        <div class="roll-buttons">
+            <button type="button" data-action="clear-stress"><span class="fas fa-refresh"></span> {{localizeHeart 'rolls' 'fallout-roll' 'clear-stress-short'}}</button>
         </div>
+        {{/if}}
     </div>
-
 </div>

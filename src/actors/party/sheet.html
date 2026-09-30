@@ -1,0 +1,191 @@
+{{!--
+  Party sheet (2026-09-30). The world's one party actor: the shared
+  Provisions track (house rule, reference/heart-rules/provisions.md), the
+  quartermaster whose Supplies protection covers it, the members, party
+  fallouts and notes. Panel-sheet chrome like the delve sheet. Provisions is
+  never written from here: every button calls the party API (sheet.js).
+--}}
+{{#*inline "provisionsBoxes"}}
+{{#each rows as |row|}}
+<span class="prov-row">{{#each row as |box|}}<a class="ordered-checkable-box readonly {{#if box.checked}}checked{{/if}} {{#if box.critical}}critical{{/if}} {{#if box.criticalStart}}critical-start{{/if}}"></a>{{/each}}</span>
+{{/each}}
+{{/inline}}
+
+{{#*inline "dieSelect"}}
+<select class="die-select" data-control="{{control}}">
+  {{#each dice as |d|}}<option value="{{d.die}}" {{#if d.selected}}selected{{/if}}>{{d.label}}</option>{{/each}}
+</select>
+{{/inline}}
+
+<div>
+<form class="heart sheet actor party panel-sheet {{cssClass}}" autocomplete="off">
+
+  <!-- HEADER: portrait, name + quartermaster, Provisions + protection -->
+  <div class="character-header">
+    <div class="header-col portrait">
+      <img class="profile" src="{{displayImg}}" title="{{actor.name}}" data-edit="img" />
+    </div>
+
+    <div class="header-col header-box identity-box">
+      <label class="header-label">{{localizeHeart "party-sheet" "name"}}</label>
+      <input class="header-input" name="name" value="{{actor.name}}" />
+      <label class="header-label">{{localizeHeart "party" "quartermaster"}}</label>
+      <select class="header-input" data-control="quartermaster" {{#unless owner}}disabled{{/unless}} title="{{localizeHeart 'party-sheet' 'quartermaster-tip'}}">
+        <option value="">{{localizeHeart "party-sheet" "none"}}</option>
+        {{#each qmOptions as |o|}}<option value="{{o.id}}" {{#if o.selected}}selected{{/if}}>{{o.name}}</option>{{/each}}
+      </select>
+    </div>
+
+    <div class="header-col header-box tracks-box provisions-box">
+      <label class="header-label">{{localizeHeart "party" "provisions"}}</label>
+      <div class="track provisions-track" title="{{provisions.trackTip}}">
+        <span class="prov-rows">{{> provisionsBoxes rows=provisions.rows}}</span>
+        <span class="count">{{provisions.value}} / {{provisions.max}}</span>
+      </div>
+      <label class="header-label">{{localizeHeart "resistance" "protection" "label-single"}}</label>
+      <div class="track protection" title="{{provisions.protectionTip}}">
+        {{#each provisions.shields as |s|}}<a class="ordered-checkable-box readonly {{#if s.checked}}checked{{/if}}"></a>{{/each}}
+      </div>
+    </div>
+  </div>
+
+  <nav class="character-nav-tabs static-strip" aria-hidden="true"></nav>
+
+  <section class="tab-content">
+    <section class="tab" data-tab="main">
+      {{#if provisions.status}}
+      <div class="difficulty-note provisions-status">{{provisions.status}}</div>
+      {{/if}}
+
+      <div class="panel-body party-body">
+        <!-- Members: class icon, name, and ancestry / class / calling; drop
+             characters anywhere on the sheet -->
+        <div class="character-tab-container members-container">
+          <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "party"}}}</span>{{localizeHeart "party-sheet" "members"}} <span class="panel-count">{{members.length}}</span>
+            {{#if owner}}<a data-action="add-member" title="{{localizeHeart 'party-sheet' 'add-member'}}"><span class="addItem">+</span></a>{{/if}}
+          </div>
+          <div class="container-content">
+            {{#if members.length}}
+            <div class="member-strip">
+              {{#each members as |m|}}
+              <div class="member-card {{#if m.quartermaster}}is-quartermaster{{/if}}" data-member-id="{{m.id}}">
+                <a class="member-open" data-action="open-member" title="{{m.label}}">
+                  <span class="member-icon">{{{heartIcon m.icon}}}<span class="chip-fallback fas fa-user"></span></span>
+                  <span class="member-name">{{m.name}}</span>
+                  {{#if m.traits}}<span class="member-traits">{{m.traits}}</span>{{/if}}
+                  {{#if m.quartermaster}}<span class="member-role">{{localizeHeart "party" "quartermaster"}}</span>{{/if}}
+                </a>
+                {{#if ../owner}}<a class="member-remove" data-action="remove-member" title="{{localizeHeart 'party-sheet' 'remove-member'}}"><span class="fas fa-times"></span></a>{{/if}}
+              </div>
+              {{/each}}
+            </div>
+            {{else}}
+            <div class="muted-line">{{localizeHeart "party-sheet" "no-members"}}</div>
+            {{/if}}
+          </div>
+        </div>
+
+        <!-- Provisions actions (2026-09-30 review): what adds stress and what
+             removes it, each with a one-line reason and its controls; every
+             one posts its own chat card -->
+        <div class="character-tab-container provisions-actions">
+          <div class="container-title"><span class="title-glyph">{{{heartGlyph "resistance" "provisions"}}}</span>{{localizeHeart "party-sheet" "actions"}}</div>
+          <div class="container-content">
+            {{#if owner}}
+            <div class="action-columns">
+              <section class="action-group">
+                <h4 class="action-group-title">{{localizeHeart "party-sheet" "add-stress"}}</h4>
+
+                <div class="action">
+                  <div class="action-text"><div class="action-name">{{localizeHeart "party-sheet" "upkeep"}}</div><div class="action-desc">{{localizeHeart "party-sheet" "upkeep-desc"}}</div></div>
+                  <div class="action-controls"><button type="button" data-action="party-upkeep">{{localizeHeart "party-sheet" "upkeep-button"}}</button></div>
+                </div>
+
+                <div class="action">
+                  <div class="action-text"><div class="action-name">{{localizeHeart "party-sheet" "mark"}}</div><div class="action-desc">{{localizeHeart "party-sheet" "mark-desc"}}</div>
+                    <label class="action-check"><input type="checkbox" data-control="ignore-protection" /> {{localizeHeart "party-sheet" "ignore-protection"}}</label></div>
+                  <div class="action-controls">
+                    {{> dieSelect control="mark-die" dice=markDice}}
+                    <span class="or">{{localizeHeart "party-sheet" "or"}}</span>
+                    <input class="amount" type="number" min="0" data-control="mark-amount" placeholder="#" title="{{localizeHeart 'party-sheet' 'amount-tip'}}" />
+                    <button type="button" data-action="party-mark">{{localizeHeart "party-sheet" "mark"}}</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="action-group">
+                <h4 class="action-group-title">{{localizeHeart "party-sheet" "remove-stress"}}</h4>
+
+                <div class="action">
+                  <div class="action-text"><div class="action-name">{{localizeHeart "party-sheet" "restock"}}</div><div class="action-desc">{{localizeHeart "party-sheet" "restock-desc"}}</div></div>
+                  <div class="action-controls">
+                    <select class="payer-select" data-control="payer" title="{{localizeHeart 'party-sheet' 'payer'}}">
+                      {{#each payerOptions as |o|}}<option value="{{o.id}}" {{#if o.selected}}selected{{/if}}>{{o.name}}</option>{{/each}}
+                    </select>
+                    {{> dieSelect control="restock-die" dice=restockDice}}
+                    <button type="button" data-action="party-restock">{{localizeHeart "party-sheet" "restock"}}</button>
+                  </div>
+                </div>
+
+                <div class="action">
+                  <div class="action-text"><div class="action-name">{{localizeHeart "party-sheet" "scavenge"}}</div><div class="action-desc">{{localizeHeart "party-sheet" "scavenge-desc"}}</div></div>
+                  <div class="action-controls"><button type="button" data-action="party-scavenge">{{localizeHeart "party-sheet" "scavenge-button"}}</button></div>
+                </div>
+
+                <div class="action">
+                  <div class="action-text"><div class="action-name">{{localizeHeart "party-sheet" "relieve"}}</div><div class="action-desc">{{localizeHeart "party-sheet" "relieve-desc"}}</div></div>
+                  <div class="action-controls">
+                    {{> dieSelect control="relieve-die" dice=relieveDice}}
+                    <span class="or">{{localizeHeart "party-sheet" "or"}}</span>
+                    <input class="amount" type="number" min="0" data-control="relieve-amount" placeholder="#" title="{{localizeHeart 'party-sheet' 'amount-tip'}}" />
+                    <button type="button" data-action="party-relieve">{{localizeHeart "party-sheet" "relieve"}}</button>
+                  </div>
+                </div>
+
+                <div class="action">
+                  <div class="action-text"><div class="action-name">{{localizeHeart "party" "clear"}}</div><div class="action-desc">{{localizeHeart "party-sheet" "clear-desc"}}</div></div>
+                  <div class="action-controls">
+                    <button type="button" data-action="party-clear">{{localizeHeart "party-sheet" "clear-button"}}</button>
+                    {{#if user.isGM}}<button type="button" class="danger" data-action="party-reset" title="{{localizeHeart 'party-sheet' 'reset-tip'}}">{{localizeHeart "party-sheet" "reset"}}</button>{{/if}}
+                  </div>
+                </div>
+              </section>
+            </div>
+            {{else}}
+            <div class="muted-line">{{localizeHeart "party-sheet" "not-owner"}}</div>
+            {{/if}}
+          </div>
+        </div>
+
+        <!-- Party fallouts: they befall every delver -->
+        <div class="character-tab-container fallout-container">
+          <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "fallout"}}}</span>{{localizeHeart "party-sheet" "fallout"}}
+            {{#if owner}}<a data-action="add" data-type="fallout" data-data='{"active": true}' title="{{localizeHeart 'create-new' 'fallout'}}"><span class="addItem">+</span></a>{{/if}}
+          </div>
+          <div class="container-content">
+            <div class="tab-item-list">
+              {{#each fallouts as |item|}}
+              {{> "heart:items/fallout/preview.html" item=item showDelete=../owner}}
+              {{/each}}
+            </div>
+            {{#unless fallouts.length}}<div class="muted-line">{{localizeHeart "party-sheet" "fallout-hint"}}</div>{{/unless}}
+          </div>
+        </div>
+
+        <div class="character-tab-container editor-panel notes-container">
+          <div class="container-title">{{localizeHeart "party-sheet" "notes"}}
+            {{#if editable}}
+            <a data-action="edit-editor" title="{{localizeHeart 'party-sheet' 'notes-edit'}}">
+              <span class="fas fa-edit clickable section-button"></span>
+            </a>
+            {{/if}}
+          </div>
+          <div class="container-content">
+            {{editor actor.system.notes target="system.notes" button=true editable=editable owner=owner}}
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+</form>
+</div>

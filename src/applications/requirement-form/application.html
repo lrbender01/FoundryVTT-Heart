@@ -1,16 +1,27 @@
+{{!-- Roll prompt (2026-09-29, approved sweep; review round 2): one-click
+     chips instead of dropdowns. Single choices are radios (first option
+     preselected, as the old selects did), multiples are checkboxes, mastery is
+     a toggle chip; FormData reads them exactly as it read the selects. Every
+     choice, difficulty included, is a separate chip. A requirement may carry a
+     hint line explaining the rule (Help). --}}
 {{#> "heart:applications/base/application.html" type=options.type showRoll=true}}
+<div class="wide requirement-list">
 {{#each options.requirements as |entry name|}}
-<label class="requirement-label">
-    {{entry.label}}
-</label>
-{{#if entry.isCheckbox}}
-<input type="checkbox" name="{{name}}" value="{{entry.value}}" />
-{{else}}
-<select name="{{name}}" {{#if entry.isMany}}multiple{{/if}}>
-    {{#each entry.options as |label value|}}
-    <option value="{{value}}">{{label}}</option>
-    {{/each}}
-</select>
-{{/if}}
+<div class="requirement requirement-{{name}}">
+    <div class="requirement-title">{{entry.label}}</div>
+    {{#if entry.hint}}<div class="requirement-hint">{{entry.hint}}</div>{{/if}}
+    {{#if entry.isCheckbox}}
+    <div class="chip-set">
+        <label class="chip-toggle"><input type="checkbox" name="{{name}}" /><span>{{entry.label}}</span></label>
+    </div>
+    {{else}}
+    <div class="chip-set">
+        {{#each entry.options as |label value|}}
+        <label class="chip-toggle"><input type="{{#if entry.isMany}}checkbox{{else}}radio{{/if}}" name="{{name}}" value="{{value}}" {{#unless entry.isMany}}{{#if entry.default}}{{#if (eq value entry.default)}}checked{{/if}}{{else if @first}}checked{{/if}}{{/unless}} /><span>{{label}}</span></label>
+        {{/each}}
+    </div>
+    {{/if}}
+</div>
 {{/each}}
+</div>
 {{/ "heart:applications/base/application.html"}}

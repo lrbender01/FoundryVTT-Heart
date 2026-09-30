@@ -1,29 +1,16 @@
 {{#> "heart:items/base/sheet.html" type="resource"}}
-<div class="grid-2 auto-first-col">
+  {{#*inline "item-stats"}}
+  <span class="stat"><b>{{localizeHeart "item-sheet" "domain"}}</b>
+    {{#if editable}}<select name="system.domain">{{selectOptions domains selected=system.domain}}</select>{{else}}<span class="v">{{localizeHeart "domain" system.domain}}</span>{{/if}}
+  </span>
+  <span class="stat"><b>{{localizeHeart "item-sheet" "die"}}</b>
+    {{#if editable}}<select name="system.die_size">{{selectOptions die_sizes selected=system.die_size}}</select>{{else}}<span class="v">{{system.die_size}}</span>{{/if}}
+    <a data-action="item-roll-self" title="{{localizeHeart 'item-sheet' 'roll'}}"><span class="sheetD10"></span></a>
+  </span>
+  {{/inline}}
 
-    <label>
-        {{localizeHeart "domain" "label-single"}}
-    </label>
-    {{#if editable}}
-        <select name="system.domain">
-            {{selectOptions domains selected=system.domain}}
-        </select>
-    {{else}}
-        {{localizeHeart "domain" system.domain}}
-    {{/if}}
-</div>
-
-<div>
-    <h2>
-        {{localizeHeart "tag" "label-multiple"}}
-        {{#if user.isGM }}
-        <a class="right" data-action="add-child" data-type="tag"><span class="fas fa-plus"></span> {{localizeHeart "tag" "add"}}</a>
-        {{/if}}
-    </h2>
-    <div class="item-list">
-        {{#each item.childrenTypes.tag as |tag|}}
-            {{> "heart:items/tag/preview.html" item=tag showActivate=false showDelete=../item.isOwner}}
-        {{/each}}
-    </div>
-</div>
+  <div class="item-cols">
+    <div class="column">{{> "heart:items/base/tags.html"}}</div>
+    <div class="column">{{> "heart:items/base/description.html"}}</div>
+  </div>
 {{/ "heart:items/base/sheet.html"}}

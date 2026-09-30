@@ -1,0 +1,13 @@
+{{!-- Titled description panel for item sheets. Pass panelTitle= to rename it
+     (e.g. "Effect" on fallout, "Rule" on tags). The pencil in the title opens
+     the editor; Foundry's floating editor button is hidden. --}}
+<div class="character-tab-container editor-panel description-panel">
+  <div class="container-title">{{#if panelTitle}}{{panelTitle}}{{else}}{{localizeHeart "item-sheet" "description"}}{{/if}}
+    {{#if editable}}
+    <a data-action="edit-editor" title="{{localizeHeart 'item-sheet' 'edit'}}"><span class="fas fa-edit clickable section-button"></span></a>
+    {{/if}}
+  </div>
+  <div class="container-content">
+    {{editor (localizeHeart system.description) target="system.description" button=true editable=editable owner=owner}}
+  </div>
+</div>

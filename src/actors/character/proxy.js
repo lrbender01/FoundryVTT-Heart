@@ -1,3 +1,5 @@
+import { orderByFlag } from './reorder';
+
 export default {
     'character': function Character(actor) {
         return new Proxy(actor, {
@@ -6,6 +8,17 @@ export default {
                     return Object.values(actor.system.resistances).reduce((sum, resistance) => {
                         return sum + resistance.value;
                     }, 0);
+                }
+
+                // The party's shared Provisions track (2026-09-30): the same
+                // value on every character; undefined until the party exists
+                if (name === 'provisions') {
+                    return game.heart?.party?.proxy?.provisions;
+                }
+
+                if (name === 'isQuartermaster') {
+                    const party = game.heart?.party;
+                    return Boolean(party && party.system.quartermaster === actor.id);
                 }
 
                 if (name === 'pronouns') {
@@ -56,9 +69,12 @@ export default {
                         abilities.push(...class_.children.filter(isAbility));
                     }
 
-                    abilities.push(...actor.items.filter(item => item.type === "ability"));
+                    // loose abilities too: only switched-on ones are usable
+                    // (switched-off ones sit in the inactive items list)
+                    abilities.push(...actor.items.filter(item => item.type === "ability" && (item.system.active ?? true)));
 
-                    return abilities;
+                    // the player's own order, dragged on the sheet (reorder.js)
+                    return orderByFlag(actor, abilities, 'abilityOrder');
                 }
 
                 if (name === 'effects') {
@@ -79,7 +95,7 @@ export default {
                         resources.push(...class_.children.filter(isActiveResource))
                     }
                     resources.push(...actor.items.filter(isActiveResource));
-                    return resources;
+                    return orderByFlag(actor, resources, 'resourceOrder');
                 }
 
                 if (name === 'equipment') {

@@ -1,103 +1,120 @@
-{{#*inline "itemListSection"}}
-<div class="section {{localizeHeart type 'label-multiple'}}">
-    <h2>
-        {{#if overrideTitle}}
-        {{overrideTitle}}
-        {{else}}
-        {{localizeHeart type "label-multiple"}}
-        {{/if}}
-        {{#if actor.isOwner}}
-        <div class="right">
-            <a data-action="add" data-type="{{type}}" data-data='{"active": true}'><span class="fas fa-plus"></span></a>
-        </div>
-        {{/if}}
-    </h2>
+{{!--
+  Delve sheet (redesigned 2026-09-29 from the approved "Landmark and Delve
+  Sheets" mockup). Shares the panel-sheet chrome with the adversary and
+  landmark sheets (common/panel-sheet.*). Delve tab = the route in play
+  (resistance, dangers, resources, connection); Notes = GM notes.
+--}}
+{{#*inline "rowList"}}
+<div class="tab-item-list">
+  {{#each list as |item|}}
+  {{> (join "/" "heart:items" type "preview.html") item=item showActivate=../showActivate showNote=../showNote
+  showDelete=(or (not item.isChild) ../user.isGM)}}
+  {{/each}}
+</div>
+{{/inline}}
 
-    <div class="item-list">
-    {{#each list as |item|}}
-        {{> (join "/" "heart:items" type "preview.html") item=item dataPath="???" hideInactive=../hideInactive showActivate=../showActivate showDelete=(or (not item.isChild) user.isGM )}}
-    {{/each}}
-    </div>
-
-    {{#if (and showTextboxesBelowItems description_path)}}
-    {{editor (lookup actor.system description_path) target=(join "." "system" description_path) button=true editable=editable owner=owner}}
+{{#*inline "editorPanel"}}
+<div class="character-tab-container editor-panel {{panelClass}}">
+  <div class="container-title">{{title}}
+    {{#if editable}}
+    <a data-action="edit-editor" title="{{localizeHeart 'delve' 'edit'}}">
+      <span class="fas fa-edit clickable section-button"></span>
+    </a>
     {{/if}}
+  </div>
+  <div class="container-content">
+    {{editor content target=target button=true editable=editable owner=owner}}
+  </div>
 </div>
 {{/inline}}
 
 <div>
-<form class="heart sheet actor delve {{cssClass}}" autocomplete="off">
-        <img class="profile" src="{{actor.img}}" title="{{actor.name}}" data-edit="img"/>
+<form class="heart sheet actor delve panel-sheet {{cssClass}}" autocomplete="off">
 
+  <!-- HEADER: portrait, identity, resistance + domains -->
+  <div class="character-header">
+    <div class="header-col portrait">
+      <img class="profile" src="{{displayImg}}" title="{{actor.name}}" data-edit="img" />
+    </div>
 
-        <div class="section info">
-            <div class="grid-2 auto-first-col place-center">
-                <h2>{{localizeHeart "delve" "name"}}</h2>
-                <input name="name" value="{{actor.name}}"/>
+    <div class="header-col header-box identity-box">
+      <label class="header-label">{{localizeHeart "delve" "name"}}</label>
+      <input class="header-input" name="name" value="{{actor.name}}" />
+      <label class="header-label">{{localizeHeart "delve" "tier"}}</label>
+      <input class="header-input" name="system.tier" value="{{tierText}}" />
+    </div>
+
+    <div class="header-col header-box tracks-box">
+      <label class="header-label">{{localizeHeart "delve" "resistance"}}</label>
+      <div class="track">
+        <span class="boxes" data-actor-track data-target="system.resistance">{{{ordered-checkable actor.system.resistance actor.system.resistanceMax}}}</span>
+        <span class="count">{{resistanceValue}} /
+          <input type="number" min="1" name="system.resistanceMax" value="{{actor.system.resistanceMax}}" />
+        </span>
+      </div>
+      <label class="header-label">{{localizeHeart "delve" "domain" "label-multiple"}}</label>
+      <div class="header-chips {{#if editing}}editing{{/if}}">
+        {{#if editing}}
+        <input class="header-input" name="system.domains" value="{{domainsText}}" placeholder="Technology, Warren" />
+        {{else}}
+        {{#each domainChips as |domain|}}<span>{{{heartGlyph "domain" domain}}}{{domain}}</span>{{/each}}
+        {{/if}}
+        {{#if editable}}
+        <a class="header-edit" data-action="toggle-edit" title="{{#if editing}}{{localizeHeart 'delve' 'done'}}{{else}}{{localizeHeart 'delve' 'edit'}}{{/if}}">
+          <span class="fas {{#if editing}}fa-check{{else}}fa-edit{{/if}}"></span>
+        </a>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+
+  <!-- One page (2026-09-29 review): the red strip stays as a static banner -->
+  <nav class="character-nav-tabs static-strip" aria-hidden="true"></nav>
+
+  <section class="tab-content">
+    <!-- ===== DELVE ===== -->
+    <section class="tab" data-tab="main">
+      <div class="panel-body">
+        <div class="column">
+          <div class="character-tab-container dangers-container">
+            <div class="container-title">{{localizeHeart "delve" "dangers"}}
+              {{#if actor.isOwner}}<a data-action="add" data-type="equipment" data-data='{"active": true}' title="{{localizeHeart 'create-new' 'equipment'}}"><span class="addItem">+</span></a>{{/if}}
             </div>
-        </div>
-
-        <div class="section info">
-            <div class="grid-2 auto-first-col place-center">
-                <h2>{{localizeHeart "delve" "resistance"}}</h2>
-                <span>
-                    <input name="system.resistance" value="{{actor.system.resistance}}" size="2"/>
-                    /
-                    <input name="system.resistanceMax" value="{{actor.system.resistanceMax}}" size="2"/>
-                </span>
+            <div class="container-content">
+              {{> rowList type="equipment" list=actor.proxy.equipment showActivate=true showNote=true}}
             </div>
-        </div>
+          </div>
 
-        <div class="section info">
-            <div class="grid-2 auto-first-col place-center">
-                <h2>{{localizeHeart "delve" "domain" "label-multiple"}}</h2>
-                <input name="system.domains" value="{{actor.system.domains}}"/>
+          <div class="character-tab-container resources-container">
+            <div class="container-title">{{localizeHeart "resource" "label-multiple"}}
+              {{#if actor.isOwner}}<a data-action="add" data-type="resource" data-data='{"active": true}' title="{{localizeHeart 'create-new' 'resource'}}"><span class="addItem">+</span></a>{{/if}}
             </div>
-        </div>
-
-        <div class="section info">
-            <div class="grid-2 auto-first-col place-center">
-                <h2>{{localizeHeart "delve" "tier"}}</h2>
-                <input name="system.tier" value="{{actor.system.tier}}"/>
+            <div class="container-content">
+              {{> rowList type="resource" list=actor.proxy.resources showActivate=true showNote=true}}
             </div>
-        </div>
+          </div>
 
-        <!--The dropdown for difficulty should be slapped in here, but I couldn't quite get it working-->
-        <!-- <div class="section info">
-            <div class="grid-2 auto-first-col place-center">
-                <h2>{{localizeHeart "delve" "difficulty"}}</h2>
-                <input name="system.difficulty" value="{{actor.system.difficulty}}"/>
+          {{#if inactiveItems.length}}
+          <div class="character-tab-container inactive-container">
+            <div class="container-title">{{localizeHeart "delve" "inactive-items"}}</div>
+            <div class="container-content">
+              <div class="tab-item-list">
+                {{#each inactiveItems as |item|}}
+                {{> (join "/" "heart:items" item.type "preview.html") item=item showActivate=../actor.isOwner showDelete=../actor.isOwner}}
+                {{/each}}
+              </div>
             </div>
-        </div> -->
-
-        <div class="section center wide notes">
-            <h3>{{localizeHeart "delve" "description"}}</h3>
-            {{editor actor.system.description target="system.description" button=true editable=editable owner=owner}}
+          </div>
+          {{/if}}
         </div>
 
-        <div class="section center wide notes">
-            <h3>{{localizeHeart "delve" "connection"}}</h3>
-            {{editor actor.system.connection target="system.connection" button=true editable=editable owner=owner}}
+        <div class="column">
+          {{> editorPanel panelClass="connection-container" title=(localizeHeart "delve" "connection") content=actor.system.connection target="system.connection"}}
+          {{> editorPanel panelClass="description-container" title=(localizeHeart "delve" "description") content=actor.system.description target="system.description"}}
+          {{> editorPanel panelClass="gm-notes-container" title=(localizeHeart "delve" "notes") content=actor.system.notes target="system.notes"}}
         </div>
-
-        {{> itemListSection type="equipment" list=actor.proxy.equipment description_path="equipment"}}
-        {{> itemListSection type="resource" list=actor.proxy.resources description_path="resources"}}
-
-        <div class="section center wide notes">
-            <h3>{{localizeHeart "delve" "notes"}}</h3>
-            {{editor actor.system.notes target="system.notes" button=true editable=editable owner=owner}}
-        </div>
-
-        <div class="section center wide inactive-items">
-            <h3>{{localizeHeart "delve" "inactive-items"}}</h3>
-            <div>{{localizeHeart "delve" "inactive-items-description"}}</div>
-            <div class="item-list">
-            {{#each actor.items as |item|}}
-                {{#if (and (not (undef item.system.active)) (not item.system.active)) }}
-                    {{> (join "/" "heart:items" item.type "preview.html") item=item dataPath="???" showActivate=../user.isOwner showDelete=../user.isOwner}}
-                {{/if}}
-            {{/each}}
-            </div>
-        </div>
+      </div>
+    </section>
+  </section>
 </form>
 </div>

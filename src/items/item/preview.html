@@ -1,4 +1,4 @@
 {{#> "heart:items/base/preview.html" showDelete=showDelete}}
-    <strong>{{localizeHeart item.name}}</strong>
+    <strong>{{{heartIcon item.img}}}{{localizeHeart item.name}}</strong>
     {{#if (gt item.system.quantity 1)}}<span class="quantity">x{{item.system.quantity}}</span>{{/if}}
 {{/ "heart:items/base/preview.html"}}

@@ -2,6 +2,11 @@ import sheetHTML from './sheet.html';
 import './character.sass';
 import HeartActorSheet from '../base/sheet';
 import template from './template.json';
+import { activateBeatListeners, openCallingBeats, createCustomBeat } from '../../items/beat/actions';
+import { activateTrinketListeners } from '../../items/trinkets';
+import { needsEquipmentPick } from '../../items/class/equipment';
+import { enableReorder, orderByFlag, orderKeys } from './reorder';
+import { provisionsView, memberView, partyMembers } from '../party/view';
 
 class HeartTabs {
     constructor({ navSelector, contentSelector, initial, sheet }) {
@@ -63,8 +68,9 @@ export default class CharacterSheet extends HeartActorSheet {
     static get defaultOptions() {
         const defaultOptions = super.defaultOptions;
         return foundry.utils.mergeObject(defaultOptions, {
-            width: 1250,
-            height: 1000,
+            // default size (2026-09-30 review): fits the Character tab
+            width: 930,
+            height: 920,
             dragDrop: [{ dragSelector: '.item:not(.non-draggable)', dropSelector: null }]
         })
     }
@@ -172,14 +178,135 @@ export default class CharacterSheet extends HeartActorSheet {
         data.callingItem = callingItem;
         data.classItem = classItem;
         data.ancestryItem = ancestryItem;
+        // the Items section in the player's order (dragged on the sheet)
+        data.orderedItems = orderByFlag(this.actor, this.actor.itemTypes.item ?? [], 'itemOrder');
+        data.orderedFallouts = orderByFlag(this.actor, this.actor.itemTypes.fallout ?? [], 'falloutOrder');
+        // a class pick-one choice not made yet (header badge + Equipment line)
+        data.classNeedsEquipment = needsEquipmentPick(classItem);
+
+        // Warnings (2026-09-30): one "!" badge per header slot / section,
+        // its tooltip listing what is missing. Keepsake / trinket only for
+        // book ancestries / callings (fvtt-heart-content), which have tables.
+        const t = (k, d) => game.i18n.format(`heart.warn.${k}`, d ?? {});
+        const fromBook = (i) => Boolean(i?.flags?.['fvtt-heart-content']);
+        const pursued = this.actor.proxy.beats?.length ?? 0;
+        const join = (list) => list.filter(Boolean).join('\n');
+        data.warnings = {
+            ancestry: join([!ancestryItem && t('no-ancestry'),
+                ancestryItem && fromBook(ancestryItem) && !ancestryItem.flags?.heart?.trinket && t('keepsake')]),
+            // equipment warns on the Equipment section, beats on Pursued Beats
+            class: join([!classItem && t('no-class')]),
+            calling: join([!callingItem && t('no-calling'),
+                callingItem && fromBook(callingItem) && !callingItem.flags?.heart?.trinket && t('trinket')]),
+            equipment: data.classNeedsEquipment ? t('equipment') : '',
+            beats: callingItem && pursued < 2 ? t('beats', { count: pursued }) : '',
+        };
+        // how many rows the Skills / Domains grids hold (one row sits alone)
+        data.skillCount = Object.values(this.actor.system.skills ?? {}).filter(s => s.value).length;
+        data.domainCount = Object.values(this.actor.system.domains ?? {}).filter(d => d.value).length;
+        // the cards in the player's order (dragged on the sheet, reorder.js)
+        const traitList = (group, flag) => {
+            const all = this.actor.system[group] ?? {};
+            const names = Object.keys(all).filter(n => all[n]?.value);
+            return orderKeys(this.actor, names, flag).map(name => ({ name, knack: all[name].knack ?? '' }));
+        };
+        data.skillList = traitList('skills', 'skillOrder');
+        data.domainList = traitList('domains', 'domainOrder');
+        data.beatSlots = game.i18n.format('heart.beat.slots', { count: this.actor.proxy.beats?.length ?? 0 });
         data.showTextboxesBelowItems = game.settings.get('heart', 'showTextboxesBelowItems');
-        data.showTotalStress = game.settings.get('heart', 'showTotalStress');
         data.showStressInputBox = game.settings.get('heart', 'showStressInputBox');
+        data.showTotalStress = game.settings.get('heart', 'showTotalStress');
+
+        // Inactive items: switched-off items owned by the character, PLUS class
+        // equipment/resources switched off from the sheet while their equipment
+        // group is still selected on the class. Those used to vanish with no way
+        // back (fixed 2026-09-29). Options from unselected pick-one groups are
+        // deliberately left out - they are choices, not switched-off gear.
+        const isInactive = (item) => item.system.active !== undefined && !item.system.active;
+        const inactiveItems = this.actor.items.filter(isInactive);
+        if (classItem) {
+            const groups = classItem.system.active_equipment_groups ?? [];
+            for (const child of classItem.children) {
+                if (!isInactive(child)) continue;
+                if (child.type === 'resource' || (child.type === 'equipment' && groups.includes(child.system.group))) {
+                    inactiveItems.push(child);
+                }
+            }
+        }
+        data.inactiveItems = inactiveItems;
+
+        // Provisions (house rule, 2026-09-30): the party's shared track under
+        // the five resistances; nothing before the party actor exists
+        data.provisions = provisionsView(this.actor.proxy.provisions);
+        if (data.provisions) {
+            const p = data.provisions;
+            const f = (k, d) => game.i18n.format(`heart.party-sheet.${k}`, d ?? {});
+            // the Party section: named after the party actor, members as chips
+            const party = game.heart.party;
+            data.partyName = party?.name || game.i18n.localize('heart.party.label-single');
+            data.partyMembers = partyMembers(party).map(a => memberView(a, party));
+            data.isQuartermaster = Boolean(this.actor.proxy.isQuartermaster);
+            data.provisionsSub = data.isQuartermaster ? f('char-qm-self')
+                : p.quartermaster ? f('char-qm', { name: p.quartermasterName })
+                : f('char-no-qm');
+        }
         return data;
     }
 
     activateListeners(html) {
         super.activateListeners(html);
+
+        // Beats: Activate / Complete on the Active Beats rows, and the eye /
+        // "Choose another" that open the calling on its Beats tab
+        activateBeatListeners(html);
+        html.find('[data-action=open-calling-beats]').click(ev => {
+            ev.preventDefault();
+            openCallingBeats(this.actor);
+        });
+        // "+" (GM): a custom beat, added to the calling and pursued at once
+        // when there is room (items/beat/actions.js)
+        html.find('[data-action=create-beat]').click(ev => {
+            ev.preventDefault();
+            createCustomBeat({ calling: this.actor.proxy.calling ?? null, actor: this.actor, pursue: true });
+        });
+
+        // Drag to reorder abilities, resources and items (actors/character/reorder.js)
+        enableReorder(html, this.actor, '.abilities-container .tab-item-list > .item.preview[data-item-id]', 'abilityOrder');
+        enableReorder(html, this.actor, '.resources-container .tab-item-list > .item.preview[data-item-id]', 'resourceOrder');
+        enableReorder(html, this.actor, '.items-container .tab-item-list > .item.preview[data-item-id]', 'itemOrder');
+        enableReorder(html, this.actor, '.fallout-container .tab-item-list > .item.preview[data-item-id]', 'falloutOrder');
+        enableReorder(html, this.actor, '.skills-container .skill-row[data-skill]', 'skillOrder', { key: 'skill', axis: 'x' });
+        enableReorder(html, this.actor, '.domains-container .domain-row[data-domain]', 'domainOrder', { key: 'domain', axis: 'x' });
+
+        // Trinkets / keepsakes (Biography): roll once, item into inventory
+        activateTrinketListeners(html);
+        html.find('[data-action=open-party]').click(ev => {
+            ev.preventDefault();
+            game.heart.party?.sheet.render(true);
+        });
+        // a party member chip opens that character (if this user may see it)
+        html.find('.party-chips [data-action=open-member]').click(ev => {
+            ev.preventDefault();
+            game.actors.get(ev.currentTarget.dataset.memberId)?.sheet.render(true);
+        });
+
+        html.find('[data-action=open-class-overview]').click(ev => {
+            ev.preventDefault();
+            const cls = this.actor.items.find(i => i.type === 'class');
+            if (!cls) return;
+            cls.sheet._activeTab = 'overview';
+            cls.sheet.render(true);
+        });
+
+        // Abilities: the eye opens the class on its Abilities tab, where
+        // abilities are unlocked
+        html.find('[data-action=open-class-abilities]').click(ev => {
+            ev.preventDefault();
+            const cls = this.actor.items.find(i => i.type === 'class');
+            if (!cls) return;
+            cls.sheet._activeTab = 'abilities';
+            cls.sheet.render(true);
+        });
 
         this.heartTabs = new HeartTabs({
             navSelector: ".character-nav-tabs a",
@@ -189,7 +316,7 @@ export default class CharacterSheet extends HeartActorSheet {
         });
         this.heartTabs.bind(html);
 
-        html.find('.ordered-checkable-box:not(.checked)').click(ev => {
+        html.find('.ordered-checkable-box:not(.checked):not(.readonly)').click(ev => {
             ev.preventDefault();
             const element = ev.currentTarget;
             const index = parseInt(element.dataset.index);
@@ -201,7 +328,7 @@ export default class CharacterSheet extends HeartActorSheet {
             this.actor.update(data);
         });
 
-        html.find('.ordered-checkable-box.checked').click(ev => {
+        html.find('.ordered-checkable-box.checked:not(.readonly)').click(ev => {
             ev.preventDefault();
             const element = ev.currentTarget;
             const index = parseInt(element.dataset.index);
@@ -251,6 +378,24 @@ export default class CharacterSheet extends HeartActorSheet {
 
         });
 
+
+        // Notes edit button lives in the container title (consistent with the
+        // other Biography sections); it clicks Foundry's own editor button,
+        // which CSS hides. Native .click() because jQuery .trigger() skips the
+        // default action on <a> elements.
+        html.find('[data-action=edit-notes]').click(ev => {
+            ev.preventDefault();
+            const button = html.find('.notes-container .editor-edit').get(0);
+            if (button) button.click();
+        });
+
+        // "+" on the Ancestry / Class / Calling slots: the Character Options
+        // picker (every compendium providing that type, searchable)
+        html.find('[data-action=choose-option]').click(ev => {
+            ev.preventDefault();
+            const type = ev.currentTarget.dataset.itemType;
+            new game.heart.applications.CharacterOptionsApplication(this.actor, type).render(true);
+        });
 
         html.find('[data-action=prepare-request-roll]').click(ev => {
             new game.heart.applications.PrepareRollRequestApplication({}).render(true);

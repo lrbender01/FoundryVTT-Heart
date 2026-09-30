@@ -4,13 +4,17 @@
             "names": "",
             "descriptors": "",
             "motivation": "",
+            "level": "",
             "difficulty": "",
+            "domains": "",
+            "domainsNote": "",
             "resistance": "",
             "resistanceMax": "5",
             "protection": "",
             "resources": [],
             "equipment": [],
             "special": "",
+            "description": "",
             "notes": ""
         }
     }

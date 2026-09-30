@@ -82,16 +82,19 @@ class HeartChatMessage extends ChatMessage {
         await this.setFlag('heart', 'fallout-roll', json);
     }
 
+    // Stress got through, so fallout may be rolled. Per character since
+    // 2026-09-30 (the roller and each helper): who already rolled is in the
+    // 'fallout-done' flag, and the stress card hides only their button.
     get showFalloutRollButton() {
         const showFalloutRollButton = this.getFlag('heart', 'show-fallout-roll-button')
-        if (this.falloutRoll !== undefined) {
-            return false;
-        }
         if (showFalloutRollButton === undefined) {
-            return true;
-        } else {
-            return Boolean(showFalloutRollButton);
+            return this.falloutRoll === undefined;
         }
+        return Boolean(showFalloutRollButton);
+    }
+
+    get falloutDone() {
+        return this.getFlag('heart', 'fallout-done') ?? [];
     }
 
     set showFalloutRollButton(value) {
@@ -125,6 +128,7 @@ class HeartChatMessage extends ChatMessage {
                 showTakeStressButton: this.showTakeStressButton,
                 showFalloutRollButton: this.showFalloutRollButton,
                 showClearStressButton: this.showClearStressButton,
+                falloutDone: this.falloutDone,
             });
             html.find('.message-content').find('.dice-roll').html(
                 $(content).children()
@@ -136,6 +140,7 @@ class HeartChatMessage extends ChatMessage {
                     showTakeStressButton: this.showTakeStressButton,
                     showFalloutRollButton: this.showFalloutRollButton,
                     showClearStressButton: this.showClearStressButton,
+                    falloutDone: this.falloutDone,
                 });
                 html.append(
                     $('<div class="message-content"></div>').append(stressContent)
@@ -195,16 +200,19 @@ function activateListeners(html) {
         const form = button.closest('form.roll-request');
         const data = new FormData(form.get(0));
 
+        // Everything is on the card, so no prompt; the pool rules (missing
+        // skills, Tired / Clouded, helper checks) still apply
         const roll = await game.heart.rolls.HeartRoll.build({
             character: character,
-            difficulty: data.get('difficulty'),
-            skill: data.get('skill'),
-            domain: data.get('domain'),
+            difficulty: data.get('difficulty') || 'standard',
+            skill: data.get('skill') || null,
+            domain: data.get('domain') || null,
             mastery: data.get('mastery') === "on",
             helpers: data.getAll('helper'),
         });
+        if (!roll) return;
 
-        roll.toMessage({speaker: { actor: character }});
+        await roll.toMessage({speaker: ChatMessage.getSpeaker({ actor: game.actors.get(character) })});
     });
 
     html.find('[data-item-id] [data-action=view]').click(async ev => {

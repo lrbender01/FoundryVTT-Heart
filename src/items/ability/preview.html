@@ -1,17 +1,39 @@
-
-{{#> "heart:items/base/preview.html" showActive=showActive}}
+{{!-- Ability row. Nested abilities (a major ability's options) are listed
+     under it. playable (the character sheet, 2026-09-29 review): only the
+     nested abilities switched on in the class are shown, and no row has an
+     on / off toggle - everything there is something the player can use.
+     Elsewhere (class sheet) every nested option shows with its toggle. --}}
+{{#> "heart:items/base/preview.html" showActivate=(and showActivate (not playable) (not unlockable)) hideView=playable}}
     <h4>
-        {{#if showTypeInTitle}}{{localizeHeart "ability" "type" item.system.type}}:{{/if}}
+        {{!-- the degree ("Major: Crimson Mirror") on the character sheet only;
+             the class sheet already groups abilities by degree --}}
+        {{#if playable}}{{#if (eq item.system.type "core")}}{{#if (eq item.parentItem.type "calling")}}{{localizeHeart "ability" "core-calling"}}{{else if (eq item.parentItem.type "class")}}{{localizeHeart "ability" "core-class"}}{{else}}{{localizeHeart "ability" "type" "core"}}{{/if}}{{else}}{{localizeHeart "ability" "type" item.system.type}}{{/if}}:{{/if}}
         {{localizeHeart item.name}}
+        {{!-- On a character's class: Learn / Learned (styled like Finish /
+             Finished). Learned when an advance allows it; it stays learned (the
+             GM can un-learn it). A major ability's options can't be learned
+             before the major ability itself (parentLocked). --}}
+        {{#if unlockable}}{{#unless (eq item.system.type "core")}}
+        {{#if item.system.active}}
+        <span class="lock-chip unlocked" {{#if @root.user.isGM}}data-action="ability-lock" title="{{localizeHeart 'ability' 'lock-tip'}}"{{/if}}>{{localizeHeart "ability" "unlocked"}}</span>
+        {{else if (and item.isOwner (not parentLocked))}}
+        <a class="lock-chip" data-action="ability-unlock" title="{{localizeHeart 'ability' 'unlock-tip'}}">{{localizeHeart "ability" "unlock"}}</a>
+        {{else if item.isOwner}}
+        <span class="lock-chip disabled" title="{{localizeHeart 'ability' 'parent-first'}}">{{localizeHeart "ability" "unlock"}}</span>
+        {{else}}
+        <span class="lock-chip">{{localizeHeart "ability" "locked"}}</span>
+        {{/if}}
+        {{/unless}}{{/if}}
     </h4>
     <div>
-        {{{localizeHeart item.system.description}}}
+        {{{heartTerms (localizeHeart item.system.description)}}}
     </div>
-    <div>
+    {{!-- a major ability's options, in columns beneath it --}}
+    <div class="nested-abilities">
         {{#each item.proxy.abilities as |ability|}}
-            <!-- {{#if (or (not ../hideInactive) ability.system.active)}} -->
-            {{> "heart:items/ability/preview.html" document=../document item=ability showTypeInTitle=true showActivate=true}}
-            <!-- {{/if}} -->
+        {{#if (or (not ../playable) ability.system.active)}}
+        {{> "heart:items/ability/preview.html" document=../document item=ability showActivate=(and (not ../playable) (not ../unlockable)) playable=../playable unlockable=../unlockable parentLocked=(not ../item.system.active)}}
+        {{/if}}
         {{/each}}
     </div>
 {{/ "heart:items/base/preview.html"}}

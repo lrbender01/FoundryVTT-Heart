@@ -1,24 +1,25 @@
-{{#> "heart:applications/base/application.html" type="beat-tracker"}}
-<div class="active-beats">
-    {{#if (gt characters.length 0)}}
+{{!-- Beat Tracker (2026-09-29): one titled container per character, their
+     active beats as beat rows (complete mark, level, text). --}}
+<form class="heart form beat-tracker" autocomplete="off">
     {{#each characters as |char|}}
-    <div class="character-box">
-        <label class="character-header">
-            {{char.character.name}}
-        </label>
-        <div class="char-active-beats">
-            {{#if (gt char.activeBeats.length 0)}}
-            {{#each char.activeBeats as |beat|}}
-            {{> "heart:items/beat/preview.html" item=beat showDelete=false showComplete=false showActivate=false}}
-            {{/each}}
+    <div class="character-tab-container tracker-character">
+        <div class="container-title">
+            <a data-action="open-actor" data-actor-id="{{char.actor.id}}">{{char.actor.name}}</a>
+            {{#if char.calling}}<span class="tracker-calling">{{{heartIcon char.callingImg}}}{{char.calling}}</span>{{/if}}
+        </div>
+        <div class="container-content">
+            {{#if char.beats.length}}
+            <div class="tab-item-list">
+                {{#each char.beats as |beat|}}
+                {{> "heart:items/beat/preview.html" item=beat showBeatActions=true showDelete=false}}
+                {{/each}}
+            </div>
             {{else}}
-            <p class="no-beats">{{localizeHeart "No active beats"}}</p>
+            <p class="tracker-empty">{{localizeHeart "applications" "beat-tracker" "no-beats"}}</p>
             {{/if}}
         </div>
     </div>
-    {{/each}}
     {{else}}
-    <p class="no-characters">{{localizeHeart "No characters available"}}</p>
-    {{/if}}
-</div>
-{{/ "heart:applications/base/application.html"}}
+    <p class="tracker-empty">{{localizeHeart "applications" "beat-tracker" "no-characters"}}</p>
+    {{/each}}
+</form>

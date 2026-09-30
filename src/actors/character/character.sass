@@ -5,53 +5,116 @@
 // ============================================================================
 
 // Colors
-$header-label-color: white
+$header-label-color: util.$header-fg
 
-// Fonts
-$label-font: 'Mosherif'
+// Fonts: see the TYPE tokens in util.sass
 
 // Sheet Containers
+// Density pass 2026-09-29 ("tight": about half the old whitespace, same text
+// sizes). Container titles sit ON the border line, so the vertical gap
+// between stacked containers must stay >= half the title height or titles
+// collide with the box above - $section-gap covers that.
 $container-border-width: 2px
 $container-radius: 8px
-$container-padding: 1.5rem
-$container-title-bg: white
+$container-padding: 0.6rem
+// Title plates straddle the container border: window colour above the
+// line, card colour below it (see .container-title)
+$container-title-bg: linear-gradient(util.$bg 50%, util.$surface 50%)
+$container-title-size: util.$fs-section
+$section-gap: 1.15rem
+
+// Header / nav geometry. Both strips are masked by header_nav.svg, whose
+// torn bottom edge sits at ~87-91% of the strip height, so these values
+// move together: the nav tucks $nav-overlap px under the header's torn edge
+// and the tab links start just below it. Tune here if the tabs clip.
+$header-row: 30px
+$header-row-gap: 6px
+$header-box-pad: 6px
+$header-box-height: 2 * $header-row + $header-row-gap + 2 * $header-box-pad + 4px
+$header-pad-top: 12px
+$header-height: 124px
+$nav-height: 60px
+$nav-overlap: 20px
 
 // ============================================================================
 // PLACEHOLDERS
 // ============================================================================
 
 %header-container-style
-  border: 2px solid white
+  border: 2px solid util.$header-fg
   border-radius: 0.5em
   background-color: transparent
-  padding: 0.625em
-  height: 5.625em
-  max-height: 5.625em
+  // tight sides so the fields keep their width (2026-09-30)
+  padding: $header-box-pad 0.45em
+  height: $header-box-height
+  max-height: $header-box-height
   box-sizing: border-box
+  grid-template-rows: $header-row $header-row
+  row-gap: $header-row-gap
 
 %header-input-style
-  background-color: rgba(0,0,0,0.25)
-  border: 1px solid white
+  background-color: util.$header-field-bg
+  border: 1px solid util.$header-fg
   border-radius: 0.3125em
-  color: white
-  padding-left: 0.625em
-  padding-right: 0.625em
-  height: 1.875em
+  color: util.$header-fg
+  padding-left: 0.45em
+  padding-right: 0.45em
+  height: $header-row
   min-width: 0
   width: 100%
-  max-height: 1.875em
-  font-family: 'Alegrey'
-  font-size: 1em
+  max-height: $header-row
+  @include util.text-body
   box-sizing: border-box
   &::placeholder
-    color: white
+    color: util.$header-fg
+    opacity: 0.55
 
 %header-label-style
-  font-family: $label-font
-  font-size: 24px
-  font-weight: normal
+  @include util.text-section
+  // header labels a step smaller than section titles: the fields matter more
+  font-size: util.$fs-chip-mosherif
+  line-height: 1
   color: $header-label-color
   align-self: center
+
+// Header item slot (ancestry, class, calling): one line always - the name
+// truncates with an ellipsis and the view / delete buttons keep their size.
+// (Foundry's .flexrow wraps and gives every child flex: 1, which made the
+// ancestry buttons wrap under the name while class / calling squeezed.)
+%header-item-slot
+  @extend %header-input-style
+  position: relative
+  display: flex
+  flex-wrap: nowrap
+  align-items: center
+  min-width: 0
+
+  // the name uses the whole slot; the icons float over its right end
+  > .name
+    flex: 1 1 0
+    min-width: 0
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+
+    &.placeholder
+      color: util.$header-fg
+      opacity: 0.55
+
+  // view / delete sit translucent over the text (2026-09-30 review), so a
+  // long name stays readable; full strength on hover
+  > .right
+    position: absolute
+    right: 0.45rem
+    top: 50%
+    transform: translateY(-50%)
+    display: flex
+    gap: 0.4rem
+    opacity: 0.4
+    transition: opacity 0.12s
+
+  &:hover > .right
+    opacity: 1
 
 %item-input
   > .flexrow
@@ -59,26 +122,54 @@ $container-title-bg: white
       flex: 0 0 auto
 
 %dynamic-container
-  border: $container-border-width solid util.$red
+  border: $container-border-width solid util.$red-mid
   border-radius: $container-radius
+  background: util.$surface
   padding: $container-padding
   position: relative
-  margin-bottom: 1rem
+  margin-bottom: 0
 
-  // Container Title: inlayed on top of the container border
+  // Container Title: centred on the top border line
   .container-title
     position: absolute
-    top: -0.8rem
-    left: 1rem
-    background-color: $container-title-bg
-    padding: 0 0.5rem
-    font-family: 'Mosherif'
-    font-size: 30px
-    color: util.$red
+    top: -($container-title-size * 0.5)
+    left: 0.75rem
+    background: $container-title-bg
+    padding: 0 0.4rem
+    @include util.text-section
+    line-height: $container-title-size
+    // title and count share a baseline (a centred count sat below Mosherif's
+    // capitals); the eye, "+" and warning badge centre on the line (2026-09-30)
+    display: flex
+    align-items: baseline
+    gap: 6px
+    white-space: nowrap
 
-  // Container Content Placeholder
+    // counts centre like the icons, in full-height (lining) figures - the
+    // old-style default made "0 / 2" sit low beside the icons
+    .panel-count
+      margin-left: 0
+      align-self: center
+      line-height: 1
+      font-variant-numeric: lining-nums tabular-nums
+
+    > a, > .heart-warn
+      align-self: center
+      display: inline-flex
+      align-items: center
+      justify-content: center
+      line-height: 1
+
+    .clickable.section-button
+      margin: 0 4px
+      transform: none
+    // Text colour, not red: bright red Mosherif at this size was hard to
+    // read on charcoal (Luke, 2026-09-29)
+    color: util.$text
+
+  // Content starts just below the title's lower half
   .container-content
-    margin-top: 1rem
+    margin-top: 0.55rem
 
 // ============================================================================
 // MIXINS
@@ -88,7 +179,7 @@ $container-title-bg: white
   color: $text-color
   background-color: $bg-color
   text-shadow: 0 0 transparent !important
-  padding: 5px 50px
+  padding: 3px 40px
   mask: radial-gradient(8px at 20px 20px, transparent 98%, black) -20px -20px
 
 @mixin hover-clickable($text-color, $bg-color, $radius: 5px)
@@ -105,43 +196,93 @@ $container-title-bg: white
 
 [id^="CharacterSheet-Actor-"] .window-content > *
   padding: 0
-  background-color: white
+  background-color: util.$bg
+  color: util.$text
 
   a span
     &:hover
       text-shadow: 0 0 transparent !important
-      color: util.$red
+      color: util.$red-bright
 
+// Top padding leaves room for the first row of container titles, which
+// stick up half their height above their box.
 .character-tab
   display: grid
-  grid-template-columns: 400px 1fr
-  gap: 1rem
+  // 390px (was 370): a full resistance row plus the Provisions QM line
+  // fits with equal margins (2026-09-30 review)
+  grid-template-columns: 390px 1fr
+  column-gap: 0.8rem
   width: 100%
-  padding: 25px
+  padding: 18px 12px 12px
+  box-sizing: border-box
 
 .biography-tab
   display: grid
   grid-template-columns: 1fr
-  gap: 1rem
+  row-gap: $section-gap
   width: 100%
-  padding: 25px
+  padding: 18px 12px 12px
+  box-sizing: border-box
 
 .column
   display: flex
   flex-direction: column
-  gap: 1rem
+  gap: $section-gap
+  min-width: 0
+
+// Skills + Domains: the wrapper is not a titled container, so it needs no
+// title clearance of its own.
+.skills-domains-container > .container-content
+  margin-top: 0
 
 // Subcolumns
 .subcolumns
   display: grid
   grid-template-columns: 1fr 1fr
-  gap: 1rem
+  gap: 0.6rem
+
+// Skills & Domains tab (2026-09-30 review): the Edit Skills / Edit Domains
+// rows (tick, glyph, name | knack), two boxes side by side, each as tall as
+// its list
+.skills-tab
+  padding: 18px 12px 12px
+  box-sizing: border-box
+
+  .subcolumns
+    align-items: start
+    gap: 0.8rem
+
+.trait-edit-grid
+  display: grid
+  grid-template-columns: auto minmax(0, 1fr)
+  align-items: center
+  gap: 0.35em 0.75em
+
+  .trait-edit-head
+    @include util.text-label
+    color: util.$muted
+
+  .skill-edit-row, .domain-edit-row
+    cursor: pointer
+    white-space: nowrap
+
+  .trait-glyph
+    display: inline-flex
+    flex: 0 0 auto
+    font-size: 20px
+
+    .heart-glyph
+      margin-right: 0
+
+  .unselected .trait-glyph
+    opacity: 0.55
 
 .subcolumn
   position: relative
-  padding: 1rem
-  border: $container-border-width solid util.$red
+  padding: $container-padding
+  border: $container-border-width solid util.$red-mid
   border-radius: $container-radius
+  background: util.$surface
   min-width: 0
 
 // ============================================================================
@@ -160,24 +301,28 @@ $container-title-bg: white
   mask-size: 0.7em
   mask-repeat: no-repeat
 
+// Dice icon colours by ROLE (class names kept for template compatibility):
+// .red = accent, .black = body-text colour, .white = header (fixed dark art)
 .heart .sheetD10.red
-  background-color: util.$red
+  background-color: util.$red-bright
 .heart .sheetD10.black
-  background-color: black
+  background-color: util.$text
 .heart .sheetD10.white
-  background-color: white
+  background-color: util.$header-fg
 
+// "+" after container titles: readable, not title-sized (2026-09-29 review)
 .heart .addItem
-  font-size: 36px
+  // drawn as Font Awesome's plus at the eye icons' 16px (2026-09-30)
+  font-size: 0
   line-height: 0
-  color: black
+  color: util.$text
   display: inline-block
   vertical-align: middle
 
 .heart .editItem
   font-size: 16px
   line-height: 0
-  color: black
+  color: util.$text
   display: inline-block
   vertical-align: middle
 
@@ -191,18 +336,19 @@ $container-title-bg: white
   display: flex
   flex-wrap: nowrap
   justify-content: flex-start
-  align-items: center
-  gap: 1em
-  padding: 1.875em
+  align-items: flex-start
+  gap: 0.5em
+  padding: $header-pad-top 0.75em 0
+  box-sizing: border-box
   background-color: transparent
   background-image: url('../../../static/assets/ui/header_background.webp')
   mask-image: url('../../../static/assets/ui/header_nav.svg')
-  mask-size: auto 11.25em
+  mask-size: auto $header-height
   mask-repeat: repeat-x
   mask-position: -0.5px top
-  margin-bottom: 1rem
-  min-height: 11.25em
-  max-height: 11.25em
+  margin-bottom: 0
+  min-height: $header-height
+  max-height: $header-height
 
 // Header Columns — generic shrink-with-priority base
 // Each variant below overrides `flex` weights so Name dominates Pronouns,
@@ -211,31 +357,33 @@ $container-title-bg: white
   flex: 1 1 auto
   min-width: 0
 
-// Portrait Container — fixed size (it's an image; don't shrink)
+// Portrait Container — fixed size (it's an image; don't shrink). Matches
+// the height of the header boxes beside it.
 .header-col.portrait
   flex: 0 0 auto
-  min-width: 5.625em
-  max-width: 5.625em
+  min-width: $header-box-height
+  max-width: $header-box-height
   img
-    background-color: black
-    width: 5.625em
-    height: 5.625em
+    background-color: util.$sunken
+    width: $header-box-height
+    height: $header-box-height
     border-radius: 50%
-    border: 2px solid white
+    border: 2px solid util.$header-fg
     object-fit: cover
+    box-sizing: border-box
 
-// Identity Container — Name dominates Pronouns (3fr vs 1fr).
-// Container takes a dominant share of the header's flex width.
+// Identity Container — Name + Ancestry. (The pronouns input left the header
+// 2026-09-29; system.pronouns is kept for when it comes back.)
 .header-col.identity-container
   @extend %header-container-style
   display: grid
-  grid-template-columns: auto 3fr 1fr
-  gap: 0.5rem 1rem
+  grid-template-columns: auto 1fr
+  column-gap: 0.5rem
   flex: 3 1 16em
   min-width: 10em
-  max-width: 28em
+  max-width: 36em
 
-  // Row 1: Name, Name Input, Pronouns Input
+  // Row 1: Name
   .name-label
     grid-column: 1
     grid-row: 1
@@ -250,18 +398,6 @@ $container-title-bg: white
     white-space: nowrap
     min-width: 0
 
-  .pronouns-input
-    grid-column: 3
-    grid-row: 1
-    @extend %header-input-style
-    overflow: hidden
-    text-overflow: ellipsis
-    white-space: nowrap
-    min-width: 0
-
-    &::placeholder
-      color: rgba(255, 255, 255, 0.5)
-
   // Row 2: Ancestry Label & Input
   .ancestry-label
     grid-column: 1
@@ -269,7 +405,7 @@ $container-title-bg: white
     @extend %header-label-style
 
   .ancestry-input
-    grid-column: 2 / span 2
+    grid-column: 2
     grid-row: 2
     @extend %header-input-style
     overflow: hidden
@@ -278,42 +414,24 @@ $container-title-bg: white
     min-width: 0
 
     &::placeholder
-      color: rgba(255, 255, 255, 0.5)
+      color: util.$header-fg
+      opacity: 0.5
 
   // Ancestry item slot - mirrors .class-content styling in the header grid
   .ancestry-content
-    grid-column: 2 / span 2
+    grid-column: 2
     grid-row: 2
-    @extend %header-input-style
-    display: flex
-    align-items: center
-    gap: 0.5rem
-    min-width: 0
-
-    .name
-      flex: 1 1 auto
-      min-width: 0
-      overflow: hidden
-      text-overflow: ellipsis
-      white-space: nowrap
-
-      &.placeholder
-        opacity: 0.6
-
-    .right
-      flex: 0 0 auto
-      display: flex
-      gap: 0.4rem
+    @extend %header-item-slot
 
 // Class & Calling Container — shrinks with content, em-based min/max.
 .header-col.class-calling-container
   @extend %header-container-style
   display: grid
   grid-template-columns: auto 1fr
-  gap: 0.5rem 1rem
-  flex: 2 1 14em
+  column-gap: 0.5rem
+  flex: 3 1 14em
   min-width: 8em
-  max-width: 22em
+  max-width: 32em
   @extend %item-input
 
   // Row 1: Class Label & Content
@@ -325,19 +443,7 @@ $container-title-bg: white
   .class-content
     grid-column: 2
     grid-row: 1
-    @extend %header-input-style
-    display: flex
-    align-items: center
-    gap: 0.5rem
-
-    .name
-      overflow: hidden
-      text-overflow: ellipsis
-      white-space: nowrap
-      min-width: 0
-
-    .name.placeholder
-      color: rgba(255, 255, 255 , 0.5)
+    @extend %header-item-slot
 
   // Row 2: Calling Label & Content
   .calling-label
@@ -348,77 +454,90 @@ $container-title-bg: white
   .calling-content
     grid-column: 2
     grid-row: 2
-    @extend %header-input-style
-    display: flex
-    align-items: center
-    gap: 0.5rem
-    
-    .name
-      overflow: hidden
-      text-overflow: ellipsis
-      white-space: nowrap
-      min-width: 0
+    @extend %header-item-slot
 
-    .name.placeholder
-      color: rgba(255, 255, 255 , 0.5)
-
-// Tab Navigation
+// Tab Navigation - tucks under the header's torn edge (see geometry vars)
 .character-nav-tabs
   z-index: 0
-  margin-top: -60px
-  padding: 5px 25px
+  margin-top: -$nav-overlap
+  padding: 0 20px
+  box-sizing: border-box
   display: flex
   justify-content: flex-start
-  gap: 3rem
-  background-color: util.$red
+  align-items: flex-start
+  gap: 1.5rem
+  background-color: util.$red-deep
   mask-image: url('../../../static/assets/ui/header_nav.svg')
-  mask-size: auto 90px
+  mask-size: auto $nav-height
   mask-repeat: repeat-x
   mask-position: -0.5px top
-  margin-bottom: 1rem
-  min-height: 90px
-  max-height: 90px
+  margin-bottom: 0
+  min-height: $nav-height
+  max-height: $nav-height
 
   a
-    padding: 5px 50px
-    margin-top: 15px
-    font-family: $label-font
-    font-size: 26px
-    color: white
+    padding: 3px 40px
+    margin-top: $nav-overlap - 8px
+    @include util.text-section
+    line-height: 1
+    color: util.$on-red
     white-space: nowrap
 
     &:hover
-      @include active-tab(util.$red, white)
+      @include active-tab(util.$red-bright, util.$surface)
     
   a:active, a.active
-    @include active-tab(util.$red, white)
+    @include active-tab(util.$red-bright, util.$surface)
 
 // Roll Buttons Container — flex weight keeps full "ROLL STRESS" / "ROLL FALLOUT"
 // labels from clipping mid-word at narrow widths.
+// Rows are pinned to $header-row (via %header-container-style); upstream
+// sized the buttons in em of their 24px label font, so each was ~45px tall
+// and "Roll Fallout" hung out through the bottom border of the box.
 .header-col.roll-buttons-container
   @extend %header-container-style
   display: grid
-  grid-template-columns: 1fr 1fr
-  gap: 0.5rem 0.5rem
-  flex: 2 1 18em
-  min-width: 12em
-  max-width: 28em
+  grid-template-columns: auto 1fr
+  column-gap: $header-row-gap
+  // the roll buttons take only what they need
+  flex: 0 1 15em
+  min-width: 11em
+  max-width: 18em
 
 // Heart Button Styles
 .header-col.heart
   button
     @extend %header-input-style
-    border: 1px solid white
+    border: 1px solid util.$header-fg
     @extend %header-label-style
+    margin: 0
+    padding: 0 0.5em
+    display: flex
+    align-items: center
+    justify-content: center
+    gap: 0.3em
+
+    &:hover
+      background-color: util.$red-mid
   
+  // Roll: a square filling the left, label over the die; Stress above
+  // Fallout on the right (2026-09-30 review)
   button.default-roll
     grid-column: 1
-    grid-row: 1
+    grid-row: 1 / span 2
+    height: 100%
+    max-height: none
+    aspect-ratio: 1
+    flex-direction: column
+    gap: 2px
+
+    .sheetD10
+      margin: 0
   button.stress-roll
     grid-column: 2
     grid-row: 1
   button.fallout-roll
-    grid-column: 1 / span 2
+    grid-column: 2
     grid-row: 2
 
 // ============================================================================
@@ -429,17 +548,53 @@ $container-title-bg: white
 .character-tab-container
   @extend %dynamic-container
 
+$shield-col: 5.6rem
+
+// Resistances: header and rows share ONE grid (rows are display: contents),
+// so "Protection" sits exactly over the shields and "Stress" over the boxes
+// (2026-09-29; separate per-row grids sized each row on its own).
+.stress-container .container-content > div
+  display: grid
+  // Never wider than its box (2026-09-30 review): the name column takes the
+  // width that is left and wraps (the Provisions "Party · QM" line); the
+  // box and shield columns are exactly their marks, and their heads wrap
+  // rather than widen them ("Stress (Total: 7)"). The block fills the box,
+  // so the space left of the glyphs matches the space right of the shields.
+  // the shield column has one fixed width here and in the Party section,
+  // so the Provisions shields sit under the resistance shields
+  grid-template-columns: minmax(0, 1fr) min-content $shield-col
+  column-gap: 0.7em
+  align-items: center
+  line-height: 1.35
+
+.stress-container .resistance-row
+  display: contents
+
+// Column heads as small labels: at body size "Protection" was wider than
+// its five shields and pushed the block past the box's right edge
+.stress-container .container-content > div > .resistance-row:first-child > span
+  @include util.text-label
+  color: util.$muted
+  line-height: 1.1
+
 .resistance-row
   display: grid
-  grid-template-columns: 5em 12em 6em
-  gap: 1em
+  grid-template-columns: max-content max-content max-content
+  column-gap: 0.9em
   align-items: center
-  margin-bottom: 0.5rem
+  margin-bottom: 0
+  line-height: 1.35
 
   .resistance-name
     font-weight: bold
-    margin-right: 1rem
-    min-width: 4rem
+    min-width: 0
+    // glyph and word centred on the row's tracks (2026-09-30)
+    display: inline-flex
+    align-items: center
+
+    .heart-glyph
+      vertical-align: 0
+      margin-right: 0.35em
 
   .resistance-stress
     font-weight: bold
@@ -453,6 +608,43 @@ $container-title-bg: white
     align-items: center
     gap: 0.2rem
 
+// Provisions (house rule, 2026-09-30): the party's shared track under the
+// five, set off by a thin line. The name stacks over a quiet "Party - QM"
+// line; the twenty boxes are two rows of ten under the Stress heading.
+.resistance-row .provisions-name
+  flex-direction: column
+  align-items: flex-start
+  gap: 1px
+
+  > .provisions-title
+    display: inline-flex
+    align-items: center
+
+  // wraps inside the name column ("Party ·" / "QM Vess") so it never
+  // widens the grid past the box
+  .provisions-sub
+    font-weight: normal
+    font-size: util.$fs-secondary
+    line-height: 1.2
+    color: util.$muted
+    white-space: normal
+    overflow-wrap: anywhere
+
+    &.is-quartermaster
+      color: util.$red-bright
+
+    a
+      color: util.$muted
+      margin-left: 3px
+
+      &:hover
+        color: util.$red-bright
+
+.resistance-row .provisions-track
+  flex-direction: column
+  align-items: flex-start
+  gap: 4px
+
 .protection input[type=checkbox]
   $size: 12px
   flex: $size 0 0
@@ -460,16 +652,16 @@ $container-title-bg: white
   display: inline-block
   width: $size
   height: $size
-  background-color: util.$black
+  background-color: util.$mark-empty
   border: none
   margin: 0 2px
   box-sizing: content-box
 
   &:disabled:checked
-    background-color: util.$disabled-and-checked
+    background-color: util.$muted
 
   &:checked
-    background-color: util.$red
+    background-color: util.$mark-on
     width: $size
     height: $size
     border: none
@@ -479,11 +671,16 @@ $container-title-bg: white
     cursor: not-allowed
 
   &.invert
-    border-color: util.$white
+    border-color: util.$header-fg
     &:checked
-      background-color: util.$white
+      background-color: util.$header-fg
 
-.protection .ordered-checkable-box
+// Protection shields: a filled shield shape, grey empty / red marked.
+// (.heart prefix: the shared mark rule in index.sass - ".heart
+// .ordered-checkable-box::after", outline + transparent fill - has the same
+// weight and could win on load order, leaving only a faint dotted outline
+// through the shield mask. Found in review, 2026-09-29.)
+.heart .protection .ordered-checkable-box
   $size: 12px
   flex: $size 0 0
 
@@ -492,103 +689,419 @@ $container-title-bg: white
     display: block
     width: $size
     height: $size
-    background-color: util.$grey
+    background-color: util.$mark-empty
     mask-image: url('../../../static/assets/ui/shield_fill.svg')
     mask-repeat: no-repeat
     mask-size: contain
     border: none
+    border-radius: 0
 
   &.checked::after
-    background-color: util.$red
-    mask-image: url('../../../static/assets/ui/shield_fill.svg')
-    mask-repeat: no-repeat
-    mask-size: contain
+    background-color: util.$mark-on
     border: none
-    width: $size
-    height: $size
 
+// Skill / domain rows (2026-09-29 review): the name, then its knack on the
+// same line; no dice icons. The whole row is one click target that rolls.
+// A grid (not wrapping flex) so the knack always starts on the name's line;
+// a long knack wraps inside its own column.
+// Skill / domain rows (2026-09-30 review): a grid sized by how many there
+// are - one row alone, two or more in two columns - centred horizontally and
+// vertically in the box (both boxes share the taller one's height). Columns
+// are only as wide as their rows; a long knack still wraps inside its column.
+.heart.character
+  // Skills above Domains, each full width, so knacks have room (2026-09-30)
+  .skills-domains-container .subcolumns
+    grid-template-columns: minmax(0, 1fr)
+    row-gap: 1.2rem
+
+  .skills-container, .domains-container
+    display: flex
+    flex-direction: column
+
+    // cards of a fixed width, three across, the set centred (2026-09-30)
+    > .container-content
+      flex: 1 1 auto
+      display: grid
+      // three per row; with only one or two cards (cols-1 / cols-2) the
+      // grid narrows so they sit centred
+      grid-template-columns: repeat(3, minmax(0, 6.4rem))
+
+      &.cols-1
+        grid-template-columns: minmax(0, 6.4rem)
+
+      &.cols-2
+        grid-template-columns: repeat(2, minmax(0, 6.4rem))
+      justify-content: center
+      // just as tall as its rows of three (2026-09-30 review: one row sat
+      // in a box sized for two)
+      align-content: start
+      gap: 0.5rem
+
+// A skill / domain card: name, then its glyph large, then the knack
 .skill-row, .domain-row
-  display: grid
-  grid-template-columns: 1fr 0.5fr
+  display: flex
+  flex-direction: column
   align-items: center
-  gap: 1rem
-  margin-top: 0.75rem
+  gap: 3px
+  padding: 6px 4px 7px
+  border: 1px solid util.$line
+  border-radius: 7px
+  background: util.$sunken
+  text-align: center
 
   .skill-name, .domain-name
-    text-align: left
-    font-weight: 900
-    cursor: pointer
+    font-weight: bold
+    white-space: nowrap
 
-  .skill-bonus-dice, .domain-bonus-dice
-    gap: 0.25rem
+  .trait-glyph
+    font-size: 38px
+    line-height: 1
 
-  .skill-plus, .domain-plus
-    font-size: 0.7em
-  
-  .skills-dice, .domain-dice
-    margin: 0
+    .heart-glyph
+      margin: 0
 
-  .knack-dice
-    margin: 0
+  .knack-label
+    @include util.text-secondary
+    font-size: 13px
+    line-height: 1.2
+    min-width: 0
+    overflow-wrap: break-word
 
-.knack-label
-  font-weight: 300
-  display: inline-block
-  max-width: 75%
-  white-space: normal
-  overflow-wrap: break-word
-  word-break: break-word
-  vertical-align: middle
-  padding: -10px 0 10px 0
+  // hovered name: the red pill grows evenly on both sides, so the name
+  // stays centred on its card (the shared pill was left-weighted)
+  &.roll-row:hover .clickable
+    margin: -2px -10px
+    padding: 2px 10px
+
+  // drag to reorder (2026-09-30): a red bar on the side it will land (the
+  // cursor stays a pointer: a click still rolls)
+  &.dragging
+    opacity: 0.5
+
+  &.drop-before
+    box-shadow: -3px 0 0 util.$red-bright
+
+  &.drop-after
+    box-shadow: 3px 0 0 util.$red-bright
+
+.roll-row:hover
+  border-color: util.$red-mid
+
+  .trait-glyph
+    color: util.$red-bright
+
+.roll-row
+  cursor: pointer
+
+  &:hover
+    .clickable
+      @include hover-clickable(util.$on-red, util.$red-mid)
+
+    .knack-label
+      color: util.$text
 
 .info
-  font-size: 0.8em
+  font-size: util.$fs-secondary
 
 .clickable
   cursor: pointer
-  color: util.$black
+  color: util.$text
 
   &:hover
-    @include hover-clickable(white, util.$red)
+    @include hover-clickable(util.$on-red, util.$red-mid)
 
+// Section edit/add icons: hover only turns them red, like the + buttons on
+// the Character tab. (The generic .clickable hover adds a red pill with extra
+// padding, which made these icons jump in size.)
 .clickable.section-button
   font-size: 16px
   margin: 0 10px
   display: inline-block
   transform: translateY(-2px)
 
+  &:hover
+    background: none
+    mask: none
+    margin: 0 10px
+    padding: 0
+    color: util.$red-bright
+
 // Biography blocks: calling (original), ancestry + class (added 2026-09-29)
 // share one look. The ancestry/class blocks use the generic bio-* classes.
+// Descriptions: body size, left-aligned (2026-09-29; was 24px centred).
+// The red rule separates description from questions, so the question-less
+// class block drops it.
 .calling-description, .bio-description
-  text-align: center
-  font-size: 24px
-  width: 70%
-  margin: 0 auto 25px auto
-  padding: 0 10% 25px
-  border-bottom: 3px solid util.$red
+  text-align: left
+  font-size: util.$fs-body
+  width: auto
+  margin: 0.5rem 0 0.6rem
+  padding: 0 0 0.6rem
+  border-bottom: 3px solid util.$red-mid
+
+  p
+    margin: 0
+
+    & + p
+      margin-top: 0.75em
+
+.class-container .bio-description
+  border-bottom: 0
+  padding-bottom: 0
+  margin-bottom: 0
+
+.calling-items .question, .bio-items .question
+  margin-bottom: 0.4rem
 
 .calling-items .question strong, .bio-items .question strong
-  font-size: 16px
-  font-weight: 900
-  color: util.$red
+  font-size: util.$fs-body
+  font-weight: bold
+  color: util.$red-bright
   display: inline-block
-  width: 70%
+  width: 100%
 
 .calling-items .question .answer-prompt, .bio-items .question .answer-prompt
-  padding: 10px 0 30px 0
-  font-size: 16px
+  @include util.text-secondary
+  padding: 2px 0 4px 0
 
 .calling-items .editor-content, .bio-items .editor-content
   background-image: none !important
-  font-size: 16px !important
-  padding: 10px 0 30px 0 !important
+  font-size: util.$fs-body !important
+
+// answers italic, as on the calling / ancestry sheets
+.calling-items .question .editor-content, .bio-items .question .editor-content
+  font-style: italic
+  padding: 2px 0 4px 0 !important
   min-height: 0 !important
 
-// Generic item rows: quantity badge (only shown when > 1)
+// ============================================================================
+// ITEM ROWS (character sheet only; item sheets keep their own spacing)
+// ============================================================================
+
+.heart.character
+  .tab-item-list, .inactive-items
+    .item.preview
+      margin: 0.3em 0
+      padding: 0.3em 0.5em
+
+      &:first-child
+        margin-top: 0
+
+      h4
+        margin: 0 0 0.15em
+
+      p
+        margin: 0.15em 0
+
+  // Notes editor: no 8em empty notepad block on the sheet
+  .notes-container .editor-content
+    min-height: 3em
+
+  // Notes edit button lives in the container title (sheet.js clicks this one)
+  .notes-container .editor .editor-edit
+    display: none
+
+
+// Generic item rows: quantity (only shown when > 1). Plain text colour -
+// not information worth highlighting (Luke, 2026-09-29).
 .item.preview.item .quantity
   margin-left: 0.4em
+  color: util.$text
+
+
+
+
+// Skills, domains and resistances named in ability text (authored as
+// <strong>) read in the accent red, as in the approved preview.
+.heart .item.preview.ability strong
+  color: util.$red-bright
+
+// Biography blocks reuse Item sheet classes; let the container card show
+// through instead of the window background.
+.biography-tab .heart.sheet
+  background: transparent
+
+// Trinket / keepsake row in the Biography blocks (2026-09-30)
+.trinket-row
+  display: flex
+  align-items: center
+  flex-wrap: wrap
+  gap: 6px
+  margin: 0 0 0.6rem
+  font-size: util.$fs-secondary
+
+  .trinket-label
+    @include util.text-label
+    color: util.$muted
+
+  .trinket-name
+    font-weight: bold
+    color: util.$text
+
+    &:hover
+      color: util.$red-bright
+
+  .trinket-reset
+    color: util.$muted
+
+    &:hover
+      color: util.$red-bright
+
+  .trinket-roll
+    width: auto
+    height: auto
+    margin: 0
+    padding: 3px 12px 2px
+    @include util.text-chip
+    font-size: util.$fs-secondary
+    background: util.$red-deep
+    border: 1px solid util.$red-mid
+    color: util.$on-red
+    border-radius: 5px
+
+// Warning badge (2026-09-30): a round "!" with a tooltip saying what is
+// missing; in a header slot's corner, or inline after a section title.
+// Ember gold with a dark "!" and a thin dark ring (review: red was lost on
+// the red and grey chrome); every badge opens what fixes it.
+.heart-warn
+  display: inline-grid
+  place-items: center
+  width: 17px
+  height: 17px
+  border-radius: 50%
+  background: util.$warn
+  color: util.$warn-ink !important
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.55)
+  font-family: util.$font-body
   font-weight: bold
-  color: util.$red
+  font-size: 12px
+  line-height: 1
+  letter-spacing: 0
+  cursor: pointer
+
+  &:hover
+    filter: brightness(1.15)
+
+.header-col .slot-flag
+  position: absolute
+  top: -7px
+  right: -7px
+  z-index: 2
+  width: 17px
+  height: 17px
+  display: grid
+  place-items: center
+  border-radius: 50%
+  background: util.$warn
+  color: util.$warn-ink !important
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.55)
+  cursor: pointer
+  font-family: util.$font-body
+  font-weight: bold
+  font-size: 12px
+  line-height: 1
 
 
+// Ability rows drag to reorder (2026-09-30)
+.abilities-container .tab-item-list > .item.preview[draggable=true]
+  cursor: grab
 
+  &.dragging
+    opacity: 0.5
+
+  &.drop-before
+    box-shadow: 0 -3px 0 util.$red-bright
+
+  &.drop-after
+    box-shadow: 0 3px 0 util.$red-bright
+
+.heart .addItem::before
+  content: "\f067"
+  font-family: "Font Awesome 6 Pro", "Font Awesome 6 Free", "Font Awesome 5 Free"
+  font-weight: 900
+  font-size: 16px
+  line-height: 1
+
+// Resources / Items rows drag to reorder too (2026-09-30)
+.resources-container, .items-container
+  .tab-item-list > .item.preview[draggable=true]
+    cursor: grab
+
+    &.dragging
+      opacity: 0.5
+
+    &.drop-before
+      box-shadow: 0 -3px 0 util.$red-bright
+
+    &.drop-after
+      box-shadow: 0 3px 0 util.$red-bright
+
+// Party section (2026-09-30 review): the shared Provisions row on the same
+// columns as the resistances, then the members as class-icon chips
+.party-container .party-grid
+  display: grid
+  grid-template-columns: minmax(0, 1fr) min-content $shield-col
+  column-gap: 0.7em
+  align-items: center
+  line-height: 1.35
+
+  .resistance-row
+    display: contents
+
+.party-chips
+  display: flex
+  flex-wrap: wrap
+  gap: 6px
+  margin-top: 0.6rem
+  padding-top: 0.55rem
+  border-top: 1px solid util.$line
+
+.party-chip
+  position: relative
+  display: inline-grid
+  place-items: center
+  width: 34px
+  height: 34px
+  box-sizing: border-box
+  border: 1px solid util.$line
+  border-radius: 7px
+  background: util.$sunken
+  color: util.$text
+  font-size: 24px
+  line-height: 1
+
+  .heart-glyph
+    margin: 0
+
+  .chip-fallback
+    font-size: 15px
+    color: util.$muted
+
+  &:has(.heart-glyph) .chip-fallback
+    display: none
+
+  &.is-quartermaster
+    border-color: util.$red-mid
+
+  &:hover
+    border-color: util.$red-bright
+    color: util.$red-bright
+
+  // "Name: Ancestry Class Calling", small and italic, under the hovered chip
+  &:hover::after
+    content: attr(data-label)
+    position: absolute
+    top: calc(100% + 4px)
+    left: 0
+    z-index: 5
+    white-space: nowrap
+    padding: 1px 6px
+    border: 1px solid util.$line
+    border-radius: 4px
+    background: util.$surface
+    color: util.$text
+    font-family: util.$font-body
+    font-size: 12px
+    font-style: italic
+    line-height: 1.4
+    pointer-events: none

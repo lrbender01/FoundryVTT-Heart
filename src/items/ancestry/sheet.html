@@ -1,37 +1,55 @@
-{{#> "heart:items/base/sheet.html" type="ancestry"}}
-<h4>
-    {{localizeHeart "ancestry" "questions" "prompt"}}
-    {{#if user.isGM }}
-    <a class="right" data-action="add-question"><span class="fas fa-plus"></span> {{localizeHeart "ancestry" "questions" "add"}}</a>
-    {{/if}}
-</h4>
-<ul class="ancestry-questions">
-{{#each system.questions as |question id|}}
-    <li data-id="{{id}}">
-        <div class="flexrow">
-            {{#if ../item.isOwned}}
-            <div>
-                <div class="question">{{{localizeHeart question.question}}}</div>
+{{#> "heart:items/base/sheet.html" type="ancestry" hideToggles=true}}
+
+  {{!-- Two columns like the calling Overview (2026-09-30 review): the
+       description on the left; the questions, then the Keepsake, on the
+       right. Opens at the calling sheet's size. --}}
+  <div class="item-cols even ancestry-body">
+    <div class="column">
+      {{> "heart:items/base/description.html"}}
+    </div>
+
+    <div class="column">
+      <div class="character-tab-container questions-container">
+        <div class="container-title">{{localizeHeart "item-sheet" "questions"}}</div>
+        <div class="container-content">
+          <div class="questions-prompt">{{localizeHeart "item-sheet" "ancestry-questions-prompt"}}</div>
+          <ol class="question-list">
+          {{#each system.questions as |question id|}}
+            <li data-id="{{id}}">
+              <div class="question">{{{localizeHeart question.question}}}{{#if (and ../item.isOwned ../editable)}}<a class="answer-edit" data-action="edit-answer" title="{{localizeHeart 'item-sheet' 'answer'}}"><span class="fas fa-edit"></span></a>{{/if}}</div>
+              {{#if ../item.isOwned}}
+              <div class="answer">
+                {{#unless question.answer}}<div class="answer-placeholder">{{localizeHeart "item-sheet" "no-answer"}}</div>{{/unless}}
                 {{#if ../editable}}
                 {{editor question.answer target=(join "." "system.questions" id "answer") button=true editable=../editable owner=../owner}}
                 {{else}}
-                <div>{{{localizeHeart question.answer}}}</div>
+                {{{question.answer}}}
                 {{/if}}
-            </div>
-            {{else}}
-                {{#if ../editable}}
-                <div class="question">
-                    {{editor (localizeHeart question.question) target=(join "." "system.questions" id "question") button=true editable=../editable owner=../owner}}
-                </div>
-                {{else}}
-                <div>{{{localizeHeart question.question}}}</div>
-                {{/if}}
-            {{/if}}
-            {{#if ../user.isGM }}
-            <a class="action" data-action="delete-question"><span class="fas fa-trash"></span> {{localizeHeart "ancestry" "questions" "delete"}}</a>
-            {{/if}}
+              </div>
+              {{/if}}
+            </li>
+          {{/each}}
+          </ol>
         </div>
-    </li>
-{{/each}}
-</ul>
+      </div>
+
+      {{#if item.isEmbedded}}
+      <div class="character-tab-container trinket-container">
+        <div class="container-title">{{localizeHeart "trinket" "keepsake"}}</div>
+        <div class="container-content">
+          <div class="trinket-row in-sheet" data-trinket-of="{{item.uuid}}">
+            {{#if trinketItem}}
+            {{!-- the rolled item as a normal item row (icon, name, open) --}}
+            <div class="tab-item-list">{{> "heart:items/item/preview.html" item=trinketItem showDelete=false}}</div>
+            {{else if item.flags.heart.trinket}}
+            <a class="trinket-name" data-action="view-trinket" data-uuid="{{item.flags.heart.trinket.uuid}}">{{item.flags.heart.trinket.name}}</a>
+            {{else if item.isOwner}}
+            <button type="button" class="trinket-roll" data-action="roll-trinket"><span class="fas fa-dice-d20"></span> {{localizeHeart "trinket" "roll-keepsake"}}</button>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+      {{/if}}
+    </div>
+  </div>
 {{/ "heart:items/base/sheet.html"}}

@@ -1,2 +1,13 @@
-{{#> "heart:items/base/sheet.html" type="fallout"}}
-{{/ "heart:items/base/sheet.html" }}
+{{#> "heart:items/base/sheet.html" type="fallout" hideToggles=true}}
+  {{#*inline "item-stats"}}
+  <span class="stat"><b>{{localizeHeart "item-sheet" "severity"}}</b>
+    {{{heartGlyph "severity" system.type}}}
+    {{#if editable}}<select name="system.type">{{selectOptions fallout_levels selected=system.type}}</select>{{else}}<span class="v">{{lookup fallout_levels system.type}}</span>{{/if}}
+  </span>
+  <span class="stat"><b>{{localizeHeart "item-sheet" "resistance"}}</b>
+    {{#if editable}}<select name="system.resistance">{{selectOptions resistances selected=system.resistance}}</select>{{else}}<span class="v">{{lookup resistances system.resistance}}</span>{{/if}}
+  </span>
+  {{/inline}}
+
+  {{> "heart:items/base/description.html" panelTitle=(localizeHeart "item-sheet" "effect")}}
+{{/ "heart:items/base/sheet.html"}}

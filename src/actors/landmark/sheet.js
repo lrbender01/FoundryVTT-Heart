@@ -2,13 +2,22 @@ import sheetHTML from './sheet.html';
 import './landmark.sass';
 import HeartActorSheet from '../base/sheet';
 import template from './template.json';
+import { activatePanelSheet, panelSheetDefaults, toChips } from '../../common/panel-sheet';
+import { iconFor } from '../../common/icons';
 
+// Landmark sheet (redesigned 2026-09-29). Layout in sheet.html; shared
+// tabs / editor / edit-toggle / die-roll behaviour in common/panel-sheet.js.
+// Haunt rows keep their own controls (service rolls, upgrade track,
+// upgrade / downgrade); services themselves are edited on the haunt's sheet.
 export default class LandmarkSheet extends HeartActorSheet {
     static get defaultOptions() {
-        const defaultOptions = super.defaultOptions;
-        return foundry.utils.mergeObject(defaultOptions, {
-            dragDrop: [{dragSelector: '.item', dropSelector: null}]
-        })
+        return panelSheetDefaults(super.defaultOptions);
+    }
+
+    constructor(...args) {
+        super(...args);
+        this._activeTab = 'main';
+        this._editing = false;
     }
 
     async _onDropItemCreate(itemData) {
@@ -30,169 +39,70 @@ export default class LandmarkSheet extends HeartActorSheet {
         return 'systems/heart/assets/monument.svg';
     }
 
-    
     getData() {
         const data = super.getData();
         data.user = game.user;
-        data.showTextboxesBelowItems = game.settings.get('heart', 'showTextboxesBelowItems')
+        data.editable = this.isEditable;
+        data.owner = this.actor.isOwner;
+        data.editing = this._editing;
         data.die_sizes = game.heart.die_sizes.reduce((map, die) => {
             map[die] = game.i18n.format('heart.die_size.d(N)', { N: die.replace(/^d/, '') })
             return map;
         }, {});
-        data.resistances = game.heart.resistances.reduce((map, resistance) => {
-            map[resistance] = game.i18n.localize(`heart.resistance.${resistance}`)
-            return map;
-        }, {});
+        data.domainChips = toChips(this.actor.system.domains);
+        data.inactiveItems = this.actor.items.filter(i => i.system.active !== undefined && !i.system.active);
         return data;
+    }
+
+    async _haunt(ev) {
+        const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
+        return fromUuid(uuid);
     }
 
     activateListeners(html) {
         super.activateListeners(html);
+        activatePanelSheet(this, html);
 
-        html.find('.ordered-checkable-box:not(.checked)').click(async ev => {
+        // Haunt upgrade track (lives on the haunt item, not the actor). Click a
+        // marked box again to clear it (was item.data - undefined on v12).
+        html.find('.item.preview.haunt .ordered-checkable-box').click(async ev => {
             ev.preventDefault();
             const element = ev.currentTarget;
             const index = parseInt(element.dataset.index);
-            const parent = element.parentElement;
-            const target = parent.dataset.target;
-            const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-
-            const data = {};
-            data[target] = index + 1;
-            item.update(data);
+            const target = element.parentElement.dataset.target;
+            const item = await this._haunt(ev);
+            if (!item) return;
+            const current = Number(foundry.utils.getProperty(item, target)) || 0;
+            const marked = element.classList.contains('checked');
+            item.update({ [target]: marked && index + 1 === current ? index : index + 1 });
         });
 
-        html.find('.ordered-checkable-box.checked').click(async ev => {
-            ev.preventDefault();
-            const element = ev.currentTarget;
-            const index = parseInt(element.dataset.index);
-            const parent = element.parentElement;
-            const target = parent.dataset.target;
-            const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-
-            const data = {};
-            if (index + 1 === foundry.utils.getProperty(item.data, target)) {
-                data[target] = index;
-            } else {
-                data[target] = index + 1;
+        const step = async (ev, delta) => {
+            const item = await this._haunt(ev);
+            if (!item) return;
+            const dieSizes = game.heart.die_sizes;
+            const updates = {};
+            if (delta > 0) updates['system.upgradeTrack'] = 0;
+            for (const [key, service] of Object.entries(item.system.resistances ?? {})) {
+                const i = dieSizes.indexOf(service.die_size) + delta;
+                if (i >= 0 && i < dieSizes.length) updates[`system.resistances.${key}.die_size`] = dieSizes[i];
             }
-            item.update(data);
-        });
-
-        html.find('[data-action=add-child][data-type]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const documentName = target.data('document-name') || 'Item';
-            const type = target.data('type');
-            const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            let itemData = target.data('data') || {};
-
-            const data = {documentName, type: type, name: `New ${type}`, system: itemData };
-            item.addChildren([data]);
-        });
-
-        html.find('[data-action=upgrade]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            const dieSizes = game.heart.die_sizes;
-            const services = item.system.resistances;
-            
-            const updates = {};
-            updates['system.upgradeTrack'] = 0;
-            
-            Object.keys(services).forEach(key => {
-                var service = services[key];
-                var indexOf = dieSizes.indexOf(service.die_size);
-                
-                if(indexOf < (dieSizes.length - 1)) {
-                    var largerSize = dieSizes[indexOf+1];
-                    updates[`system.resistances.${key}.die_size`] = largerSize;
-                }
-            });
-
             item.update(updates);
-        });
+        };
+        html.find('.item.preview.haunt [data-action=upgrade]').click(ev => step(ev, 1));
+        html.find('.item.preview.haunt [data-action=downgrade]').click(ev => step(ev, -1));
 
-        html.find('[data-action=downgrade]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            const dieSizes = game.heart.die_sizes;
-            const services = item.system.resistances;
-
-            const updates = {};
-            
-            Object.keys(services).forEach(key => {
-                var service = services[key];
-                var indexOf = dieSizes.indexOf(service.die_size);
-                
-                if(indexOf > 0) {
-                    var smallerSize = dieSizes[indexOf-1];
-                    updates[`system.resistances.${key}.die_size`] = smallerSize;
-                }
-            });
-
-            item.update(updates);
-        });
-
-        html.find('[data-action=add-service]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const id = foundry.utils.randomID();
-            const uuid = target.closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            item.update({[`system.resistances.${id}`]: {
-                die_size: 'd4',
-                resistance: 'blood'
-            }});
-        });
-
-        html.find('[data-action=delete-service]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            const id = target.closest ('[data-id]').data('id');
-            item.update({[`system.resistances.-=${id}`]: null});
-        });
-
-        html.find('[name=service-selector-die]').change(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            const id = target.closest ('[data-id]').data('id');
-            const val = ev.target.value;
-            item.update({[`system.resistances.${id}`]: {
-                die_size: val
-            }});
-        });
-
-        html.find('[name=service-selector-resistance]').change(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            const id = target.closest ('[data-id]').data('id');
-            const val = ev.target.value;
-            item.update({[`system.resistances.${id}`]: {
-                resistance: val
-            }});
-        });
-
-        html.find('[data-action=service-roll]').click(async ev => {
-            const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
-            const hauntitem = await fromUuid(uuid);
-            const target = $(ev.currentTarget);
-            const id = target.closest ('[data-id]').data('id');
-            const service = hauntitem.system.resistances[id];
-            const item = {system: {die_size:service.die_size}};
-
-            const roll = game.heart.rolls.ItemRoll.build({item});
+        html.find('.item.preview.haunt [data-action=service-roll]').click(async ev => {
+            ev.preventDefault();
+            const haunt = await this._haunt(ev);
+            if (!haunt) return;
+            const id = $(ev.currentTarget).closest('[data-id]').data('id');
+            const service = haunt.system.resistances[id];
+            const roll = game.heart.rolls.ItemRoll.build({ item: { system: { die_size: service.die_size } } });
             await roll.evaluateSync();
-
             roll.toMessage({
-                flavor: `${localizeHeart(hauntitem.name)} (<span class="item-type">${hauntitem.type}</span>)<div class="resistance-text">${localizeHeart(service.resistance)}</div>`,
-                speaker: {alias: "GM"}
+                flavor: `${iconFor(haunt.img)}${localizeHeart(haunt.name)} (<span class="item-type">${haunt.type}</span>)<div class="resistance-text">${localizeHeart(service.resistance)}</div>`,
+                speaker: { alias: "GM" }
             });
         });
     }

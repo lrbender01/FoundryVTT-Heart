@@ -1,7 +1,12 @@
-{{#> "heart:items/base/preview.html"}}
-<!-- This should probably be a class toggle but I couldn't figure it out. Something like the below-->
-<!-- <div class="{{#if item.system.complete}}completed-beat{{/if}};"></div> -->
-<div {{#if item.system.complete}}style="text-decoration: line-through;" {{/if}}>
-    <b>{{{titlecase (localizeHeart item.system.type)}}}:</b> {{{localizeHeart item.system.description}}}
+{{!-- Beat row (2026-09-29 review): level, text and, where the beat can be
+     played (showBeatActions), the Activate / Finish buttons from
+     actions.html. hideLevel drops the Minor / Major label where the section
+     already says it (the calling's Beats tab). A completed beat is greyed out. No checkbox: completion is
+     a button, and only an active beat can be completed. --}}
+{{#> "heart:items/base/preview.html" showActivate=false showComplete=false showDelete=showDelete hideView=hideView}}
+<div class="beat-row {{#if item.system.complete}}done{{/if}} {{#if item.system.active}}is-active{{/if}}">
+    {{#unless hideLevel}}<span class="beat-level">{{localizeHeart "beat" "level" item.system.type}}</span>{{/unless}}
+    <span class="beat-text">{{{heartTerms (localizeHeart item.system.description)}}}</span>
+    {{#if showBeatActions}}{{> "heart:items/beat/actions.html" item=item}}{{/if}}
 </div>
 {{/ "heart:items/base/preview.html"}}

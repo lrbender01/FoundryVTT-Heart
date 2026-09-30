@@ -1,0 +1,21 @@
+{{!-- Beat buttons (2026-09-29 review): Pursue and Finish side by side (a finished beat shows only Finished)
+     (stacked on the calling's Beats tab, for more text room).
+     See actions.js for the rules. Owners get the buttons; everyone else sees
+     the beat's state. data-item-id sits here so the buttons work in a row or
+     in the beat's own sheet header. --}}
+<div class="beat-actions" data-item-id="{{item.uuid}}">
+  {{#if item.isOwner}}
+    {{#if item.system.complete}}
+    <a class="beat-chip done" data-action="beat-uncomplete" title="{{localizeHeart 'beat' 'undo-complete'}}">{{localizeHeart "beat" "completed"}}</a>
+    {{else if item.system.active}}
+    <a class="beat-chip on" data-action="beat-deactivate" title="{{localizeHeart 'beat' 'deactivate-hint'}}">{{localizeHeart "beat" "pursued"}}</a>
+    <a class="beat-chip" data-action="beat-complete">{{localizeHeart "beat" "complete"}}</a>
+    {{else}}
+    <a class="beat-chip" data-action="beat-activate">{{localizeHeart "beat" "activate"}}</a>
+    <span class="beat-chip disabled" title="{{localizeHeart 'beat' 'activate-first'}}">{{localizeHeart "beat" "complete"}}</span>
+    {{/if}}
+  {{else}}
+    {{#if item.system.complete}}<span class="beat-chip done static">{{localizeHeart "beat" "completed"}}</span>
+    {{else if item.system.active}}<span class="beat-chip on static">{{localizeHeart "beat" "pursued"}}</span>{{/if}}
+  {{/if}}
+</div>

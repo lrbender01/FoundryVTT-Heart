@@ -1,101 +1,172 @@
 @use '../../util'
 
-form.heart.class
-    display: block
-    font-size: 1.1em
-    background: util.$white
+// Class sheet (2026-09-29): layout comes from the shared item chrome
+// (items/base/item-sheet.sass); this file styles the class-only pieces.
+form.heart.item-sheet.class
 
-    h1, h2
-        font-family: 'Mosherif'
-        
+    // Equipment (2026-09-29 review): "You get" and each pick-one choice are
+    // ONE section each; a choice lists its options separated by thin lines,
+    // with a grey/red mark for the chosen one (on a character).
+    .equipment-choice
+        border: 1px solid util.$line
+        border-radius: 7px
+        padding: 6px 8px
+        background: util.$sunken
 
-    h1, h2, h3
-        text-transform: uppercase
-    
-    h4
-        font-weight: bold
+        & + .equipment-choice
+            margin-top: 8px
 
-    
-    h1, h2, h3, h4
-        border: 0
-        margin: 0
-        flex: auto 0 0
+        .choice-head
+            @include util.text-label
+            color: util.$muted
+            margin-bottom: 4px
 
-        .right
-            float: right
-            font-family: Alegreya
-            font-size: 0.8em
+    .equipment-option
+        display: flex
+        align-items: center
+        gap: 7px
+        padding: 4px 0
 
-    h1
-        background: util.$red
-        color: util.$white
-        padding: 0.2em
+        & + .equipment-option
+            border-top: 1px solid util.$red-mid
 
-        input
-            color: util.$white !important
-            border: 0
-            width: 100%
-            font-size: 1em !important
-            text-align: left !important
+        &:not(.chosen) .option-items
+            opacity: 0.8
 
-    h2
-        color: util.$red
-        padding: 0.2em 0
+        // once one option is picked the others are ghosted and locked
+        &.ghosted
+            opacity: 0.4
 
-    .description
-        flex: auto 0 0
-        font-style: italic
-        padding: 0 1em
-        margin: 0.5em
+        .option-pick.locked
+            cursor: not-allowed
 
-        .editor-content
-            font-size: 1.7em !important
-            line-height: 1em
-            background: rgba(0, 0, 0, 0.1)
-            min-height: 6.5em
-            padding: 0.5em
-            text-align: center
+        .option-items
+            flex: 1 1 auto
+            min-width: 0
 
-    li .action
-        padding: 0.2em
+            .item.preview
+                margin: 0
+                background: util.$surface
 
-    .action
-        flex: auto 0 0
+                & + .item.preview
+                    margin-top: 4px
 
-    p
-        margin: 0
-        & + p
-            margin-top: 0.2em
+        .option-pick
+            flex: 0 0 auto
+            margin-top: 0
+            line-height: 0
 
-    .flexrow
-        align-content: center
+        .pick-mark
+            display: block
+            width: 13px
+            height: 13px
+            box-sizing: border-box
+            border: 1.5px solid util.$mark-empty
+            border-radius: 50%
 
-    .right
-        flex: auto 0 0
+            &.on
+                background: util.$mark-on
+                border-color: util.$mark-on
 
-    .question
-        font-weight: bold
-        font-style: italic
+        .group-actions
+            flex: 0 0 auto
+            display: flex
+            gap: 8px
+            margin-top: 8px
+            font-size: util.$fs-secondary
 
-        
-        .editor-content
-            min-height: 7em !important
+            a
+                color: util.$muted
 
-        
-    .name
-        text-transform: uppercase
-        font-weight: bold
-        color: util.$red
-    
-    .equipment-group
-        margin: 5px 0
-        padding: 5px
-        border-radius: 3px
-        border: 1px dashed util.$red
+                &:hover
+                    color: util.$red-bright
 
-        &:hover
-            box-shadow: 0px 0px 5px util.$red
-            cursor: pointer
+    .you-get .equipment-option
+        display: block
 
-        &.active
-            border-style: solid
+        .group-actions
+            justify-content: flex-end
+            margin-top: 4px
+
+    // Abilities: tiers with many entries read as a two-column grid
+    .ability-grid
+        display: grid
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
+        gap: 6px
+
+        > .item.preview
+            margin: 0
+
+    .class-description
+        p
+            margin: 0
+
+            & + p
+                margin-top: 0.75em
+
+    // Overview (2026-09-30 review): a wider resource / equipment column
+    .item-tab[data-tab=overview] > .item-cols
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr)
+
+    // Core domain and skill (2026-09-30 review): two equal cells, each a
+    // small-caps label centred over its value, the way the pool reads them
+    .core-traits
+        display: grid
+        grid-template-columns: 1fr 1fr
+        gap: 6px
+        text-align: center
+
+    // label over value on the left, the glyph full height on the right
+    // (2026-09-30 review); the pair centred in the cell
+    .core-trait
+        display: grid
+        grid-template-columns: auto auto
+        grid-template-rows: auto auto
+        justify-content: center
+        align-items: center
+        column-gap: 12px
+        row-gap: 1px
+        padding: 6px 10px
+        border-radius: 6px
+        background: util.$sunken
+        border: 1px solid util.$line
+        font-weight: normal
+
+        .core-label
+            @include util.text-label
+            color: util.$muted
+            grid-column: 1
+            grid-row: 1
+
+        .core-value, select
+            grid-column: 1
+            grid-row: 2
+
+        .core-value
+            color: util.$red-bright
+            font-weight: bold
+            font-size: util.$fs-body
+
+        select
+            width: auto
+            max-width: 100%
+            color: util.$red-bright
+            font-weight: bold
+
+    // "Not picked yet" beside the Equipment title on a character's class
+    .pick-needed-badge
+        font-family: util.$font-body
+        font-size: util.$fs-secondary
+        letter-spacing: 0
+        color: util.$red-bright
+        margin-left: 4px
+
+    .core-glyph
+        grid-column: 2
+        grid-row: 1 / span 2
+        font-size: 40px
+        line-height: 1
+        color: util.$red-bright
+
+        .heart-glyph
+            margin: 0

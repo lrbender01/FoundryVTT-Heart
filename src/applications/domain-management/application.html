@@ -1,13 +1,20 @@
-<div class="domains-manager">
+<!-- A real <form> (2026-09-29): without one, FormApplication had nothing to
+     submit and knack edits were lost. Changes apply on Save. -->
+<form class="domains-manager" autocomplete="off">
     <div class="section domains grid-2 auto-first-col">
       <h3 class="center">{{localizeHeart "domain" "label-multiple"}}</h3>
       <h3 class="faded">{{localizeHeart "domain" "knack" "label-multiple"}}</h3>
       {{#each domains as |domain name|}}
       <div class="domain-edit-row {{#if domain.value}}selected{{else}}unselected{{/if}}">
         <input type="checkbox" name="system.domains.{{name}}.value" {{checked domain.value}} />
+        <span class="trait-glyph">{{{heartGlyph "domain" name}}}</span>
         <span class="domain-name">{{localizeHeart "domain" name}}</span>
       </div>
-      <textarea class="knack-input" name="system.domains.{{name}}.knack" rows="1">{{domain.knack}}</textarea>
+      <textarea class="knack-input" name="system.domains.{{name}}.knack" rows="1" {{#unless domain.value}}disabled{{/unless}}>{{domain.knack}}</textarea>
       {{/each}}
     </div>
-  </div>
+    <footer class="manager-buttons">
+      <button type="button" data-action="cancel"><span class="fas fa-times"></span> {{localizeHeart "cancel"}}</button>
+      <button type="button" data-action="save"><span class="fas fa-save"></span> {{localizeHeart "save"}}</button>
+    </footer>
+</form>

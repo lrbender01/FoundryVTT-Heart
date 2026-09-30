@@ -1,0 +1,212 @@
+@use './util'
+
+// ============================================================================
+// HEART COLOUR SCHEMES (2026-09-29)
+// ============================================================================
+// Dark is the default; the per-user "Colour scheme" client setting sets
+// html[data-heart-scheme="light"] to switch. Palette approved by Luke via the
+// "Heart Dark Palette" preview page. Roles are documented in util.sass.
+
+:root
+    // Dark (default) - layered charcoal with a faint red bias
+    --heart-bg: #1a1818
+    --heart-surface: #242121
+    --heart-sunken: #111010
+    --heart-line: #3a3434
+    --heart-text: #e8e2da
+    --heart-muted: #a39a92
+    --heart-red-deep: #5c0a0a
+    --heart-red-mid: #9a1414
+    --heart-red-bright: #ef5a4d
+    --heart-on-red: #f4eee8
+    --heart-disabled: #3a3434
+    // Empty marks share one grey (stress outline = protection shield), per
+    // Luke's review of the preview; marked = bright red.
+    --heart-mark-empty: #6f6666
+    --heart-mark-on: #ef5a4d
+    --heart-header-fg: #f4eee8
+    // completion accent (beats) - green, the one non-red accent
+    --heart-good: #86b86f
+    --heart-good-deep: #26401d
+    // incomplete-character alerts (2026-09-30): ember gold, dark "!"
+    --heart-warn: #e8a33d
+    --heart-warn-ink: #1a1410
+    // Glyph halo (2026-09-30, Luke): a soft outline in the colour opposite
+    // the glyph, so every glyph stands off any ground. Dark scheme: glyphs
+    // are light, the halo is dark.
+    --heart-glyph-halo: rgba(0, 0, 0, 0.9)
+
+:root[data-heart-scheme="light"]
+    // Light (option) - approximates the pre-2026-09-29 white sheet
+    // Light scheme: sheet glyphs are drawn dark, so their halo is light
+    --heart-glyph-halo: rgba(255, 255, 255, 0.95)
+    --heart-bg: #ffffff
+    --heart-surface: #ffffff
+    --heart-sunken: #f5f3f1
+    --heart-line: rgba(99, 0, 0, 0.35)
+    --heart-text: #111111
+    --heart-muted: #555050
+    --heart-red-deep: #940404
+    --heart-red-mid: #940404
+    --heart-red-bright: #940404
+    --heart-on-red: #ffffff
+    --heart-disabled: #d4d4d4
+    --heart-mark-empty: #b9b9b9
+    --heart-mark-on: #940404
+    --heart-header-fg: #ffffff
+    --heart-good: #2f6e2a
+    --heart-good-deep: #dcecd5
+    --heart-warn: #d98a1c
+    --heart-warn-ink: #1a1410
+
+// ============================================================================
+// FOUNDRY CORE WINDOWS IN DARK MODE
+// ============================================================================
+// Foundry v12 paints classic windows (journals, roll tables, item/actor
+// directories' popouts, dialogs, settings) with a parchment image and dark
+// text taken from --color-text-dark-* / --color-border-light-* variables.
+// In dark mode we swap the parchment for the Heart window colour and
+// re-point those variables INSIDE windows only (the sidebar, hotbar and
+// canvas UI already use Foundry's light-on-dark variables and are left
+// alone). Light scheme = Foundry untouched.
+//
+// Restyles of core components use :where() so they carry element-level
+// specificity: they beat the core rules they replace (same specificity,
+// later in the cascade) but lose to any Heart or module rule with a class.
+
+$dark: ':root:not([data-heart-scheme="light"])'
+
+#{$dark} .window-app .window-content
+    background: util.$bg
+    color: util.$text
+    color-scheme: dark
+
+#{$dark} .window-app .window-content,
+#{$dark} .chat-message
+    --color-text-dark-primary: #{util.$text}
+    --color-text-dark-secondary: #{util.$muted}
+    --color-text-dark-header: #{util.$text}
+    --color-text-dark-inactive: #{util.$muted}
+    --color-text-dark-1: #{util.$text}
+    --color-text-dark-2: #{util.$text}
+    --color-text-dark-3: #{util.$muted}
+    --color-text-dark-4: #{util.$muted}
+    --color-text-dark-5: #{util.$muted}
+    --color-text-dark-6: #{util.$muted}
+    --color-text-hyperlink: #{util.$red-bright}
+    --color-border-light-primary: #{util.$line}
+    --color-border-light-secondary: #{util.$line}
+    --color-border-light-tertiary: #{util.$line}
+    --color-border-light-1: #{util.$line}
+    --color-border-light-2: #{util.$line}
+    --color-border-light-highlight: #{util.$line}
+    --color-underline-header: transparent
+    --color-underline-inactive: #{util.$line}
+
+:where(#{$dark} .window-app .window-content)
+    // Form fields: recessed wells instead of 5%-black tints on parchment
+    :is(input[type="text"], input[type="number"], input[type="password"], input[type="date"], input[type="time"], input[type="search"], select, textarea)
+        background: util.$sunken
+        color: util.$text
+        border-color: util.$line
+
+    option, optgroup
+        background: util.$surface
+        color: util.$text
+
+    // Core buttons were translucent on parchment with a light groove border
+    button
+        background: util.$sunken
+        color: util.$text
+        border: 1px solid util.$line
+
+    // Inline document links and rolls were #ddd chips with dark text
+    a.content-link, a.inline-roll
+        background: util.$sunken
+        color: util.$text
+        border: 1px solid util.$line
+
+        i
+            color: util.$red-bright
+
+    a.content-link.broken
+        color: util.$muted
+        text-decoration: line-through
+
+    a.inline-roll.gmroll, a.inline-roll.blindroll
+        border-style: dashed
+
+    table tr:nth-child(even)
+        background: rgba(255, 255, 255, 0.03)
+
+    // File picker + keybinding chips
+    .filepicker .favorites .path, .filepicker .display-modes a, #keybindings .binding .key
+        background: util.$sunken
+        color: util.$text
+
+    .filepicker .display-modes a.active
+        background: util.$red-deep
+        color: util.$on-red
+
+    // Journal pages: Heart's title face + bright-red headings (as previewed)
+    .journal-entry-page :is(h1, h2, h3, h4)
+        font-family: util.$font-display
+        font-weight: normal
+        color: util.$red-bright
+        letter-spacing: util.$track-display
+
+    .journal-entry-page blockquote
+        background: util.$sunken
+        border: 1px solid util.$red-mid
+        border-radius: 6px
+        color: util.$text
+
+    // Plain links in journal text (the :where keeps this from outranking
+    // any styled anchor, e.g. Heart's sheet tabs)
+    .journal-entry-page :where(a:not(.content-link, .inline-roll))
+        color: util.$red-bright
+
+// ============================================================================
+// SHARED ACCENTS (both schemes)
+// ============================================================================
+
+// Skills / domains highlighted by common/terms.js (ability rows, journals)
+strong.heart-term
+    color: util.$red-bright
+    font-weight: bold
+
+// ============================================================================
+// ROLL TABLES + COMPENDIUM WINDOWS IN DARK MODE (2026-09-29, approved sweep)
+// ============================================================================
+:where(#{$dark}) .roll-table-config
+    .table-results
+        .table-result:nth-child(even)
+            background: rgba(255, 255, 255, 0.03)
+
+        .table-result .result-range, .table-result .range
+            color: util.$muted
+            font-variant-numeric: tabular-nums
+
+    .table-header, .table-results > .table-header
+        color: util.$red-bright
+        border-bottom: 1px solid util.$red-mid
+
+:where(#{$dark}) .compendium.directory
+    .directory-header .header-search input
+        background: util.$sunken
+        color: util.$text
+        border: 1px solid util.$line
+
+    .directory-item
+        border-bottom: 1px solid util.$line
+
+        .document-name a:hover
+            color: util.$red-bright
+
+        img.thumbnail
+            border: 1px solid util.$line
+            border-radius: 5px
+
+    .folder > .folder-header
+        background: util.$red-deep
+        color: util.$on-red

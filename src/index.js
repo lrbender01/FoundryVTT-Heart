@@ -1,6 +1,8 @@
 import templates from './**/*.@(html|handlebars|hbs)';
 import './index.sass';
 import './common/sheet.sass';
+import { emphasizeTerms, registerJournalTerms } from './common/terms';
+import { registerIconHelpers, adoptPackIcons } from './common/icons';
 
 import modules from './**/index.js';
 
@@ -77,21 +79,52 @@ function registerSettings() {
     });
 }
 
-function initialise() {
-    const _compendium_opts = Compendium.defaultOptions;
-    _compendium_opts.template = 'heart:' + _compendium_opts.template;
+// Colour scheme (2026-09-29). Dark is the system default; each user can pick
+// Light. The value is mirrored onto <html data-heart-scheme="..."> and the
+// palette in src/theme.sass keys off it, so switching is live (CSS custom
+// properties) with no reload. Registered at init, not ready, so the right
+// palette is in place before the first sheet renders.
+function applyColourScheme(scheme) {
+    document.documentElement.dataset.heartScheme = scheme === 'light' ? 'light' : 'dark';
+}
 
-    Object.defineProperty(Compendium, 'defaultOptions', {
-        'get': function () {
-            return _compendium_opts;
-        }
+function registerColourScheme() {
+    game.settings.register('heart', 'colourScheme', {
+        name: 'Colour Scheme',
+        hint: 'Dark (default) or Light for Heart sheets, chat cards, and Foundry windows. Applies instantly, per user.',
+        scope: 'client',
+        config: true,
+        type: String,
+        choices: {
+            dark: 'Dark',
+            light: 'Light',
+        },
+        default: 'dark',
+        onChange: applyColourScheme,
     });
+    applyColourScheme(game.settings.get('heart', 'colourScheme'));
+}
+
+function initialise() {
+    registerColourScheme();
+    registerJournalTerms();
+
+    // Compendium windows keep Foundry's own template (folders, sort, search
+    // modes, collapse); only the entry row is Heart's, so the core packs'
+    // lang-key names are translated. (Until 2026-09-29 the whole template was
+    // replaced by a flat list, which dropped every in-pack folder.)
+    Compendium.entryPartial = 'heart:templates/sidebar/compendium-index-partial.html';
 
     activateTemplates();
 
     game.heart = {
         difficulties: ['standard', 'risky', 'dangerous', 'impossible'],
         resistances: ['blood', 'mind', 'echo', 'fortune', 'supplies'],
+        // Provisions house rule (2026-09-30): one party-wide track on the
+        // party actor. `resistances` stays the five a character has; places
+        // that pick what a stress roll marks use stress_targets.
+        party_resistances: ['provisions'],
+        stress_targets: ['blood', 'mind', 'echo', 'fortune', 'supplies', 'provisions'],
         skills: ['compel', 'delve', 'discern', 'endure', 'evade', 'hunt', 'kill', 'mend', 'sneak'],
         domains: ['cursed', 'desolate', 'haven', 'occult', 'religion', 'technology', 'warren', 'wild'],
         stress_dice: ['d4', 'd6', 'd8', 'd10', 'd12'],
@@ -210,6 +243,15 @@ function initialise() {
 
     Handlebars.registerHelper('localizeHeart', localizeHeart);
 
+    // Skills and domains in ability text render bold + accent red
+    // (src/common/terms.js). Returns HTML, so use it in a triple-stash.
+    Handlebars.registerHelper('heartTerms', function (html) {
+        return emphasizeTerms(html);
+    });
+
+    // {{{heartGlyph kind id}}} / {{{heartIcon img}}} (common/icons.js)
+    registerIconHelpers();
+
     Handlebars.registerHelper('ownsAnyActors', function (ids) {
         for (let id of ids) {
             const actor = game.actors.get(id);
@@ -226,6 +268,8 @@ Hooks.once('init', initialise);
 
 Hooks.once('ready', function () {
     registerSettings();
+    // older class / calling / ancestry copies take their compendium icon (GM)
+    adoptPackIcons();
     new Promise(async function () {
         if (game.settings.get('heart', 'showStartupMessage')) {
             let d = new Dialog({
@@ -272,6 +316,22 @@ Hooks.on('preCreateActor', function(document, data, options, userId) {
 // An actor holds at most one ancestry item; dropping a new one replaces the
 // old (mirroring the class/calling behavior in the character sheet) and keeps
 // the header's system.ancestry text field in sync with the item name.
+// A character gains its class's core skill and core domain when the class is
+// added (2026-09-29 review): the class shows them in its header, and the old
+// class-proxy ActiveEffects were never applied to the actor. Only turns them
+// on; anything the player already has is left alone.
+Hooks.on('createItem', async function(item, options, userId) {
+    if (game.user.id !== userId) return;
+    const actor = item.actor;
+    if (item.type !== 'class' || !actor || actor.type !== 'character') return;
+    const updates = {};
+    const skill = item.system.core_skill;
+    const domain = item.system.core_domain;
+    if (skill && actor.system.skills?.[skill] && !actor.system.skills[skill].value) updates[`system.skills.${skill}.value`] = true;
+    if (domain && actor.system.domains?.[domain] && !actor.system.domains[domain].value) updates[`system.domains.${domain}.value`] = true;
+    if (Object.keys(updates).length) await actor.update(updates);
+});
+
 Hooks.on('createItem', async function(item, options, userId) {
     if (game.user.id !== userId) return;
     const actor = item.actor;

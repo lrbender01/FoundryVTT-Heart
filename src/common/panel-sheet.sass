@@ -1,0 +1,356 @@
+@use '../util'
+
+// ============================================================================
+// PANEL SHEETS: adversary, landmark, delve (2026-09-29, approved mockups)
+// ============================================================================
+// Header strip, tab strip and titled containers come from the character
+// sheet's global classes (.character-header, .character-nav-tabs,
+// .character-tab-container in character.sass). This file holds what the
+// three panel sheets share on top of that. Forms carry .panel-sheet; the
+// window carries .heart-panel-sheet (panel-sheet.js).
+
+$row: 30px
+$box-height: 2 * $row + 6px + 2 * 6px + 4px
+
+// Track marks (2026-09-29 review): squares and shields share one visual size,
+// render as blocks so they centre on their label, and wrap in rows of ten
+// (two groups of five) so a 20-point track is two even rows.
+$mark: 13px
+$shield: 14px
+$mark-gap: 3px
+$group-gap: 7px
+$track-row-width: 10 * $mark + 9 * $mark-gap + $group-gap
+
+// Full-bleed like the character sheet (world, token and compendium sheets)
+.heart-panel-sheet .window-content
+    padding: 0
+
+    > *
+        padding: 0
+        background-color: util.$bg
+        color: util.$text
+
+.heart.sheet.actor.panel-sheet
+    position: relative
+    background: util.$bg
+    color: util.$text
+
+    // ---------- header ----------
+    .header-box
+        border: 2px solid util.$header-fg
+        border-radius: 0.5em
+        padding: 6px 0.625em
+        height: $box-height
+        box-sizing: border-box
+        display: grid
+        grid-template-columns: auto 1fr
+        grid-template-rows: $row $row
+        row-gap: 6px
+        column-gap: 0.75rem
+        min-width: 0
+
+    .identity-box
+        flex: 1 1 250px
+        max-width: 26em
+
+    .tracks-box, .place-box
+        flex: 1.4 1 330px
+
+    // Tracks grow downward when a long resistance track takes two rows
+    .tracks-box
+        height: auto
+        min-height: $box-height
+        max-height: none
+        grid-template-rows: auto auto
+        align-content: center
+
+    .header-label
+        @include util.text-section
+        line-height: 1
+        color: util.$header-fg
+        align-self: center
+        white-space: nowrap
+
+    .header-input
+        background-color: util.$header-field-bg
+        border: 1px solid util.$header-fg
+        border-radius: 0.3125em
+        color: util.$header-fg
+        padding: 0 0.625em
+        height: $row
+        width: 100%
+        min-width: 0
+        font-size: util.$fs-body
+        box-sizing: border-box
+
+        option
+            background: util.$surface
+            color: util.$text
+
+    // Chips in the header (domains) and the rollable stress die
+    .header-chips
+        display: flex
+        flex-wrap: wrap
+        align-items: center
+        gap: 5px
+        min-width: 0
+
+        > span
+            @include util.text-chip
+            padding: 1px 9px
+            border-radius: 5px
+            border: 1px solid util.$header-fg
+            background: util.$header-field-bg
+            color: util.$header-fg
+
+        // editing: the input takes the row, the check mark stays beside it
+        &.editing
+            flex-wrap: nowrap
+
+            .header-input
+                flex: 1 1 auto
+                width: auto
+                min-width: 0
+
+        .header-edit
+            flex: 0 0 auto
+            color: util.$header-fg
+            opacity: 0.7
+            margin-left: 2px
+
+            &:hover
+                opacity: 1
+                color: util.$red-bright
+
+    .stress-die
+        display: flex
+        align-items: center
+        gap: 6px
+
+        select
+            width: auto
+            color: util.$red-bright
+            border-color: util.$red-bright
+            font-family: util.$font-body
+            font-weight: bold
+            font-size: util.$fs-body
+
+        a
+            color: util.$red-bright
+
+            .sheetD10
+                margin: 0
+
+    // ---------- tracks ----------
+    .track
+        display: flex
+        flex-wrap: wrap
+        align-items: center
+        align-content: center
+        gap: $mark-gap
+        min-width: 0
+        min-height: $row
+
+        .ordered-checkable-box
+            display: block
+            line-height: 0
+            margin: 0
+
+            &::after
+                display: block
+                box-sizing: border-box
+
+            // groups of five inside a row of ten
+            &:nth-of-type(5n):not(:nth-of-type(10n)):not(:last-child)
+                margin-right: $group-gap
+
+    .boxes
+        display: flex
+        flex-wrap: wrap
+        align-items: center
+        gap: $mark-gap
+        max-width: $track-row-width
+
+        .ordered-checkable-box
+            flex: $mark 0 0
+
+            &::after
+                width: $mark
+                height: $mark
+
+    // Protection shields match the squares (the shield shape needs a pixel
+    // more to read at the same size)
+    .track.protection .ordered-checkable-box
+        flex: $shield 0 0
+
+        &::after
+            width: $shield
+            height: $shield
+
+    .count
+        margin-left: 8px
+        font-size: util.$fs-secondary
+        color: util.$header-fg
+        white-space: nowrap
+        font-variant-numeric: tabular-nums
+
+        input
+            width: 3em
+            height: 22px
+            padding: 0
+            text-align: center
+            background: util.$header-field-bg
+            border: 1px solid util.$header-fg
+            border-radius: 4px
+            color: util.$header-fg
+
+    // ---------- body ----------
+    .difficulty-note
+        margin: 12px 14px 0
+        padding: 6px 10px
+        border-left: 3px solid util.$red-mid
+        background: util.$sunken
+        border-radius: 0 6px 6px 0
+        @include util.text-secondary
+
+        strong
+            font-style: normal
+            color: util.$text
+            margin-right: 0.3em
+
+    .panel-body
+        display: grid
+        grid-template-columns: minmax(0, 330px) minmax(0, 1fr)
+        column-gap: 13px
+        padding: 18px 12px 14px
+        box-sizing: border-box
+
+    .panel-lore
+        display: grid
+        grid-template-columns: minmax(0, 1fr)
+        row-gap: 1.15rem
+        padding: 18px 12px 14px
+        box-sizing: border-box
+
+    // Rows: same compact spacing as the character sheet
+    .tab-item-list .item.preview
+        margin: 0.3em 0
+        padding: 0.3em 0.5em
+
+        &:first-child
+            margin-top: 0
+
+    // Text panels: the pencil in the title opens the editor
+    .editor .editor-edit
+        display: none
+
+    .editor-panel .editor-content
+        min-height: 1.5em
+
+    // ---------- profile (adversary) ----------
+    .profile-label
+        @include util.text-label
+        color: util.$muted
+        margin: 6px 0 2px
+
+        &:first-child
+            margin-top: 0
+
+    .chips
+        display: flex
+        flex-wrap: wrap
+        gap: 5px
+
+        span
+            @include util.text-chip
+            padding: 2px 10px
+            border-radius: 5px
+            background: util.$sunken
+            border: 1px solid util.$line
+
+    .profile-note
+        margin-top: 4px
+        @include util.text-secondary
+
+    .profile-input
+        width: 100%
+        box-sizing: border-box
+
+// ---------- haunt rows (landmark sheet; also any haunt preview) ----------
+.item.preview.haunt
+    .haunt-services
+        display: flex
+        flex-wrap: wrap
+        gap: 2px 12px
+        margin-top: 2px
+
+    .haunt-service
+        white-space: nowrap
+        color: util.$text
+
+        .item-roll
+            color: util.$red-bright
+            font-weight: bold
+
+            .sheetD10
+                margin: 0 0.15em 0 0
+
+        &:hover .item-roll
+            text-decoration: underline
+
+    .haunt-upgrade
+        display: flex
+        align-items: center
+        gap: 6px
+        margin-top: 4px
+        font-size: util.$fs-secondary
+        color: util.$muted
+
+        .haunt-track
+            display: inline-flex
+            gap: 2px
+
+        a
+            color: util.$muted
+
+            &:hover
+                color: util.$red-bright
+
+// Delve: the tab strip without tabs is a static red banner
+// With no tabs in it the strip only needs to read as the torn red band:
+// about half the tab strip's height (2026-09-30, for density)
+.heart.sheet.actor.panel-sheet .character-nav-tabs.static-strip
+    pointer-events: none
+    min-height: 30px
+    max-height: 30px
+    mask-size: auto 30px
+
+// Adversary (2026-09-30 review): two equal columns (fight | portrayal) and
+// a compact Profile - each label beside its value
+.heart.sheet.actor.panel-sheet
+    // three paired rows, each pair the same height (2026-09-30)
+    .panel-body.adversary-body
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
+        align-items: stretch
+        row-gap: 1.35rem
+
+        > .character-tab-container
+            margin: 0
+            height: 100%
+            box-sizing: border-box
+
+        // switched-off gear spans both columns under the pairs
+        > .inactive-container
+            grid-column: 1 / -1
+
+    .profile-grid
+        display: grid
+        grid-template-columns: auto minmax(0, 1fr)
+        align-items: baseline
+        gap: 6px 12px
+
+        .profile-label
+            margin: 0
+
+        .profile-note
+            margin-top: 3px

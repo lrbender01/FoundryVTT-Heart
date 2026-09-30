@@ -1,10 +1,4 @@
-@use '../../util'
-
-.equipment.resistances
-    display: flex
-    flex-flow: row wrap
-    justify-content: space-around
-    color: util.$red
-
-    h3
-        color: util.$red
+// The equipment sheet's layout comes from the shared item chrome
+// (items/base/item-sheet.sass, 2026-09-29). Its pre-redesign styles were
+// removed before the UI review: they targeted markup that no longer exists
+// and some still leaked onto the new sheet (e.g. a 1.1em font size on haunts).

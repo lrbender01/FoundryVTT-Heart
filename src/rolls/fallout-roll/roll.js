@@ -1,5 +1,6 @@
 import chatTemplateHTML from './roll.html';
 import './roll.sass';
+import { partyFalloutResult, isPastRolling, PARTY_FALLOUT_RESULTS } from '../../actors/party/rules';
 
 const fallout_results = {
     'no-fallout': (total, totalStress) => total > totalStress,
@@ -8,7 +9,9 @@ const fallout_results = {
 };
 
 export function initialise() {
-    game.heart.fallout_results = Object.keys(fallout_results);
+    // critical-fallout is rolled only for the party's Provisions (house rule,
+    // 2026-09-30); a character's own check never rolls it
+    game.heart.fallout_results = [...PARTY_FALLOUT_RESULTS];
 }
 
 export default class FalloutRoll extends Roll {
@@ -27,13 +30,15 @@ export default class FalloutRoll extends Roll {
         }
     }
 
-    static build({character}={}, data={}, options={}) {
+    // resistance: the stress that triggered it, so Minor fallout can clear
+    // that track without asking (2026-09-30)
+    static build({character, resistance}={}, data={}, options={}) {
         return new Promise((resolve, reject) => {
             const requirements = this.requirements;
         
             if(character !== undefined) delete requirements.character;
 
-            const buildData = {character};
+            const buildData = {character, resistance};
             if(Object.keys(requirements).length > 0) {
                 game.heart.applications.RequirementApplication.build({
                     requirements,
@@ -49,13 +54,33 @@ export default class FalloutRoll extends Roll {
         })
     }
 
-    static _build({character}, data={}, options={}) {
-        const actor = game.actors.get(character).proxy;
+    static _build({character, resistance}, data={}, options={}) {
+        const doc = game.actors.get(character);
+        // Provisions: the check is against the party's track, with the house
+        // rule's thresholds (13+: Major is Critical; at the max: no roll)
+        if (resistance === 'provisions' || doc?.type === 'party') {
+            const party = doc?.type === 'party' ? doc : game.heart.party;
+            const p = party.proxy.provisions;
+            options.party = true;
+            options.totalStress = p.value;
+            options.max = p.max;
+            options.character = party.id;
+            options.resistance = 'provisions';
+            return new this('1d12', data, options);
+        }
+        const actor = doc.proxy;
         options.totalStress = actor.totalStress;
+        options.character = character;
+        options.resistance = resistance;
         return new this('1d12', data, options);
     }
 
+    get notRolled() {
+        return Boolean(this.options.party) && isPastRolling(this.options.totalStress, this.options.max);
+    }
+
     get result() {
+        if (this.options.party) return partyFalloutResult(this.total, this.options.totalStress, this.options.max);
         return Object.keys(fallout_results).find(result => fallout_results[result](this.total, this.options.totalStress));
     }
 
@@ -73,9 +98,14 @@ export default class FalloutRoll extends Roll {
         // Execute the roll, if needed
         if (!this._evaluated) await this.evaluate();
 
-        const description = game.i18n.format('heart.rolls.fallout-roll.description(totalStress)', {
+        let description = game.i18n.format(this.options.party
+            ? 'heart.rolls.fallout-roll.description-party(totalStress)'
+            : 'heart.rolls.fallout-roll.description(totalStress)', {
             totalStress: this.options.totalStress
         });
+        // at the top of the track the d12 decides nothing (the card can hide
+        // the face using chatData.notRolled)
+        if (this.notRolled) description = game.i18n.localize('heart.rolls.fallout-roll.not-rolled');
 
         // Define chat data
         const chatData = {
@@ -87,6 +117,10 @@ export default class FalloutRoll extends Roll {
             total: isPrivate ? "?" : this.total,
             result: isPrivate ? "?" : this.result,
             showClearStressButton: isPrivate ? false : showClearStressButton,
+            party: Boolean(this.options.party),
+            notRolled: isPrivate ? false : this.notRolled,
+            // minor / major / critical: the outcome's severity glyph
+            severity: isPrivate ? '' : String(this.result ?? '').replace(/-fallout$/, ''),
         };
 
         // Render the roll display template
@@ -96,17 +130,35 @@ export default class FalloutRoll extends Roll {
 
     async clearStress(msg) {
       return new Promise((resolve, reject) => {
-          let character = msg.rolls[0].options.character || msg.speaker.actor;
-          let stressType = msg.rolls[0].options.resistance || '';
-  
+          let character = this.options.character || msg.rolls[0].options.character || msg.speaker.actor;
+          let stressType = this.options.resistance || msg.stressRoll?.options?.resistance || msg.rolls[0].options.resistance || '';
+
+          // Provisions fallout of any severity clears the party's track
+          if (this.options.party) {
+            const party = game.actors.get(character) ?? game.heart.party;
+            if (!party) return resolve();
+            confirmClear({
+              content: game.i18n.format('heart.party.confirm-clear', {
+                name: escape(party.name), count: Number(party.system.provisions?.value) || 0,
+              }),
+              clearLabel: game.i18n.localize('heart.party.clear'),
+              onClear: () => {
+                party.update({ 'system.provisions.value': 0 });
+                msg.showClearStressButton = false;
+              }
+            });
+            return resolve();
+          }
+
           let actor = game.actors.get(character);
           let resistances = actor.system.resistances;
 
           if (this.result == 'major-fallout') {
-            Dialog.confirm({
-              title: 'Confirm Stress Reset',
-              content: `Are you sure you want to reset ${actor.name}'s stress? This cannot be reversed.`,
-              yes: () => {
+            const count = Object.values(resistances).reduce((sum, r) => sum + (Number(r.value) || 0), 0);
+            confirmClear({
+              content: game.i18n.format('heart.rolls.fallout-roll.confirm-major', { name: escape(actor.name), count }),
+              clearLabel: game.i18n.localize('heart.rolls.fallout-roll.confirm-clear-all'),
+              onClear: () => {
                 Object.keys(resistances).forEach(key =>{Object.assign(resistances[key], { value: 0 });});
             
                 let data = {};
@@ -138,11 +190,32 @@ export default class FalloutRoll extends Roll {
           }
       });
 
+      // Confirmations say exactly what will happen, with numbers, and the
+      // buttons name the action (2026-09-29, approved sweep)
+      function escape(text) {
+        return Handlebars.escapeExpression(String(text ?? ''));
+      }
+
+      function confirmClear({ content, clearLabel, onClear }) {
+        new Dialog({
+          title: game.i18n.localize('heart.rolls.fallout-roll.confirm-title'),
+          content: `<p>${content}</p><p>${game.i18n.localize('heart.rolls.fallout-roll.confirm-final')}</p>`,
+          buttons: {
+            keep: { icon: '<i class="fas fa-times"></i>', label: game.i18n.localize('heart.rolls.fallout-roll.confirm-keep') },
+            clear: { icon: '<i class="fas fa-eraser"></i>', label: clearLabel, callback: onClear },
+          },
+          default: 'clear',
+        }, { classes: ['dialog', 'heart-confirm'] }).render(true);
+      }
+
       function removeMinorStress(stressType, actor, resistances) {
-        Dialog.confirm({
-          title: `Confirm Set ${stressType} to 0`,
-          content: `Are you sure you want to reset ${actor.name}'s ${stressType} stress to 0? This cannot be reversed.`,
-          yes: () => {
+        const label = game.i18n.localize(`heart.resistance.${stressType}`);
+        confirmClear({
+          content: game.i18n.format('heart.rolls.fallout-roll.confirm-minor', {
+            name: escape(actor.name), resistance: escape(label), count: Number(resistances[stressType]?.value) || 0,
+          }),
+          clearLabel: game.i18n.format('heart.rolls.fallout-roll.confirm-clear-one', { resistance: label }),
+          onClear: () => {
             resistances[stressType].value = 0;
 
             let data = {};

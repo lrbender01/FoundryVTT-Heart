@@ -1,20 +1,125 @@
-$red: rgb(148, 4, 4)
-$disabled: #D4D4D4
-$disabled-and-checked: #2c2c2c
-$bg-for-red: #949494
-$red-black: #2c2c2c
-$black: #000
-$grey: rgb(185, 185, 185)
-$white: #fff
-$red-transparent: rgba(99, 0, 0, 0.2)
+// Semantic colour roles (2026-09-29 dark-mode pass). Every stylesheet in the
+// system uses these; none uses a literal colour. Each role is a CSS custom
+// property whose Dark / Light values live in src/theme.sass and are flipped
+// per user by the "Colour scheme" client setting (html[data-heart-scheme]).
+//
+// Red tiers have JOBS, not just shades - on charcoal the mid red is ~1.8:1,
+// unreadable as text, so:
+//   $red-deep   fills: tab strip, buttons, chat card bars, "on" option chips
+//   $red-mid    borders and dividers
+//   $red-bright ALL red text: headings, titles, links, hover, emphasis
+$bg: var(--heart-bg)
+$surface: var(--heart-surface)
+$sunken: var(--heart-sunken)
+$line: var(--heart-line)
+$text: var(--heart-text)
+$muted: var(--heart-muted)
+$red-deep: var(--heart-red-deep)
+$red-mid: var(--heart-red-mid)
+$red-bright: var(--heart-red-bright)
+$on-red: var(--heart-on-red)
+$disabled: var(--heart-disabled)
+// completion accent (a completed beat, the Complete button): green
+$good: var(--heart-good)
+$good-deep: var(--heart-good-deep)
+$warn: var(--heart-warn)
+$warn-ink: var(--heart-warn-ink)
 
+// Marks (stress boxes, protection shields, checkboxes): grey outline or
+// shape when empty, bright red when marked - one rule everywhere.
+$mark-empty: var(--heart-mark-empty)
+$mark-on: var(--heart-mark-on)
+
+// The character header sits on the dark header texture in BOTH schemes, so
+// its text, borders and field wells are fixed rather than themed.
+$header-fg: var(--heart-header-fg)
+$header-field-bg: rgba(0, 0, 0, 0.35)
+
+// ============================================================================
+// TYPE (2026-09-29, "Heart Type System" mock, Roomy scale). Five text styles;
+// every stylesheet uses these tokens and mixins, never a literal family or
+// size. Window title bars stay in Foundry's own font.
+//
+//   display    Mosherif  sheet / item names, roll banners, chat outcome words
+//   section    Mosherif  container titles, tab labels, header field labels
+//   label      Alegreya SC  small field names: "pick one", type lines,
+//                        requirement titles (lowercase text renders as small
+//                        caps; one size, one letter-spacing)
+//   body       Alegreya  everything you read: rows, descriptions, inputs
+//   secondary  Alegreya italic, muted: knacks, answers, hints, placeholders
+//
+// Chips and buttons that choose something use $font-chip at $fs-chip. Game
+// terms are bold red (no italic). Mosherif runs about 22% small for its point
+// size, so Mosherif text beside Alegreya uses the *-mosherif sizes.
+// ============================================================================
+$font-display: 'Mosherif', 'Alegreya SC', Georgia, serif
+$font-body: 'Alegreya', Georgia, serif
+$font-label: 'Alegreya SC', 'Alegreya', Georgia, serif
+// Chip face: Alegreya SC (chosen by Luke 2026-09-29 from the type mock over
+// Mosherif and plain Alegreya) - small caps still read as buttons, but scan
+// far better than all-caps Mosherif in a row of choices
+$font-chip: $font-label
+
+$fs-display: 32px
+$fs-section: 28px
+$fs-label: 14px
+$fs-body: 17px
+$fs-secondary: 15px
+$fs-chip: 19px
+// Mosherif set to sit level with Alegreya at the chip / body size
+$fs-chip-mosherif: 23px
+
+$track-label: 0.06em
+$track-display: 0.03em
+
+@mixin text-display
+    font-family: $font-display
+    font-weight: normal
+    font-size: $fs-display
+    letter-spacing: $track-display
+
+@mixin text-section
+    font-family: $font-display
+    font-weight: normal
+    font-size: $fs-section
+    letter-spacing: $track-display
+
+@mixin text-label
+    font-family: $font-label
+    font-weight: 500
+    font-size: $fs-label
+    letter-spacing: $track-label
+    text-transform: lowercase
+
+@mixin text-body
+    font-family: $font-body
+    font-size: $fs-body
+
+@mixin text-secondary
+    font-family: $font-body
+    font-size: $fs-secondary
+    font-style: italic
+    color: $muted
+
+@mixin text-chip
+    font-family: $font-chip
+    font-weight: 500
+    font-size: $fs-chip
+    letter-spacing: 0.03em
+
+// Rich-text areas (descriptions, notes). Upstream painted ruled-paper lines
+// behind every line of text with a repeating gradient; removed 2026-09-29
+// (no lines under text anywhere in the system).
 @mixin notepad
-    font-size: 15px
-    line-height: 20px
-    background-image: -moz-linear-gradient(top , transparent, transparent 19px,$red-transparent 0px)
-    background-image: -webkit-linear-gradient(top , transparent, transparent 19px, $red-transparent 0px)
-    background-size: 100% 20px
+    font-size: $fs-body
+    line-height: 1.4
+    background-image: none
     min-height: 8em
 
+    // Paragraphs read as paragraphs: a blank-line gap between them
+    // (2026-09-29; upstream zeroed it, so multi-paragraph text read as a wall)
     p
         margin: 0
+
+        & + p
+            margin-top: 0.75em

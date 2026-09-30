@@ -1,61 +1,42 @@
-{{#> "heart:common/sheet.html" documentName="item" type=type}}
-    <div class="grid-2 auto-first-col place-center" style="flex: auto 0 0">
-    {{#if system.die_size}}
-        <label>
-            {{localizeHeart "die_size" "label-single"}}
-        </label>
-        {{#if editable}}
-        <select name="system.die_size">
-            {{selectOptions die_sizes selected=system.die_size}}
-        </select>
-        
-        {{else}}
-        {{system.die_size}}
-        {{/if}}
-    {{/if}}
-    {{#if item.isOwner }}
-        {{#if (not (undef system.active))}}
-            <label>
-                {{localizeHeart "base" "is-active"}}
-            </label>
-            <input type="checkbox" value="system.active" {{checked system.active}}/>
-        {{/if}}
+{{!--
+  Shared item sheet chrome (2026-09-29, approved "Heart Interface Sweep").
+  Compact torn header: icon, name, type line, and the type's key stats as
+  chips. A sheet supplies its header stats and optional tab strip as inline
+  partials, and its body as the partial block:
 
-        {{#if (not (undef system.complete))}}
-            <label>
-                {{localizeHeart "base" "is-complete"}}
-            </label>
-            <input type="checkbox" value="system.complete" {{checked system.complete}}/>
-        {{/if}}
+    {{#> "heart:items/base/sheet.html" type="equipment"}}
+      {{#*inline "item-stats"}} ...chips... {{/inline}}
+      {{#*inline "item-tabs"}} <nav class="character-nav-tabs"> ... {{/inline}}
+      ...body (titled containers)...
+    {{/ "heart:items/base/sheet.html"}}
 
-        {{#if (eq type "beat")}}
-            <label>
-                Level
-            </label>
-            <select name="system.type">
-                {{selectOptions beat_levels selected=system.type}}
-            </select>
-        {{/if}}
-
-        {{#if (eq type "fallout")}}
-            <label>
-                Level
-            </label>
-            <select name="system.type">
-                {{selectOptions fallout_levels selected=system.type}}
-            </select>
-
-            <label>
-                Resistance
-            </label>
-            <select name="system.resistance">
-                {{selectOptions resistances selected=system.resistance}}
-            </select>
-        {{/if}}
-    {{/if}}
+  An Active toggle is added automatically when the item has that field (pass
+  hideToggles=true to suppress it). No generic Complete toggle since
+  2026-09-30: resources carried one from the upstream data model, and beats
+  have their own Activate / Complete buttons.
+--}}
+<form class="heart sheet base Item item-sheet {{type}} {{cssClass}}" autocomplete="off">
+  <header class="item-header">
+    <img class="item-icon" src="{{displayImg}}" title="{{localizeHeart item.name}}" data-edit="img" />
+    <div class="item-ident">
+      <input class="item-name" name="name" value="{{localizeHeart item.name}}" placeholder="{{localizeHeart type 'name'}}" {{#unless editable}}readonly{{/unless}} />
+      <div class="item-type">{{localizeHeart type "label-single"}}{{#if parentName}} &middot; {{parentName}}{{/if}}</div>
     </div>
+    <div class="item-stats">
+      {{#> item-stats}}{{/item-stats}}
+      {{#unless hideToggles}}
+      {{#if (not (undef system.active))}}
+      <a class="stat toggle {{#if system.active}}on{{/if}}" {{#if item.isOwner}}data-action="toggle-field" data-field="system.active"{{/if}}>
+        <b>{{localizeHeart "item-sheet" "active"}}</b>
+      </a>
+      {{/if}}
+      {{/unless}}
+    </div>
+  </header>
 
-    {{editor (localizeHeart system.description) target="system.description" button=true editable=editable owner=owner}}
-        
-    {{> @partial-block }}
-{{/ "heart:common/sheet.html" }}
+  {{#> item-tabs}}<div class="item-no-tabs"></div>{{/item-tabs}}
+
+  <div class="item-body">
+    {{> @partial-block}}
+  </div>
+</form>
