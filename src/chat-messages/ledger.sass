@@ -1,0 +1,334 @@
+@use '../util'
+
+// ============================================================================
+// Ledger chat cards (2026-09-30, Luke's pick of the round-2 mock B, "no
+// badge", with his review changes). Every Heart card is one or more ledger
+// blocks:
+//
+//   header   Foundry's own: just the portrait and the character's name
+//   what     a darker hint line: what was rolled ("Kill + Occult, Risky")
+//   out      the outcome, led by its glyph
+//   dice     every die on Foundry's die shape, number on top, label under;
+//            the kept die red, removed dice crossed out (rolls/dice.js)
+//   det      a small muted note (difficulty, helpers, notes)
+//   lines    who took what, one short line each
+//   acts     pill buttons, right-aligned
+//
+// Chained blocks (a stress roll under its Heart roll, the fallout under
+// that) follow in the same message, each after a thin rule.
+// ============================================================================
+
+// ---------- the message header: portrait and name ----------
+.chat-message .message-header
+    display: flex
+    flex-wrap: nowrap
+    align-items: center
+    gap: 7px
+    margin: 0 0 6px
+    padding: 0
+    background: transparent
+    color: util.$muted
+    border: 0
+    border-radius: 0
+
+    .message-sender
+        flex: 1 1 auto
+        // names wrap between whole words
+        min-width: min-content
+        margin: 0
+        font-family: util.$font-body
+        font-size: util.$fs-secondary
+        font-weight: bold
+        line-height: 1.2
+        color: util.$text
+        white-space: normal
+
+    .message-metadata
+        flex: 0 0 auto
+        font-size: 12px
+        color: util.$muted
+
+        a
+            color: util.$muted
+
+// the flavour is folded into the ledger's what line
+.chat-message:has(.ledger) .message-header .flavor-text,
+.chat-message:has(.ledger) .whisper-to
+    display: none
+
+// ---------- blocks ----------
+// Lines break between whole words; only a single word too long for the
+// whole card is ever split
+.chat-message :is(.ledger-what, .ledger-out, .ledger-det, .ledger-name, .ledger-line > span)
+    white-space: normal
+    overflow-wrap: break-word
+    word-break: normal
+    hyphens: manual
+    min-width: 0
+
+.chat-message .ledger
+    display: flex
+    flex-direction: column
+    gap: 5px
+    font-family: util.$font-body
+    color: util.$text
+
+    // a chained block after the first: a thin rule between them
+    &.chained
+        margin-top: 8px
+        padding-top: 8px
+        border-top: 1px solid util.$line
+
+// the hint line: everything muted, the difficulty highlighted
+.chat-message .ledger-what
+    font-size: 12px
+    line-height: 1.3
+    color: util.$muted
+
+    b
+        color: inherit
+
+    .heart-glyph
+        margin-right: 0.2em
+
+.chat-message .ledger-out
+    font-family: util.$font-label
+    font-weight: bold
+    font-size: 18px
+    line-height: 1.15
+    letter-spacing: 0.02em
+    color: util.$text
+
+    .heart-glyph, .heart-item-thumb
+        width: 1.1em
+        height: 1.1em
+        margin-right: 0.3em
+        vertical-align: -0.15em
+
+    &.bad
+        color: util.$red-bright
+
+    &.crit
+        text-decoration: underline
+        text-decoration-color: util.$red-bright
+        text-underline-offset: 3px
+
+// a name that opens its item (keepsake draw): plain white text, not a red
+// link chip (2026-09-30 review). !important: Foundry's chat log colours
+// links from an id-scoped rule no class selector outranks
+.chat-message .ledger a.content-link.ledger-name
+    background: none
+    border: 0
+    padding: 0
+    color: util.$text !important
+
+    &:hover
+        color: util.$red-bright !important
+
+.chat-message .ledger-name
+    font-weight: bold
+    line-height: 1.25
+    color: util.$text
+
+    &:hover
+        color: util.$red-bright
+
+// ---------- the dice row (rolls/dice.js diceRow) ----------
+.chat-message .ledger-dice
+    display: flex
+    flex-wrap: wrap
+    gap: 4px 8px
+
+    .ledger-die
+        display: flex
+        flex-direction: column
+        align-items: center
+        gap: 1px
+        min-width: 30px
+
+    .die-shape
+        position: relative
+        width: 30px
+        height: 30px
+        display: grid
+        place-items: center
+
+        // Foundry's die icon as a mask, so the card colours it
+        i
+            position: absolute
+            inset: 0
+            background: util.$muted
+            -webkit-mask: var(--die) center / contain no-repeat
+            mask: var(--die) center / contain no-repeat
+
+        b
+            position: relative
+            font-family: util.$font-body
+            font-size: 14px
+            font-weight: bold
+            font-variant-numeric: tabular-nums
+            color: #111
+
+    .kept .die-shape
+        i
+            background: util.$red-bright
+
+        b
+            color: #fff
+
+    // removed by the difficulty: crossed out, not faded
+    .removed .die-shape
+        &::before, &::after
+            content: ''
+            position: absolute
+            z-index: 1
+            left: 2px
+            right: 2px
+            top: 50%
+            height: 2px
+            margin-top: -1px
+            background: util.$text
+            border-radius: 1px
+            box-shadow: 0 0 0 1px #111
+
+        &::before
+            transform: rotate(45deg)
+
+        &::after
+            transform: rotate(-45deg)
+
+    // the body face, plain case: the small-caps label face was hard to
+    // read this small (2026-09-30 review)
+    .die-label
+        max-width: 64px
+        font-family: util.$font-body
+        font-size: 11px
+        line-height: 1.15
+        text-align: center
+        overflow-wrap: break-word
+        color: util.$muted
+
+// the small note under the dice
+.chat-message .ledger-det
+    font-size: 11px
+    line-height: 1.3
+    color: util.$muted
+
+    b
+        color: util.$text
+
+    p
+        margin: 0
+
+.chat-message .ledger-lines
+    display: flex
+    flex-direction: column
+    gap: 3px
+    padding-top: 4px
+    border-top: 1px solid util.$line
+    font-size: 13px
+
+    .ledger-line
+        display: flex
+        flex-wrap: wrap
+        justify-content: space-between
+        align-items: baseline
+        gap: 0 8px
+
+        > :first-child
+            font-weight: bold
+            min-width: 0
+
+        .v
+            margin-left: auto
+            color: util.$muted
+            text-align: right
+
+        &.blocked .v
+            font-style: italic
+
+// pill buttons (beat the generic chat button rule in chat-message.sass)
+.chat-message .ledger .ledger-acts
+    display: flex
+    justify-content: flex-end
+    flex-wrap: wrap
+    gap: 6px
+
+    button
+        flex: 0 1 auto
+        width: auto
+        max-width: 100%
+        height: auto
+        min-height: 26px
+        margin: 0
+        padding: 4px 11px
+        white-space: normal
+        text-align: center
+        border: 1px solid util.$red-mid
+        border-radius: 13px
+        background: util.$red-deep
+        color: util.$on-red
+        font-family: util.$font-label
+        font-weight: bold
+        font-size: 14px
+        line-height: 1.15
+
+        &:hover
+            background: util.$red-mid
+
+        &.ghost
+            background: transparent
+            border-color: util.$line
+            color: util.$text
+
+        + button
+            margin-top: 0
+
+// ---------- cards posted before the round-2 layout ----------
+// Their markup is saved in the chat log: the old badge beside the outcome
+// still lays out, and the old dice line and breakdown stay hidden
+.chat-message .ledger-main
+    display: grid
+    grid-template-columns: 40px minmax(0, 1fr)
+    align-items: center
+    gap: 8px
+
+.chat-message .ledger-badge
+    width: 40px
+    height: 40px
+    box-sizing: border-box
+    display: grid
+    place-items: center
+    border: 1px solid util.$line
+    border-radius: 6px
+    background: util.$sunken
+    font-family: util.$font-display
+    font-size: 22px
+
+    .heart-glyph, .heart-item-thumb
+        width: 26px
+        height: 26px
+        margin: 0
+
+.chat-message :is(.ledger-formula, .ledger-breakdown)
+    display: none
+
+// ---------- the roll request card (2026-09-30 rebuild) ----------
+// Its choices are the roll prompt's chip toggles, sized for the chat column
+.chat-message .roll-request-card
+    .request-choice
+        gap: 4px
+
+        .chip-toggle span
+            display: inline-flex
+            align-items: center
+            gap: 4px
+            padding: 2px 8px 1px
+            font-size: 14px
+            line-height: 1.2
+
+        .heart-glyph
+            width: 1em
+            height: 1em
+            margin: 0
+            background: none

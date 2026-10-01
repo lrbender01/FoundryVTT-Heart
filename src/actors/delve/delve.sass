@@ -1,14 +1,16 @@
 @use '../../util'
 
-.sticky
+// Scoped to Heart (util.$in-heart, same specificity) 2026-09-30: these
+// upstream helpers were global
+#{util.$in-heart} .sticky
     position: sticky
     top: 0
     z-index: 1
 
-.section
+#{util.$in-heart} .section
     padding: 0.5em
 
-.item-list
+#{util.$in-heart} .item-list
     &> *
         padding: 0.5em
         margin: 0.5em 0
@@ -16,7 +18,7 @@
         background: util.$sunken
         border-radius: 5px
 
-a[disabled]
+#{util.$in-heart} a[disabled]
     opacity: 0.5
     pointer-events: none
 

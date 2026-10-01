@@ -60,28 +60,30 @@
     --heart-warn-ink: #1a1410
 
 // ============================================================================
-// FOUNDRY CORE WINDOWS IN DARK MODE
+// HEART AND MYTHIC WINDOWS IN DARK MODE
 // ============================================================================
-// Foundry v12 paints classic windows (journals, roll tables, item/actor
-// directories' popouts, dialogs, settings) with a parchment image and dark
-// text taken from --color-text-dark-* / --color-border-light-* variables.
-// In dark mode we swap the parchment for the Heart window colour and
-// re-point those variables INSIDE windows only (the sidebar, hotbar and
-// canvas UI already use Foundry's light-on-dark variables and are left
-// alone). Light scheme = Foundry untouched.
+// Foundry v12 paints classic windows with a parchment image and dark text
+// taken from --color-text-dark-* / --color-border-light-* variables. In dark
+// mode we swap the parchment for the Heart window colour and re-point those
+// variables inside Heart's windows and Mythic GME Tools' windows only
+// (util.$themed-window; decided 2026-09-30, Luke). Core windows (journals,
+// compendiums, roll tables, settings, the file picker, keybindings, core
+// dialogs), the sidebar, and every other module's windows keep Foundry's
+// own look. Light scheme = Foundry untouched.
 //
 // Restyles of core components use :where() so they carry element-level
 // specificity: they beat the core rules they replace (same specificity,
 // later in the cascade) but lose to any Heart or module rule with a class.
 
 $dark: ':root:not([data-heart-scheme="light"])'
+$window: '.window-app#{util.$themed-window} .window-content'
 
-#{$dark} .window-app .window-content
+#{$dark} #{$window}
     background: util.$bg
     color: util.$text
     color-scheme: dark
 
-#{$dark} .window-app .window-content,
+#{$dark} #{$window},
 #{$dark} .chat-message
     --color-text-dark-primary: #{util.$text}
     --color-text-dark-secondary: #{util.$muted}
@@ -103,7 +105,7 @@ $dark: ':root:not([data-heart-scheme="light"])'
     --color-underline-header: transparent
     --color-underline-inactive: #{util.$line}
 
-:where(#{$dark} .window-app .window-content)
+:where(#{$dark} #{$window})
     // Form fields: recessed wells instead of 5%-black tints on parchment
     :is(input[type="text"], input[type="number"], input[type="password"], input[type="date"], input[type="time"], input[type="search"], select, textarea)
         background: util.$sunken
@@ -139,32 +141,9 @@ $dark: ':root:not([data-heart-scheme="light"])'
     table tr:nth-child(even)
         background: rgba(255, 255, 255, 0.03)
 
-    // File picker + keybinding chips
-    .filepicker .favorites .path, .filepicker .display-modes a, #keybindings .binding .key
-        background: util.$sunken
-        color: util.$text
-
-    .filepicker .display-modes a.active
-        background: util.$red-deep
-        color: util.$on-red
-
-    // Journal pages: Heart's title face + bright-red headings (as previewed)
-    .journal-entry-page :is(h1, h2, h3, h4)
-        font-family: util.$font-display
-        font-weight: normal
-        color: util.$red-bright
-        letter-spacing: util.$track-display
-
-    .journal-entry-page blockquote
-        background: util.$sunken
-        border: 1px solid util.$red-mid
-        border-radius: 6px
-        color: util.$text
-
-    // Plain links in journal text (the :where keeps this from outranking
-    // any styled anchor, e.g. Heart's sheet tabs)
-    .journal-entry-page :where(a:not(.content-link, .inline-roll))
-        color: util.$red-bright
+    // (The file picker, keybinding, and journal-page restyles of the
+    // 2026-09-29 sweep were removed 2026-09-30: those are core windows, which
+    // keep Foundry's look now.)
 
 // ============================================================================
 // SHARED ACCENTS (both schemes)
@@ -175,38 +154,27 @@ strong.heart-term
     color: util.$red-bright
     font-weight: bold
 
-// ============================================================================
-// ROLL TABLES + COMPENDIUM WINDOWS IN DARK MODE (2026-09-29, approved sweep)
-// ============================================================================
-:where(#{$dark}) .roll-table-config
-    .table-results
-        .table-result:nth-child(even)
-            background: rgba(255, 255, 255, 0.03)
+// Heart tooltips (2026-09-30, Luke; common/tooltip.js): Foundry's styled
+// tooltip in Heart's colours and body face, only when it was raised from a
+// Heart surface (the class is added there and nowhere else). pre-line keeps
+// the line breaks of multi-line tips (the warning badges' lists).
+// (#tooltip plus a class: outranks core's #tooltip rules; locked copies of a
+// tooltip keep its class.)
+:is(#tooltip, .locked-tooltip).heart-tooltip
+    background: util.$surface
+    color: util.$text
+    border: 1px solid util.$line
+    border-radius: 5px
+    font-family: util.$font-body
+    font-size: util.$fs-secondary
+    font-style: normal
+    line-height: 1.35
+    max-width: 22em
+    padding: 4px 8px
+    white-space: pre-line
+    overflow-wrap: break-word
 
-        .table-result .result-range, .table-result .range
-            color: util.$muted
-            font-variant-numeric: tabular-nums
-
-    .table-header, .table-results > .table-header
-        color: util.$red-bright
-        border-bottom: 1px solid util.$red-mid
-
-:where(#{$dark}) .compendium.directory
-    .directory-header .header-search input
-        background: util.$sunken
-        color: util.$text
-        border: 1px solid util.$line
-
-    .directory-item
-        border-bottom: 1px solid util.$line
-
-        .document-name a:hover
-            color: util.$red-bright
-
-        img.thumbnail
-            border: 1px solid util.$line
-            border-radius: 5px
-
-    .folder > .folder-header
-        background: util.$red-deep
-        color: util.$on-red
+// (The dark roll-table and compendium-window restyles of the 2026-09-29
+// sweep were removed 2026-09-30: core windows keep Foundry's look, Heart's
+// compendiums included. The glyph halo on Heart's own icons in Heart's
+// compendium windows stays, in index.sass.)

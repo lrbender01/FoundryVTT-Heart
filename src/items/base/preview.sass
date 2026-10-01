@@ -10,8 +10,9 @@
     margin: 0.5em 0
 
     // Equipment / resource rows: the skill or domain and the rollable die read
-    // in the accent red, tags in italics (2026-09-29)
-    .item-skill, .item-roll
+    // in the accent red, tags in italics (2026-09-29); the resistance a piece
+    // of gear works on too ("Mend Mind", 2026-09-30 review)
+    .item-skill, .item-resistance, .item-roll
         color: util.$red-bright
 
     .item-roll
@@ -23,7 +24,19 @@
         .sheetD10
             margin: 0 0.15em 0 0
 
+    // Tags always on their own line, indented under the name, with a small
+    // tag glyph; the rest of the row runs full width (2026-09-30 review)
     .item-tags
+        display: block
+        margin: 1px 0 0 1.35em
+        font-size: util.$fs-secondary
+        line-height: 1.3
+
+        .heart-glyph
+            font-size: 0.75em
+            margin-right: 0.35em
+            vertical-align: 0
+
         .fas
             margin-right: 0.1em
 
@@ -42,11 +55,34 @@
         p
             margin: 0
 
+    // Row icons (edit / toggle / delete) sit translucent in the top-right
+    // corner over the text, like the header slots' eye / trash, so the row's
+    // text runs the full width of its box; full strength on hover
+    // (2026-09-30 review)
     .actionbar
-        float: right
+        position: absolute
+        top: 0.3em
+        right: 0.45em
+        z-index: 1
+        display: flex
+        gap: 0.45em
+        line-height: 1
+        opacity: 0.4
+        transition: opacity 0.12s
 
         a:hover
             transform: scale(1.05)
+
+    &:hover > .actionbar
+        opacity: 1
+
+    // equipment, resource, and plain item rows: smaller icons, top right
+    // (2026-09-30 review). Every row has the "item" class, so plain items
+    // are told apart by type-item (base/preview.html)
+    &:is(.equipment, .resource, .type-item) > .actionbar
+        top: 0.35em
+        gap: 0.4em
+        font-size: 12px
 
     h1, h2, h3, h4
         font-family: util.$font-display
@@ -79,6 +115,29 @@
     .beat-text
         flex: 1 1 auto
         min-width: 0
+
+    // a beat's edit / delete, in the row just left of Pursue / Finish and
+    // level with their top edge; translucent like every row's icons
+    // always at the top of the row, however tall its text (2026-09-30 review)
+    .beat-controls
+        flex: 0 0 auto
+        align-self: flex-start
+        display: flex
+        align-items: flex-start
+        gap: 8px
+
+    .beat-tools
+        flex: 0 0 auto
+        display: flex
+        gap: 0.4em
+        padding-top: 0.35em
+        font-size: 12px
+        line-height: 1
+        opacity: 0.4
+        transition: opacity 0.12s
+
+    &:hover .beat-tools
+        opacity: 1
 
         p
             margin: 0
@@ -190,6 +249,17 @@
     &[data-action=ability-lock]
         cursor: pointer
 
+    // Learn again (a repeatable ability): a small + beside Learned
+    &.again
+        margin-left: 4px
+        padding: 2px 6px 1px
+        color: util.$text
+        cursor: pointer
+
+        &:hover
+            border-color: util.$red-mid
+            color: util.$red-bright
+
     // not yet (the major ability isn't learned)
     &.disabled
         color: util.$text
@@ -208,3 +278,48 @@
 
     > .item.preview
         margin: 0
+
+// Class / calling / ancestry rows (2026-09-30 review, identity-preview.html):
+// a link to one in chat or a journal. Icon and name, the type in the small
+// label face, the pitch muted under it
+.item.preview:is(.calling, .class, .ancestry)
+    .identity-row
+        display: flex
+        flex-direction: column
+        gap: 2px
+        padding-right: 2.2em
+
+    .identity-name strong
+        font-size: util.$fs-body
+
+    .identity-type
+        @include util.text-label
+        margin-left: 0.3em
+        color: util.$muted
+
+    .identity-pitch
+        margin: 0
+        font-size: util.$fs-secondary
+        line-height: 1.3
+        color: util.$muted
+
+// Ability references (2026-09-30, Luke; common/terms.js): a capitalised
+// ability title inside ability, class, or calling text ("as per
+// HEARTSBLOOD") in the ability-title face, red, sized so its capitals
+// match the body text's (Mosherif runs about 22% small; util.sass pairs
+// 1.6em matched Alegreya's capitals but read as header-sized; 1.35em sits
+// just under them, review 2026-09-30), on one line
+// box so the paragraph spacing holds
+strong.heart-term.heart-ability-ref
+    font-family: util.$font-display
+    font-weight: normal
+    font-size: 1.35em
+    line-height: 1
+    letter-spacing: 0.04em
+
+// Learned more than once (2026-09-30, Luke): "x2" after the title, in the
+// title face, red like the other counts
+.item.preview.ability .ability-times
+    margin-left: 0.35em
+    color: util.$red-bright
+    font-variant-numeric: lining-nums tabular-nums

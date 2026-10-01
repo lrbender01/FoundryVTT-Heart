@@ -64,30 +64,28 @@
 // global rules below (.skill-row / .domain-row / .knack-input) so the same
 // styling drives the Skills & Domains tab on the character sheet (Phase 2A.4).
 // (window-content prefix: outranks the global ".window-content > *" padding)
+// Top padding leaves room for the container title, which sits on the box's
+// top border like the character sheet's (2026-09-30, Luke)
 .window-app .window-content > :is(.skills-manager, .domains-manager)
-    padding: 6px 12px 10px
+    padding: 18px 12px 10px
 
 .skills-manager, .domains-manager
     // no padding from the global .section rule (landmark.sass)
     .section
         padding: 0
-        margin: 0 0 0.6em
+        margin: 0
 
-        // Column heads as small labels (2026-09-30 review: the section-size
-        // heading row was mostly whitespace)
-        h3
-            @include util.text-label
-            color: util.$muted
-            padding: 0
-            margin: 0
-            line-height: 1.2
+    // the rows sit in a titled container (character.sass, .character-tab-
+    // container), as on the Skills & Domains tab
+    .grid-2.auto-first-col
+        gap: 0.35em 0.6em
+        margin: 0
 
-            &.center
-                text-align: left
-
-        .grid-2.auto-first-col
-            gap: 0.35em 0.6em
-            margin-top: 0
+    // Column heads as small labels, as on the Skills & Domains tab
+    .trait-edit-head
+        @include util.text-label
+        color: util.$muted
+        line-height: 1.2
 
     // the skill / domain glyph between the tick and the name
     .trait-glyph
@@ -106,7 +104,7 @@
         display: grid
         grid-template-columns: 1fr 1fr
         gap: 0.5em
-        margin-top: 0.5em
+        margin-top: 0.7em
 
         button
             margin: 0
@@ -165,9 +163,6 @@ form.heart.form.beat-tracker
     flex-direction: column
     gap: 8px
     padding: 4px 2px
-
-    .tracker-hint
-        @include util.text-secondary
 
     .tracker-character
         margin: 0
@@ -237,7 +232,7 @@ form.heart.form.beat-tracker
 
     .option-cards
         display: grid
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))
+        grid-template-columns: repeat(var(--option-cols, 5), minmax(0, 1fr))
         gap: 10px
 
     .option-card
@@ -343,7 +338,8 @@ form.heart.form.beat-tracker
 
 // Roll / Roll with Mastery prompt (2026-09-29 review round 2): legible at a
 // glance - larger description, headings and chips; the window grows to fit.
-.app.requirement
+// (:where(.heart-window), 2026-09-30: Heart's window only, same specificity)
+.app.requirement:where(.heart-window)
     .description
         margin-bottom: 0.3rem
 
@@ -429,7 +425,9 @@ textarea.knack-input:disabled
     opacity: 0.45
     cursor: not-allowed
 
-// Named-button confirmations (fallout / clear stress)
+// Every Heart dialog (2026-09-30, common/dialog.js): confirmations, the
+// custom beat and add-member prompts, the startup window. Chip buttons;
+// the action button (the default one, Yes, Clear) filled red
 .heart-confirm
     .dialog-content
         p
@@ -438,13 +436,23 @@ textarea.knack-input:disabled
         b.resistance
             color: util.$red-bright
 
+        .form-group
+            margin: 0 0 0.5em
+
+            &.stacked
+                flex-direction: column
+                align-items: stretch
+
     .dialog-buttons button
         @include util.text-chip
 
-        &[data-button="clear"]
+        &.default, &[data-button="yes"], &[data-button="clear"], &[data-button="ok"]
             background: util.$red-deep
             border-color: util.$red-mid
             color: util.$on-red
+
+            &:hover
+                background: util.$red-mid
 
 // Startup / changelog dialog
 .heart-changelog

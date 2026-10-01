@@ -73,6 +73,9 @@ export function initialise() {
     });
 
     CONFIG.Actor.documentClass = HeartActor;
+    // Create Actor preselects Adversary, the type the GM makes most often
+    // (2026-09-30 review)
+    CONFIG.Actor.defaultType = 'adversary';
 
     proxies.forEach(function(module) {
         Object.entries(module.default).forEach(([type, proxy]) => {

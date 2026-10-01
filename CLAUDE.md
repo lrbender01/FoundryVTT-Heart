@@ -136,6 +136,16 @@ The system ships **no book content**: the classes, callings, fallouts and tags p
 
 Upstream's `build-packs.js` line 269 wrote `"path": \`./packs/${type}.db\`` to system.json, but `compilePack()` on line 259 wrote the LevelDB directories WITHOUT a `.db` suffix. Foundry then couldn't resolve the path. Fixed at source on 2026-06-12 — line 269 now writes `"path": \`./packs/${type}\``. The legacy `macros.db`NeDB pack keeps its`.db` (it's a real file, not a LevelDB directory).
 
+## Tests
+
+Rules tests (added 2026-09-30): vitest, node environment, about 250 tests that run in under a second without Foundry.
+
+- **Run:** `npm test` inside this folder (`npm run test:watch` to watch), or `npm run test:heart-system` from the monorepo root. Root `npm test` (and so the Husky pre-commit hook) chains it on after the workspaces. vitest is NOT a dependency of the fork: it resolves from the monorepo root's `node_modules` (npm puts every ancestor `node_modules/.bin` on the script PATH), so nothing is installed here.
+- **Layout:** `vitest.config.mjs`; `test/setup.mjs` stubs only the Foundry globals the tested modules touch (`game.i18n` returns keys as themselves and `format` appends its data as `key{a=1}`, `game.actors` is a Map, `game.heart`, `Handlebars.escapeExpression`, `foundry.utils`, `ui.notifications`), reset before each test; `test/helpers.mjs` has fake actors and fallouts, a seeded PRNG, the highlighter's match helpers, and a copy of Foundry v12's pool keep / drop logic (`evaluatePool`).
+- **Covered:** Heart roll results (normal, Difficult, Impossible; which results offer stress), the pool (`pool.js`: dice, difficulty cuts, the fresh die, helpers, mastery, missing skill / domain notes, Tired / Clouded / Furious, party fallouts, hints, knacks), kept / removed dice on the card (`markPool`), stress (die steps, passive, critical doubling, Protection per character), the character fallout thresholds and `totalStress`, Provisions (`actors/party/rules.js`, `provisionsOf`, `provisionsView`, `partyMembers`), the term highlighter (`common/terms.js`, a table of phrases plus the sentence-start rule, markup, and ability references; assertions read the highlighted text and class, never the exact tag), `rollParts` / `diceRow`, repeatable abilities, class equipment choices, the two-beat limit, and seeded randomized checks (thousands of pools and Provisions marks).
+- **Extraction pattern:** a module that imports `.html` or `.sass` (webpack-only) cannot load in vitest. Keep the rule in a small pure module beside it and import it back, with no behaviour change: `rolls/heart-roll/results.js` (result tables, `heartResult`, `markPool`), `rolls/fallout-roll/results.js` (`characterFalloutResult`), `rolls/stress-roll/rules.js` (`stepDown`, `stressDie`, `stressFormula`, `afterProtection`), alongside the already-pure `actors/party/rules.js`. New rules go in modules like these; test files are `test/*.test.mjs`.
+- **A failing test that shows a real rules bug** is reported and left as `it.fails` with a comment, never fixed silently in the same change.
+
 ---
 
 ## Monorepo Integration
@@ -174,7 +184,7 @@ When editing source inside this submodule:
 
 ### npm workspaces exclusion
 
-The fork is **deliberately excluded** from the root `package.json` workspaces list (switched from `["packages/*"]` glob to explicit list on 2026-06-12 during Phase 0). Root `npm test` does not touch this package. Root devDependencies do not pollute the fork's isolated `node_modules`.
+The fork is **deliberately excluded** from the root `package.json` workspaces list (switched from `["packages/*"]` glob to explicit list on 2026-06-12 during Phase 0). Root devDependencies do not pollute the fork's isolated `node_modules`. Since 2026-09-30 root `npm test` does run the fork's rules tests, chained on after the workspaces (`npm run test:heart-system`); see "Tests" below.
 
 ```json
 // root package.json — fvtt-heart-system NOT in this list
@@ -327,7 +337,7 @@ Distilled from the character, adversary, landmark and delve sheets and applied s
 - **System config:** `foundryvtt.config.js` — owns the system ID, title, description, compatibility, author list. Edit here to change foundational metadata.
 - **Character sheet:** `src/actors/character/sheet.html` + `sheet.js` + `character.sass` + `proxy.js` (where `totalStress` is computed)
 - **Character template:** `src/actors/character/template.json` (defines stored fields — ancestry, pronouns added by PR #94)
-- **Settings registry:** `src/index.js` (PR #94 added `showTotalStress`, `showStressInputBox`, `preSelectStressType`)
+- **Settings registry:** `src/index.js` (PR #94 added `showTotalStress`, `showStressInputBox`, `preSelectStressType`; the last two, and `showTextboxesBelowItems`, were removed 2026-09-30 as nothing read them)
 - **Rolls:** `src/rolls/` — `HeartRoll`, `StressRoll`, `FalloutRoll`, `ItemRoll`. Exposed as `game.heart.rolls.<Class>` after `ready`.
 - **Chat messages:** `src/chat-messages/index.js` (PR #94 fixed rolltable compendium resolution here)
 - **Items:** `src/items/` — 10 item types (ability, beat, calling, class, equipment, fallout, haunt, resource, tag, base)

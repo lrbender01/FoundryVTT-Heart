@@ -36,6 +36,33 @@ $header-fg: var(--heart-header-fg)
 $header-field-bg: rgba(0, 0, 0, 0.35)
 
 // ============================================================================
+// SCOPE (2026-09-30, Luke): Heart's styling applies only to Heart's own
+// windows, Heart content (chat cards, item previews), and Mythic GME Tools'
+// windows; the rest of Foundry keeps its own look. Every Heart application
+// carries the .heart-window class (common/sheet.js, the applications,
+// common/dialog.js). The scopes are :where() lists, so a scoped rule keeps
+// exactly the specificity it had unscoped and no Heart rule changes which
+// one wins.
+//
+//   $in-heart          Heart windows, plus .heart forms and item previews
+//                      (HeartTextEditor wraps a preview in div.heart.sheet,
+//                      also inside journals)
+//   $in-heart-or-chat  the same, plus chat messages
+//   $themed-window     a window the dark theme paints: Heart's and Mythic's
+//                      (use as .window-app#{$themed-window})
+// ============================================================================
+$in-heart: ':where(.heart-window, .heart)'
+$in-heart-or-chat: ':where(.heart-window, .heart, .chat-message)'
+// Mythic GME Tools (2.10.x) gives its windows no class of its own: its panels
+// are Applications with ids ending "_panel_window" (m1e_, m2e_, mvars1_,
+// mvars2_, pum_, pum8_, sum_, sum7_, gum_, gum2_, gma_), and its dialogs are
+// plain core Dialogs whose content has mgme_* element ids (#mgme_odds,
+// #mgme_re_question, ...). A few one-line result dialogs carry neither and
+// keep Foundry's look.
+$mythic-window: '[id$="_panel_window"], :has(> .window-content [id^="mgme_"])'
+$themed-window: ':where(.heart-window, #{$mythic-window})'
+
+// ============================================================================
 // TYPE (2026-09-29, "Heart Type System" mock, Roomy scale). Five text styles;
 // every stylesheet uses these tokens and mixins, never a literal family or
 // size. Window title bars stay in Foundry's own font.

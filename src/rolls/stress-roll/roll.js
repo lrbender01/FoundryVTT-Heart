@@ -1,5 +1,6 @@
 import chatTemplateHTML from './roll.html';
-import { showDice } from '../dice';
+import { showDice, diceRow, rollParts } from '../dice';
+import { glyphFor } from '../../common/icons';
 
 // Stress roll (2026-09-30 rebuild with the roll prompt). Rules (HCB p.77-78;
 // gm-companion rulings 13, 16):
@@ -12,13 +13,9 @@ import { showDice } from '../dice';
 //   - if Protection stops all of it, there is no fallout roll
 // Stakes are picked AFTER the roll (Luke, 2026-09-30): one short picker;
 // the resistance is prefilled with this user's last choice, the die is D4.
-
-const DIE_ORDER = ['d4', 'd6', 'd8', 'd10', 'd12'];
-
-function stepDown(die) {
-    const i = DIE_ORDER.indexOf(String(die).toLowerCase());
-    return i > 0 ? DIE_ORDER[i - 1] : die;
-}
+// The arithmetic (die steps, doubling, Protection) lives in rules.js, free of
+// webpack-only imports, so the rules tests can load it (2026-09-30, Luke).
+import { stressDie, stressFormula, afterProtection } from './rules';
 
 export default class StressRoll extends Roll {
     static get CHAT_TEMPLATE() { return chatTemplateHTML.path; }
@@ -35,25 +32,33 @@ export default class StressRoll extends Roll {
             result: {
                 label: loc('heart.result.label-single'),
                 options: Object.fromEntries(game.heart.stress_results.filter(r => r !== 'n_a').map(r => [r, loc(`heart.result.${r}`)])),
+                // tooltips (2026-09-30, Luke): `tip` on a checkbox, `tips`
+                // per option, both lang keys the tooltip localizes
+                tips: { critical_failure: 'heart.tip.stakes.critical-failure' },
             },
             resistance: {
                 label: loc('heart.resistance.label-single'),
                 // the five personal tracks plus the party's Provisions
                 options: Object.fromEntries(game.heart.stress_targets.map(r => [r, loc(`heart.resistance.${r}`)])),
+                tips: Object.fromEntries(game.heart.stress_targets.map(r => [r, `heart.tip.resistance.${r}`])),
                 default: last.resistance,
             },
             die_size: {
                 label: loc('heart.rolls.stress-roll.die'),
                 options: Object.fromEntries(game.heart.stress_dice.map(d => [d, d.toUpperCase()])),
+                // the book's stress ladder (HCB p. 78); D10 has no rule of its own
+                tips: { d4: 'heart.tip.stakes.d4', d6: 'heart.tip.stakes.d6', d8: 'heart.tip.stakes.d8', d12: 'heart.tip.stakes.d12' },
                 default: 'd4',
             },
             passive: {
                 label: loc('heart.rolls.stress-roll.passive'),
                 hint: loc('heart.rolls.stress-roll.passive-hint'),
+                tip: 'heart.tip.stakes.passive',
                 isCheckbox: true,
             },
             ignoreProtection: {
                 label: loc('heart.rolls.stress-roll.ignore-protection'),
+                tip: 'heart.tip.ignore-protection',
                 isCheckbox: true,
             },
         };
@@ -91,9 +96,7 @@ export default class StressRoll extends Roll {
     }
 
     static _build({ result, die_size, character, resistance, ignoreProtection, helpers = [], passive }, data = {}, options = {}) {
-        let die = String(die_size ?? 'd4').toLowerCase();
-        const stepped = Boolean(passive) && result === 'success_at_a_cost';
-        if (stepped) die = stepDown(die);
+        const { die, stepped } = stressDie(die_size, result, passive);
 
         options.result = result;
         options.die_size = die;
@@ -103,8 +106,7 @@ export default class StressRoll extends Roll {
         options.ignoreProtection = Boolean(ignoreProtection);
         options.helpers = (helpers ?? []).filter(id => id && id !== character);
 
-        const formula = result === 'critical_failure' ? `2 * {${die}}` : die;
-        return new this(formula, data, options);
+        return new this(stressFormula(die, result), data, options);
     }
 
     // Mark the stress on the roller and each helper. Returns (and stores in
@@ -119,8 +121,7 @@ export default class StressRoll extends Roll {
             const actor = game.actors.get(id);
             const res = actor?.system?.resistances?.[resistance];
             if (!res) continue;
-            const protection = this.options.ignoreProtection ? 0 : (Number(res.protection) || 0);
-            const amount = Math.max(0, total - protection);
+            const { protection, amount } = afterProtection(total, res.protection, this.options.ignoreProtection);
             if (amount > 0 && actor.isOwner) {
                 await actor.update({ [`system.resistances.${resistance}.value`]: (Number(res.value) || 0) + amount });
             }
@@ -142,8 +143,7 @@ export default class StressRoll extends Roll {
             return [];
         }
         const p = party.proxy.provisions;
-        const protection = this.options.ignoreProtection ? 0 : p.protection;
-        const amount = Math.max(0, total - protection);
+        const { protection, amount } = afterProtection(total, p.protection, this.options.ignoreProtection);
         const marked = amount > 0 && party.isOwner;
         if (marked) {
             await party.update({ 'system.provisions.value': Math.min(p.max, p.value + amount) });
@@ -167,31 +167,68 @@ export default class StressRoll extends Roll {
         if (!this._evaluated) await this.evaluate();
 
         const opts = this.options;
+        const loc = (k, d) => (d ? game.i18n.format(k, d) : game.i18n.localize(k));
+        const esc = (t) => Handlebars.escapeExpression(String(t ?? ''));
         const die = String(opts.die_size ?? '').toUpperCase();
-        const resistanceLabel = opts.resistance ? game.i18n.localize(`heart.resistance.${opts.resistance}`) : '';
-        let description = game.i18n.format('heart.rolls.stress-roll.summary', { die, resistance: resistanceLabel });
-        if (opts.result === 'critical_failure') description += game.i18n.localize('heart.rolls.stress-roll.summary-double');
-        if (opts.stepped) description += game.i18n.localize('heart.rolls.stress-roll.summary-passive');
+        const resistanceLabel = opts.resistance ? loc(`heart.resistance.${opts.resistance}`) : '';
+        const party = opts.resistance === 'provisions';
 
-        const applied = (opts.applied ?? []).map(a => ({
-            ...a,
-            line: a.amount > 0
-                ? game.i18n.format(a.marked ? 'heart.rolls.stress-roll.took' : 'heart.rolls.stress-roll.takes', { name: a.name, amount: a.amount, resistance: resistanceLabel })
-                : game.i18n.format('heart.rolls.stress-roll.blocked', { name: a.name }),
-            protectionNote: a.protection ? game.i18n.format('heart.rolls.stress-roll.protection-note', { protection: a.protection }) : '',
-        }));
+        // What: "D6 to Blood", "Upkeep: D4 to Provisions" (the flavour is the
+        // Provisions source), plus doubled / one size smaller
+        let what = loc('heart.card.stress-what', { die: esc(die), resistance: `${glyphFor('resistance', opts.resistance)}<b>${esc(resistanceLabel)}</b>` });
+        if (opts.result === 'critical_failure') what += `, ${esc(loc('heart.card.doubled'))}`;
+        if (opts.stepped) what += `, ${esc(loc('heart.card.passive'))}`;
+        if (chatOptions.flavor) what = `${esc(chatOptions.flavor)}: ${what}`;
+
+        // One line each: "+3 (protection 1) · 7 of 10"; the party's: "... of 20"
+        const applied = (opts.applied ?? []).map(a => {
+            const doc = game.actors.get(a.id);
+            let track = '';
+            if (a.shared) {
+                const p = doc?.proxy?.provisions;
+                if (p) track = loc('heart.card.track', { value: p.value, max: p.max });
+            } else {
+                const r = doc?.system?.resistances?.[opts.resistance];
+                if (r) track = loc('heart.card.track', { value: Number(r.value) || 0, max: 10 });
+            }
+            const protection = a.protection
+                ? loc(a.shared ? 'heart.card.qm-protection' : 'heart.card.protection', { protection: a.protection })
+                : '';
+            const value = a.amount > 0
+                ? [`+${a.amount}${protection ? ` (${protection})` : ''}`, track].filter(Boolean).join(' · ')
+                : loc('heart.card.stopped', { protection: a.protection });
+            return { ...a, value };
+        });
+
+        // fallout per character who took stress (none if Protection stopped it)
+        const falloutFor = isPrivate || !showFalloutRollButton ? []
+            : applied.filter(a => a.amount > 0 && !(chatOptions.falloutDone ?? []).includes(a.id));
+        falloutFor.forEach(a => {
+            a.button = a.shared ? loc('heart.card.party-fallout')
+                : falloutFor.length === 1 ? loc('heart.rolls.fallout-roll.action')
+                : loc('heart.card.fallout-for', { name: a.name });
+            // the rule it rolls, as a tooltip key (2026-09-30, Luke)
+            a.tip = a.shared ? 'heart.tip.card.party-fallout' : 'heart.term.fallout';
+        });
+
+        // Provisions past twelve: every check is fallout
+        let det = '';
+        if (party) {
+            const p = game.heart.party?.proxy?.provisions;
+            if (p && p.value >= p.criticalFrom) det = loc('heart.party-sheet.status-dire', { past: p.criticalFrom - 1 });
+        }
 
         const chatData = {
             character: chatOptions.character || opts.character,
-            description: isPrivate ? '???' : description,
+            what: isPrivate ? '???' : what,
+            out: isPrivate ? '?' : loc('heart.card.stress-out', { amount: this.total, resistance: resistanceLabel }),
+            det: isPrivate ? '' : det,
             formula: isPrivate ? '???' : this._formula,
-            flavor: isPrivate ? null : chatOptions.flavor,
             user: chatOptions.user,
-            tooltip: isPrivate ? '' : await this.getTooltip(),
+            dice: isPrivate ? '' : diceRow(rollParts(this).map(p => ({ ...p, kept: true }))),
             applied: isPrivate ? [] : applied,
             showTakeStressButton: isPrivate ? false : showTakeStressButton && !opts.applied,
-            // fallout per character who took stress (none if Protection stopped it)
-            falloutFor: isPrivate || !showFalloutRollButton ? [] : applied.filter(a => a.amount > 0 && !(chatOptions.falloutDone ?? []).includes(a.id)),
+            falloutFor,
             resistance: isPrivate ? '' : opts.resistance,
             total: isPrivate ? '?' : this.total,
             result: isPrivate ? '?' : this.result

@@ -23,6 +23,12 @@ export default class RequirementApplication extends HeartApplication {
     }
 
     static build({requirements, callback, cancel, type, description}) {
+        // A requirement may name a glyph kind for its chips; a resistance
+        // choice shows the resistance glyphs (Provisions included) like the
+        // roll prompt's skill and domain chips (2026-09-30, Luke)
+        for (const [key, requirement] of Object.entries(requirements ?? {})) {
+            if (key === 'resistance' && requirement && !requirement.glyph) requirement.glyph = 'resistance';
+        }
         new this({}, {
             type,
             requirements,

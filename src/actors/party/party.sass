@@ -36,37 +36,40 @@ $mark: 13px
     .provisions-status
         margin: 12px 14px 0
 
-    // members and actions span the sheet; fallout and notes share a row
+    // one column: members, party fallout, Provisions actions, notes
+    // (2026-09-30 review)
     .panel-body.party-body
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
+        grid-template-columns: minmax(0, 1fr)
         row-gap: 1.15rem
-        column-gap: 13px
         align-items: start
 
-        > .members-container, > .provisions-actions
-            grid-column: 1 / -1
+        > .character-tab-container
             margin: 0
 
     .muted-line
         @include util.text-secondary
 
     // ---------- members (2026-09-30 review): class icon, name, traits ----------
+    // five across, each card the largest square that fits (alphabetical;
+    // no manual ordering)
     .member-strip
-        display: flex
-        flex-wrap: wrap
+        display: grid
+        grid-template-columns: repeat(5, minmax(0, 1fr))
         gap: 10px
 
     .member-card
         position: relative
-        width: 150px
+        aspect-ratio: 1 / 1
+        min-height: 0
 
         .member-open
             display: flex
             flex-direction: column
             align-items: center
+            justify-content: center
             gap: 3px
             height: 100%
-            padding: 10px 8px 9px
+            padding: 8px 8px 9px
             box-sizing: border-box
             border: 1px solid util.$line
             border-radius: 7px
@@ -83,9 +86,9 @@ $mark: 13px
         .member-icon
             display: inline-grid
             place-items: center
-            width: 52px
-            height: 52px
-            font-size: 48px
+            width: 64px
+            height: 64px
+            font-size: 60px
             line-height: 1
 
             .heart-glyph
@@ -110,8 +113,11 @@ $mark: 13px
             line-height: 1.25
             color: util.$muted
 
+        // Quartermaster tag at the very top of the card; the line is kept on
+        // every card so the icons line up
         .member-role
             @include util.text-label
+            min-height: 1.2em
             color: util.$red-bright
 
         &.is-quartermaster .member-open
@@ -132,36 +138,52 @@ $mark: 13px
         &:hover .member-remove
             opacity: 1
 
-    // ---------- Provisions actions (2026-09-30 review) ----------
-    // Two groups side by side (adds stress | removes stress); each action is
-    // a row: its name and one line on when to use it, then its controls
+    // ---------- Provisions actions (2026-09-30, Luke's pick "action rows") ----------
+    // Two groups side by side (adds Stress | removes Stress). Each action is
+    // a row card like the character sheet's item rows: name and one line on
+    // when to use it, its controls in a right column, top-aligned so every
+    // row's controls start level with its name
     .action-columns
         display: grid
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
-        gap: 0 22px
+        gap: 0 16px
+        align-items: start
 
+    .action-group
+        display: flex
+        flex-direction: column
+        gap: 6px
+
+    // Gain Stress / Relieve Stress: a step larger than the small labels
     .action-group-title
         @include util.text-label
+        font-size: 17px
         color: util.$muted
-        margin: 0 0 4px
+        margin: 0
         padding-bottom: 3px
         border-bottom: 1px solid util.$line
 
+    // the text first, full width; the controls always under it,
+    // right-justified (2026-09-30 review: one button language)
     .action
-        display: grid
-        grid-template-columns: minmax(0, 1fr) auto
-        align-items: center
-        gap: 4px 12px
-        padding: 7px 0
+        display: flex
+        flex-direction: column
+        gap: 6px
+        padding: 7px 10px
+        border: 1px solid util.$line
+        border-radius: 6px
+        background: util.$sunken
 
-        & + .action
-            border-top: 1px solid util.$line
+    .action-text
+        min-width: 0
 
     .action-name
         font-weight: bold
         font-size: util.$fs-body
+        line-height: 1.25
 
     .action-desc
+        margin-top: 1px
         font-size: util.$fs-secondary
         line-height: 1.3
         color: util.$muted
@@ -170,44 +192,141 @@ $mark: 13px
         display: inline-flex
         align-items: center
         gap: 5px
-        margin-top: 3px
+        margin-top: 4px
         font-size: util.$fs-secondary
         color: util.$muted
+
+        input
+            width: 13px
+            height: 13px
+            margin: 0
 
     .action-controls
         display: flex
         flex-wrap: wrap
         justify-content: flex-end
         align-items: center
-        gap: 6px
+        gap: 5px 10px
 
-        button
-            flex: 0 0 auto
-            width: auto
-            min-width: 6.5em
-            height: 30px
+    .control-line, .die-chips
+        display: flex
+        align-items: center
+        gap: 4px
+
+    // chips in the character sheet's beat-chip style: outlined, red on
+    // hover; the chosen die filled like a pursued beat
+    .prov-chip
+        @include util.text-chip
+        flex: 0 0 auto
+        width: auto
+        min-width: 0
+        height: 24px
+        margin: 0
+        padding: 1px 9px 0
+        font-size: util.$fs-secondary
+        line-height: 1
+        white-space: nowrap
+        text-align: center
+        border: 1px solid util.$line
+        border-radius: 5px
+        background: util.$bg
+        color: util.$text
+        cursor: pointer
+
+        &:hover
+            border-color: util.$red-mid
+            color: util.$red-bright
+
+        &.on
+            background: util.$red-deep
+            border-color: util.$red-mid
+            color: util.$on-red
+
+        // the row's action: a slightly stronger outline
+        &.go
+            min-width: 5.5em
+            border-color: util.$red-mid
+
+        &.danger
+            color: util.$red-bright
+
+    .die-chip
+        min-width: 2.6em
+        padding: 1px 5px 0
+
+    // the payer picker and the amount box sized to the chips
+    .payer-select, .amount
+        height: 24px
+        margin: 0
+        border: 1px solid util.$line
+        border-radius: 5px
+        background: util.$bg
+        color: util.$text
+        font-size: util.$fs-secondary
+
+    .payer-select
+        width: auto
+        max-width: 11em
+        padding: 0 4px
+
+    .amount
+        width: 3em
+        padding: 0
+        text-align: center
+
+    .or
+        color: util.$muted
+        font-size: util.$fs-secondary
+
+    // ---------- pursued beats (2026-09-30, Luke) ----------
+    // two members to a row; each member's name (class icon, count) then
+    // their beats as the character sheet's beat rows, without buttons
+    .party-beats
+        display: grid
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+        gap: 12px 18px
+        align-items: start
+
+    .member-beats
+        display: flex
+        flex-direction: column
+        gap: 5px
+        min-width: 0
+
+        .item.preview
             margin: 0
-            padding: 0 12px
-            line-height: 1
-            font-size: util.$fs-body
 
-        select
-            width: auto
-            height: 30px
-            font-size: util.$fs-body
+        .beat-row
+            align-items: baseline
 
-        .payer-select
-            max-width: 11em
+    .member-beats-name
+        display: flex
+        align-items: center
+        gap: 6px
+        padding-bottom: 3px
+        border-bottom: 1px solid util.$line
+        font-weight: bold
+        font-size: util.$fs-body
+        color: util.$text
 
-        .amount
-            width: 3.5em
-            height: 30px
-            text-align: center
+        .heart-glyph, .heart-item-thumb
+            width: 1.2em
+            height: 1.2em
+            margin: 0
 
-        .or
-            color: util.$muted
-            font-size: util.$fs-secondary
+        .panel-count
+            margin-left: auto
 
-    button.danger
-        color: util.$red-bright
-        border-color: util.$red-mid
+        &:hover
+            color: util.$red-bright
+
+    // party fallouts and the party's shared items two to a row, so all of
+    // them show at a glance (2026-09-30 review)
+    .fallout-grid, .party-item-grid
+        display: grid
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+        gap: 6px 10px
+        align-items: start
+
+        > .item.preview
+            margin: 0

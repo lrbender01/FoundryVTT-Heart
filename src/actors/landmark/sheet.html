@@ -15,15 +15,15 @@
 
 {{#*inline "editorPanel"}}
 <div class="character-tab-container editor-panel {{panelClass}}">
-  <div class="container-title">{{title}}
+  <div class="container-title">{{#if glyph}}<span class="title-glyph">{{{heartGlyph "section" glyph}}}</span>{{/if}}{{title}}
     {{#if editable}}
-    <a data-action="edit-editor" title="{{localizeHeart 'landmark' 'edit'}}">
+    <a data-action="edit-editor" aria-label="{{localizeHeart 'landmark' 'edit'}}">
       <span class="fas fa-edit clickable section-button"></span>
     </a>
     {{/if}}
   </div>
   <div class="container-content">
-    {{editor content target=target button=true editable=editable owner=owner}}
+    {{editor content target=target button=true editable=editable owner=owner engine="prosemirror"}}
   </div>
 </div>
 {{/inline}}
@@ -34,7 +34,7 @@
   <!-- HEADER: portrait, identity, place strip -->
   <div class="character-header">
     <div class="header-col portrait">
-      <img class="profile" src="{{displayImg}}" title="{{actor.name}}" data-edit="img" />
+      <img class="profile" src="{{displayImg}}" alt="{{actor.name}}" data-edit="img" />
     </div>
 
     <div class="header-col header-box identity-box">
@@ -53,18 +53,18 @@
         {{#each domainChips as |domain|}}<span>{{{heartGlyph "domain" domain}}}{{domain}}</span>{{/each}}
         {{/if}}
         {{#if editable}}
-        <a class="header-edit" data-action="toggle-edit" title="{{#if editing}}{{localizeHeart 'landmark' 'done'}}{{else}}{{localizeHeart 'landmark' 'edit'}}{{/if}}">
+        <a class="header-edit" data-action="toggle-edit" aria-label="{{#if editing}}{{localizeHeart 'landmark' 'done'}}{{else}}{{localizeHeart 'landmark' 'edit'}}{{/if}}">
           <span class="fas {{#if editing}}fa-check{{else}}fa-edit{{/if}}"></span>
         </a>
         {{/if}}
       </div>
       <label class="header-label">{{localizeHeart "landmark" "stress"}}</label>
       <div class="stress-die">
-        <select class="header-input" name="system.stress" title="{{localizeHeart 'landmark' 'defaultStress'}}">
+        <select class="header-input" name="system.stress" data-tooltip="heart.tip.landmark.stress">
           {{selectOptions die_sizes selected=actor.system.stress}}
         </select>
         <a data-action="roll-die" data-die="{{actor.system.stress}}" data-flavor="{{actor.name}}: {{localizeHeart 'landmark' 'defaultStress'}}"
-          title="{{localizeHeart 'landmark' 'roll-stress'}}"><span class="sheetD10 red"></span></a>
+          aria-label="{{localizeHeart 'landmark' 'roll-stress'}}"><span class="sheetD10 red"></span></a>
       </div>
     </div>
   </div>
@@ -89,8 +89,8 @@
           </div>
 
           <div class="character-tab-container resources-container">
-            <div class="container-title">{{localizeHeart "resource" "label-multiple"}}
-              {{#if actor.isOwner}}<a data-action="add" data-type="resource" data-data='{"active": true}' title="{{localizeHeart 'create-new' 'resource'}}"><span class="addItem">+</span></a>{{/if}}
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "resources"}}}</span>{{localizeHeart "resource" "label-multiple"}}
+              {{#if actor.isOwner}}<a data-action="add" data-type="resource" data-data='{"active": true}' aria-label="{{localizeHeart 'create-new' 'resource'}}"><span class="addItem">+</span></a>{{/if}}
             </div>
             <div class="container-content">
               {{> rowList type="resource" list=actor.proxy.resources showActivate=true showNote=true}}
@@ -100,7 +100,7 @@
           <!-- Gear the book lists at a landmark (rare; hidden when none) -->
           {{#if actor.proxy.equipment.length}}
           <div class="character-tab-container equipment-container">
-            <div class="container-title">{{localizeHeart "equipment" "label-multiple"}}</div>
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "equipment"}}}</span>{{localizeHeart "equipment" "label-multiple"}}</div>
             <div class="container-content">
               {{> rowList type="equipment" list=actor.proxy.equipment showActivate=true showNote=true}}
             </div>
@@ -109,7 +109,7 @@
 
           {{#if inactiveItems.length}}
           <div class="character-tab-container inactive-container">
-            <div class="container-title">{{localizeHeart "landmark" "inactive-items"}}</div>
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "inactive-gear"}}}</span>{{localizeHeart "landmark" "inactive-items"}}</div>
             <div class="container-content">
               <div class="tab-item-list">
                 {{#each inactiveItems as |item|}}
@@ -122,8 +122,8 @@
         </div>
 
         <div class="column">
-          {{> editorPanel panelClass="special-container" title=(localizeHeart "landmark" "specialRule" "label-multiple") content=actor.system.specialRules target="system.specialRules"}}
-          {{> editorPanel panelClass="plots-container" title=(localizeHeart "landmark" "potentialPlot" "label-multiple") content=actor.system.potentialPlots target="system.potentialPlots"}}
+          {{> editorPanel panelClass="special-container" glyph="special" title=(localizeHeart "landmark" "specialRule" "label-multiple") content=actor.system.specialRules target="system.specialRules"}}
+          {{> editorPanel panelClass="plots-container" glyph="plots" title=(localizeHeart "landmark" "potentialPlot" "label-multiple") content=actor.system.potentialPlots target="system.potentialPlots"}}
         </div>
       </div>
     </section>
@@ -131,8 +131,8 @@
     <!-- ===== LORE ===== -->
     <section class="tab" data-tab="lore">
       <div class="panel-lore">
-        {{> editorPanel panelClass="description-container" title=(localizeHeart "landmark" "description") content=actor.system.description target="system.description"}}
-        {{> editorPanel panelClass="gm-notes-container" title=(localizeHeart "landmark" "gm-notes") content=actor.system.notes target="system.notes"}}
+        {{> editorPanel panelClass="description-container" glyph="notes" title=(localizeHeart "landmark" "description") content=actor.system.description target="system.description"}}
+        {{> editorPanel panelClass="gm-notes-container" glyph="notes" title=(localizeHeart "landmark" "gm-notes") content=actor.system.notes target="system.notes"}}
       </div>
     </section>
   </section>

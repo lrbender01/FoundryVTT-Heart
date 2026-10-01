@@ -9,8 +9,8 @@
 
   {{#if (or item.proxy.abilities.length user.isGM)}}
   <div class="character-tab-container upgrades-container">
-    <div class="container-title">{{localizeHeart "item-sheet" "upgrades"}}
-      {{#if user.isGM}}<a class="panel-add" data-action="add-child" data-type="ability" data-data='{"type": "minor", "name": "New Ability"}' title="{{localizeHeart 'ability' 'add-child-ability'}}"><span class="fas fa-plus"></span></a>{{/if}}
+    <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "upgrades"}}}</span>{{localizeHeart "item-sheet" "upgrades"}}
+      {{#if user.isGM}}<a class="panel-add" data-action="add-child" data-type="ability" data-data='{"type": "minor", "name": "New Ability"}' aria-label="{{localizeHeart 'ability' 'add-child-ability'}}"><span class="fas fa-plus"></span></a>{{/if}}
     </div>
     <div class="container-content">
       <div class="tab-item-list">

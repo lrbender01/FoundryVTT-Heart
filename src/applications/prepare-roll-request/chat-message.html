@@ -1,70 +1,52 @@
-<form class="heart roll-request grid-2 auto-first-col place-center">
-    <h1 class="wide title-font ">{{localizeHeart "rolls" "roll-request" "label"}}</h1>
-    <label class="title-font">{{localizeHeart "difficulty" "label-single"}}</label>
-    <div>
-        {{localizeHeart "difficulty" difficulty}}
-        <input type="hidden" name="difficulty" value="{{difficulty}}"/>
-    </div>
+{{!-- Roll request card (2026-09-30 rebuild, ledger style like every Heart
+     card): a hint line with the difficulty, the roll asked for led by its
+     glyph, chip choices where the GM offered more than one skill or domain,
+     Mastery and helper chips, then a "Roll as" pill per character the
+     viewer owns. chat-messages/index.js reads the form (field names:
+     difficulty, skill, domain, mastery, helper). --}}
+<form class="heart roll-request-card roll-request" autocomplete="off">
+    <input type="hidden" name="difficulty" value="{{difficulty}}"/>
+    <div class="ledger">
+        <div class="ledger-what">{{localizeHeart "rolls" "roll-request" "label"}}, <strong class="heart-term">{{localizeHeart "difficulty" difficulty}}</strong></div>
 
-    <label class="title-font">{{localizeHeart "skill" "label-single"}}</label>
-    {{#if (lt skills.length 2)}}
-        {{#if (eq skills.length 1)}}
-            <div>
-                {{localizeHeart "skill" (lookup skills 0)}}
-                <input type="hidden" name="skill" value="{{lookup skills 0}}"/>
-            </div>
-        {{else}}
-            <div>{{localizeHeart "none"}}</div>
-        {{/if}}
-    {{else}}
-    <select name="skill">
-        {{#each skills as |skill|}}
-        <option value="{{skill}}">{{localizeHeart "skill" skill}}</option>
-        {{/each}}
-    </select>
-    {{/if}}
-
-    <label class="title-font">{{localizeHeart "domain" "label-single"}}</label>
-    {{#if (lt domains.length 2)}}
-        {{#if (eq domains.length 1)}}
-        <div>
-            {{localizeHeart "domain" (lookup domains 0)}}
-            <input type="hidden" name="domain" value="{{lookup domains 0}}"/>
+        <div class="ledger-out">
+            {{#if (eq skills.length 1)}}{{{heartGlyph "skill" (lookup skills 0)}}}{{localizeHeart "skill" (lookup skills 0)}}<input type="hidden" name="skill" value="{{lookup skills 0}}"/>{{else if (gt skills.length 1)}}{{localizeHeart "skill" "label-single"}}{{else}}{{localizeHeart "none"}}{{/if}}
+            +
+            {{#if (eq domains.length 1)}}{{{heartGlyph "domain" (lookup domains 0)}}}{{localizeHeart "domain" (lookup domains 0)}}<input type="hidden" name="domain" value="{{lookup domains 0}}"/>{{else if (gt domains.length 1)}}{{localizeHeart "domain" "label-single"}}{{else}}{{localizeHeart "none"}}{{/if}}
         </div>
-        {{else}}
-            <div>{{localizeHeart "none"}}</div>
+
+        {{#if (gt skills.length 1)}}
+        <div class="chip-set request-choice">
+            {{#each skills as |skill|}}
+            <label class="chip-toggle"><input type="radio" name="skill" value="{{skill}}" {{#if @first}}checked{{/if}} /><span>{{{heartGlyph "skill" skill}}}{{localizeHeart "skill" skill}}</span></label>
+            {{/each}}
+        </div>
         {{/if}}
-    {{else}}
-    <select name="domain">
-        {{#each domains as |domain|}}
-        <option value="{{domain}}">{{localizeHeart "domain" domain}}</option>
-        {{/each}}
-    </select>
-    {{/if}}
-
-    <label class="title-font">{{localizeHeart "mastery" "short"}}</label>
-    <input class="invert" type="checkbox" name="mastery"/>
-
-    <label class="title-font">{{localizeHeart "help"}}</label>
-    {{#if validHelpers}}
-    <select name="helper" multiple>
-        {{#each validHelpers as |helper_id|}}
-        {{#with (getActor helper_id) as |actor|}}
-        <option value="{{helper_id}}">{{actor.name}}</option>
-        {{/with}}
-        {{/each}}
-    </select>
-    {{else}}
-    <div>{{localizeHeart "none"}}</div>
-    {{/if}}
-
-    <div class="wide">
-        {{#each characters as |character|}}
-        {{#with (getActor character) as |actor|}}
-        {{#if actor.isOwner}}
-            <button data-action="roll" data-character="{{character}}"> <span class="fas fa-dice"></span> {{localizeHeart "applications" "prepare-roll-request" "roll-as"}} {{actor.name}}</button>
+        {{#if (gt domains.length 1)}}
+        <div class="chip-set request-choice">
+            {{#each domains as |domain|}}
+            <label class="chip-toggle"><input type="radio" name="domain" value="{{domain}}" {{#if @first}}checked{{/if}} /><span>{{{heartGlyph "domain" domain}}}{{localizeHeart "domain" domain}}</span></label>
+            {{/each}}
+        </div>
         {{/if}}
-        {{/with}}
-        {{/each}}
+
+        <div class="chip-set request-choice">
+            <label class="chip-toggle"><input type="checkbox" name="mastery" /><span>{{localizeHeart "mastery" "short"}}</span></label>
+            {{#each validHelpers as |helper_id|}}
+            {{#with (getActor helper_id) as |actor|}}
+            <label class="chip-toggle"><input type="checkbox" name="helper" value="{{helper_id}}" /><span>{{localizeHeart "help"}}: {{actor.name}}</span></label>
+            {{/with}}
+            {{/each}}
+        </div>
+
+        <div class="ledger-acts">
+            {{#each characters as |character|}}
+            {{#with (getActor character) as |actor|}}
+            {{#if actor.isOwner}}
+            <button type="button" data-action="roll" data-character="{{character}}">{{localizeHeart "applications" "prepare-roll-request" "roll-as"}} {{actor.name}}</button>
+            {{/if}}
+            {{/with}}
+            {{/each}}
+        </div>
     </div>
 </form>

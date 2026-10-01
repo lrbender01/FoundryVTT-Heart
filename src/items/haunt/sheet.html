@@ -1,25 +1,25 @@
 {{#> "heart:items/base/sheet.html" type="haunt"}}
   {{#*inline "item-stats"}}
-  <span class="stat"><b>{{localizeHeart "item-sheet" "upgrade"}}</b>
+  <span class="stat"><b data-tooltip="heart.tip.haunt.track">{{localizeHeart "item-sheet" "upgrade"}}</b>
     <span class="haunt-track" data-target="system.upgradeTrack">{{{ordered-checkable system.upgradeTrack 6}}}</span>
-    <a data-action="upgrade" title="{{localizeHeart 'haunt' 'upgrade'}}"><span class="fas fa-level-up-alt"></span></a>
-    <a data-action="downgrade" title="{{localizeHeart 'haunt' 'downgrade'}}"><span class="fas fa-level-down-alt"></span></a>
+    <a data-action="upgrade" data-tooltip="heart.tip.haunt.upgrade"><span class="fas fa-level-up-alt"></span></a>
+    <a data-action="downgrade" data-tooltip="heart.tip.haunt.downgrade"><span class="fas fa-level-down-alt"></span></a>
   </span>
   {{/inline}}
 
   <div class="item-cols">
     <div class="column">
       <div class="character-tab-container services-container" data-item-id="{{item.uuid}}">
-        <div class="container-title">{{localizeHeart "item-sheet" "services"}}
-          {{#if editable}}<a class="panel-add" data-action="add-service" title="{{localizeHeart 'haunt' 'service' 'label-single'}}"><span class="fas fa-plus"></span></a>{{/if}}
+        <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "services"}}}</span>{{localizeHeart "item-sheet" "services"}}
+          {{#if editable}}<a class="panel-add" data-action="add-service" aria-label="{{localizeHeart 'haunt' 'service' 'label-single'}}"><span class="fas fa-plus"></span></a>{{/if}}
         </div>
         <div class="container-content">
           {{#each system.resistances as |service id|}}
           <div class="service-row" data-id="{{id}}">
-            <a data-action="service-roll" title="{{localizeHeart 'item-sheet' 'roll'}}"><span class="sheetD10 red"></span></a>
+            <a data-action="service-roll" data-tooltip="heart.tip.haunt.service"><span class="sheetD10 red"></span></a>
             <select name="system.resistances.{{id}}.resistance">{{selectOptions ../resistances selected=service.resistance}}</select>
             <select name="system.resistances.{{id}}.die_size">{{selectOptions ../die_sizes selected=service.die_size}}</select>
-            {{#if ../user.isGM}}<a class="service-delete" data-action="delete-service" title="{{localizeHeart 'base' 'delete'}}"><span class="fas fa-trash"></span></a>{{/if}}
+            {{#if ../user.isGM}}<a class="service-delete" data-action="delete-service" aria-label="{{localizeHeart 'base' 'delete'}}"><span class="fas fa-trash"></span></a>{{/if}}
           </div>
           {{else}}
           <div class="muted-note">-</div>

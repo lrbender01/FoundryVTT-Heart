@@ -13,9 +13,9 @@
         {{#each index}}
         <li class="directory-item document {{@root.documentCls}} flexrow" data-entry-id="{{this._id}}" data-document-id="{{this._id}}">
             {{#if this.thumb}}
-            <img class="thumbnail" title="{{this.name}}" alt="{{this.name}}" data-src="{{this.thumb}}"/>
+            <img class="thumbnail" alt="{{this.name}}" data-src="{{this.thumb}}"/>
             {{else if this.img}}
-            <img class="thumbnail" title="{{this.name}}" alt="{{this.name}}" data-src="{{this.img}}"/>
+            <img class="thumbnail" alt="{{this.name}}" data-src="{{this.img}}"/>
             {{/if}}
             <h4 class="document-name entry-name"><a>{{localizeHeart this.name}}</a></h4>
         </li>

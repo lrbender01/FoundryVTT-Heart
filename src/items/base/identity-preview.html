@@ -1,0 +1,10 @@
+{{!-- Class / calling / ancestry row (2026-09-30 review): what a link to one
+     shows in chat, journals, and descriptions (HeartTextEditor). The item's
+     icon, name, and type, then the picker's two-sentence pitch from
+     fvtt-heart-content when there is one. Click the edit icon to open it. --}}
+{{#> "heart:items/base/preview.html" showDelete=false}}
+<div class="identity-row">
+    <span class="identity-name"><strong>{{{heartIcon item.img}}}{{localizeHeart item.name}}</strong> <span class="identity-type">{{localizeHeart item.type "label-single"}}</span></span>
+    {{#with (lookup item.flags "fvtt-heart-content") as |flags|}}{{#if flags.pitch}}<p class="identity-pitch">{{flags.pitch}}</p>{{/if}}{{/with}}
+</div>
+{{/ "heart:items/base/preview.html"}}

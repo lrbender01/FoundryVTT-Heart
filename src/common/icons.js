@@ -11,7 +11,9 @@
 // so they follow the text in either colour scheme instead of staying white
 // (invisible on the light scheme's white ground).
 
-const GLYPH_DIRS = { skill: 'skills', domain: 'domains', resistance: 'resistances', severity: 'severity', item: 'items', section: 'sections' };
+import { termTooltipKey } from './terms';
+
+const GLYPH_DIRS ={ skill: 'skills', domain: 'domains', resistance: 'resistances', severity: 'severity', item: 'items', section: 'sections' };
 const GLYPH_IDS = {
     skill: () => game.heart?.skills ?? [],
     domain: () => game.heart?.domains ?? [],
@@ -24,7 +26,10 @@ const GLYPH_IDS = {
     // character sheet section titles (2026-09-30); files under
     // icons/sections/ start as an obvious placeholder until the real glyph is
     // dropped in with the same name
-    section: () => ['resistances', 'party', 'fallout', 'skills', 'domains', 'equipment', 'resources', 'items', 'inactive-gear'],
+    section: () => ['resistances', 'party', 'fallout', 'skills', 'domains', 'equipment', 'resources', 'items', 'inactive-gear', 'notes',
+        // Luke's picks from the glyph candidate sheet (2026-09-30)
+        'descriptors', 'motivation', 'profile', 'special', 'plots', 'services', 'dangers', 'connection',
+        'questions', 'core-traits', 'upgrades', 'effect', 'rule'],
 };
 
 // The fork's generic type images (each sheet type's fallback) and Foundry's
@@ -69,6 +74,18 @@ export function registerIconHelpers() {
     // {{#if (heartHasGlyph kind id)}}: a SafeString is always truthy, so
     // templates that need a fallback test with this instead
     Handlebars.registerHelper('heartHasGlyph', (kind, name) => Boolean(glyphFor(kind, name)));
+    // {{heartTip "skill" "kill"}}: one sentence on what a skill, domain, or
+    // resistance is for, as a tooltip (2026-09-30); empty when there is none.
+    // {{heartTip "term" "Brutal"}}: the rule a game term names, as the
+    // highlighter shows it (common/terms.js), e.g. a tag with no rule text
+    // of its own (2026-09-30, Luke)
+    Handlebars.registerHelper('heartTip', (kind, name) => {
+        if (!kind || !name || typeof name !== 'string') return '';
+        const key = kind === 'term'
+            ? termTooltipKey(game.i18n.localize(name))
+            : `heart.tip.${kind}.${name.trim().toLowerCase()}`;
+        return key && game.i18n.has(key) ? game.i18n.localize(key) : '';
+    });
     Handlebars.registerHelper('heartGlyph', (kind, name, options) =>
         new Handlebars.SafeString(glyphFor(kind, name, typeof options?.hash?.class === 'string' ? options.hash.class : '')));
     Handlebars.registerHelper('heartIcon', (img, options) =>

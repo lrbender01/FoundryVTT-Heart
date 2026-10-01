@@ -5,21 +5,8 @@
     .dice-total
         font-family: util.$font-display
 
-    .dice-tooltip
-        text-align: center
-        display: flex
-        flex-flow: row wrap
-        align-items: flex-end
-
-        .tooltip-part
-            flex: 33% 1 1
-            text-align: center
-
-            .dice-rolls
-                text-align: center
-                display: flex
-                flex-flow: row wrap
-                justify-content: center
+    // (Foundry's dice tooltip is no longer on Heart cards: the ledger's own
+    // breakdown replaced it, chat-messages/ledger.sass, 2026-09-30)
 
     & + .heart.heart-roll
         margin-top: 0.5em

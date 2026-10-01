@@ -1,0 +1,143 @@
+@use '../util'
+
+// The tamed editor in Heart windows (2026-09-30, Luke; common/editor.js):
+// a dark writing area showing plain text, and two worded actions on the
+// right (Cancel, Save); no formatting buttons, no rules
+:where(.heart-window, .heart) .editor.prosemirror
+    display: flex
+    flex-direction: column
+    gap: 6px
+    height: auto
+    // Foundry caps .editor at its parent's height and scrolls it
+    max-height: none
+    min-height: 8em
+    overflow: visible
+
+    menu.editor-menu
+        display: flex
+        flex-wrap: wrap
+        align-items: center
+        gap: 4px
+        margin: 0
+        justify-content: flex-end
+        padding: 0
+        list-style: none
+        background: transparent
+        border: 0
+        border-radius: 0
+
+        // (the old .heart.sheet .text rule would stretch the text-scope
+        // buttons, which Foundry gives the class "text")
+        li, li.text
+            display: flex
+            flex: 0 0 auto
+            flex-flow: row
+            margin: 0
+            list-style: none
+
+            &.heart-editor-cancel
+                margin-left: auto
+
+            &.concurrent-users:empty
+                display: none
+
+        button
+            @include util.text-chip
+            flex: 0 0 auto
+            width: auto
+            min-width: 30px
+            height: 26px
+            margin: 0
+            padding: 0 8px
+            line-height: 1
+            font-size: 13px
+            border: 1px solid util.$line
+            border-radius: 5px
+            background: util.$bg
+            color: util.$text
+            box-shadow: none
+
+            &:hover
+                border-color: util.$red-mid
+                color: util.$red-bright
+
+            &.active
+                background: util.$red-deep
+                border-color: util.$red-mid
+                color: util.$on-red
+
+        .heart-editor-save button
+            background: util.$red-deep
+            border-color: util.$red-mid
+            color: util.$on-red
+
+            &:hover
+                background: util.$red-mid
+                color: util.$on-red
+
+        .heart-editor-label
+            font-family: util.$font-label
+            font-size: 14px
+            letter-spacing: 0.02em
+
+    .editor-container
+        flex: 1 1 auto
+        min-height: 6em
+        max-height: 60vh
+        overflow-y: auto
+        padding: 8px 10px
+        border: 1px solid util.$line
+        border-radius: 6px
+        background: util.$sunken
+
+        &:focus-within
+            border-color: util.$red-mid
+
+    // grows with its text; the container above scrolls. Foundry pins the
+    // content absolutely inside its container with its own scrollbar
+    // (foundry2.css), which kept the container from growing
+    .ProseMirror, .editor-content
+        position: static
+        inset: auto
+        margin: 0
+        padding: 0
+        height: auto
+        overflow: visible
+        min-height: 5em
+        outline: none
+        background: transparent
+        color: util.$text
+        font-family: util.$font-body
+        font-size: util.$fs-body
+        line-height: 1.4
+
+        p
+            margin: 0 0 0.6em
+
+            &:last-child
+                margin-bottom: 0
+
+    // plain text while editing (Luke): italics, bold, and links show as
+    // ordinary text in the writing area; they are kept, and the sheet styles
+    // the saved text as usual (answers italic) once the editor closes
+    .ProseMirror
+        font-style: normal
+        font-weight: normal
+
+        em, i, strong, b, a, u, s, code
+            font-style: inherit
+            font-weight: inherit
+            text-decoration: none
+            font-family: inherit
+            color: inherit
+
+        ul, ol
+            margin: 0 0 0.6em
+            padding-left: 1.3em
+
+        li
+            border: 0
+            padding: 0
+
+        hr
+            display: none

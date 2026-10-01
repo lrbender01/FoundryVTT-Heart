@@ -1,11 +1,18 @@
+{{!-- Generic item (trinkets, keepsakes, loot). The quantity sits in its own
+     box to the right of the description with - / + (2026-09-30 review: in
+     the header it collided with long names, which now take the whole
+     header width). --}}
 {{#> "heart:items/base/sheet.html" type="item"}}
-  {{#*inline "item-stats"}}
-  <span class="stat"><b>{{localizeHeart "item-sheet" "qty"}}</b>
-    {{#if editable}}<a data-action="qty-step" data-step="-1" title="-1">&minus;</a>{{/if}}
-    <input type="number" name="system.quantity" value="{{system.quantity}}" min="0" step="1" {{#unless editable}}disabled{{/unless}} />
-    {{#if editable}}<a data-action="qty-step" data-step="1" title="+1">+</a>{{/if}}
-  </span>
-  {{/inline}}
+  <div class="item-with-qty">
+    {{> "heart:items/base/description.html"}}
 
-  {{> "heart:items/base/description.html"}}
+    <div class="character-tab-container qty-container">
+      <div class="container-title">{{localizeHeart "item-sheet" "qty"}}</div>
+      <div class="container-content qty-stepper">
+        {{#if editable}}<a class="qty-step" data-action="qty-step" data-step="-1" aria-label="-1"><span class="fas fa-minus"></span></a>{{/if}}
+        <input type="number" name="system.quantity" value="{{system.quantity}}" min="0" step="1" {{#unless editable}}disabled{{/unless}} />
+        {{#if editable}}<a class="qty-step" data-action="qty-step" data-step="1" aria-label="+1"><span class="fas fa-plus"></span></a>{{/if}}
+      </div>
+    </div>
+  </div>
 {{/ "heart:items/base/sheet.html"}}

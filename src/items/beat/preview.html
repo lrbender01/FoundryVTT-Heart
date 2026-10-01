@@ -3,10 +3,21 @@
      actions.html. hideLevel drops the Minor / Major label where the section
      already says it (the calling's Beats tab). A completed beat is greyed out. No checkbox: completion is
      a button, and only an active beat can be completed. --}}
-{{#> "heart:items/base/preview.html" showActivate=false showComplete=false showDelete=showDelete hideView=hideView}}
+{{#> "heart:items/base/preview.html" showActivate=false showComplete=false showDelete=showDelete hideView=hideView noActionbar=true}}
 <div class="beat-row {{#if item.system.complete}}done{{/if}} {{#if item.system.active}}is-active{{/if}}">
     {{#unless hideLevel}}<span class="beat-level">{{localizeHeart "beat" "level" item.system.type}}</span>{{/unless}}
     <span class="beat-text">{{{heartTerms (localizeHeart item.system.description)}}}</span>
-    {{#if showBeatActions}}{{> "heart:items/beat/actions.html" item=item}}{{/if}}
+    {{!-- edit / delete grouped with Pursue / Finish, top-aligned with them,
+         so they always sit just to the left and never overlap (2026-09-30
+         review) --}}
+    <span class="beat-controls">
+        {{#if (or (not hideView) (and item.isOwner showDelete))}}
+        <span class="beat-tools">
+            {{#unless hideView}}<a data-action="view" aria-label="{{localizeHeart 'base' 'view'}}"><span class="fas fa-edit"></span></a>{{/unless}}
+            {{#if (and item.isOwner showDelete)}}<a data-action="delete" aria-label="{{localizeHeart 'base' 'delete'}}"><span class="fas fa-trash"></span></a>{{/if}}
+        </span>
+        {{/if}}
+        {{#if showBeatActions}}{{> "heart:items/beat/actions.html" item=item}}{{/if}}
+    </span>
 </div>
 {{/ "heart:items/base/preview.html"}}

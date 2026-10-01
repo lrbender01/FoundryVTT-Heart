@@ -9,24 +9,30 @@
              the class sheet already groups abilities by degree --}}
         {{#if playable}}{{#if (eq item.system.type "core")}}{{#if (eq item.parentItem.type "calling")}}{{localizeHeart "ability" "core-calling"}}{{else if (eq item.parentItem.type "class")}}{{localizeHeart "ability" "core-class"}}{{else}}{{localizeHeart "ability" "type" "core"}}{{/if}}{{else}}{{localizeHeart "ability" "type" item.system.type}}{{/if}}:{{/if}}
         {{localizeHeart item.name}}
+        {{!-- learned more than once ("You can take this advance more than
+             once", 2026-09-30, Luke): x2, x3 after the title --}}
+        {{#if (and item.system.active (gt item.system.times 1))}}<span class="ability-times">&times;{{item.system.times}}</span>{{/if}}
         {{!-- On a character's class: Learn / Learned (styled like Finish /
              Finished). Learned when an advance allows it; it stays learned (the
              GM can un-learn it). A major ability's options can't be learned
-             before the major ability itself (parentLocked). --}}
+             before the major ability itself (parentLocked). A repeatable
+             ability, once learned, also offers "+" to learn it again (the GM's
+             click on Learned takes one back). --}}
         {{#if unlockable}}{{#unless (eq item.system.type "core")}}
         {{#if item.system.active}}
-        <span class="lock-chip unlocked" {{#if @root.user.isGM}}data-action="ability-lock" title="{{localizeHeart 'ability' 'lock-tip'}}"{{/if}}>{{localizeHeart "ability" "unlocked"}}</span>
+        <span class="lock-chip unlocked" {{#if @root.user.isGM}}data-action="ability-lock" data-tooltip="{{localizeHeart 'ability' 'lock-tip'}}"{{/if}}>{{localizeHeart "ability" "unlocked"}}</span>
+        {{#if (and item.isOwner (heartRepeatable item))}}<a class="lock-chip again" data-action="ability-again" data-tooltip="{{localizeHeart 'ability' 'again-tip'}}"><span class="fas fa-plus"></span></a>{{/if}}
         {{else if (and item.isOwner (not parentLocked))}}
-        <a class="lock-chip" data-action="ability-unlock" title="{{localizeHeart 'ability' 'unlock-tip'}}">{{localizeHeart "ability" "unlock"}}</a>
+        <a class="lock-chip" data-action="ability-unlock" data-tooltip="{{localizeHeart 'ability' 'unlock-tip'}}">{{localizeHeart "ability" "unlock"}}</a>
         {{else if item.isOwner}}
-        <span class="lock-chip disabled" title="{{localizeHeart 'ability' 'parent-first'}}">{{localizeHeart "ability" "unlock"}}</span>
+        <span class="lock-chip disabled" data-tooltip="{{localizeHeart 'ability' 'parent-first'}}">{{localizeHeart "ability" "unlock"}}</span>
         {{else}}
         <span class="lock-chip">{{localizeHeart "ability" "locked"}}</span>
         {{/if}}
         {{/unless}}{{/if}}
     </h4>
     <div>
-        {{{heartTerms (localizeHeart item.system.description)}}}
+        {{{heartTerms (localizeHeart item.system.description) refs=true}}}
     </div>
     {{!-- a major ability's options, in columns beneath it --}}
     <div class="nested-abilities">

@@ -9,5 +9,14 @@
   </span>
   {{/inline}}
 
-  {{> "heart:items/base/description.html" panelTitle=(localizeHeart "item-sheet" "effect")}}
+  {{> "heart:items/base/description.html" panelTitle=(localizeHeart "item-sheet" "effect") panelGlyph="effect"}}
+
+  {{!-- Where the fallout comes from (2026-09-30): its own field, shown here
+       only; character and party sheet rows leave it out --}}
+  {{#if (or editable system.source)}}
+  <div class="fallout-source">
+    <label>{{localizeHeart "item-sheet" "source"}}</label>
+    {{#if editable}}<input type="text" name="system.source" value="{{system.source}}" placeholder="{{localizeHeart 'item-sheet' 'source-placeholder'}}" />{{else}}<span>{{system.source}}</span>{{/if}}
+  </div>
+  {{/if}}
 {{/ "heart:items/base/sheet.html"}}

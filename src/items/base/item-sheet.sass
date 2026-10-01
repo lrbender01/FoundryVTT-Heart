@@ -331,7 +331,9 @@ form.heart.item-sheet
         margin: 0
         padding: 0
 
-        li
+        // the questions only (> li): bullet points inside an answer got
+        // the rule too (2026-09-30 review)
+        > li
             padding: 0.45em 0
 
             & + li
@@ -407,3 +409,63 @@ form.heart.item-sheet
 
         .trinket-name
             font-weight: bold
+
+    // fallout sheet: where it comes from, under the effect (2026-09-30)
+    .fallout-source
+        display: flex
+        align-items: center
+        gap: 8px
+        font-size: util.$fs-secondary
+        color: util.$muted
+
+        label
+            @include util.text-label
+            flex: 0 0 auto
+
+        input
+            flex: 1 1 auto
+            min-width: 0
+
+    // generic item (2026-09-30 review): no header chips, so the name takes
+    // the header's width; the quantity sits beside the description
+    &.item .item-ident
+        flex: 1 1 auto
+        max-width: 100%
+
+    .item-with-qty
+        display: grid
+        grid-template-columns: minmax(0, 1fr) auto
+        gap: 12px
+        align-items: start
+
+        > .character-tab-container
+            margin: 0
+
+    .qty-stepper
+        display: flex
+        align-items: center
+        justify-content: center
+        gap: 8px
+        min-width: 7.5em
+
+        input[type="number"]
+            width: 3.2em
+            height: 30px
+            text-align: center
+            font-size: util.$fs-body
+            font-weight: bold
+
+        .qty-step
+            display: inline-grid
+            place-items: center
+            width: 28px
+            height: 28px
+            border: 1px solid util.$line
+            border-radius: 5px
+            background: util.$sunken
+            color: util.$text
+            font-size: 12px
+
+            &:hover
+                border-color: util.$red-mid
+                color: util.$red-bright

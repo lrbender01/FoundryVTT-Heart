@@ -2,6 +2,8 @@
 // sheet and every character sheet's Resistances section. Read-only: marks
 // and relief go through the party API (party.js), never the sheet.
 
+import { orderByFlag } from '../character/reorder';
+
 const PROTECTION_SHIELDS = 5;
 const ROW = 10;
 
@@ -57,9 +59,20 @@ export function memberView(actor, party) {
     };
 }
 
-// The party's members as characters (ids that no longer point at one drop out)
+// A member's pursued beats for the party sheet's Beats section (2026-09-30,
+// Luke): read-only, in the order the member keeps them on their own sheet,
+// with the full text
+export function memberBeats(actor) {
+    const beats = orderByFlag(actor, actor.proxy?.beats ?? [], 'beatOrder');
+    return beats.map(b => ({ type: b.system?.type ?? '', text: b.system?.description ?? '' }));
+}
+
+// The party's members as characters (ids that no longer point at one drop
+// out), always in alphabetical order wherever they are shown (2026-09-30
+// review: no manual ordering)
 export function partyMembers(party) {
     return (party?.system?.members ?? [])
         .map(id => game.actors.get(id))
-        .filter(a => a?.type === 'character');
+        .filter(a => a?.type === 'character')
+        .sort((a, b) => a.name.localeCompare(b.name, game.i18n.lang));
 }

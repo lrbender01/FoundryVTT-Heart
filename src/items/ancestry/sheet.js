@@ -6,6 +6,7 @@ import sheetHTML from './sheet.html';
 import templateJSON from './template.json';
 import HeartItemSheet from '../base/sheet';
 import { trinketItemOf } from '../trinkets';
+import { activateQuestionListeners } from './questions';
 
 import './sheet.sass';
 
@@ -48,19 +49,8 @@ export default class extends HeartItemSheet {
     activateListeners(html) {
         super.activateListeners(html);
 
-        html.find('[data-action=add-question]').click(ev => {
-            const id = foundry.utils.randomID();
-            this.item.update({[`system.questions.${id}`]: {
-                question: '',
-                answer: ''
-            }});
-        });
-
-        html.find('[data-action=delete-question]').click(ev => {
-            const target = $(ev.currentTarget);
-            const id = target.closest('[data-id]').data('id');
-            this.item.update({[`system.questions.-=${id}`]: null});
-        });
+        // delete and add questions (2026-09-30, Luke): items/ancestry/questions.js
+        activateQuestionListeners(html);
     }
 }
 

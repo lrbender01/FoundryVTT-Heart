@@ -13,7 +13,7 @@
          ones are learned at once, the rest show Learn --}}
     {{#if (or user.isGM (and editable (not item.isOwned)))}}
     <a class="panel-add" data-action="add-child" data-type="ability" data-data='{"type": "{{type}}"{{#if (eq type "core")}}, "active": true{{/if}} }'
-      title="{{localizeHeart 'class' (join '' type '-ability') 'add'}}"><span class="fas fa-plus"></span></a>
+      aria-label="{{localizeHeart 'class' (join '' type '-ability') 'add'}}"><span class="fas fa-plus"></span></a>
     {{/if}}
   </div>
   <div class="container-content">
@@ -40,12 +40,12 @@
       <div class="column">
         <!-- Core skill and domain (2026-09-30: moved here from the header) -->
         <div class="character-tab-container core-container">
-          <div class="container-title">{{localizeHeart "item-sheet" "core-traits"}}</div>
+          <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "core-traits"}}}</span>{{localizeHeart "item-sheet" "core-traits"}}</div>
           <div class="container-content core-traits">
-            <label class="core-trait"><span class="core-glyph">{{{heartGlyph "domain" system.core_domain}}}</span><span class="core-label">{{localizeHeart "item-sheet" "domain"}}</span>
+            <label class="core-trait" data-tooltip="{{heartTip 'domain' system.core_domain}}"><span class="core-glyph">{{{heartGlyph "domain" system.core_domain}}}</span><span class="core-label">{{localizeHeart "item-sheet" "domain"}}</span>
               {{#if (and editable (not item.isOwned))}}<select name="system.core_domain">{{selectOptions domains selected=system.core_domain}}</select>{{else}}<span class="core-value">{{localizeHeart "domain" system.core_domain}}</span>{{/if}}
             </label>
-            <label class="core-trait"><span class="core-glyph">{{{heartGlyph "skill" system.core_skill}}}</span><span class="core-label">{{localizeHeart "item-sheet" "skill"}}</span>
+            <label class="core-trait" data-tooltip="{{heartTip 'skill' system.core_skill}}"><span class="core-glyph">{{{heartGlyph "skill" system.core_skill}}}</span><span class="core-label">{{localizeHeart "item-sheet" "skill"}}</span>
               {{#if (and editable (not item.isOwned))}}<select name="system.core_skill">{{selectOptions skills selected=system.core_skill}}</select>{{else}}<span class="core-value">{{localizeHeart "skill" system.core_skill}}</span>{{/if}}
             </label>
           </div>
@@ -53,7 +53,7 @@
 
         <div class="character-tab-container resource-container">
           <div class="container-title">{{localizeHeart "item-sheet" "resource"}}
-            {{#if (and user.isGM (not item.isOwned))}}<a class="panel-add" data-action="add-child" data-type="resource" data-data='{"name": "New Resource", "domain": "cursed", "active": true}' title="{{localizeHeart 'class' 'resource' 'add'}}"><span class="fas fa-plus"></span></a>{{/if}}
+            {{#if (and user.isGM (not item.isOwned))}}<a class="panel-add" data-action="add-child" data-type="resource" data-data='{"name": "New Resource", "domain": "cursed", "active": true}' aria-label="{{localizeHeart 'class' 'resource' 'add'}}"><span class="fas fa-plus"></span></a>{{/if}}
           </div>
           <div class="container-content">
             <div class="tab-item-list">
@@ -67,7 +67,7 @@
         <div class="character-tab-container equipment-container">
           <div class="container-title">{{localizeHeart "item-sheet" "equipment"}}
             {{#if needsEquipment}}<span class="pick-needed-badge">{{localizeHeart "class" "equipment" "unpicked"}}</span>{{/if}}
-            {{#if (and user.isGM (not item.isOwned))}}<a class="panel-add" data-action="add-equipment-group" title="{{localizeHeart 'class' 'equipment' 'add-group'}}"><span class="fas fa-plus"></span></a>{{/if}}
+            {{#if (and user.isGM (not item.isOwned))}}<a class="panel-add" data-action="add-equipment-group" aria-label="{{localizeHeart 'class' 'equipment' 'add-group'}}"><span class="fas fa-plus"></span></a>{{/if}}
           </div>
           <div class="container-content">
             {{#if youGet}}
@@ -94,10 +94,10 @@
                 {{#if (or @root.item.isEmbedded @root.item.isChild)}}
                 {{#if choice.locked}}
                 {{!-- picked: final for players (2026-09-30 review) --}}
-                <span class="option-pick locked" title="{{localizeHeart 'class' 'equipment' 'locked'}}"><span class="pick-mark {{#if option.active}}on{{/if}}"></span></span>
+                <span class="option-pick locked" data-tooltip="{{localizeHeart 'class' 'equipment' 'locked'}}"><span class="pick-mark {{#if option.active}}on{{/if}}"></span></span>
                 {{else}}
                 <a class="option-pick" data-action="{{#if option.active}}deactivate-group{{else}}activate-group{{/if}}"
-                   title="{{#if option.active}}{{localizeHeart 'base' 'deactivate'}}{{else}}{{localizeHeart 'base' 'activate'}}{{/if}}"><span class="pick-mark {{#if option.active}}on{{/if}}"></span></a>
+                   aria-label="{{#if option.active}}{{localizeHeart 'base' 'deactivate'}}{{else}}{{localizeHeart 'base' 'activate'}}{{/if}}"><span class="pick-mark {{#if option.active}}on{{/if}}"></span></a>
                 {{/if}}
                 {{/if}}
                 <div class="option-items">
@@ -107,8 +107,8 @@
                 </div>
                 {{#if (and @root.user.isGM (not @root.item.isOwned))}}
                 <div class="group-actions">
-                  <a data-action="add-child" data-type="equipment" data-data='{"name": "New Equipment", "group": "{{option.id}}"}' title="{{localizeHeart 'class' 'equipment' 'add'}}"><span class="fas fa-plus"></span></a>
-                  <a data-action="delete-equipment-group" title="{{localizeHeart 'class' 'equipment' 'delete-group'}}"><span class="fas fa-trash"></span></a>
+                  <a data-action="add-child" data-type="equipment" data-data='{"name": "New Equipment", "group": "{{option.id}}"}' aria-label="{{localizeHeart 'class' 'equipment' 'add'}}"><span class="fas fa-plus"></span></a>
+                  <a data-action="delete-equipment-group" aria-label="{{localizeHeart 'class' 'equipment' 'delete-group'}}"><span class="fas fa-trash"></span></a>
                 </div>
                 {{/if}}
               </div>

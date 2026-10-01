@@ -24,20 +24,25 @@
     font-family: 'Mosherif'
     src: url(fonts/mosherif/Mosherif.ttf)
 
-.title-font
+// Every rule in this file that names a generic class is scoped (2026-09-30,
+// Luke): util.$in-heart / $in-heart-or-chat keep it inside Heart's windows,
+// forms, previews, and chat, at its old specificity.
+
+#{util.$in-heart-or-chat} .title-font
     font-family: util.$font-display
 
-// No lines under headings anywhere while Heart is loaded (decided
-// 2026-09-29): Foundry core underlines h1-h3 (sheets, journals, dialogs) and
-// Heart's own dialogs ruled their section h3s. !important is deliberate - it
-// has to beat core's higher-specificity journal/application selectors too.
-:is(h1, h2, h3, h4, h5, h6)
+// No lines under headings (decided 2026-09-29) in Heart's and Mythic's
+// windows and in chat (2026-09-30: no longer anywhere while Heart is
+// loaded): Foundry core underlines h1-h3 and Heart's own dialogs ruled their
+// section h3s. !important is deliberate - it has to beat core's
+// higher-specificity application selectors too.
+:where(.window-app#{util.$themed-window}, .chat-message) :is(h1, h2, h3, h4, h5, h6)
     border-bottom: none !important
 
-input.hidden
+#{util.$in-heart-or-chat} input.hidden
     display: none !important
 
-input.toggle-display
+#{util.$in-heart-or-chat} input.toggle-display
     & ~ *
         max-height: 0
         overflow: hidden
@@ -47,7 +52,7 @@ input.toggle-display
         max-height: 20em
         transition: max-height 0.2s ease-in
 
-.toggle-button
+#{util.$in-heart-or-chat} .toggle-button
     @include util.text-section
     color: util.$text
     text-align: center
@@ -162,9 +167,10 @@ input.toggle-display
             cursor: default
 
     .prov-row
+        --prov-gap: 0.2rem
         display: flex
         align-items: center
-        gap: 0.2rem
+        gap: var(--prov-gap)
 
         .ordered-checkable-box
             display: block
@@ -177,14 +183,15 @@ input.toggle-display
     .ordered-checkable-box.critical:not(.checked)::after
         border-color: util.$red-mid
 
+    // the Critical line: 1px, centred in the gap between boxes 12 and 13
+    // (2026-09-30 review)
     .ordered-checkable-box.critical-start::before
         content: ''
         position: absolute
-        left: -3px
+        left: calc(var(--prov-gap, 0.2rem) / -2 - 0.5px)
         top: -3px
         bottom: -3px
-        width: 2px
-        border-radius: 1px
+        width: 1px
         background: util.$red-bright
 
     input[type=checkbox]:nth-of-type(5)
@@ -201,13 +208,15 @@ input.toggle-display
                 background-color: util.$mark-on
                 border-color: util.$mark-on
 
-.window-app .window-content
+// Heart windows only (2026-09-30): core and module windows keep their padding
+.window-app:where(.heart-window) .window-content
     padding: 0
 
     & > *
         padding: 8px
 
-.grid-2
+// (chat too: the GM roll request card is a grid-2 form)
+#{util.$in-heart-or-chat} .grid-2
     display: grid
     grid-template-columns: 1fr 1fr
     place-items: stretch
@@ -227,7 +236,7 @@ input.toggle-display
     &.place-top
         align-items: start
 
-.version-tabs
+#{util.$in-heart} .version-tabs
     flex-wrap: wrap
     gap: 5px 10px
     justify-content: flex-start
@@ -257,11 +266,12 @@ input.toggle-display
         -webkit-mask: var(--glyph) center / contain no-repeat
         mask: var(--glyph) center / contain no-repeat
 
-// The same halo on glyph files shown as plain images anywhere in Foundry
-// (sidebar and compendium lists, portraits, chat): these are always the
+// The same halo on glyph files shown as plain images: these are always the
 // white files, so the halo is always dark. Covers the system's icons and
-// fvtt-heart-content's (both live under assets/icons/).
-img[src*="/assets/icons/"]
+// fvtt-heart-content's. Scoped 2026-09-30 (Luke) to Heart's windows, chat,
+// and Heart's compendium windows (Foundry ids them "compendium-<pack id>");
+// the sidebar and other compendiums keep Foundry's look.
+:where(.heart-window, .heart, .chat-message, [id^="compendium-heart."], [id^="compendium-fvtt-heart-content."]) img:is([src*="systems/heart/assets/icons/"], [src*="modules/fvtt-heart-content/assets/icons/"])
     filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.9))
 
 // an icon and its word never split across lines
@@ -280,19 +290,30 @@ img[src*="/assets/icons/"]
 .container-title .title-glyph
     display: inline-flex
     align-self: center
+    // centred on the capitals, not the line box: measured 1 to 1.5px low in
+    // Foundry (2026-09-30 review)
+    position: relative
+    top: -1px
     font-size: 18px
     line-height: 1
 
     .heart-glyph
         margin-right: 0
 
-// Fallout rows: severity glyph, resistance glyph, name (tooltips name them)
-.fallout-title .fallout-glyph
-    display: inline-flex
-    vertical-align: -0.1em
+// Fallout rows: severity glyph, resistance glyph, name (tooltips name them),
+// all centred on one line (2026-09-30 review: the glyphs sat above the text)
+.fallout-title
+    display: flex
+    align-items: center
+    gap: 0.3em
 
-    .heart-glyph
-        margin-right: 0.25em
+    .fallout-glyph
+        display: inline-flex
+        flex: 0 0 auto
+
+        .heart-glyph
+            margin: 0
+            vertical-align: 0
 
 .fallout-title .fallout-extra
     font-weight: normal

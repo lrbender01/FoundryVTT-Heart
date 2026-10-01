@@ -1,30 +1,3 @@
-{{#*inline "itemListSection"}}
-<div class="section {{localizeHeart type 'label-multiple'}}">
-  <h2>
-    {{#if overrideTitle}}
-    {{overrideTitle}}
-    {{else}}
-    {{localizeHeart type "label-multiple"}}
-    {{/if}}
-    {{#if actor.isOwner}}
-    <div class="right">
-      <a data-action="add" data-type="{{type}}" data-data='{"active": true}'><span class="fas fa-plus"></span></a>
-    </div>
-    {{/if}}
-  </h2>
-  <div class="item-list">
-    {{#each list as |item|}}
-    {{> (join "/" "heart:items" type "preview.html") item=item dataPath="???" hideInactive=../hideInactive
-    showActivate=../showActivate playable=../playable showDelete=(or (not item.isChild) user.isGM )}}
-    {{/each}}
-  </div>
-  {{#if (and showTextboxesBelowItems description_path)}}
-  {{editor (lookup actor.system description_path) target=(join "." "system" description_path) button=true
-  editable=editable owner=owner}}
-  {{/if}}
-</div>
-{{/inline}}
-
 {{#*inline "characterTabItemList"}}
 <div class="tab-item-list">
   {{#each list as |item|}}
@@ -38,8 +11,8 @@
 <!-- inactiveItems is built in sheet.js: switched-off items owned by the
      character PLUS switched-off class equipment/resources (2026-09-29).
      Class children can be re-activated here but not deleted. -->
-<div class="section center wide inactive-items">
-  {{#each inactiveItems as |item|}}
+<div class="section center wide inactive-items tab-item-list">
+  {{#each orderedInactive as |item|}}
   {{> (join "/" "heart:items" item.type "preview.html") item=item dataPath="???" showActivate=../user.isOwner
   showDelete=(and ../user.isOwner (not item.isChild))}}
   {{/each}}
@@ -59,7 +32,7 @@
     <div class="character-header">
       <!-- Column 1: Character Portrait -->
       <div class="header-col portrait">
-        <img class="profile" src="{{displayImg}}" title="{{actor.name}}" data-edit="img" />
+        <img class="profile" src="{{displayImg}}" alt="{{actor.name}}" data-edit="img" />
       </div>
 
       <!-- Column 2: Identity (Ancestry, Name, Pronouns) -->
@@ -73,14 +46,14 @@
         <label class="ancestry-label">{{localizeHeart "character" "ancestry"}}</label>
         {{#if ancestryItem}}
         <div data-item-id="{{ancestryItem.uuid}}" class="ancestry-content flexrow item non-draggable">
-          {{#if warnings.ancestry}}<a class="slot-flag heart-warn" data-action="view" title="{{warnings.ancestry}}">!</a>{{/if}}
+          {{#if warnings.ancestry}}<a class="slot-flag heart-warn" data-action="view" data-tooltip="{{warnings.ancestry}}">!</a>{{/if}}
           <div class="name">{{{heartIcon ancestryItem.img}}}{{localizeHeart ancestryItem.name}}</div>
           <div class="right">
-            <a data-action="view" title="{{localizeHeart 'base' 'view'}}">
+            <a data-action="view" aria-label="{{localizeHeart 'base' 'view'}}">
               <span class="fas fa-eye"></span>
             </a>
             {{#if ancestryItem.isOwner}}
-            <a data-action="delete" title="{{localizeHeart 'base' 'delete'}}">
+            <a data-action="delete" aria-label="{{localizeHeart 'base' 'delete'}}">
               <span class="fas fa-trash"></span>
             </a>
             {{/if}}
@@ -88,8 +61,8 @@
         </div>
         {{else}}
         {{#if actor.isOwner}}
-        <div class="ancestry-content flexrow item non-draggable">
-          {{#if warnings.ancestry}}<a class="slot-flag heart-warn" data-action="choose-option" data-item-type="ancestry" title="{{warnings.ancestry}}">!</a>{{/if}}
+        <div class="ancestry-content flexrow item non-draggable slot-empty" data-action="choose-option" data-item-type="ancestry">
+          {{#if warnings.ancestry}}<a class="slot-flag heart-warn" data-action="choose-option" data-item-type="ancestry" data-tooltip="{{warnings.ancestry}}">!</a>{{/if}}
           <div class="name {{#unless actor.system.ancestry}}placeholder{{/unless}}">
             {{#if actor.system.ancestry}}{{actor.system.ancestry}}{{else}}{{localizeHeart "character" "ancestry-prompt"}}{{/if}}
           </div>
@@ -110,13 +83,13 @@
         {{#if classItem}}
         <div data-item-id="{{classItem.uuid}}" class="class-content flexrow item non-draggable">
           <div class="name">{{{heartIcon classItem.img}}}{{localizeHeart classItem.name}}</div>
-          {{#if warnings.class}}<a class="slot-flag heart-warn" data-action="open-class-overview" title="{{warnings.class}}">!</a>{{/if}}
+          {{#if warnings.class}}<a class="slot-flag heart-warn" data-action="open-class-overview" data-tooltip="{{warnings.class}}">!</a>{{/if}}
           <div class="right">
-            <a data-action="view" title="{{localizeHeart 'base' 'view'}}">
+            <a data-action="view" aria-label="{{localizeHeart 'base' 'view'}}">
               <span class="fas fa-eye"></span>
             </a>
             {{#if classItem.isOwner}}
-            <a data-action="delete" title="{{localizeHeart 'base' 'delete'}}">
+            <a data-action="delete" aria-label="{{localizeHeart 'base' 'delete'}}">
               <span class="fas fa-trash"></span>
             </a>
             {{/if}}
@@ -124,8 +97,8 @@
         </div>
         {{else}}
         {{#if actor.isOwner}}
-        <div class="class-content flexrow item non-draggable">
-          {{#if warnings.class}}<a class="slot-flag heart-warn" data-action="choose-option" data-item-type="class" title="{{warnings.class}}">!</a>{{/if}}
+        <div class="class-content flexrow item non-draggable slot-empty" data-action="choose-option" data-item-type="class">
+          {{#if warnings.class}}<a class="slot-flag heart-warn" data-action="choose-option" data-item-type="class" data-tooltip="{{warnings.class}}">!</a>{{/if}}
           <div class="name placeholder">{{localizeHeart "character" "class-prompt"}}</div>
           <div class="right">
             <a data-action="choose-option" data-item-type="class">
@@ -140,14 +113,14 @@
         <label class="calling-label">{{localizeHeart "character" "calling"}}</label>
         {{#if callingItem}}
         <div data-item-id="{{callingItem.uuid}}" class="calling-content flexrow item non-draggable">
-          {{#if warnings.calling}}<a class="slot-flag heart-warn" data-action="view" title="{{warnings.calling}}">!</a>{{/if}}
+          {{#if warnings.calling}}<a class="slot-flag heart-warn" data-action="view" data-tooltip="{{warnings.calling}}">!</a>{{/if}}
           <div class="name">{{{heartIcon callingItem.img}}}{{localizeHeart callingItem.name}}</div>
           <div class="right">
-            <a data-action="view" title="{{localizeHeart 'base' 'view'}}">
+            <a data-action="view" aria-label="{{localizeHeart 'base' 'view'}}">
               <span class="fas fa-eye"></span>
             </a>
             {{#if callingItem.isOwner}}
-            <a data-action="delete" title="{{localizeHeart 'base' 'delete'}}">
+            <a data-action="delete" aria-label="{{localizeHeart 'base' 'delete'}}">
               <span class="fas fa-trash"></span>
             </a>
             {{/if}}
@@ -155,8 +128,8 @@
         </div>
         {{else}}
         {{#if actor.isOwner}}
-        <div class="calling-content flexrow item non-draggable">
-          {{#if warnings.calling}}<a class="slot-flag heart-warn" data-action="choose-option" data-item-type="calling" title="{{warnings.calling}}">!</a>{{/if}}
+        <div class="calling-content flexrow item non-draggable slot-empty" data-action="choose-option" data-item-type="calling">
+          {{#if warnings.calling}}<a class="slot-flag heart-warn" data-action="choose-option" data-item-type="calling" data-tooltip="{{warnings.calling}}">!</a>{{/if}}
           <div class="name placeholder">{{localizeHeart "character" "calling-prompt"}}</div>
           <div class="right">
             <a data-action="choose-option" data-item-type="calling">
@@ -175,10 +148,10 @@
         <button data-action="roll" class="default-roll">
           {{localizeHeart "perform" "roll"}} <span class="sheetD10 white"></span>
         </button>
-        <button data-action="stress-roll" class="stress-roll">
+        <button data-action="stress-roll" class="stress-roll" data-tooltip="heart.term.stress">
           {{localizeHeart "perform" "roll-stress"}} <span class="sheetD10 white"></span>
         </button>
-        <button data-action="fallout-roll" class="fallout-roll">
+        <button data-action="fallout-roll" class="fallout-roll" data-tooltip="heart.term.fallout">
           {{localizeHeart "perform" "roll-fallout"}} <span class="sheetD10 white"></span>
         </button>
       </div>
@@ -207,13 +180,13 @@
                 <div>
                   <div class="resistance-row">
                     <span class="resistance-name"></span>
-                    <span class="resistance-stress red">{{localizeHeart "character" "stress-heading"}}{{#if showTotalStress}} ({{localizeHeart "character" "total-label"}}: {{actor.proxy.totalStress}}){{/if}}</span>
-                    <span class="resistance-protection">{{localizeHeart "character" "protection-heading"}}</span>
+                    <span class="resistance-stress red" data-tooltip="heart.term.stress">{{localizeHeart "character" "stress-heading"}}{{#if showTotalStress}} ({{localizeHeart "character" "total-label"}}: {{actor.proxy.totalStress}}){{/if}}</span>
+                    <span class="resistance-protection" data-tooltip="heart.term.protection">{{localizeHeart "character" "protection-heading"}}</span>
                   </div>
                   {{#each actor.system.resistances as |resistance name|}}
                   <div class="resistance-row" data-resistance="{{name}}">
                     <!-- Resistance Name -->
-                    <span class="resistance-name clickable" data-action="stress-roll" data-resistance="{{name}}">
+                    <span class="resistance-name clickable" data-action="stress-roll" data-resistance="{{name}}" data-tooltip="{{heartTip 'resistance' name}}">
                       {{{heartGlyph "resistance" name}}}{{localizeHeart "resistance" name}}
                     </span>
 
@@ -242,29 +215,32 @@
             {{#if provisions}}
             <div class="character-tab-container party-container">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "party"}}}</span>{{partyName}}
-                <a data-action="open-party" title="{{localizeHeart 'party-sheet' 'open'}}"><span class="fas fa-eye clickable section-button"></span></a>
+                {{#if warnings.party}}<a class="heart-warn" data-action="open-party" data-tooltip="{{warnings.party}}">!</a>{{/if}}
+                <a data-action="open-party" aria-label="{{localizeHeart 'party-sheet' 'open'}}"><span class="fas fa-eye clickable section-button"></span></a>
               </div>
               <div class="container-content">
+                {{#if inParty}}
                 <div class="party-grid">
                   <div class="resistance-row provisions-row" data-resistance="provisions">
                     <span class="resistance-name provisions-name">
-                      <span class="clickable provisions-title" data-action="stress-roll" data-resistance="provisions" title="{{localizeHeart 'party-sheet' 'roll-tip'}}">{{{heartGlyph "resistance" "provisions"}}}{{localizeHeart "resistance" "provisions"}}</span>
-                      <span class="provisions-sub {{#if isQuartermaster}}is-quartermaster{{/if}}">{{provisionsSub}}</span>
+                      <span class="clickable provisions-title" data-action="stress-roll" data-resistance="provisions" data-tooltip="{{heartTip 'resistance' 'provisions'}}">{{{heartGlyph "resistance" "provisions"}}}{{localizeHeart "resistance" "provisions"}}</span>
                     </span>
-                    <span class="resistance-stress red provisions-track" title="{{provisions.trackTip}}">
+                    <span class="resistance-stress red provisions-track" data-tooltip="{{provisions.trackTip}}">
                       {{#each provisions.rows as |row|}}<span class="prov-row">{{#each row as |box|}}<a class="ordered-checkable-box readonly {{#if box.checked}}checked{{/if}} {{#if box.critical}}critical{{/if}} {{#if box.criticalStart}}critical-start{{/if}}"></a>{{/each}}</span>{{/each}}
                     </span>
-                    <span class="resistance-protection protection" title="{{provisions.protectionTip}}">{{#each provisions.shields as |s|}}<a class="ordered-checkable-box readonly {{#if s.checked}}checked{{/if}}"></a>{{/each}}</span>
+                    <span class="resistance-protection protection" data-tooltip="{{provisions.protectionTip}}">{{#each provisions.shields as |s|}}<a class="ordered-checkable-box readonly {{#if s.checked}}checked{{/if}}"></a>{{/each}}</span>
                   </div>
                 </div>
-                {{#if partyMembers.length}}
+                <div class="party-qm">{{partyQm}}</div>
                 <div class="party-chips">
                   {{#each partyMembers as |m|}}
                   <a class="party-chip {{#if m.quartermaster}}is-quartermaster{{/if}}" data-action="open-member" data-member-id="{{m.id}}" data-label="{{m.label}}" aria-label="{{m.label}}">{{{heartIcon m.icon}}}<span class="chip-fallback fas fa-user"></span></a>
+                  {{else}}
+                  <span class="beat-slots">{{localizeHeart "party-sheet" "no-other-members"}}</span>
                   {{/each}}
                 </div>
                 {{else}}
-                <div class="beat-slots">{{localizeHeart "party-sheet" "no-members-short"}}</div>
+                <div class="beat-slots">{{localizeHeart "party-sheet" "not-member"}}</div>
                 {{/if}}
               </div>
             </div>
@@ -285,10 +261,10 @@
                     <div class="container-content {{#if (lt skillCount 3)}}cols-{{skillCount}}{{/if}}">
                         {{!-- cards in the player's order; drag one onto another to move it --}}
                         {{#each skillList as |s|}}
-                            <div class="skill-row roll-row" data-action="skill-roll" data-skill="{{s.name}}" data-knack="{{s.knack}}" title="{{localizeHeart "perform" "roll"}} {{localizeHeart "skill" s.name}}">
+                            <div class="skill-row roll-row" data-action="skill-roll" data-skill="{{s.name}}" data-knack="{{s.knack}}" data-tooltip="{{heartTip 'skill' s.name}}">
                               <span class="skill-name clickable">{{localizeHeart "skill" s.name}}</span>
                               <span class="trait-glyph">{{{heartGlyph "skill" s.name}}}</span>
-                              {{#if s.knack}}<span class="knack-label">{{s.knack}}</span>{{/if}}
+                              {{#if s.knack}}<span class="knack-label" data-tooltip="heart.term.knack">{{s.knack}}</span>{{/if}}
                             </div>
                         {{/each}}
                     </div>
@@ -303,10 +279,10 @@
                     </div>
                     <div class="container-content {{#if (lt domainCount 3)}}cols-{{domainCount}}{{/if}}">
                       {{#each domainList as |d|}}
-                        <div class="domain-row roll-row" data-action="domain-roll" data-domain="{{d.name}}" data-knack="{{d.knack}}" title="{{localizeHeart "perform" "roll"}} {{localizeHeart "domain" d.name}}">
+                        <div class="domain-row roll-row" data-action="domain-roll" data-domain="{{d.name}}" data-knack="{{d.knack}}" data-tooltip="{{heartTip 'domain' d.name}}">
                               <span class="domain-name clickable">{{localizeHeart "domain" d.name}}</span>
                               <span class="trait-glyph">{{{heartGlyph "domain" d.name}}}</span>
-                              {{#if d.knack}}<span class="knack-label">{{d.knack}}</span>{{/if}}
+                              {{#if d.knack}}<span class="knack-label" data-tooltip="heart.term.knack">{{d.knack}}</span>{{/if}}
                             </div>
                     {{/each}}
                     </div>
@@ -317,13 +293,13 @@
 
             <!-- Equipment -->
             <div class="character-tab-container equipment-container">
-              <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "equipment"}}}</span>{{localizeHeart "character" "equipment-heading"}}{{#if warnings.equipment}} <a class="heart-warn" data-action="open-class-overview" title="{{warnings.equipment}}">!</a>{{/if}} {{#if actor.isOwner}}<a data-action="add" data-type="equipment" title="{{localizeHeart 'create-new' 'equipment'}}"
+              <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "equipment"}}}</span>{{localizeHeart "character" "equipment-heading"}}{{#if warnings.equipment}} <a class="heart-warn" data-action="open-class-overview" data-tooltip="{{warnings.equipment}}">!</a>{{/if}} {{#if actor.isOwner}}<a data-action="add" data-type="equipment" aria-label="{{localizeHeart 'create-new' 'equipment'}}"
                   data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}
               </div>
 
               <div class="container-content">
                 <!-- TODO: Add Equipment content -->
-                {{> characterTabItemList type="equipment" list=actor.proxy.equipment description_path="equipment"
+                {{> characterTabItemList type="equipment" list=orderedEquipment description_path="equipment"
                 showActivate=true}}
                 {{#if classNeedsEquipment}}
                 <div class="beat-slots pick-needed">{{localizeHeart "class" "equipment" "unpicked-line"}}</div>
@@ -333,7 +309,7 @@
 
             <!-- Resources -->
             <div class="character-tab-container resources-container">
-              <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "resources"}}}</span>{{localizeHeart "character" "resources-heading"}} {{#if actor.isOwner}}<a data-action="add" data-type="resource" title="{{localizeHeart 'create-new' 'resource'}}"
+              <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "resources"}}}</span>{{localizeHeart "character" "resources-heading"}} {{#if actor.isOwner}}<a data-action="add" data-type="resource" aria-label="{{localizeHeart 'create-new' 'resource'}}"
                   data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}
               </div>
               <div class="container-content">
@@ -344,7 +320,7 @@
 
             <!-- Items (generic, no roll automation: trinkets, keepsakes, loot) -->
             <div class="character-tab-container items-container">
-              <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "items"}}}</span>{{localizeHeart "character" "items-heading"}} {{#if actor.isOwner}}<a data-action="add" data-type="item" title="{{localizeHeart 'create-new' 'item'}}"><span class="addItem">+</span></a>{{/if}}
+              <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "items"}}}</span>{{localizeHeart "character" "items-heading"}} {{#if actor.isOwner}}<a data-action="add" data-type="item" aria-label="{{localizeHeart 'create-new' 'item'}}"><span class="addItem">+</span></a>{{/if}}
               </div>
               <div class="container-content">
                 {{> characterTabItemList type="item" list=orderedItems}}
@@ -371,14 +347,14 @@
                    its Beats tab; "+" (GM only) adds a one-off beat outside the
                    calling; rows carry Activate / Finish; a quiet line offers
                    another pick while fewer than two are active -->
-              <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "beat"}}}</span>{{localizeHeart "beat" "active" "label-multiple"}} <span class="panel-count">{{actor.proxy.beats.length}} / 2</span>
-                {{#if warnings.beats}}<a class="heart-warn" data-action="open-calling-beats" title="{{warnings.beats}}">!</a>{{/if}}
-                {{#if callingItem}}<a data-action="open-calling-beats" title="{{localizeHeart 'beat' 'open-calling'}}"><span class="fas fa-eye clickable section-button"></span></a>{{/if}}
-                {{#if user.isGM}}<a data-action="create-beat" title="{{localizeHeart 'beat' 'custom' 'add'}}"><span class="addItem">+</span></a>{{/if}}
+              <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "beat"}}}</span>{{localizeHeart "beat" "active" "label-multiple"}} <span class="panel-count" data-tooltip="heart.tip.beats-limit">{{actor.proxy.beats.length}} / 2</span>
+                {{#if warnings.beats}}<a class="heart-warn" data-action="open-calling-beats" data-tooltip="{{warnings.beats}}">!</a>{{/if}}
+                {{#if callingItem}}<a data-action="open-calling-beats" aria-label="{{localizeHeart 'beat' 'open-calling'}}"><span class="fas fa-eye clickable section-button"></span></a>{{/if}}
+                {{#if user.isGM}}<a data-action="create-beat" aria-label="{{localizeHeart 'beat' 'custom' 'add'}}"><span class="addItem">+</span></a>{{/if}}
               </div>
               <div class="container-content">
                 <div class="tab-item-list">
-                  {{#each actor.proxy.beats as |beat|}}
+                  {{#each orderedBeats as |beat|}}
                   {{> "heart:items/beat/preview.html" item=beat showBeatActions=true hideView=true showDelete=(and @root.user.isGM (not beat.isChild))}}
                   {{/each}}
                 </div>
@@ -391,7 +367,7 @@
             <!-- Fallout -->
             <div class="character-tab-container fallout-container">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "fallout"}}}</span>{{localizeHeart "character" "fallout-heading"}} {{#if actor.isOwner}}<a data-action="add" data-type="fallout"
-                  data-data='{"active": true}' title="{{localizeHeart 'create-new' 'fallout'}}"><span class="addItem">+</span></a>{{/if}}</div>
+                  data-data='{"active": true}' aria-label="{{localizeHeart 'create-new' 'fallout'}}"><span class="addItem">+</span></a>{{/if}}</div>
               <div class="container-content">
                 <!-- TODO: Add Fallout content -->
                 {{> characterTabItemList type="fallout" list=orderedFallouts
@@ -402,8 +378,8 @@
             <!-- Abilities -->
             <div class="character-tab-container abilities-container">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "ability"}}}</span>{{localizeHeart "character" "abilities-heading"}}
-                {{#if classItem}}<a data-action="open-class-abilities" title="{{localizeHeart 'ability' 'open-class'}}"><span class="fas fa-eye clickable section-button"></span></a>{{/if}}
-                {{#if actor.isOwner}}<a data-action="add" data-type="ability" title="{{localizeHeart 'create-new' 'ability'}}"
+                {{#if classItem}}<a data-action="open-class-abilities" aria-label="{{localizeHeart 'ability' 'open-class'}}"><span class="fas fa-eye clickable section-button"></span></a>{{/if}}
+                {{#if actor.isOwner}}<a data-action="add" data-type="ability" aria-label="{{localizeHeart 'create-new' 'ability'}}"
                   data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}</div>
               <div class="container-content">
                 <!-- TODO: Add Abilities content -->
@@ -421,15 +397,15 @@
                button sits in the title like the other sections and opens the
                editor inline; Foundry's floating editor button is hidden. -->
           <div class="character-tab-container notes-container">
-            <div class="container-title">{{localizeHeart "character" "notes"}}
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "notes"}}}</span>{{localizeHeart "character" "notes"}}
               {{#if actor.isOwner}}
-              <a data-action="edit-notes" title="{{localizeHeart 'character' 'notes-edit'}}">
+              <a data-action="edit-notes" aria-label="{{localizeHeart 'character' 'notes-edit'}}">
                 <span class="fas fa-edit clickable section-button"></span>
               </a>
               {{/if}}
             </div>
             <div class="container-content">
-              {{editor actor.system.notes target="system.notes" button=true editable=true owner=true}}
+              {{editor actor.system.notes target="system.notes" button=true editable=true owner=true engine="prosemirror"}}
             </div>
           </div>
 
@@ -443,7 +419,7 @@
             <div data-item-id="{{item.uuid}}" data-document-id="{{item.uuid}}">
               <div class="heart sheet base Item calling {{cssClass}} editable">
                 <div class="container-title">
-                  {{{heartIcon item.img}}}{{localizeHeart "character" "calling"}}: {{localizeHeart item.name}}
+                  <span class="title-glyph">{{{heartIcon item.img}}}</span>{{localizeHeart "character" "calling"}}: {{localizeHeart item.name}}
                   <a data-action="view">
                     <span class="fas fa-edit clickable section-button"></span>
                   </a>
@@ -451,12 +427,12 @@
                 <div class="section calling-items">
                   <!-- Iterate over questions in the calling item -->
                   <div class="calling-description">
-                    {{{heartTerms (localizeHeart item.system.description)}}}
+                    {{{heartTerms (localizeHeart item.system.description) refs=true}}}
                   </div>
                 <div class="trinket-row">
                   {{#if item.flags.heart.trinket}}
                   <span class="trinket-label">{{localizeHeart "trinket" "trinket"}}:</span>
-                  <a class="trinket-name" data-action="view-trinket" data-uuid="{{item.flags.heart.trinket.uuid}}">{{item.flags.heart.trinket.name}}</a>
+                  <a class="trinket-name" data-action="view-trinket" data-uuid="{{item.flags.heart.trinket.uuid}}">{{@root.trinketNames.calling}}</a>
                   {{else if item.isOwner}}
                   <button type="button" class="trinket-roll" data-action="roll-trinket"><span class="fas fa-dice-d20"></span> {{localizeHeart "trinket" "roll-trinket"}}</button>
                   {{/if}}
@@ -464,10 +440,10 @@
                   {{#each item.system.questions as |question id|}}
                   <div class="question editable">
                     {{#if question.answer}}
-                    <strong>{{{localizeHeart question.question}}}</strong>
-                    {{editor question.answer button=false editable=false}}
+                    <strong>{{{heartTerms (localizeHeart question.question)}}}</strong>
+                    {{editor question.answer button=false editable=false engine="prosemirror"}}
                     {{else}}
-                    <strong>{{{localizeHeart question.question}}}</strong>
+                    <strong>{{{heartTerms (localizeHeart question.question)}}}</strong>
                     <div class="answer-prompt">
                       {{localizeHeart "calling" "questions" "sheet-prompt"}}
                     </div>
@@ -495,7 +471,7 @@
             <div data-item-id="{{ancestryItem.uuid}}" data-document-id="{{ancestryItem.uuid}}">
               <div class="heart sheet base Item ancestry {{cssClass}} editable">
                 <div class="container-title">
-                  {{{heartIcon ancestryItem.img}}}{{localizeHeart "character" "ancestry"}}: {{localizeHeart ancestryItem.name}}
+                  <span class="title-glyph">{{{heartIcon ancestryItem.img}}}</span>{{localizeHeart "character" "ancestry"}}: {{localizeHeart ancestryItem.name}}
                   <a data-action="view">
                     <span class="fas fa-edit clickable section-button"></span>
                   </a>
@@ -507,23 +483,37 @@
                 <div class="trinket-row">
                   {{#if ancestryItem.flags.heart.trinket}}
                   <span class="trinket-label">{{localizeHeart "trinket" "keepsake"}}:</span>
-                  <a class="trinket-name" data-action="view-trinket" data-uuid="{{ancestryItem.flags.heart.trinket.uuid}}">{{ancestryItem.flags.heart.trinket.name}}</a>
+                  <a class="trinket-name" data-action="view-trinket" data-uuid="{{ancestryItem.flags.heart.trinket.uuid}}">{{@root.trinketNames.ancestry}}</a>
                   {{else if ancestryItem.isOwner}}
                   <button type="button" class="trinket-roll" data-action="roll-trinket"><span class="fas fa-dice-d20"></span> {{localizeHeart "trinket" "roll-keepsake"}}</button>
                   {{/if}}
                 </div>
-                  {{#each ancestryItem.system.questions as |question id|}}
-                  <div class="question editable">
-                    <strong>{{{localizeHeart question.question}}}</strong>
-                    {{#if question.answer}}
-                    {{editor question.answer button=false editable=false}}
-                    {{else}}
-                    <div class="answer-prompt">
-                      {{localizeHeart "ancestry" "questions" "sheet-prompt"}}
+                  {{!-- answer one question (2026-09-30, Luke): the pencil
+                       opens the ancestry sheet to answer, the trash deletes
+                       the question, "Add question" adds one (typed on the
+                       ancestry sheet); items/ancestry/questions.js --}}
+                  <div class="ancestry-questions" data-questions-of="{{ancestryItem.uuid}}">
+                    <div class="questions-prompt">{{localizeHeart "item-sheet" "ancestry-questions-prompt"}}</div>
+                    {{#each ancestryItem.system.questions as |question id|}}
+                    <div class="question editable" data-id="{{id}}">
+                      <div class="question-line">
+                        <strong>{{#if question.question}}{{{heartTerms (localizeHeart question.question)}}}{{else}}{{localizeHeart "ancestry" "questions" "unwritten"}}{{/if}}</strong>
+                        {{#if ../ancestryItem.isOwner}}<span class="question-tools">
+                          <a class="question-tool" data-action="open-questions" aria-label="{{localizeHeart 'item-sheet' 'answer'}}"><span class="fas fa-edit"></span></a>
+                          <a class="question-tool" data-action="delete-question" aria-label="{{localizeHeart 'ancestry' 'questions' 'delete'}}"><span class="fas fa-trash"></span></a>
+                        </span>{{/if}}
+                      </div>
+                      {{#if question.answer}}
+                      {{editor question.answer button=false editable=false engine="prosemirror"}}
+                      {{else}}
+                      <div class="answer-prompt">
+                        {{localizeHeart "ancestry" "questions" "sheet-prompt"}}
+                      </div>
+                      {{/if}}
                     </div>
-                    {{/if}}
+                    {{/each}}
+                    {{#if ancestryItem.isOwner}}<a class="question-add" data-action="add-question"><span class="fas fa-plus"></span> {{localizeHeart "ancestry" "questions" "add"}}</a>{{/if}}
                   </div>
-                  {{/each}}
                 </div>
               </div>
             </div>
@@ -543,14 +533,14 @@
             <div data-item-id="{{classItem.uuid}}" data-document-id="{{classItem.uuid}}">
               <div class="heart sheet base Item class {{cssClass}} editable">
                 <div class="container-title">
-                  {{{heartIcon classItem.img}}}{{localizeHeart "character" "class"}}: {{localizeHeart classItem.name}}
+                  <span class="title-glyph">{{{heartIcon classItem.img}}}</span>{{localizeHeart "character" "class"}}: {{localizeHeart classItem.name}}
                   <a data-action="view">
                     <span class="fas fa-edit clickable section-button"></span>
                   </a>
                 </div>
                 <div class="section bio-items">
                   <div class="bio-description">
-                    {{{heartTerms (localizeHeart classItem.system.description)}}}
+                    {{{heartTerms (localizeHeart classItem.system.description) refs=true}}}
                   </div>
                 </div>
               </div>
@@ -581,7 +571,7 @@
                   <span class="trait-edit-head">{{localizeHeart "skill" "label-multiple"}}</span>
                   <span class="trait-edit-head">{{localizeHeart "skill" "knack" "label-multiple"}}</span>
                   {{#each actor.system.skills as |skill name|}}
-                  <label class="skill-edit-row {{#if skill.value}}selected{{else}}unselected{{/if}}">
+                  <label class="skill-edit-row {{#if skill.value}}selected{{else}}unselected{{/if}}" data-tooltip="{{heartTip 'skill' name}}">
                     <input type="checkbox" name="system.skills.{{name}}.value" {{checked skill.value}} />
                     <span class="trait-glyph">{{{heartGlyph "skill" name}}}</span>
                     <span class="skill-name">{{localizeHeart "skill" name}}</span>
@@ -599,7 +589,7 @@
                   <span class="trait-edit-head">{{localizeHeart "domain" "label-multiple"}}</span>
                   <span class="trait-edit-head">{{localizeHeart "domain" "knack" "label-multiple"}}</span>
                   {{#each actor.system.domains as |domain name|}}
-                  <label class="domain-edit-row {{#if domain.value}}selected{{else}}unselected{{/if}}">
+                  <label class="domain-edit-row {{#if domain.value}}selected{{else}}unselected{{/if}}" data-tooltip="{{heartTip 'domain' name}}">
                     <input type="checkbox" name="system.domains.{{name}}.value" {{checked domain.value}} />
                     <span class="trait-glyph">{{{heartGlyph "domain" name}}}</span>
                     <span class="domain-name">{{localizeHeart "domain" name}}</span>

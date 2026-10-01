@@ -1,4 +1,71 @@
+@use '../../util'
+
 // The ancestry sheet's layout comes from the shared item chrome
 // (items/base/item-sheet.sass, 2026-09-29). Its pre-redesign styles were
 // removed before the UI review: they targeted markup that no longer exists
 // and some still leaked onto the new sheet (e.g. a 1.1em font size on haunts).
+
+// Ancestry questions (2026-09-30, Luke): on the ancestry sheet and in the
+// character sheet's Biography tab ([data-questions-of]). One row per
+// question: its text, then the pencil and trash together at the top right,
+// the same size and the same fade, level with the text's first line
+.heart [data-questions-of]
+    .question, .question-line
+        display: flex
+        align-items: flex-start
+        flex-wrap: nowrap
+        gap: 8px
+
+    .question-line
+        width: 100%
+
+        strong
+            flex: 1 1 auto
+            min-width: 0
+
+    .question-text, .question-input
+        flex: 1 1 auto
+        min-width: 0
+
+    .question-input
+        width: auto
+        height: 26px
+        border: 1px solid util.$line
+        border-radius: 5px
+        background: util.$sunken
+        color: util.$text
+        padding: 0 0.5em
+
+    // the row's tools: first-line height, so the icons sit level with the
+    // question's first line whatever its length
+    .question-tools
+        flex: 0 0 auto
+        display: inline-flex
+        align-items: center
+        gap: 0.5em
+        // one line of the question text (body size x its line height)
+        height: 23px
+        font-size: 12px
+        opacity: 0.4
+        transition: opacity 0.12s
+
+    .question-tool
+        color: util.$text
+        line-height: 1
+
+        &:hover
+            color: util.$red-bright
+
+    li:hover .question-tools, .question:hover .question-tools
+        opacity: 1
+
+    .question-add
+        display: inline-flex
+        align-items: center
+        gap: 5px
+        margin-top: 4px
+        font-size: util.$fs-secondary
+        color: util.$muted
+
+        &:hover
+            color: util.$red-bright

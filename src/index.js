@@ -3,6 +3,10 @@ import './index.sass';
 import './common/sheet.sass';
 import { emphasizeTerms, registerJournalTerms } from './common/terms';
 import { registerIconHelpers, adoptPackIcons } from './common/icons';
+import { migrateFalloutSource } from './items/fallout/migrate';
+import { heartDialogOptions } from './common/dialog';
+import { registerHeartTooltips } from './common/tooltip';
+import { isRepeatable } from './items/ability/repeat';
 
 import modules from './**/index.js';
 
@@ -24,14 +28,8 @@ function registerSettings() {
         type: Boolean,
     });
 
-    game.settings.register('heart', 'showTextboxesBelowItems', {
-        name: 'Show Textboxes Below Item Lists',
-        hint: 'On the character sheet, toggle the legacy text boxes',
-        scope: 'client',
-        config: true,
-        default: true,
-        type: Boolean,
-    });
+    // (showTextboxesBelowItems, showStressInputBox, and preSelectStressType
+    // were removed 2026-09-30, Luke: nothing read them any more)
 
     game.settings.register('heart', 'showStressRoll3dDice', {
       name: 'Show 3D Dice for Stress Rolls',
@@ -54,24 +52,6 @@ function registerSettings() {
     game.settings.register('heart', 'showTotalStress', {
       name: 'Show Total Stress on Character Sheet',
       hint: 'Show Total Stress on Character Sheet',
-      scope: 'client',
-      config: true,
-      default: true,
-      type: Boolean,
-    });
-
-    game.settings.register('heart', 'showStressInputBox', {
-      name: 'Show Input Box Beside Character Resistances',
-      hint: 'Show Input Box Beside Character Resistances for editing',
-      scope: 'client',
-      config: true,
-      default: false,
-      type: Boolean,
-    });
-
-    game.settings.register('heart', 'preSelectStressType', {
-      name: 'Select Stress Type When Beginning a Stress Roll',
-      hint: 'Select Stress Type When Beginning a Stress Roll',
       scope: 'client',
       config: true,
       default: true,
@@ -202,7 +182,7 @@ function initialise() {
         const fa = Boolean(target) ? 'check' : 'times';
         let type = options.hash.optional ? 'optional' : 'required';
         const title = game.i18n.localize(`heart.notification:${type}`);
-        return `<span class="fas fa-${fa}-circle" data-notification="${type}" data-target="${targetName}" title="${title}" data-type="${options.hash.type}"></span>`;
+        return `<span class="fas fa-${fa}-circle" data-notification="${type}" data-target="${targetName}" data-tooltip="${title}" data-type="${options.hash.type}"></span>`;
     });
 
     Handlebars.registerHelper('getActor', function (id) {
@@ -245,8 +225,21 @@ function initialise() {
 
     // Skills and domains in ability text render bold + accent red
     // (src/common/terms.js). Returns HTML, so use it in a triple-stash.
-    Handlebars.registerHelper('heartTerms', function (html) {
-        return emphasizeTerms(html);
+    // {{heartPlain html}}: the text of some HTML, one line, for tooltips
+    // (tag rules on hover, 2026-09-30)
+    Handlebars.registerHelper('heartPlain', function (html) {
+        const el = document.createElement('div');
+        el.innerHTML = String(html ?? '');
+        return (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+    });
+
+    // {{{heartTerms text}}}; refs=true also marks capitalised ability
+    // references (ability, class, and calling text; common/terms.js)
+    // {{#if (heartRepeatable item)}}: an ability learnable more than once
+    Handlebars.registerHelper('heartRepeatable', (item) => isRepeatable(item));
+
+    Handlebars.registerHelper('heartTerms', function (html, options) {
+        return emphasizeTerms(html, { abilityRefs: Boolean(options?.hash?.refs) });
     });
 
     // {{{heartGlyph kind id}}} / {{{heartIcon img}}} (common/icons.js)
@@ -268,8 +261,12 @@ Hooks.once('init', initialise);
 
 Hooks.once('ready', function () {
     registerSettings();
+    // Heart's data-tooltip elements: themed, shown as plain text (common/tooltip.js)
+    registerHeartTooltips();
     // older class / calling / ancestry copies take their compendium icon (GM)
     adoptPackIcons();
+    // fallout source lines out of the effect text, into system.source (GM, once)
+    migrateFalloutSource();
     new Promise(async function () {
         if (game.settings.get('heart', 'showStartupMessage')) {
             let d = new Dialog({
@@ -287,13 +284,15 @@ Hooks.once('ready', function () {
                         callback: () => game.settings.set('heart', 'showStartupMessage', false)
                     }
                 },
-                default: "skip",
+                // "close" (Skip): the default named a "skip" button that does
+                // not exist, so no button was the default (2026-09-30)
+                default: "close",
                 render: html => {
                     const tabs = new Tabs({ navSelector: ".tabs", contentSelector: ".content", initial: `v${game.system.version}` });
                     tabs.bind(html[0]);
                 },
                 close: html => { }
-            });
+            }, heartDialogOptions()); // a Heart window: themed, chip buttons (common/dialog.js)
             d.render(true);
         }
     });

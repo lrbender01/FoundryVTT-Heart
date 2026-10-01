@@ -4,6 +4,8 @@ import './preview.sass';
 import './item-sheet.sass';
 import { highlightRendered } from '../../common/terms';
 import { iconFor } from '../../common/icons';
+import { heartDialogOptions } from '../../common/dialog';
+import { learnedTimes } from '../ability/repeat';
 import { activateBeatListeners } from '../beat/actions';
 import { activateTrinketListeners } from '../trinkets';
 
@@ -81,7 +83,10 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         // ---- shared item chrome (2026-09-29) ----
         // Game terms (skills, domains, resistances, fallout, protection, dice)
         // highlighted in the DISPLAYED descriptions; editing uses stored data.
-        highlightRendered(html[0], '.editor-panel .editor-content, .class-description, .calling-text');
+        // Ability, class, and calling text also mark capitalised ability
+        // references ("as per HEARTSBLOOD", 2026-09-30, Luke)
+        highlightRendered(html[0], '.editor-panel .editor-content, .class-description, .calling-text',
+            { abilityRefs: ['ability', 'class', 'calling'].includes(this.item.type) });
 
         // The name field is as wide as its text, so the header chips sit
         // right after the name instead of a fixed field width away
@@ -131,11 +136,23 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
             }
             await ability.update({ 'system.active': true });
         });
+        // Repeatable abilities ("You can take this advance more than once",
+        // 2026-09-30, Luke): "+" learns one again (system.times counts them);
+        // the GM's click on Learned takes one back, the last one un-learns it
+        html.find('[data-action=ability-again]').click(async ev => {
+            ev.preventDefault();
+            const ability = await fromUuid(ev.currentTarget.closest('[data-item-id]').dataset.itemId);
+            if (!ability?.isOwner || !ability.system.active) return;
+            await ability.update({ 'system.times': learnedTimes(ability) + 1 });
+        });
         html.find('[data-action=ability-lock]').click(async ev => {
             ev.preventDefault();
             if (!game.user.isGM) return;
             const ability = await fromUuid(ev.currentTarget.closest('[data-item-id]').dataset.itemId);
-            await ability?.update({ 'system.active': false });
+            if (!ability) return;
+            const times = learnedTimes(ability);
+            if (times > 1) await ability.update({ 'system.times': times - 1 });
+            else await ability.update({ 'system.active': false, 'system.times': 1 });
         });
 
         // Header chips that flip a boolean (Active, Complete)
@@ -196,7 +213,7 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
             const uuid = target.closest('[data-item-id]').data('itemId');
             const item = await fromUuid(uuid);
             if(item === null) return;
-            await item.deleteDialog();
+            await item.deleteDialog(heartDialogOptions());
         });
 
         html.find('[data-item-id] [data-action=activate]').click(async ev => {

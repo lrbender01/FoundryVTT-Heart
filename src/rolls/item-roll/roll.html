@@ -1,0 +1,12 @@
+{{!-- Item roll card (2026-09-30, round-2 mock B, no badge): a hint line
+     with what the item is used for ("Kill, D6", or "Item roll"), the item's
+     icon and name, and the die labelled with its skill or domain. A haunt
+     service has no item: its flavour names it. --}}
+<div class="dice-roll heart item-roll">
+    <div class="ledger">
+        <div class="ledger-what">{{{what}}}</div>
+        <div class="ledger-out">{{{out}}}</div>
+        {{{dice}}}
+        {{#if det}}<div class="ledger-det">{{det}}</div>{{/if}}
+    </div>
+</div>

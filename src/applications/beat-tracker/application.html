@@ -1,10 +1,11 @@
 {{!-- Beat Tracker (2026-09-29): one titled container per character, their
-     active beats as beat rows (complete mark, level, text). --}}
+     active beats as beat rows (complete mark, level, text). The beat glyph
+     leads each title like the sheet's section titles (2026-09-30, Luke). --}}
 <form class="heart form beat-tracker" autocomplete="off">
     {{#each characters as |char|}}
     <div class="character-tab-container tracker-character">
         <div class="container-title">
-            <a data-action="open-actor" data-actor-id="{{char.actor.id}}">{{char.actor.name}}</a>
+            <span class="title-glyph">{{{heartGlyph "item" "beat"}}}</span><a data-action="open-actor" data-actor-id="{{char.actor.id}}">{{char.actor.name}}</a>
             {{#if char.calling}}<span class="tracker-calling">{{{heartIcon char.callingImg}}}{{char.calling}}</span>{{/if}}
         </div>
         <div class="container-content">

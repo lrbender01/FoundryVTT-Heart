@@ -1,26 +1,30 @@
-<div data-item-id="{{item.uuid}}" data-document-id="{{item.uuid}}" class="item preview {{item.type}}">
+<div data-item-id="{{item.uuid}}" data-document-id="{{item.uuid}}" class="item preview {{item.type}} type-{{item.type}}">
+    {{!-- noActionbar: a row that places these icons itself (beats, beside
+         their Pursue / Finish buttons) --}}
+    {{#unless noActionbar}}
     <div class="actionbar">
-        {{#unless hideView}}<a data-action="view" title="{{localizeHeart 'base' 'view'}}"><span class="fas fa-edit"></span></a>{{/unless}}
+        {{#unless hideView}}<a data-action="view" aria-label="{{localizeHeart 'base' 'view'}}"><span class="fas fa-edit"></span></a>{{/unless}}
         {{#if item.isOwner}}
             {{#if showComplete}}
                 {{#if item.system.complete}}
-                <a data-action="uncomplete" title="{{localizeHeart 'base' 'uncomplete'}}"><span class="fas fa-times"></span></a>
+                <a data-action="uncomplete" aria-label="{{localizeHeart 'base' 'uncomplete'}}"><span class="fas fa-times"></span></a>
                 {{else}}
-                <a data-action="complete" title="{{localizeHeart 'base' 'complete'}}"><span class="fas fa-check"></span></a>
+                <a data-action="complete" aria-label="{{localizeHeart 'base' 'complete'}}"><span class="fas fa-check"></span></a>
                 {{/if}}
             {{/if}}
             {{#if showActivate}}
                 {{#if item.system.active}}
-                <a data-action="deactivate" title="{{localizeHeart 'base' 'deactivate'}}"><span class="fas fa-toggle-on"></span></a>
+                <a data-action="deactivate" aria-label="{{localizeHeart 'base' 'deactivate'}}"><span class="fas fa-toggle-on"></span></a>
                 {{else}}
-                <a data-action="activate" title="{{localizeHeart 'base' 'activate'}}"><span class="fas fa-toggle-off"></span></a>
+                <a data-action="activate" aria-label="{{localizeHeart 'base' 'activate'}}"><span class="fas fa-toggle-off"></span></a>
                 {{/if}}
             {{/if}}
             {{#if showDelete }}
-                <a data-action="delete" title="{{localizeHeart 'base' 'delete'}}"><span class="fas fa-trash"></span></a>
+                <a data-action="delete" aria-label="{{localizeHeart 'base' 'delete'}}"><span class="fas fa-trash"></span></a>
             {{/if}}
         {{/if}}
     </div>
+    {{/unless}}
 
     {{> @partial-block }}
 

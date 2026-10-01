@@ -18,15 +18,15 @@
 
 {{#*inline "editorPanel"}}
 <div class="character-tab-container editor-panel {{panelClass}}">
-  <div class="container-title">{{title}}
+  <div class="container-title">{{#if glyph}}<span class="title-glyph">{{{heartGlyph "section" glyph}}}</span>{{/if}}{{title}}
     {{#if editable}}
-    <a data-action="edit-editor" title="{{localizeHeart 'adversary' 'edit'}}">
+    <a data-action="edit-editor" aria-label="{{localizeHeart 'adversary' 'edit'}}">
       <span class="fas fa-edit clickable section-button"></span>
     </a>
     {{/if}}
   </div>
   <div class="container-content">
-    {{editor content target=target button=true editable=editable owner=owner}}
+    {{editor content target=target button=true editable=editable owner=owner engine="prosemirror"}}
   </div>
 </div>
 {{/inline}}
@@ -37,28 +37,28 @@
   <!-- HEADER: portrait, identity, tracks -->
   <div class="character-header">
     <div class="header-col portrait">
-      <img class="profile" src="{{displayImg}}" title="{{actor.name}}" data-edit="img" />
+      <img class="profile" src="{{displayImg}}" alt="{{actor.name}}" data-edit="img" />
     </div>
 
     <div class="header-col header-box identity-box">
       <label class="header-label">{{localizeHeart "adversary" "name"}}</label>
       <input class="header-input" name="name" value="{{actor.name}}" />
-      <label class="header-label">{{localizeHeart "adversary" "difficulty"}}</label>
+      <label class="header-label" data-tooltip="heart.tip.adversary.difficulty">{{localizeHeart "adversary" "difficulty"}}</label>
       <select class="header-input" name="system.level">
         {{selectOptions levels selected=actor.system.level blank=""}}
       </select>
     </div>
 
     <div class="header-col header-box tracks-box">
-      <label class="header-label">{{localizeHeart "resistance" "label-single"}}</label>
+      <label class="header-label" data-tooltip="heart.tip.adversary.resistance">{{localizeHeart "resistance" "label-single"}}</label>
       <div class="track">
         <span class="boxes" data-actor-track data-target="system.resistance">{{{ordered-checkable actor.system.resistance actor.system.resistanceMax}}}</span>
         <span class="count">{{resistanceValue}} /
           <input type="number" min="1" name="system.resistanceMax" value="{{actor.system.resistanceMax}}"
-            title="{{localizeHeart 'adversary' 'resistanceMax'}}" />
+            aria-label="{{localizeHeart 'adversary' 'resistanceMax'}}" />
         </span>
       </div>
-      <label class="header-label">{{localizeHeart "protection" "label-single"}}</label>
+      <label class="header-label" data-tooltip="heart.tip.adversary.protection">{{localizeHeart "protection" "label-single"}}</label>
       <div class="track protection" data-actor-track data-target="system.protection">{{{ordered-checkable actor.system.protection 10}}}</div>
     </div>
   </div>
@@ -69,7 +69,7 @@
     <!-- ===== STAT BLOCK ===== -->
     <section class="tab" data-tab="stat">
       {{#if difficultyNote}}
-      <div class="difficulty-note" title="{{localizeHeart 'adversary' 'default-difficulty'}}"><strong>{{localizeHeart "adversary" "default-difficulty"}}:</strong> {{difficultyNote}}</div>
+      <div class="difficulty-note"><strong>{{localizeHeart "adversary" "default-difficulty"}}:</strong> {{difficultyNote}}</div>
       {{/if}}
 
       <!-- Order follows play (2026-09-30 review): left runs the fight, right
@@ -79,20 +79,20 @@
            Special | Motivation, Loot | Profile. -->
       <div class="panel-body adversary-body">
           <div class="character-tab-container attacks-container">
-            <div class="container-title">{{localizeHeart "adversary" "attacks"}}
-              {{#if actor.isOwner}}<a data-action="add" data-type="equipment" data-data='{"active": true}' title="{{localizeHeart 'create-new' 'equipment'}}"><span class="addItem">+</span></a>{{/if}}
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "equipment"}}}</span>{{localizeHeart "adversary" "attacks"}}
+              {{#if actor.isOwner}}<a data-action="add" data-type="equipment" data-data='{"active": true}' aria-label="{{localizeHeart 'create-new' 'equipment'}}"><span class="addItem">+</span></a>{{/if}}
             </div>
             <div class="container-content">
               {{> rowList type="equipment" list=actor.proxy.equipment showActivate=true showNote=true}}
             </div>
           </div>
 
-          {{> editorPanel panelClass="descriptors-container" title=(localizeHeart "adversary" "descriptors") content=actor.system.descriptors target="system.descriptors"}}
-          {{> editorPanel panelClass="special-container" title=(localizeHeart "adversary" "special") content=actor.system.special target="system.special"}}
-          {{> editorPanel panelClass="motivation-container" title=(localizeHeart "adversary" "motivation") content=actor.system.motivation target="system.motivation"}}
+          {{> editorPanel panelClass="descriptors-container" glyph="descriptors" title=(localizeHeart "adversary" "descriptors") content=actor.system.descriptors target="system.descriptors"}}
+          {{> editorPanel panelClass="special-container" glyph="special" title=(localizeHeart "adversary" "special") content=actor.system.special target="system.special"}}
+          {{> editorPanel panelClass="motivation-container" glyph="motivation" title=(localizeHeart "adversary" "motivation") content=actor.system.motivation target="system.motivation"}}
           <div class="character-tab-container loot-container">
-            <div class="container-title">{{localizeHeart "adversary" "loot"}}
-              {{#if actor.isOwner}}<a data-action="add" data-type="resource" data-data='{"active": true}' title="{{localizeHeart 'create-new' 'resource'}}"><span class="addItem">+</span></a>{{/if}}
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "resources"}}}</span>{{localizeHeart "adversary" "loot"}}
+              {{#if actor.isOwner}}<a data-action="add" data-type="resource" data-data='{"active": true}' aria-label="{{localizeHeart 'create-new' 'resource'}}"><span class="addItem">+</span></a>{{/if}}
             </div>
             <div class="container-content">
               {{> rowList type="resource" list=actor.proxy.resources showActivate=true showNote=true}}
@@ -100,9 +100,9 @@
           </div>
 
           <div class="character-tab-container profile-container">
-            <div class="container-title">{{localizeHeart "adversary" "profile"}}
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "profile"}}}</span>{{localizeHeart "adversary" "profile"}}
               {{#if editable}}
-              <a data-action="toggle-edit" title="{{#if editing}}{{localizeHeart 'adversary' 'done'}}{{else}}{{localizeHeart 'adversary' 'edit'}}{{/if}}">
+              <a data-action="toggle-edit" aria-label="{{#if editing}}{{localizeHeart 'adversary' 'done'}}{{else}}{{localizeHeart 'adversary' 'edit'}}{{/if}}">
                 <span class="fas {{#if editing}}fa-check{{else}}fa-edit{{/if}} clickable section-button"></span>
               </a>
               {{/if}}
@@ -135,7 +135,7 @@
 
           {{#if inactiveItems.length}}
           <div class="character-tab-container inactive-container">
-            <div class="container-title">{{localizeHeart "adversary" "inactive-items"}}</div>
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "inactive-gear"}}}</span>{{localizeHeart "adversary" "inactive-items"}}</div>
             <div class="container-content">
               <div class="tab-item-list">
                 {{#each inactiveItems as |item|}}
@@ -149,8 +149,8 @@
 
       <!-- ===== LORE (same page) ===== -->
       <div class="panel-lore">
-        {{> editorPanel panelClass="description-container" title=(localizeHeart "adversary" "description") content=actor.system.description target="system.description"}}
-        {{> editorPanel panelClass="gm-notes-container" title=(localizeHeart "adversary" "gm-notes") content=actor.system.notes target="system.notes"}}
+        {{> editorPanel panelClass="description-container" glyph="notes" title=(localizeHeart "adversary" "description") content=actor.system.description target="system.description"}}
+        {{> editorPanel panelClass="gm-notes-container" glyph="notes" title=(localizeHeart "adversary" "gm-notes") content=actor.system.notes target="system.notes"}}
       </div>
     </section>
   </section>

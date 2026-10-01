@@ -3,7 +3,12 @@ import './roll.sass';
 import chatTemplateHTML from './roll.html';
 import tooltipTemplateHTML from './tooltip.html';
 import { buildPool, poolFormula } from './pool';
-import { showDice } from '../dice';
+import { showDice, diceRow } from '../dice';
+import { glyphFor } from '../../common/icons';
+import { emphasizeTerms } from '../../common/terms';
+// The result tables and lookups live in results.js, free of webpack-only
+// imports, so the rules tests can load them (2026-09-30, Luke)
+import { normal_results, difficult_results, stress_results, heartResult, markPool } from './results';
 
 const difficulty_reductions = {
     standard: 0,
@@ -11,27 +16,6 @@ const difficulty_reductions = {
     dangerous: 2,
     impossible: Infinity,
 }
-
-const normal_results = {
-    'critical_failure': [1, 1],
-    'failure': [2, 5],
-    'success_at_a_cost': [6, 7],
-    'success': [8, 9],
-    'critical_success': [10, 10]
-};
-
-const difficult_results = {
-    'critical_failure': [1, 1],
-    'failure': [2, 9],
-    'success_at_a_cost': [10, 10],
-}
-
-const stress_results = [
-    'n_a',
-    'success_at_a_cost',
-    'failure',
-    'critical_failure'
-];
 
 export function initialise() {
     const results = {...normal_results, ...difficult_results};
@@ -77,19 +61,7 @@ export default class HeartRoll extends Roll {
     }
 
     get result() {
-        if(this.options.difficulty === 'impossible') {
-            return 'failure';   
-        }
-
-        let results = normal_results;
-        if(this.options.result_set === 'difficult') {
-            results = difficult_results;
-        }
-
-        return Object.keys(results).find(result => {
-            const [minVal, maxVal] = results[result];
-            return minVal <= this.total && this.total <= maxVal;
-        });
+        return heartResult(this.total, this.options.result_set, this.options.difficulty);
     }
 
     async render(chatOptions = {}) {
@@ -108,32 +80,52 @@ export default class HeartRoll extends Roll {
 
         const faces = this.faces();
         const opts = this.options;
-        const difficulty = game.i18n.localize(`heart.difficulty.${opts.difficulty}`);
-        const count = (opts.pool ?? []).length || faces.length;
-        let description;
-        if (opts.result_set === "impossible") description = game.i18n.localize("heart.rolls.roll.summary-impossible");
-        else if (opts.result_set === "difficult") description = game.i18n.format("heart.rolls.roll.summary-fresh", { difficulty, count });
-        else description = game.i18n.format(count === 1 ? "heart.rolls.roll.summary-one" : "heart.rolls.roll.summary", { difficulty, count })
-            + (opts.cut ? game.i18n.localize(`heart.rolls.roll.summary-cut-${opts.cut}`) : "");
+        const loc = (k, d) => (d ? game.i18n.format(k, d) : game.i18n.localize(k));
+        const esc = (t) => Handlebars.escapeExpression(String(t ?? ""));
+        const difficulty = loc(`heart.difficulty.${opts.difficulty}`);
 
-        const outcomeClass = ["failure", "critical_failure"].includes(this.result) ? "bad"
+        // What was rolled: "Kill + Occult, Risky" with their glyphs; the
+        // difficulty always, highlighted like the game's other terms
+        const trait = (kind, id) => id ? `${glyphFor(kind, id)}<b>${esc(loc(`heart.${kind}.${id}`))}</b>` : "";
+        const traits = [trait("skill", opts.skill), trait("domain", opts.domain)].filter(Boolean).join(" + ");
+        const whatParts = [traits || esc(loc("heart.card.heart-roll"))];
+        if (opts.difficulty) whatParts.push(`<strong class="heart-term">${esc(difficulty)}</strong>`);
+        if (opts.mastery) whatParts.push(esc(loc("heart.card.mastery")));
+        let what = whatParts.join(", ");
+        if (chatOptions.flavor) what = `${esc(chatOptions.flavor)}: ${what}`;
+
+        // One muted line: the difficulty's cut, the pool's notes, helpers
+        // ("Risky: highest die removed. Vess helped and takes the same stress.")
+        const det = [];
+        if (opts.result_set === "impossible") det.push(esc(loc("heart.card.impossible")));
+        else if (opts.result_set === "difficult") det.push(esc(loc("heart.card.fresh", { difficulty })));
+        else if (opts.cut) det.push(esc(loc(`heart.card.cut-${opts.cut}`, { difficulty })));
+        for (const note of opts.notes ?? []) det.push(esc(note));
+        // Helpers share the consequences (HCB p. 76): Take stress marks the
+        // same stress on each of them, less their own Protection
+        const helpers = (opts.helpers ?? []).map(id => game.actors.get(id)?.name).filter(Boolean);
+        if (helpers.length) {
+            const names = helpers.map(n => `<b>${esc(n)}</b>`).join(` ${esc(loc("heart.card.and"))} `);
+            det.push(game.i18n.format(helpers.length === 1 ? "heart.card.helped-one" : "heart.card.helped-many", { names }));
+        }
+        if (this.result === "critical_success") det.push(esc(loc("heart.rolls.roll.crit-step-up")));
+
+        // a result that costs stress reads red; a critical success underlined
+        const outcomeClass = ["failure", "critical_failure", "success_at_a_cost"].includes(this.result) ? "bad"
             : this.result === "critical_success" ? "crit" : "";
 
         // Define chat data
         const chatData = {
-            faces: isPrivate ? [] : faces,
             outcomeClass: isPrivate ? "" : outcomeClass,
             character: chatOptions.character || opts.character,
-            description: isPrivate ? "???" : description,
-            notes: isPrivate ? [] : (opts.notes ?? []),
+            what: isPrivate ? "???" : what,
+            // the outcome leads with the skill's glyph (the domain's without one)
+            glyph: isPrivate ? "" : (glyphFor("skill", opts.skill) || glyphFor("domain", opts.domain)),
+            det: isPrivate ? "" : emphasizeTerms(det.join(" ")),
             formula: isPrivate ? "???" : this._formula,
-            flavor: isPrivate ? null : chatOptions.flavor,
             user: chatOptions.user,
-            tooltip: isPrivate ? "" : await this.getTooltip(),
-            // Helpers share the consequences (HCB p. 76): Take stress marks
-            // the same stress on each of them, less their own Protection
-            helperNames: isPrivate ? "" : (opts.helpers ?? []).map(id => game.actors.get(id)?.name).filter(Boolean).join(", "),
-            criticalSuccess: !isPrivate && this.result === "critical_success",
+            // each die with its source (Base, Wild, a helper, Difficult)
+            dice: isPrivate ? '' : diceRow(faces.map(f => ({ label: f.flavor, faces: 10, value: f.result, kept: f.kept, removed: f.removed }))),
             showStressRollButton: isPrivate ? false : showStressRollButton && stress_results.includes(this.result),
             total: isPrivate ? "?" : this.total,
             result: isPrivate ? "?" : this.result
@@ -154,13 +146,7 @@ export default class HeartRoll extends Roll {
             return this.dice.map(d => ({ result: d.total, flavor: d.flavor || game.i18n.localize("heart.rolls.roll.fresh-flavor"), kept: true, removed: false }));
         }
         const results = pool.results;
-        const keptIndex = results.findIndex(r => r.active);
-        const cut = this.options.cut ?? 0;
-        const removed = results.map((r, i) => ({ v: r.result, i }))
-            .filter(o => o.i !== keptIndex)
-            .sort((a, b) => b.v - a.v)
-            .slice(0, cut)
-            .map(o => o.i);
+        const { kept: keptIndex, removed } = markPool(results, this.options.cut ?? 0);
         return results.map((r, i) => ({
             result: r.result,
             flavor: labels[i] ?? this.dice[i]?.flavor ?? "",

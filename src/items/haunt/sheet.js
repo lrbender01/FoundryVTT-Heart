@@ -62,15 +62,16 @@ export default class extends HeartItemSheet {
             const target = $(ev.currentTarget);
             const id = target.closest ('[data-id]').data('id');
             const service = this.item.system.resistances[id];
-            const item = {system:{die_size:service.die_size}};
+            // the haunt rides on the roll as its item (2026-09-30 review)
+            const item = {
+                name: this.item.name, img: this.item.img, type: 'haunt',
+                system: { die_size: service.die_size, service: service.resistance },
+            };
 
             const roll = game.heart.rolls.ItemRoll.build({item});
             await roll.evaluateSync();
 
-            roll.toMessage({
-                flavor: `${localizeHeart(this.item.name)} (<span class="item-type">${localizeHeart(this.item.type)}</span>)<div class="resistance-text">${localizeHeart(service.resistance)}</div>`,
-                speaker: {alias: "GM"}
-            });
+            roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this.item.actor }) });
         });
 
         html.find('[data-action=upgrade]').click(async ev => {

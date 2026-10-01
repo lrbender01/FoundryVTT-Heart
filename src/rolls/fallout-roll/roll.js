@@ -1,12 +1,12 @@
 import chatTemplateHTML from './roll.html';
 import './roll.sass';
+import { glyphFor } from '../../common/icons';
+import { diceRow, rollParts } from '../dice';
+import { heartDialogOptions } from '../../common/dialog';
 import { partyFalloutResult, isPastRolling, PARTY_FALLOUT_RESULTS } from '../../actors/party/rules';
-
-const fallout_results = {
-    'no-fallout': (total, totalStress) => total > totalStress,
-    'minor-fallout': (total, totalStress) => total <= totalStress && total <= 6,
-    'major-fallout': (total, totalStress) => total <= totalStress && total > 6
-};
+// The character thresholds live in results.js, free of webpack-only imports,
+// so the rules tests can load them (2026-09-30, Luke)
+import { characterFalloutResult } from './results';
 
 export function initialise() {
     // critical-fallout is rolled only for the party's Provisions (house rule,
@@ -81,7 +81,7 @@ export default class FalloutRoll extends Roll {
 
     get result() {
         if (this.options.party) return partyFalloutResult(this.total, this.options.totalStress, this.options.max);
-        return Object.keys(fallout_results).find(result => fallout_results[result](this.total, this.options.totalStress));
+        return characterFalloutResult(this.total, this.options.totalStress);
     }
 
     async render(chatOptions = {}) {
@@ -98,29 +98,52 @@ export default class FalloutRoll extends Roll {
         // Execute the roll, if needed
         if (!this._evaluated) await this.evaluate();
 
-        let description = game.i18n.format(this.options.party
-            ? 'heart.rolls.fallout-roll.description-party(totalStress)'
-            : 'heart.rolls.fallout-roll.description(totalStress)', {
-            totalStress: this.options.totalStress
-        });
-        // at the top of the track the d12 decides nothing (the card can hide
-        // the face using chatData.notRolled)
-        if (this.notRolled) description = game.i18n.localize('heart.rolls.fallout-roll.not-rolled');
+        const loc = (k, d) => (d ? game.i18n.format(k, d) : game.i18n.localize(k));
+        const esc = (t) => Handlebars.escapeExpression(String(t ?? ''));
+        const opts = this.options;
+        const result = this.result;
+        const resistance = opts.resistance;
+        const resistanceLabel = resistance ? loc(`heart.resistance.${resistance}`) : '';
+
+        // What: "d12 vs 9 total stress", "d12 vs 14 Provisions"; at the top of
+        // the track the d12 decides nothing (no die shown). The triggering
+        // resistance is left off (2026-09-30 review: the stress block above
+        // already says it)
+        let what;
+        if (this.notRolled) what = loc('heart.card.fallout-full', { value: opts.totalStress, max: opts.max });
+        else if (opts.party) what = loc('heart.card.fallout-party', { total: opts.totalStress, resistance: `${glyphFor('resistance', 'provisions')}<b>${esc(resistanceLabel)}</b>` });
+        else what = loc('heart.card.fallout-what', { total: opts.totalStress });
+        if (chatOptions.flavor) what = `${esc(chatOptions.flavor)}: ${what}`;
+
+        // the clear button says what it clears
+        const clearLabel = opts.party ? loc('heart.party.clear')
+            : result === 'major-fallout' ? loc('heart.rolls.fallout-roll.confirm-clear-all')
+            : resistanceLabel ? loc('heart.rolls.fallout-roll.confirm-clear-one', { resistance: resistanceLabel })
+            : loc('heart.rolls.fallout-roll.clear-stress-short');
+        // and its tooltip names the rule (2026-09-30, Luke): Minor clears its
+        // resistance, Major every resistance, a Provisions Fallout the track
+        const clearTip = opts.party ? 'heart.tip.card.clear-provisions'
+            : result === 'major-fallout' ? 'heart.term.major-fallout'
+            : result === 'minor-fallout' ? 'heart.term.minor-fallout'
+            : '';
 
         // Define chat data
         const chatData = {
-            description: isPrivate ? '???' : description,
+            what: isPrivate ? '???' : what,
             formula: isPrivate ? "???" : this._formula,
-            flavor: isPrivate ? null : chatOptions.flavor,
             user: chatOptions.user,
-            tooltip: isPrivate ? "" : await this.getTooltip(),
+            dice: isPrivate || this.notRolled ? '' : diceRow(rollParts(this).map(p => ({ ...p, kept: true }))),
             total: isPrivate ? "?" : this.total,
-            result: isPrivate ? "?" : this.result,
+            result: isPrivate ? "?" : result,
+            bad: !isPrivate && result !== 'no-fallout',
+            crit: !isPrivate && result === 'critical-fallout',
+            clearLabel,
+            clearTip,
             showClearStressButton: isPrivate ? false : showClearStressButton,
-            party: Boolean(this.options.party),
+            party: Boolean(opts.party),
             notRolled: isPrivate ? false : this.notRolled,
             // minor / major / critical: the outcome's severity glyph
-            severity: isPrivate ? '' : String(this.result ?? '').replace(/-fallout$/, ''),
+            severity: isPrivate ? '' : String(result ?? '').replace(/-fallout$/, ''),
         };
 
         // Render the roll display template
@@ -205,7 +228,7 @@ export default class FalloutRoll extends Roll {
             clear: { icon: '<i class="fas fa-eraser"></i>', label: clearLabel, callback: onClear },
           },
           default: 'clear',
-        }, { classes: ['dialog', 'heart-confirm'] }).render(true);
+        }, heartDialogOptions()).render(true);
       }
 
       function removeMinorStress(stressType, actor, resistances) {

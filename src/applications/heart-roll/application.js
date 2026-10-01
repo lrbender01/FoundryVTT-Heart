@@ -27,7 +27,8 @@ export default class HeartRollPrompt extends Application {
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
             template: applicationHTML.path,
-            classes: ['heart', 'heart-roll-prompt'],
+            // heart-window: the class Heart's theme is scoped to (2026-09-30)
+            classes: ['heart', 'heart-window', 'heart-roll-prompt'],
             width: 600,
             height: 'auto',
             resizable: true,
@@ -75,11 +76,14 @@ export default class HeartRollPrompt extends Application {
             const has = Boolean(data?.value);
             const blocked = has && ((kind === 'skill' && flags.tired) || (kind === 'domain' && flags.clouded));
             const label = loc(`heart.${kind}.${id}`);
+            // the chip's rule (what the skill or domain covers, 2026-09-30),
+            // or why it adds no die for this character
+            const rule = loc(`heart.tip.${kind}.${id}`);
             let tip;
-            if (!actor) tip = label;
+            if (!actor) tip = rule;
             else if (!has) tip = game.i18n.format('heart.roll-prompt.lacks', { name: actor.name, what: label });
             else if (blocked) tip = game.i18n.format(`heart.roll-prompt.${kind === 'skill' ? 'tired' : 'clouded'}`, { what: label });
-            else tip = loc('heart.roll-prompt.adds-die') + (data.knack ? ` ${game.i18n.format('heart.roll-prompt.knack-tip', { knack: data.knack })}` : '');
+            else tip = rule + (data.knack ? ` ${game.i18n.format('heart.roll-prompt.knack-tip', { knack: data.knack })}` : '');
             return { id, label, has, knack: has && Boolean(data.knack), on: s[kind] === id, lack: actor && !has, blocked, tip };
         };
         const skills = game.heart.skills.map(id => trait('skill', id));

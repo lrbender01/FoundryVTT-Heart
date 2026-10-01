@@ -13,7 +13,7 @@
 <div class="character-tab-container beats-{{type}}">
   <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "beat"}}}</span>{{title}} <span class="panel-count">{{done}} / {{beats.length}}</span>
     {{#if user.isGM}}
-    <a class="panel-add" data-action="create-beat" data-level="{{type}}" title="{{localizeHeart 'beat' 'custom' 'add'}}"><span class="fas fa-plus"></span></a>
+    <a class="panel-add" data-action="create-beat" data-level="{{type}}" aria-label="{{localizeHeart 'beat' 'custom' 'add'}}"><span class="fas fa-plus"></span></a>
     {{/if}}
   </div>
   <div class="container-content">
@@ -44,11 +44,14 @@
   {{/inline}}
 
   <!-- ===== OVERVIEW ===== -->
+  <!-- Pursued Beats across the top; then the core ability, the description,
+       and the trinket on the left, the questions on the right (2026-09-30
+       review) -->
   <section class="item-tab" data-tab="overview">
     {{#if item.isOwned}}
     <div class="character-tab-container active-beats-container">
-      <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "beat"}}}</span>{{localizeHeart "beat" "active" "label-multiple"}} <span class="panel-count">{{activeBeats.length}} / 2</span>
-        {{#if beatsWarning}}<a class="heart-warn" data-action="show-beats-tab" title="{{beatsWarning}}">!</a>{{/if}}
+      <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "beat"}}}</span>{{localizeHeart "beat" "active" "label-multiple"}} <span class="panel-count" data-tooltip="heart.tip.beats-limit">{{activeBeats.length}} / 2</span>
+        {{#if beatsWarning}}<a class="heart-warn" data-action="show-beats-tab" data-tooltip="{{beatsWarning}}">!</a>{{/if}}
       </div>
       <div class="container-content">
         <div class="tab-item-list">
@@ -65,18 +68,9 @@
 
     <div class="item-cols even">
       <div class="column">
-        {{#if (and editable (not item.isOwned))}}
-        {{> "heart:items/base/description.html"}}
-        {{else}}
-        <div class="character-tab-container description-panel">
-          <div class="container-title">{{localizeHeart "item-sheet" "description"}}</div>
-          <div class="container-content calling-text">{{{localizeHeart system.description}}}</div>
-        </div>
-        {{/if}}
-
         <div class="character-tab-container core-ability-container">
           <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "ability"}}}</span>{{localizeHeart "calling" "core-ability" "label-single"}}
-            {{#if user.isGM}}<a class="panel-add" data-action="add-child" data-type="ability" data-data='{"active": true}' title="{{localizeHeart 'calling' 'core-ability' 'add'}}"><span class="fas fa-plus"></span></a>{{/if}}
+            {{#if user.isGM}}<a class="panel-add" data-action="add-child" data-type="ability" data-data='{"active": true}' aria-label="{{localizeHeart 'calling' 'core-ability' 'add'}}"><span class="fas fa-plus"></span></a>{{/if}}
           </div>
           <div class="container-content">
             <div class="tab-item-list">
@@ -86,6 +80,15 @@
             </div>
           </div>
         </div>
+
+        {{#if (and editable (not item.isOwned))}}
+        {{> "heart:items/base/description.html"}}
+        {{else}}
+        <div class="character-tab-container description-panel">
+          <div class="container-title">{{localizeHeart "item-sheet" "description"}}</div>
+          <div class="container-content calling-text">{{{localizeHeart system.description}}}</div>
+        </div>
+        {{/if}}
 
         <!-- Trinket (2026-09-30 review): its own section under the core
              ability; rolled once, into the character's items -->
@@ -110,18 +113,18 @@
 
       <div class="column">
         <div class="character-tab-container questions-container">
-        <div class="container-title">{{localizeHeart "item-sheet" "questions"}}</div>
+        <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "questions"}}}</span>{{localizeHeart "item-sheet" "questions"}}</div>
         <div class="container-content">
           <div class="questions-prompt">{{localizeHeart "item-sheet" "calling-questions-prompt"}}</div>
           <ol class="question-list">
           {{#each system.questions as |question id|}}
             <li data-id="{{id}}">
-              <div class="question">{{{localizeHeart question.question}}}{{#if (and ../item.isOwned ../editable)}}<a class="answer-edit" data-action="edit-answer" title="{{localizeHeart 'item-sheet' 'answer'}}"><span class="fas fa-edit"></span></a>{{/if}}</div>
+              <div class="question">{{{heartTerms (localizeHeart question.question)}}}{{#if (and ../item.isOwned ../editable)}}<a class="answer-edit" data-action="edit-answer" aria-label="{{localizeHeart 'item-sheet' 'answer'}}"><span class="fas fa-edit"></span></a>{{/if}}</div>
               {{#if ../item.isOwned}}
               <div class="answer">
                 {{#unless question.answer}}<div class="answer-placeholder">{{localizeHeart "item-sheet" "no-answer"}}</div>{{/unless}}
                 {{#if ../editable}}
-                {{editor question.answer target=(join "." "system.questions" id "answer") button=true editable=../editable owner=../owner}}
+                {{editor question.answer target=(join "." "system.questions" id "answer") button=true editable=../editable owner=../owner engine="prosemirror"}}
                 {{else}}
                 {{{question.answer}}}
                 {{/if}}

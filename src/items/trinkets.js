@@ -12,7 +12,8 @@
 // flags.heart.trinket = {name, uuid}: it happens once, with no reroll
 // (Luke, 2026-09-30).
 
-import { showDice } from '../rolls/dice';
+import { showDice, diceRow, rollParts } from '../rolls/dice';
+import { iconFor } from '../common/icons';
 
 const KIND = { ancestry: 'keepsake', calling: 'trinket' };
 
@@ -60,14 +61,13 @@ export async function rollTrinket(item) {
         ui.notifications.warn(game.i18n.format('heart.trinket.no-table', { name: itemName }));
         return;
     }
-    // Roll the table, show the dice (Dice So Nice, or Foundry's dice sound),
-    // then post the usual draw card without the roll attached, so Dice So
-    // Nice doesn't animate it a second time (2026-09-30 review)
+    // Roll the table and show the dice (Dice So Nice, or Foundry's dice
+    // sound); the card below carries no roll, so nothing animates twice
+    // (2026-09-30 review)
     const { roll, results } = await table.roll();
     const result = results?.[0];
     if (!result) return;
     await showDice(roll);
-    await table.toMessage(results, { roll: null, messageData: { speaker: ChatMessage.getSpeaker({ actor }) } });
 
     const source = await resultDocument(result);
     let created;
@@ -87,6 +87,28 @@ export async function rollTrinket(item) {
     }
     // (no "added to items" banner: the sheet shows the item, 2026-09-30)
     await item.setFlag('heart', 'trinket', { name: created?.name ?? '', uuid: created?.uuid ?? '' });
+    await postDrawCard(actor, table, created, roll);
+}
+
+// A compact draw card (2026-09-30 review; replaces Foundry's table card and
+// its long table description): who drew from which table, then the item's
+// icon large beside its name, which opens (and drags) the item
+async function postDrawCard(actor, table, created, roll = null) {
+    const esc = (t) => Handlebars.escapeExpression(String(t ?? ''));
+    const name = created?.name ?? '';
+    const link = created
+        ? `<a class="content-link ledger-name" draggable="true" data-link data-uuid="${esc(created.uuid)}" data-type="Item">${esc(name)}</a>`
+        : `<span class="ledger-name">${esc(name)}</span>`;
+    // ledger style (2026-09-30, round-2 mock B): the table as the hint line,
+    // the item's icon leading its name, then the table's die
+    await ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor }),
+        content: `<div class="heart heart-draw-card"><div class="ledger">`
+            + `<div class="ledger-what">${esc(game.i18n.format('heart.trinket.draw-flavor', { table: table.name }))}</div>`
+            + `<div class="ledger-out">${iconFor(created?.img)}${link}</div>`
+            + (roll ? diceRow(rollParts(roll)) : '')
+            + `</div></div>`,
+    });
 }
 
 // The rolled keepsake / trinket as the actor's item (for the sheet's row),

@@ -29,3 +29,41 @@ export async function showDice(roll, { setting = null, rollMode = game.settings.
     const src = CONFIG.sounds?.dice;
     if (src) foundry.audio.AudioHelper.play({ src, volume: 0.8, autoplay: true, loop: false }, true);
 }
+
+// ---------------------------------------------------------------- dice row
+// Every ledger card's dice (2026-09-30, Luke's pick of the round-2 mock B):
+// one always-visible row, each die drawn as Foundry's own die shape with
+// its number on top and its label under it (Base, Kill, a helper, d6). The
+// kept die is red; a die the difficulty removed is crossed out. Replaces
+// the old dice summary line and its click-to-open breakdown.
+
+// Every die in a roll as a part: { label, faces, value, kept, removed }
+export function rollParts(roll, label = '') {
+    return (roll?.dice ?? []).flatMap(die => (die.results ?? []).map(r => ({
+        label: die.flavor || label,
+        faces: die.faces,
+        value: r.result,
+        kept: r.active !== false && !r.discarded,
+        removed: r.active === false || Boolean(r.discarded),
+    })));
+}
+
+const DIE_ICONS = new Set([4, 6, 8, 10, 12, 20]);
+
+// The die shape is a mask (like the glyphs), so the card colours it: grey,
+// or red for the kept die
+export function diceRow(parts) {
+    const esc = (t) => Handlebars.escapeExpression(String(t ?? ''));
+    if (!parts?.length) return '';
+    const dice = parts.map(p => {
+        const faces = DIE_ICONS.has(Number(p.faces)) ? Number(p.faces) : 6;
+        const cls = ['ledger-die', p.kept ? 'kept' : '', p.removed ? 'removed' : ''].filter(Boolean).join(' ');
+        // a label only when it says something the die shape doesn't (Base,
+        // Kill, a helper); a bare "d20" is left off (2026-09-30 review)
+        return `<span class="${cls}" data-tooltip="d${faces}">`
+            + `<span class="die-shape"><i style="--die: url('icons/svg/d${faces}-grey.svg')"></i><b>${esc(p.value)}</b></span>`
+            + (p.label ? `<span class="die-label">${esc(p.label)}</span>` : '')
+            + `</span>`;
+    }).join('');
+    return `<div class="ledger-dice">${dice}</div>`;
+}

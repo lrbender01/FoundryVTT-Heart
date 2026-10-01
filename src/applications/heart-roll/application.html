@@ -15,7 +15,7 @@
   <section>
     <div class="roll-label">{{localizeHeart "difficulty" "label-single"}} <span class="why">{{localizeHeart "roll-prompt" "difficulty-why"}}</span></div>
     <div class="roll-chips">
-      {{#each difficulties as |d|}}<button type="button" class="roll-chip {{#if d.on}}on{{/if}}" data-k="difficulty" data-v="{{d.id}}" title="{{d.tip}}">{{d.label}}</button>{{/each}}
+      {{#each difficulties as |d|}}<button type="button" class="roll-chip {{#if d.on}}on{{/if}}" data-k="difficulty" data-v="{{d.id}}" data-tooltip="{{d.tip}}">{{d.label}}</button>{{/each}}
     </div>
     {{#each hints as |hint|}}<p class="roll-hint warn">{{hint}}</p>{{/each}}
   </section>
@@ -23,16 +23,16 @@
   <section>
     <div class="roll-label">{{localizeHeart "domain" "label-single"}} <span class="why">{{localizeHeart "roll-prompt" "domain-why"}}</span></div>
     <div class="roll-chips">
-      <button type="button" class="roll-chip {{#if noDomain}}on{{/if}}" data-k="domain" data-v="" title="{{localizeHeart 'roll-prompt' 'none-domain-tip'}}">{{localizeHeart "roll-prompt" "none"}}</button>
-      {{#each domains as |t|}}<button type="button" class="roll-chip {{#if t.on}}on{{/if}} {{#if t.lack}}lack{{/if}} {{#if t.blocked}}struck{{/if}}" data-k="domain" data-v="{{t.id}}" title="{{t.tip}}">{{{heartGlyph "domain" t.id}}}{{t.label}}{{#if t.has}}<span class="has"></span>{{/if}}{{#if t.knack}}<span class="knack">✦</span>{{/if}}</button>{{/each}}
+      <button type="button" class="roll-chip {{#if noDomain}}on{{/if}}" data-k="domain" data-v="">{{localizeHeart "roll-prompt" "none"}}</button>
+      {{#each domains as |t|}}<button type="button" class="roll-chip {{#if t.on}}on{{/if}} {{#if t.lack}}lack{{/if}} {{#if t.blocked}}struck{{/if}}" data-k="domain" data-v="{{t.id}}" data-tooltip="{{t.tip}}">{{{heartGlyph "domain" t.id}}}{{t.label}}{{#if t.has}}<span class="has"></span>{{/if}}{{#if t.knack}}<span class="knack">✦</span>{{/if}}</button>{{/each}}
     </div>
   </section>
 
   <section>
     <div class="roll-label">{{localizeHeart "skill" "label-single"}} <span class="why">{{localizeHeart "roll-prompt" "skill-why"}}</span></div>
     <div class="roll-chips">
-      <button type="button" class="roll-chip {{#if noSkill}}on{{/if}}" data-k="skill" data-v="" title="{{localizeHeart 'roll-prompt' 'none-skill-tip'}}">{{localizeHeart "roll-prompt" "none"}}</button>
-      {{#each skills as |t|}}<button type="button" class="roll-chip {{#if t.on}}on{{/if}} {{#if t.lack}}lack{{/if}} {{#if t.blocked}}struck{{/if}}" data-k="skill" data-v="{{t.id}}" title="{{t.tip}}">{{{heartGlyph "skill" t.id}}}{{t.label}}{{#if t.has}}<span class="has"></span>{{/if}}{{#if t.knack}}<span class="knack">✦</span>{{/if}}</button>{{/each}}
+      <button type="button" class="roll-chip {{#if noSkill}}on{{/if}}" data-k="skill" data-v="">{{localizeHeart "roll-prompt" "none"}}</button>
+      {{#each skills as |t|}}<button type="button" class="roll-chip {{#if t.on}}on{{/if}} {{#if t.lack}}lack{{/if}} {{#if t.blocked}}struck{{/if}}" data-k="skill" data-v="{{t.id}}" data-tooltip="{{t.tip}}">{{{heartGlyph "skill" t.id}}}{{t.label}}{{#if t.has}}<span class="has"></span>{{/if}}{{#if t.knack}}<span class="knack">✦</span>{{/if}}</button>{{/each}}
     </div>
     {{#if actor}}<div class="roll-legend"><span><span class="has"></span> {{legendHas}}</span><span>✦ {{localizeHeart "roll-prompt" "legend-knack"}}</span><span>{{localizeHeart "roll-prompt" "legend-lack"}}</span></div>{{/if}}
   </section>
@@ -40,7 +40,7 @@
   <section>
     <div class="roll-label">{{localizeHeart "mastery" "label-single"}} <span class="why">{{localizeHeart "roll-prompt" "mastery-why"}}</span></div>
     <div class="roll-chips">
-      <button type="button" class="roll-chip {{#if mastery}}on{{/if}}" data-k="mastery" title="{{localizeHeart 'roll-prompt' 'mastery-tip'}}">{{localizeHeart "mastery" "label"}}</button>
+      <button type="button" class="roll-chip {{#if mastery}}on{{/if}}" data-k="mastery" data-tooltip="heart.term.mastery">{{localizeHeart "mastery" "label"}}</button>
     </div>
     {{#if knacks.length}}
     {{#each knacks as |k|}}<p class="roll-hint">{{localizeHeart "roll-prompt" "knack-for"}} {{k.label}}: <b>{{k.knack}}</b>. {{localizeHeart "roll-prompt" "knack-applies"}}</p>{{/each}}
@@ -53,7 +53,7 @@
   <section>
     <div class="roll-label">{{localizeHeart "helper" "label-multipler"}} <span class="why">{{localizeHeart "roll-prompt" "helpers-why"}}</span></div>
     <div class="roll-chips">
-      {{#each helpers as |h|}}<button type="button" class="roll-chip {{#if h.on}}on{{/if}} {{#if h.blocked}}blocked{{/if}} {{#if h.override}}override{{/if}}" data-k="helper" data-v="{{h.id}}" title="{{h.tip}}">{{h.name}}</button>{{/each}}
+      {{#each helpers as |h|}}<button type="button" class="roll-chip {{#if h.on}}on{{/if}} {{#if h.blocked}}blocked{{/if}} {{#if h.override}}override{{/if}}" data-k="helper" data-v="{{h.id}}" data-tooltip="{{h.tip}}">{{h.name}}</button>{{/each}}
     </div>
     <p class="roll-hint">{{localizeHeart "helper" "hint"}}{{#if isGM}} {{localizeHeart "roll-prompt" "gm-override"}}{{/if}}</p>
   </section>
@@ -73,7 +73,7 @@
     {{#each pool.notes as |n|}}<p class="roll-hint">{{n}}</p>{{/each}}
     {{#if pool.impossible}}
     {{else if pool.fresh}}
-    <div class="pool-outcomes"><b>10</b><span>{{localizeHeart "result" "success_at_a_cost"}}</span><b>2-9</b><span class="bad">{{localizeHeart "result" "failure"}}</span><b>1</b><span class="bad">{{localizeHeart "result" "critical_failure"}}</span></div>
+    <div class="pool-outcomes"><b>10</b><span>{{localizeHeart "result" "success_at_a_cost"}}</span><b>1-9</b><span class="bad">{{localizeHeart "result" "failure"}}</span></div>
     {{else}}
     <div class="pool-outcomes"><b>10</b><span>{{localizeHeart "result" "critical_success"}}</span><b>8-9</b><span>{{localizeHeart "result" "success"}}</span><b>6-7</b><span>{{localizeHeart "result" "success_at_a_cost"}}</span><b>2-5</b><span class="bad">{{localizeHeart "result" "failure"}}</span><b>1</b><span class="bad">{{localizeHeart "roll-prompt" "crit-fail-double"}}</span></div>
     {{/if}}

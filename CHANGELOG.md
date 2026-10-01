@@ -10,6 +10,45 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
 
 ### Added
 
+- **Tooltip pass (2026-09-30, Luke).** Every Heart tooltip is now a rule you can use at the table, in the book's terms, one short sentence (two at most), checked against the core book and the Provisions house rule. Checklist with pages: `docs/plans/heart-tooltips.md` (repo root).
+  - **Hover delay:** Heart tooltips open after a deliberate one-second hover, so they never flash up while the mouse crosses a sheet (Foundry's own tooltips keep their delay). Moving off, a re-render, or a nested tooltip cancels the wait; the middle-click lock and dismissal work as before (`common/tooltip.js`).
+  - **Term tooltips:** every red-highlighted game term shows its rule: skills, domains, resistances, difficulties, Stress, Protection, Fallout and its severities, Mastery, Knack, Skill / Domain / Resistance, the Skill+Domain roll, and every equipment and resource tag (`heart.term.*`; whole phrases point at their main term, so "+2 Echo Protection" explains Protection). Dangerous, both a difficulty and a tag, explains both. Journal text counts too.
+  - **Rewritten** in the bare-rule voice: skills, domains, and resistances (what each covers; how to remove the Stress was tried and dropped in review), difficulties, the roll prompt's skill and domain chips (the rule, or why a character gets no die), helpers, Mastery, beats, learning abilities, Provisions track and Protection, quartermaster, Reset Party, haunt services and upgrades, fallout glyphs, the tag Uses field.
+  - **New:** Stress and Protection column heads, the header Stress and Fallout buttons, knacks, the two-beat limit, Pursue and Finish, equipment types (Kill, Delve, Mend, Miscellaneous), tag links without rule text, the Provisions actions (Upkeep, Use Provisions, Restock, Scavenge, Relieve, Clear) and Ignore Protection, the stakes picker (Passive, Ignore Protection, die sizes, resistances, critical failure), chat-card buttons (Take Stress, each fallout button, the clear buttons), and the adversary, delve, and landmark header fields.
+  - **Removed** tooltips that only named the obvious (open, delete, edit, add, preview, plain "Roll" dice, portrait names, "Default Difficulty" repeating its label); each icon-only control keeps that wording as an `aria-label` for screen readers.
+- **Rules tests (2026-09-30, Luke).** About 250 vitest tests that run without Foundry (`npm test` here; root `npm test` and the pre-commit hook run them too): Heart roll results, the dice pool and difficulty cuts, kept / removed dice, stress steps, doubling and Protection, fallout thresholds, Provisions, the term highlighter, the dice row, repeatable abilities, equipment choices, the two-beat limit, and seeded randomized checks. To make them loadable, the result tables and stress / fallout arithmetic moved out of the webpack-only roll files into pure modules beside them (`rolls/heart-roll/results.js`, `rolls/fallout-roll/results.js`, `rolls/stress-roll/rules.js`), imported back with no behaviour change. See CLAUDE.md "Tests".
+- **What each skill, domain, and resistance is for (2026-09-30 review).** One-sentence tooltips (`heart.tip.*`, written in the book's voice, not quoted) on the character sheet's skill and domain cards, resistance and Provisions names, the Skills & Domains tab, the Edit Skills / Edit Domains windows, and the class sheet's Domain & Skill; `{{heartTip kind id}}` helper.
+- **More highlighted terms:** the difficulties (Standard, Risky, Impossible; Dangerous already counted as a tag) and plural "Protections", with the same capitalisation rules as every term.
+- **Whole-phrase highlights (2026-09-30, Luke's picks).** One highlight per phrase for Protection units ("+2 Echo Protection", "+1 Blood and Mind Protection", "Blood Protection +2", "Protection 5"), Stress units ("D6 Stress to Mind", "+2 Stress to Blood", "D4, D6 or D10 Stress to Supplies", "all Mind Stress", "Stress dice", "4 total Stress", "4 or more Stress", "Mind Stress to 0"), Fallout lists ("Major or Minor Blood, Mind or Supplies Fallout", "Fallouts"), and dice with counts, plurals, or signs ("2D10", "D8s", "+D4"). "Stress" and "Mastery" count as terms and skip the sentence-start check; "dice", "die", "equipment", and "region(s)" mark a term after a sentence-start word ("Delve equipment", "Desolate regions"). Signs need a space or the line start before them, so ranges like "2-5" never match. Lists work with or without the serial comma ("D4, D6, or D8", "Blood, Mind, or Supplies"), and Provisions counts as a resistance term ("Provisions Stress").
+- **Party sheet: Pursued Beats (2026-09-30, Luke).** Every member's pursued beats with their full text, two members to a row, in each member's own order; read-only (Pursue / Finish stay on the character sheet). The member's name opens their sheet. The section refreshes when a member pursues, finishes, or reorders a beat. It sits at the bottom of the sheet, under Notes.
+- **Skill, Domain, Resistance, and Knack highlight (2026-09-30, Luke).**
+  - Highlighted alone and in combinations: "Delve+Domain", "Discern+[Domain]", "Skill+Domain", "Kill Skill", "Occult Domain", "Blood Resistance". fvtt-heart-content capitalises them where they mean the mechanic.
+  - The sentence-start check applies, so "Skills you have..." at the start of a sentence stays plain.
+- **Notes glyph (2026-09-30, Luke).** The character sheet's and party sheet's Notes titles get a section glyph (`sections/notes.svg`, game-icons.net scroll-unfurled by lorc).
+- **Party sheet: Party Items (2026-09-30, Luke).**
+  - Equipment, resources, and plain items the party carries together, two to a row, between Provisions and Notes.
+  - Drop them onto the sheet, or use + for a new item.
+  - Party Reset deletes them along with the party's Fallouts.
+- **Reset Party in the window title bar (2026-09-30, Luke).**
+  - The GM's reset moved from the Clear Provisions row into the party sheet's title bar, at the start of the header buttons, well away from Close. It is styled like Foundry's other header buttons.
+  - It is labelled "Reset Party", with a tooltip and a confirmation that list everything it clears: name, portrait, members, quartermaster, Provisions, Fallouts, items, and notes.
+
+
+- **Ledger chat cards (2026-09-30, Luke's pick from the "Heart Chat Cards" mock, direction B).** Every Heart card is one or more ledger blocks: a "what" line (moved up beside the speaker for the first block; later chained blocks keep theirs after a thin rule), a square badge (the kept die, a resistance or severity glyph, the item's icon) beside the outcome and its dice, one muted detail line, one line per character, and pill buttons. The message header is that compact top line on every message (no red bar).
+  - Heart roll: "Kill + Occult, Risky"; "Risky: highest die removed. **Vess** helped and takes the same stress."; a result that costs stress reads red.
+  - Stress: "D6 to Blood", "+4 Blood Stress", each character's "+3 (protection 1) · 7 of 10", a fallout pill per character; Provisions stress reads "+3 Provisions Stress" with the party's line and the past-twelve warning.
+  - Fallout: "d12 vs 9 total stress, after Blood", the severity glyph as the badge, and the clear pill named for what it clears; a full Provisions track shows no die.
+  - Restock is one card: "-6 Provisions Stress", "Resupplied D8 provisions.", "Kettle pays D6: +4 Supplies Stress", the party's change, and the payer's fallout pill. Relief (scavenge, haunts, and the rest) gets the same card. Both carry their rolls, so Dice So Nice animates them.
+  - Item rolls (equipment, resources, haunt services) get the item's icon and name beside the result, with its skill or domain and the die. Keepsake draws use the same shape.
+  - Quartermaster changes, clears, and resets post one-line notices.
+- **Party reset is a fresh party (2026-09-30 review):** default name and portrait, no members, no quartermaster, empty Provisions, no fallouts, no notes.
+
+- **Party section on the character sheet (2026-09-30 review).** Under Resistances, titled with the party actor's name ("Party" by default) and an eye that opens the party sheet: the shared Provisions row (moved out of Resistances; its shields share the resistances' column width so they line up), then the members as class-icon chips (the class icon, not the token art) whose "Name: Ancestry Class Calling" shows small and italic on hover. The party sheet's member cards show the class icon, name, and ancestry / class / calling; its Provisions actions are two groups (Mark stress / Remove stress), each action a name, one line on when to use it, and its controls; the quartermaster's name no longer repeats beside Protection. Sheets refresh when a member's name, ancestry, class, or calling changes.
+- **Section-title glyphs everywhere on the character sheet (2026-09-30 review).** Resistances, Party, Skills, Domains, Equipment, Resources, Items, Inactive Gear, and Fallout (Abilities and Pursued Beats already had theirs), from `assets/icons/sections/<name>.svg` via `heartGlyph "section"`. All nine files are placeholders (a dashed ring with "?") until the real glyphs are dropped in under the same names.
+- **Fallout source field (2026-09-30 review).** `system.source` on fallouts (template.json), edited on the fallout sheet under the effect; rows on character, party, and actor sheets no longer show it. On ready the GM's client moves the trailing "Source: ..." paragraph of older copies into the field (`items/fallout/migrate.js`). fvtt-heart-content writes the field instead of the paragraph.
+- **Reorder fallouts (2026-09-30 review)** by dragging, like abilities (`flags.heart.falloutOrder`).
+- **Create Actor defaults to Adversary** (`CONFIG.Actor.defaultType`).
+
 - **Every new glyph in use (2026-09-30 review, Luke's placements).** Severity glyphs (minor / major / critical) on fallout rows, the fallout roll card's outcome, and the fallout sheet's Severity chip. Fallout rows lead with the severity glyph, then the resistance glyph (tooltips name both; the "(Major Blood)" text is gone, kept only for a resistance with no glyph). Item-type glyphs before section titles (Pursued Beats and beat sections: beat; Abilities, Core Ability, class tiers: ability; Tags: tag; landmark Haunts: haunt) and the tag glyph before equipment / resource tag lists. Equipment, resource, and haunt roll cards lead with the item's own icon. Item rows (Items section, keepsakes) show their icon on the left. Provisions shows its own glyph on the character sheet; a party still carrying the old Supplies placeholder takes the Provisions glyph on the GM's next load. `heartGlyph` gained the `item` kind; `heartHasGlyph` tests for a glyph in templates.
 - **Class starting equipment locks once picked (2026-09-30 review).** Picking an option on a character's class asks first ("can't be changed once it's picked"); the other options stay listed, ghosted, and unpickable, and the pick can't be undone by players (the GM still can).
 
@@ -24,7 +63,158 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
 - **Party sheet and Provisions on the character sheet (2026-09-30).** The party actor has a real sheet (`actors/party/sheet.*`, `party.sass`): name and quartermaster picker in the header beside the 20-box Provisions track (two rows of ten, a red tick and red outlines from box 13) and the quartermaster's protection; a members strip (token art and name; drag characters onto the sheet or use +, x to remove, click to open); Provisions actions (Upkeep, Mark by die or amount with an ignore-protection box, Restock with payer and die, Scavenge relief, Relieve by die or amount, Clear, GM-only Reset), every one through the party API; party fallouts (only fallout items can be dropped); notes. New field `system.members` (character ids); the quartermaster and restock payer lists offer the members, or every character while there are none. Each character sheet shows Provisions as a sixth, read-only row under the five resistances ("Party · QM Vess", or "Quartermaster" on the quartermaster's own sheet): the name rolls stress to Provisions, the eye opens the party sheet. Open character sheets refresh when the party, its fallouts or the quartermaster's Supplies protection change (`actors/party/view.js` holds the shared display data).
 - **Provisions and the party actor (2026-09-30).** A house rule (monorepo `reference/heart-rules/provisions.md`): one party-wide Provisions track of 20 on a new singleton Actor type `party` ("The Party", created by the GM on ready, owned by every player, not deletable, only one). `game.heart.party`, `actor.proxy.provisions` on every character, and an API on `game.heart.party.proxy` (mark, upkeep, relieve, restock, scavenge, quartermaster, clear, reset). Stress rolls can target Provisions (applied once to the party, less the quartermaster's Supplies protection); its fallout check uses the house thresholds (13+: Major is Critical; 20: Critical without a roll). Party fallouts count on every character's roll prompt. Behaviour only: the party sheet is a placeholder and no other UI changed. Details in the monorepo's `docs/plans/heart-provisions.md`.
 
+### Changed
+
+- **Chat cards, round 2 (2026-09-30, Luke's pick "no badge" with his review changes).**
+  - The message header is just the portrait and the name.
+  - Each block opens with a darker hint line saying what was rolled ("Kill + Occult, Risky", with glyphs; the difficulty always shows and is highlighted).
+  - The outcome follows, led by its glyph (the skill, the resistance, the severity, or the item's icon). There is no badge.
+  - Every die then shows in one always-visible row: Foundry's own die shape (`icons/svg/dN-grey.svg`, as a mask) with the number on top and its label under it (Base, Kill, a helper, d6). The kept die is red; dice the difficulty removed are crossed out, not faded.
+  - A smaller note follows (difficulty, helpers, notes), then who took what, then the buttons.
+  - This replaces the badge, the small face chips, the dice summary line, and its click-to-open breakdown (`diceRow` replaces `diceSummary` and `diceBreakdown` in `rolls/dice.js`).
+  - The fallout card drops "after Blood" and the no-roll note. The item card's hint line is the skill or domain and the die, not the item name repeated. Keepsake draws, restock, and relief cards use the same layout.
+  - Cards posted earlier keep a small badge layout; their old dice line stays hidden.
+  - Card strings capitalise the game terms ("D12 vs 9 total Stress", "Protection 1", "Mastery").
+  - Dice labels only show when they say something the die doesn't (Base, Kill, a helper). Keepsake, stress, and fallout dice drop the bare "d20" / "d6". Labels use the body face in plain case so they read at 11px.
+  - A keepsake or trinket name on its draw card is white, red on hover.
+- **Smaller fixes (2026-09-30 review).**
+  - The Provisions track's Critical line is 1px and centred in the gap between boxes 12 and 13.
+  - Section-title glyphs and edit / eye pencils are centred on the title's capitals, not its line box.
+    - Measured from Luke's Foundry screenshots: both icons' tops met the capitals' tops, so their centres sat 1 to 1.5px low (Notes, Calling, Ancestry, Class, and every other titled section).
+    - Lifted 1px (`.title-glyph` in index.sass, `.container-title .clickable.section-button` in character.sass).
+  - Plain item rows' edit and delete icons match equipment and resource rows (12px, translucent until hover). Preview rows carry a `type-<type>` class, because every row has the `item` class.
+  - The calling sheet's header shows Completed Beats and the three severities in one row at the top right.
+- **Party sheet Provisions actions as action rows (2026-09-30, Luke's pick).**
+  - Each action is a sunken row card like the character sheet's item rows.
+  - Controls always sit under the text, right-justified.
+  - Column titles are Gain Stress and Relieve Stress, a step larger.
+  - "Mark" is now "Use Provisions", with a "Mark Stress" button; Upkeep's button reads "Mark D4 Stress".
+  - Restock explains itself: the payer takes D4, D6, or D8 Supplies Stress, and Provisions Stress is reduced by one die size larger.
+  - Action descriptions highlight game terms.
+  - The Members title drops its count.
+  - Restock's "Who pays" lists only party members (the ones this user owns; the GM sees every member), never every character in the world.
+- **Heart's look stays in Heart's windows (2026-09-30, Luke).**
+  - Every Heart window carries `heart-window`: the sheet mixin, the application base, the options picker, the roll prompt, and Heart dialogs.
+  - The dark window theme (`theme.sass`) applies only to Heart windows and to Mythic GME Tools' panels (`[id$="_panel_window"]`) and dialogs (content with `mgme_` ids). Core journals, compendium windows, roll tables, Configure Settings, the file picker, keybindings, core dialogs, the sidebar, and other modules' windows are back to Foundry's own look. Chat keeps the Heart cards.
+  - The old upstream rules that leaked into every window (zero window padding, heading borders, `.section`, `.sticky`, `.item-list`, `.grid-2`, `.toggle-button`, and 47 generic character-sheet selectors) are scoped with `:where(...)`, so specificity inside Heart windows is unchanged. The scopes are `$in-heart`, `$in-heart-or-chat`, and `$themed-window` in `util.sass`.
+  - The glyph halo on images applies only to Heart icons in Heart windows, chat, and Heart compendiums.
+  - The startup dialog's default button is fixed (it named a button that didn't exist).
+- **The rich-text editor, tamed (2026-09-30, Luke).**
+  - Heart keeps Foundry's own editor, so paste clean-up, undo, safe HTML, and the book text's italics and links all keep working.
+  - Every Heart editor now asks for ProseMirror (`engine="prosemirror"` on all 11 `{{editor}}` calls). Foundry v12's `{{editor}}` helper still defaults to the old TinyMCE editor, which is what Heart sheets were running (its toolbar looks much the same).
+  - Heart sheets build the toolbar themselves: `HeartSheetMixin._configureProseMirrorPlugins` returns a `HeartProseMirrorMenu` (`common/editor.js`) with only the worded actions Cancel and Save on the right. There are no formatting buttons, and the writing area shows the text plain; existing italics, bold, and links are kept, and the sheet styles the saved text as before (answers italic). No divider under the toolbar; bullet points inside a calling or ancestry answer no longer get the question divider. A first version filtered Foundry's menu from its hooks, which never ran under TinyMCE.
+  - Save (or Ctrl+S) saves and closes the editor; Cancel closes it without saving.
+  - The editor is dark: a sunken writing area that grows with its text up to 60% of the window height, then scrolls, with chip buttons. Foundry's light, absolutely positioned content area is overridden.
+  - Other windows keep Foundry's full toolbar. Files: `common/editor.js`, `common/editor.sass`.
+- **The Difficult table follows the book (2026-09-30, Luke).** When a difficulty removes every die, the single fresh die reads 1-9 Failure and 10 Success at a Cost (HCB p. 77), and the roll prompt's table shows the same. A 1 was a Critical Failure, after the Player Cheat Sheet. The rules docs (`reference/heart-rules/`) are updated to match.
+- **Abilities learned more than once (2026-09-30, Luke).**
+  - An ability whose text says "You can take this advance more than once" can be learned again: once learned, a "+" chip sits beside Learned on the class sheet's Abilities tab. "×2", "×3" appears after its title everywhere it shows.
+  - The GM's click on Learned takes one back; the last one un-learns it. The count is `system.times`.
+  - Detection reads the description (`items/ability/repeat.js`, `heartRepeatable` helper), so no content changed. The scan found 40 such abilities across all 13 classes: each class's gain-a-Skill, gain-a-Domain, and +1 Protection advances, plus Snail Pilgrim's Friend! Blessed Friend! and Refuge.
+- **Foundry tooltips everywhere in Heart (2026-09-30, Luke).**
+  - 135 native `title=` tooltips across the sheets, item rows, windows, chips, and the chat dice row became Foundry's `data-tooltip`.
+  - `common/tooltip.js` styles any tooltip shown from a Heart surface (`.heart-window`, `.heart`, `.ledger`) as `.heart-tooltip`: dark, body face, line breaks kept. It shows the text escaped, since Foundry renders tooltip text as HTML and item names or tag rules could otherwise inject markup.
+  - Tooltips elsewhere in Foundry are untouched.
+- **Identity polish (2026-09-30).**
+  - Stakes and Clear Which Stress chips show the resistance glyph (Provisions too); the clear-stress window is titled "Clear Which Stress?".
+  - Edit Skills / Edit Domains use the titled container with the Skills / Domains glyph.
+  - Beat Tracker titles get the beat glyph.
+  - Calling questions are term-highlighted.
+  - The three settings that did nothing (Show Textboxes Below Items, Show Stress Input Box, Pre-Select Stress Type) and the dead `itemListSection` partial are removed.
+- **Ability references (2026-09-30, Luke).** The book names other abilities in capitals inside ability text ("as per HEARTSBLOOD", "your BLOODBOUND BEAST", "OATH OF FURY").
+  - In ability, class, and calling text, each capitalised run of four letters or more is now one highlight. It is red, in the ability-title face (Mosherif), at 1.35em, just under the headers' size and close to the body text (Mosherif runs small), on one line box.
+  - It appears in ability rows on every sheet and in chat, in the Biography tab's calling and class descriptions, and in the ability, class, and calling sheets' text panels.
+  - Other text is unaffected, so "AWOL" in an adversary or a capitalised book title on a trinket stays plain.
+  - A scan of all content found 37 references in the core classes and no other capitalised runs in class or calling text.
+  - Render-time only (`emphasizeTerms(html, { abilityRefs })`, `{{{heartTerms text refs=true}}}`, `highlightRendered(root, sel, { abilityRefs })`, `.heart-ability-ref`); no content changed.
+- **Party name, quartermaster, and membership are GM-only (2026-09-30, Luke).**
+  - Everyone still owns the party, so players keep the Fallout, Provisions actions, items, and notes.
+  - Only the GM renames it, picks the quartermaster, or adds members. A player can still take their own character out.
+  - For players the sheet shows the name read-only, the quartermaster picker disabled, and no Members "+". Dropping a character on the party sheet, or the party on a character sheet, warns instead.
+  - `setQuartermaster` checks for the GM, and a `preUpdateActor` hook refuses those three changes from a non-GM however they're attempted.
+  - Quartermaster picker: members only, so a party with no members offers nobody (a quartermaster who has left still shows).
+- **Request Roll (GM) is back (2026-09-30, Luke).**
+  - A GM-only "Request Roll" button sits in the Actors sidebar header, beside Beat Tracker.
+  - The window uses the roll prompt's chip toggles, with skill and domain glyphs. It offers the party's members, or every character while there is no party.
+  - The card it posts is a ledger card: a hint line with the difficulty highlighted, the roll asked for led by its glyph, compact chip choices when the GM offered several Skills or Domains, Mastery and helper chips, and a "Roll as" pill per character the viewer owns.
+  - The old upstream card styles are gone.
+- **Empty Ancestry / Class / Calling slots open the picker from anywhere inside (2026-09-30, Luke)**, not just from the "+".
+- **Section glyphs, first pass (2026-09-30).**
+  - Existing glyphs reused: adversary Attacks (equipment), Loot (resources), Inactive Items (inactive gear), Description and GM Notes (notes).
+  - Landmark: Resources, Equipment, Inactive, Description, and GM Notes.
+  - Delve: Resources, Inactive, Description, and Notes.
+  - Every item sheet's Description panel (notes; a renamed panel takes `panelGlyph=`).
+  - Luke's picks from the candidate sheet (game-icons.net, credited in `assets/icons/CREDITS.md`):
+    - Adversary: Descriptors (portrait), Motivation (grab), Profile (vitruvian-man), Special (aura, the ability glyph).
+    - Landmark: Special Rules (aura), Potential Plots (fishing-hook); haunt Services (two-coins).
+    - Delve: Dangers (hazard-sign), Connection (trail).
+    - Calling and ancestry: Questions (uncertainty). Class: Core Traits (heart-organ). Ability: Upgrades (upgrade). Fallout: Effect (broken-heart). Tag: Rule (rule-book).
+    - All are `sections/<id>.svg` glyphs.
+- **Ancestry questions: answer one (2026-09-30, Luke).**
+  - The prompt reads "Answer one of these questions when you create your character."
+  - No pick marks (tried and dropped in review): each question row is its text, then the edit-answer pencil and the trash together at the top right, the same size and fade, level with the first line. In the Biography tab the pencil opens the ancestry sheet.
+  - Every question has a trash (asks first).
+  - "+" on the ancestry sheet, or "Add question" in the Biography tab (which opens the sheet), adds a question whose wording is a text field (`custom: true`). Book questions stay read-only text.
+  - Question text is term-highlighted.
+  - `items/ancestry/questions.js`.
+- **Every Heart dialog is a Heart window (2026-09-30).**
+  - Confirmations and prompts (custom beat, add member, Reset Party, Clear Provisions, class equipment pick and delete, fallout clears, item deletes, the startup window) carry `heart-window heart-confirm` (`common/dialog.js` `heartDialogOptions`).
+  - Chip buttons, with the action button filled red.
+  - The class equipment-option delete is no longer hard-coded English.
+- **Chat (2026-09-30 review).**
+  - Class, calling, and ancestry links render as item rows (icon, name, type, pitch) through the shared `items/base/identity-preview.html`. The calling's bare upstream preview is gone.
+  - Content links and inline rolls in chat are dark chips.
+  - An item row's edit icon in chat works on every message, not just those already posted when the log first rendered (delegated handler).
+  - Haunt service rolls show the haunt's icon and name as the outcome, its service Resistance and die as the hint line, and the Resistance as the die's label, spoken by the landmark. Before, the outcome was blank: the name only travelled in the hidden flavour.
+- **Choose a Class fits its cards (2026-09-30, Luke).** Five columns by three rows for the thirteen classes, with the window height fitted to the cards like the Ancestry and Calling pickers (no scrolling, still resizable). Before, it opened at a fixed 1450 x 900.
+  - Buttons are chips in the beat-chip style (outlined, red on hover).
+  - Die dropdowns became segmented die chips, with the chosen die filled.
+  - The payer picker and the amount box are sized to match.
+  - Reset sits before Clear.
+  - Party strings capitalise Stress, Protection, and Fallout.
+
 ### Fixed
+
+- **Round 23 (2026-09-30 review).** Marked protection shields sat lower and looked larger than empty ones: the generic mark rule made them inline-blocks in a 23px text line; both states are now 12px blocks (measured identical). Title pencils (Notes, Calling, Ancestry, Class) are drawn exactly like the Skills pencil. Pursue and Finish are always stacked in Pursued Beats. The quartermaster line keeps one colour for everyone.
+
+- **Chat card artifacts (2026-09-30 review).** Foundry's dice tooltip on the ledger cards overlapped the next block and left empty space, and any click in a card (Take stress included) toggled it: the fork's old heart-roll rule made it a flex row inside the ledger's column. Ledger cards now carry their own breakdown (`diceBreakdown` / `rollParts` in rolls/dice.js): each die on Foundry's die icon with its value and label (Base, Wild, a helper, Difficult; Supplies and Provisions on a restock), the kept one red, removed ones struck, opened only by the card's dice line. Buttons in a card no longer reach Foundry's roll-card click.
+- **No one-line notice cards:** clearing Provisions and resetting the party no longer post to chat (quartermaster changes already did not).
+- The Party section's three parts (Provisions, the quartermaster line, the member chips) are one even step apart.
+
+- **Round 21 (2026-09-30 review).**
+  - Every chat card shows the dice behind it: a small dice line ("4d10", "1d6 · 1d8") with a die icon. Clicking the card opens Foundry's full breakdown of every die, now also on the hand-built cards (restock, relief, keepsake and trinket draws). Card text wraps only between whole words.
+  - Changing the quartermaster no longer posts to chat.
+  - Party members: players add and remove only their own characters (the party sheet's picker, drops, and the remove x); the GM can change anyone.
+  - Party Fallout is two to a row on the party sheet.
+  - Marked protection shields on the character sheet (Resistances and Party) are the same size and spacing as empty ones; the generic mark rule gave them a 1px border and 10px box.
+  - Beat edit / delete and Pursue / Finish sit at the top of the row, however tall its text.
+  - Equipment rows highlight the resistance a piece of gear works on ("Mend **Mind**"), localized.
+  - Biography: the title pencils centre exactly; the keepsake and trinket show the item's current name, so a renamed item reads as renamed.
+
+- **Round 20 (2026-09-30 review).**
+  - Generic item sheet: the quantity left the header (it collided with long names) for its own box beside the description, with - and + buttons; the name takes the header's width.
+  - Chat cards lose no text at any chat width: the speaker (between words), the header's what line, the outcome, the detail and character lines, and the pill buttons all wrap instead of trailing off; a truncated what line keeps its full text on hover.
+  - Beat rows: edit / delete sit in the row with Pursue / Finish, just to their left and level with their top, so they never overlap at any row height (`noActionbar` on the base row).
+  - The Party section's quartermaster line is 15px (was 13).
+
+- **Classes with more than one equipment choice (2026-09-30 review).** Picking an option dropped every other active group, so Blightborn's weapon pick undid its kit pick and vice versa; a pick now replaces only the options of its own choice (and no longer edits the class's data in place).
+- **Row icons (2026-09-30 review):** smaller on equipment, resource, and beat rows; beat rows keep room for them, so Pursue and Finish no longer sit under edit / delete.
+
+- **Round 18 (2026-09-30 review).**
+  - Party membership is explicit: a new character has no party. Its Party section shows a warning ("Not in a party yet") until the party actor is dropped on the sheet (or the character on the party sheet); then it shows Provisions, "Quartermaster: Name" in small type, and the other members' chips (never your own).
+  - Members are always alphabetical, everywhere; no manual ordering.
+  - The Provisions boxes sit right, next to the shields, so the name never runs into them.
+  - Resistance shields and their head sit flush right, so the margins match.
+  - Party sheet:
+    - Members five across as the largest squares that fit, with the Quartermaster tag at the top of the card.
+    - Party Fallout moves under Members and above the Provisions actions.
+    - The Restock payer starts empty and lists only characters you own (the GM sees every member).
+  - Calling Overview: Pursued Beats across the top; the core ability, the description, and the trinket on the left; the questions on the right.
+  - Rows (equipment, resources, items, fallout, and others): the edit / toggle / delete icons sit translucent in the top-right corner like the header slots, and the row's text runs the full width. Tags stay on their own indented line, and a tag's tooltip is its rule text.
+  - Drag to reorder now also covers equipment, pursued beats, and inactive gear. Every reorderable list shows the red drop line.
+  - Biography: the calling, ancestry, and class titles centre their icons, and the Trinket / Keepsake label shares its name's baseline.
+
+- **Round 17 (2026-09-30 review).** Severity glyphs redrawn as one, two, and three exclamation marks on the same canvas. Fallout row glyphs centre on the name. Tags sit on their own indented line with a small tag glyph. Pickers are titled "Choose Ancestry / Calling / Class" (also the sheet slots' prompts) and sized to their options: ancestries four in a row, callings three by three (both fit their cards and stay resizable), classes five across at 1450 x 900. Keepsake / trinket draws post a compact card (who drew from which table, the item's icon large beside its name) instead of Foundry's table card. Calling Overview: Pursued Beats and the description on the left; the core ability, questions, and trinket on the right. The Provisions eye moved to the Party section.
 
 - **Sheets no longer jump to the top on update (2026-09-30 review).** Foundry AppV1 saves scroll positions from the whole window but restores them only inside the newly rendered inner HTML; Heart sheets scroll on `.window-content`, which is outside it, so learning an ability, pursuing a beat, or any other update scrolled the sheet back to the top. The shared sheet mixin (`common/sheet.js`) adds `.window-content` to `scrollY` and restores against the whole window.
 - **Keepsakes and trinkets (2026-09-30 review).** The roll shows its dice through Dice So Nice (Foundry's dice sound without it), then posts the draw card without the roll attached so it isn't animated twice; no "added to items" banner. The Keepsake / Trinket section shows the rolled item as an item row (icon, name, open). The ancestry's Keepsake section sits under Questions.

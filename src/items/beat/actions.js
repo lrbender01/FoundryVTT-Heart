@@ -12,6 +12,8 @@
 //   - undoing a completion makes the beat active again when there is room
 //     (otherwise it goes back to inactive, with a notice)
 
+import { heartDialogOptions } from '../../common/dialog';
+
 export const ACTIVE_BEAT_LIMIT = 2;
 
 // The character a beat belongs to: a loose beat on the actor, or a child of
@@ -127,6 +129,7 @@ export async function createCustomBeat({ calling = null, actor = null, level = '
         content,
         label: loc('create'),
         rejectClose: false,
+        options: heartDialogOptions(),
         callback: html => ({
             name: String(html.find('[name=name]').val() ?? '').trim(),
             level: html.find('[name=level]').val() || 'minor',

@@ -9,19 +9,35 @@
     </div>
 
     <div class="column">
-      <div class="character-tab-container questions-container">
-        <div class="container-title">{{localizeHeart "item-sheet" "questions"}}</div>
+      {{!-- Questions (2026-09-30, Luke): answer one; no pick marks. Each row
+           is the question, then its edit-answer pencil and trash together at
+           the top right (same size, same fade); "+" adds a question whose
+           wording is a text field (items/ancestry/questions.js) --}}
+      <div class="character-tab-container questions-container" data-questions-of="{{item.uuid}}">
+        <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "questions"}}}</span>{{localizeHeart "item-sheet" "questions"}}
+          {{#if item.isOwner}}<a class="panel-add" data-action="add-question" aria-label="{{localizeHeart 'ancestry' 'questions' 'add'}}"><span class="fas fa-plus"></span></a>{{/if}}
+        </div>
         <div class="container-content">
           <div class="questions-prompt">{{localizeHeart "item-sheet" "ancestry-questions-prompt"}}</div>
           <ol class="question-list">
           {{#each system.questions as |question id|}}
             <li data-id="{{id}}">
-              <div class="question">{{{localizeHeart question.question}}}{{#if (and ../item.isOwned ../editable)}}<a class="answer-edit" data-action="edit-answer" title="{{localizeHeart 'item-sheet' 'answer'}}"><span class="fas fa-edit"></span></a>{{/if}}</div>
+              <div class="question">
+                {{#if (and question.custom ../editable)}}
+                <input class="question-input" type="text" name="system.questions.{{id}}.question" value="{{question.question}}" placeholder="{{localizeHeart 'ancestry' 'questions' 'placeholder'}}" />
+                {{else}}
+                <span class="question-text">{{{heartTerms (localizeHeart question.question)}}}</span>
+                {{/if}}
+                <span class="question-tools">
+                  {{#if (and ../item.isOwned ../editable)}}<a class="question-tool" data-action="edit-answer" aria-label="{{localizeHeart 'item-sheet' 'answer'}}"><span class="fas fa-edit"></span></a>{{/if}}
+                  {{#if ../item.isOwner}}<a class="question-tool" data-action="delete-question" aria-label="{{localizeHeart 'ancestry' 'questions' 'delete'}}"><span class="fas fa-trash"></span></a>{{/if}}
+                </span>
+              </div>
               {{#if ../item.isOwned}}
               <div class="answer">
                 {{#unless question.answer}}<div class="answer-placeholder">{{localizeHeart "item-sheet" "no-answer"}}</div>{{/unless}}
                 {{#if ../editable}}
-                {{editor question.answer target=(join "." "system.questions" id "answer") button=true editable=../editable owner=../owner}}
+                {{editor question.answer target=(join "." "system.questions" id "answer") button=true editable=../editable owner=../owner engine="prosemirror"}}
                 {{else}}
                 {{{question.answer}}}
                 {{/if}}

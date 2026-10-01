@@ -12,12 +12,12 @@
     {{#if entry.hint}}<div class="requirement-hint">{{entry.hint}}</div>{{/if}}
     {{#if entry.isCheckbox}}
     <div class="chip-set">
-        <label class="chip-toggle"><input type="checkbox" name="{{name}}" /><span>{{entry.label}}</span></label>
+        <label class="chip-toggle" {{#if entry.tip}}data-tooltip="{{entry.tip}}"{{/if}}><input type="checkbox" name="{{name}}" /><span>{{entry.label}}</span></label>
     </div>
     {{else}}
     <div class="chip-set">
         {{#each entry.options as |label value|}}
-        <label class="chip-toggle"><input type="{{#if entry.isMany}}checkbox{{else}}radio{{/if}}" name="{{name}}" value="{{value}}" {{#unless entry.isMany}}{{#if entry.default}}{{#if (eq value entry.default)}}checked{{/if}}{{else if @first}}checked{{/if}}{{/unless}} /><span>{{label}}</span></label>
+        <label class="chip-toggle" {{#with (lookup entry.tips value)}}data-tooltip="{{this}}"{{/with}}><input type="{{#if entry.isMany}}checkbox{{else}}radio{{/if}}" name="{{name}}" value="{{value}}" {{#unless entry.isMany}}{{#if entry.default}}{{#if (eq value entry.default)}}checked{{/if}}{{else if @first}}checked{{/if}}{{/unless}} /><span>{{#if entry.glyph}}{{{heartGlyph entry.glyph value}}}{{/if}}{{label}}</span></label>
         {{/each}}
     </div>
     {{/if}}

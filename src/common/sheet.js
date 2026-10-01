@@ -1,4 +1,5 @@
 import sheetHTML from './sheet.html';
+import { heartProseMirrorPlugins } from './editor';
 
 export default function HeartSheetMixin(baseClass) {
     return class extends baseClass {
@@ -8,14 +9,25 @@ export default function HeartSheetMixin(baseClass) {
         // freshly rendered inner HTML, which .window-content is not part of:
         // every update (learning an ability, pursuing a beat, a stress box)
         // jumped the sheet back to the top.
+        // .heart-window (2026-09-30, Luke): the one class every Heart window
+        // carries; Heart's theme and window-level rules are scoped to it, so
+        // the rest of Foundry keeps its own look. Every actor and item sheet
+        // reaches here (panel sheets and HeartItemSheet extend these classes).
         static get defaultOptions() {
             const options = super.defaultOptions;
             const scrollY = [...new Set([...(options.scrollY ?? []), '.window-content'])];
-            return foundry.utils.mergeObject(options, { scrollY });
+            const classes = [...new Set([...(options.classes ?? []), 'heart-window'])];
+            return foundry.utils.mergeObject(options, { scrollY, classes });
         }
 
         _restoreScrollPositions(html) {
             super._restoreScrollPositions(this.element?.length ? this.element : html);
+        }
+
+        // The tamed rich-text editor (2026-09-30, Luke; common/editor.js):
+        // Bold, Italic, Bullet list, Cancel, Save; Save closes it
+        _configureProseMirrorPlugins(name, options = {}) {
+            return heartProseMirrorPlugins(this, name, options);
         }
 
         get template() {

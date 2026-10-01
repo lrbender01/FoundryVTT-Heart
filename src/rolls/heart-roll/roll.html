@@ -1,29 +1,18 @@
-{{!-- Heart roll card (2026-09-30 rebuild): summary, the dice faces (the die
-     actually kept in red, dice the difficulty removed struck through, hover a
-     face for its source), notes (a skill the roller lacks, Tired...), the
-     outcome word, helpers, and Take stress on a result that costs stress. --}}
+{{!-- Heart roll card (2026-09-30, Luke's pick of the round-2 mock B, no
+     badge): a hint line with what was rolled ("Kill + Occult, Risky"), the
+     outcome led by its glyph, every die in one row (the kept one red, the
+     ones the difficulty removed crossed out), one small line on difficulty /
+     helpers / notes, and Take stress on a result that costs stress. --}}
 <form class="dice-roll heart heart-roll">
     <input type="hidden" name="character" value="{{character}}"/>
-    {{#if flavor}}
-    <div class="dice-flavor">{{flavor}}</div>
-    {{/if}}
-    <div class="dice-result">
-        <div class="roll-summary">{{description}}</div>
-        {{#if faces.length}}
-        <div class="roll-faces">
-            {{#each faces as |face|}}<span class="roll-face {{#if face.kept}}kept{{/if}} {{#if face.removed}}removed{{/if}}" title="{{face.flavor}}">{{face.result}}</span>{{/each}}
-        </div>
-        {{/if}}
-        {{#each notes as |note|}}<div class="roll-note">{{note}}</div>{{/each}}
-        {{{tooltip}}}
-        <div class="roll-outcome {{outcomeClass}}">{{localizeHeart "result" result}}</div>
-        {{#if criticalSuccess}}<div class="roll-note center">{{localizeHeart "rolls" "roll" "crit-step-up"}}</div>{{/if}}
-        {{#if helperNames}}
-        <div class="roll-helpers"><span class="fas fa-hands-helping"></span> {{localizeHeart "helper" "card"}} <strong>{{helperNames}}</strong>. {{localizeHeart "helper" "card-stress"}}</div>
-        {{/if}}
+    <div class="ledger">
+        <div class="ledger-what">{{{what}}}</div>
+        <div class="ledger-out {{outcomeClass}}">{{{glyph}}}{{localizeHeart "result" result}}</div>
+        {{{dice}}}
+        {{#if det}}<div class="ledger-det">{{{det}}}</div>{{/if}}
         {{#if (and showStressRollButton (lookup (getActor character) "isOwner"))}}
-        <div class="roll-buttons">
-            <button type="button" data-action='roll-stress'><span class="fas fa-heart-broken"></span> {{localizeHeart 'rolls' 'roll' 'take-stress'}}</button>
+        <div class="ledger-acts">
+            <button type="button" data-action="roll-stress" data-tooltip="heart.tip.card.roll-stress">{{localizeHeart 'rolls' 'roll' 'take-stress'}}</button>
         </div>
         {{/if}}
     </div>

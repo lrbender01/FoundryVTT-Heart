@@ -3,7 +3,8 @@ import './character.sass';
 import HeartActorSheet from '../base/sheet';
 import template from './template.json';
 import { activateBeatListeners, openCallingBeats, createCustomBeat } from '../../items/beat/actions';
-import { activateTrinketListeners } from '../../items/trinkets';
+import { activateTrinketListeners, trinketItemOf } from '../../items/trinkets';
+import { activateQuestionListeners } from '../../items/ancestry/questions';
 import { needsEquipmentPick } from '../../items/class/equipment';
 import { enableReorder, orderByFlag, orderKeys } from './reorder';
 import { provisionsView, memberView, partyMembers } from '../party/view';
@@ -180,7 +181,13 @@ export default class CharacterSheet extends HeartActorSheet {
         data.ancestryItem = ancestryItem;
         // the Items section in the player's order (dragged on the sheet)
         data.orderedItems = orderByFlag(this.actor, this.actor.itemTypes.item ?? [], 'itemOrder');
+        // the Biography's keepsake / trinket: the item's current name (it
+        // may have been renamed), else the name recorded when it was rolled
+        const trinketName = (owner) => owner ? (trinketItemOf(owner)?.name ?? owner.flags?.heart?.trinket?.name ?? '') : '';
+        data.trinketNames = { calling: trinketName(callingItem), ancestry: trinketName(ancestryItem) };
         data.orderedFallouts = orderByFlag(this.actor, this.actor.itemTypes.fallout ?? [], 'falloutOrder');
+        data.orderedEquipment = orderByFlag(this.actor, this.actor.proxy.equipment ?? [], 'equipmentOrder');
+        data.orderedBeats = orderByFlag(this.actor, this.actor.proxy.beats ?? [], 'beatOrder');
         // a class pick-one choice not made yet (header badge + Equipment line)
         data.classNeedsEquipment = needsEquipmentPick(classItem);
 
@@ -213,8 +220,6 @@ export default class CharacterSheet extends HeartActorSheet {
         data.skillList = traitList('skills', 'skillOrder');
         data.domainList = traitList('domains', 'domainOrder');
         data.beatSlots = game.i18n.format('heart.beat.slots', { count: this.actor.proxy.beats?.length ?? 0 });
-        data.showTextboxesBelowItems = game.settings.get('heart', 'showTextboxesBelowItems');
-        data.showStressInputBox = game.settings.get('heart', 'showStressInputBox');
         data.showTotalStress = game.settings.get('heart', 'showTotalStress');
 
         // Inactive items: switched-off items owned by the character, PLUS class
@@ -234,6 +239,7 @@ export default class CharacterSheet extends HeartActorSheet {
             }
         }
         data.inactiveItems = inactiveItems;
+        data.orderedInactive = orderByFlag(this.actor, inactiveItems, 'inactiveOrder');
 
         // Provisions (house rule, 2026-09-30): the party's shared track under
         // the five resistances; nothing before the party actor exists
@@ -244,13 +250,33 @@ export default class CharacterSheet extends HeartActorSheet {
             // the Party section: named after the party actor, members as chips
             const party = game.heart.party;
             data.partyName = party?.name || game.i18n.localize('heart.party.label-single');
-            data.partyMembers = partyMembers(party).map(a => memberView(a, party));
+            // membership is explicit (2026-09-30 review): drop the party on
+            // this sheet or this character on the party sheet; until then the
+            // section only says how, with a warning
+            data.inParty = Boolean(party && (party.system.members ?? []).includes(this.actor.id));
+            // the other members (not this character) as chips
+            data.partyMembers = partyMembers(party).filter(a => a.id !== this.actor.id).map(a => memberView(a, party));
             data.isQuartermaster = Boolean(this.actor.proxy.isQuartermaster);
-            data.provisionsSub = data.isQuartermaster ? f('char-qm-self')
-                : p.quartermaster ? f('char-qm', { name: p.quartermasterName })
-                : f('char-no-qm');
+            data.partyQm = p.quartermaster ? f('qm-line', { name: p.quartermasterName }) : f('qm-none-line');
+            data.warnings.party = data.inParty ? '' : game.i18n.localize('heart.warn.party');
         }
         return data;
+    }
+
+    // Dropping the party actor on this sheet makes the character a member
+    // (the other way: drop the character on the party sheet)
+    async _onDropActor(event, data) {
+        const dropped = await Actor.implementation.fromDropData(data);
+        if (dropped?.type !== 'party') return super._onDropActor(event, data);
+        if (!this.actor.isOwner || this.actor.type !== 'character') return false;
+        // only the GM adds members (2026-09-30, Luke)
+        if (!game.user.isGM) {
+            ui.notifications.warn(game.i18n.localize('heart.party.gm-only-settings'));
+            return false;
+        }
+        const members = dropped.system.members ?? [];
+        if (!members.includes(this.actor.id)) await dropped.update({ 'system.members': [...members, this.actor.id] });
+        return dropped;
     }
 
     activateListeners(html) {
@@ -275,11 +301,16 @@ export default class CharacterSheet extends HeartActorSheet {
         enableReorder(html, this.actor, '.resources-container .tab-item-list > .item.preview[data-item-id]', 'resourceOrder');
         enableReorder(html, this.actor, '.items-container .tab-item-list > .item.preview[data-item-id]', 'itemOrder');
         enableReorder(html, this.actor, '.fallout-container .tab-item-list > .item.preview[data-item-id]', 'falloutOrder');
+        enableReorder(html, this.actor, '.equipment-container .tab-item-list > .item.preview[data-item-id]', 'equipmentOrder');
+        enableReorder(html, this.actor, '.active-beats-container .tab-item-list > .item.preview[data-item-id]', 'beatOrder');
+        enableReorder(html, this.actor, '.inactive-items-container .tab-item-list > .item.preview[data-item-id]', 'inactiveOrder');
         enableReorder(html, this.actor, '.skills-container .skill-row[data-skill]', 'skillOrder', { key: 'skill', axis: 'x' });
         enableReorder(html, this.actor, '.domains-container .domain-row[data-domain]', 'domainOrder', { key: 'domain', axis: 'x' });
 
         // Trinkets / keepsakes (Biography): roll once, item into inventory
         activateTrinketListeners(html);
+        // ancestry questions: delete, add (2026-09-30, Luke)
+        activateQuestionListeners(html, { openSheetOnAdd: true });
         html.find('[data-action=open-party]').click(ev => {
             ev.preventDefault();
             game.heart.party?.sheet.render(true);
@@ -390,9 +421,12 @@ export default class CharacterSheet extends HeartActorSheet {
         });
 
         // "+" on the Ancestry / Class / Calling slots: the Character Options
-        // picker (every compendium providing that type, searchable)
+        // picker (every compendium providing that type, searchable). An empty
+        // slot opens it from anywhere inside (2026-09-30, Luke); the inner "+"
+        // and "!" stop here so it opens once
         html.find('[data-action=choose-option]').click(ev => {
             ev.preventDefault();
+            ev.stopPropagation();
             const type = ev.currentTarget.dataset.itemType;
             new game.heart.applications.CharacterOptionsApplication(this.actor, type).render(true);
         });

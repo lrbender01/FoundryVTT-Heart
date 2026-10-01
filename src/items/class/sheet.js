@@ -2,6 +2,7 @@ import sheetHTML from './sheet.html';
 import templateJSON from './template.json';
 import HeartItemSheet from '../base/sheet';
 import { needsEquipmentPick } from './equipment';
+import { heartDialogOptions } from '../../common/dialog';
 
 import './sheet.sass';
 
@@ -89,8 +90,9 @@ export default class extends HeartItemSheet {
 
             const ids = this.item.children.filter(x => x.type === 'equipment' && x.system.group === groupId).map(item => item.id);
             Dialog.confirm({
-              title: 'Confirm Deletion',
-              content: 'Are you sure you want to delete this equipment group? It cannot be recovered.',
+              title: game.i18n.localize('heart.class.equipment.delete-title'),
+              content: `<p>${game.i18n.localize('heart.class.equipment.delete-body')}</p>`,
+              options: heartDialogOptions(),
               yes: () => {
                 this.item.deleteChildren(ids);
                 this.render();
@@ -114,20 +116,25 @@ export default class extends HeartItemSheet {
                 const ok = await Dialog.confirm({
                     title: game.i18n.localize('heart.class.equipment.confirm-title'),
                     content: `<p>${esc(game.i18n.format('heart.class.equipment.confirm-body', { items: names.join(', ') }))}</p>`,
+                    options: heartDialogOptions(),
                 });
                 if (!ok) return;
             }
 
             const childrenUpdates = {};
 
-            const previousEquipmentGroups = [...this.item.system.active_equipment_groups];
-            let activeEquipmentGroups = this.item.system.active_equipment_groups;
-            if (groupId === "core" && activeEquipmentGroups.find(g => g === "core") === undefined) {
-                activeEquipmentGroups.push('core');
-            }
-
-            if (groupId !== "core" && activeEquipmentGroups.find(g => g === groupId) === undefined) {
-                activeEquipmentGroups = activeEquipmentGroups.filter(g => g === "core");
+            // One option per choice, and only within that choice (2026-09-30
+            // fix: picking dropped every other active group, so a class with
+            // two choices, Blightborn's weapon_* and kit_*, lost one pick
+            // when the other was made). Copies, never the live array.
+            const choiceOf = (id) => String(id).replace(/[_-]?\d+$/, '') || String(id);
+            const previousEquipmentGroups = [...(this.item.system.active_equipment_groups ?? [])];
+            let activeEquipmentGroups = [...previousEquipmentGroups];
+            if (groupId === "core") {
+                if (!activeEquipmentGroups.includes('core')) activeEquipmentGroups.push('core');
+            } else if (!activeEquipmentGroups.includes(groupId)) {
+                const key = choiceOf(groupId);
+                activeEquipmentGroups = activeEquipmentGroups.filter(g => g === 'core' || choiceOf(g) !== key);
                 activeEquipmentGroups.push(groupId);
             }
 

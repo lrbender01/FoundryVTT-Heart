@@ -4,8 +4,8 @@
      with no glyph (a custom resistance) still shows as text. --}}
 {{#> "heart:items/base/preview.html" }}
     <h4 class="fallout-title">
-        {{~#if (heartHasGlyph "severity" item.system.type)}}<span class="fallout-glyph" title="{{localizeHeart 'fallout' 'level' item.system.type}}">{{{heartGlyph "severity" item.system.type}}}</span>{{/if~}}
-        {{~#if (heartHasGlyph "resistance" item.system.resistance)}}<span class="fallout-glyph" title="{{localizeHeart 'resistance' item.system.resistance}}">{{{heartGlyph "resistance" item.system.resistance}}}</span>{{/if~}}
+        {{~#if (heartHasGlyph "severity" item.system.type)}}<span class="fallout-glyph" data-tooltip="heart.term.{{item.system.type}}-fallout">{{{heartGlyph "severity" item.system.type}}}</span>{{/if~}}
+        {{~#if (heartHasGlyph "resistance" item.system.resistance)}}<span class="fallout-glyph" data-tooltip="{{heartTip 'resistance' item.system.resistance}}">{{{heartGlyph "resistance" item.system.resistance}}}</span>{{/if~}}
         {{localizeHeart item.name}}
         {{~#unless (heartHasGlyph "resistance" item.system.resistance)}}{{#if item.system.resistance}} <span class="fallout-extra">({{localizeHeart item.system.resistance}})</span>{{/if}}{{/unless~}}
     </h4>

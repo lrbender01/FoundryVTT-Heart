@@ -5,13 +5,13 @@
     <strong>{{localizeHeart item.name}}</strong>
     <div class="haunt-services">
         {{#each item.system.resistances as |service id|}}
-        <a class="haunt-service" data-id="{{id}}" data-action="service-roll" title="{{localizeHeart 'perform' 'roll'}}"><span class="item-skill">{{localizeHeart "resistance" service.resistance}}</span> <span class="item-roll"><span class="sheetD10 red"></span>{{service.die_size}}</span></a>
+        <a class="haunt-service" data-id="{{id}}" data-action="service-roll" data-tooltip="heart.tip.haunt.service"><span class="item-skill">{{localizeHeart "resistance" service.resistance}}</span> <span class="item-roll"><span class="sheetD10 red"></span>{{service.die_size}}</span></a>
         {{/each}}
     </div>
     <div class="haunt-upgrade">
-        <span>{{localizeHeart "haunt" "upgradeTrack" "label-single"}}</span>
+        <span data-tooltip="heart.tip.haunt.track">{{localizeHeart "haunt" "upgradeTrack" "label-single"}}</span>
         <span class="haunt-track" data-target="system.upgradeTrack">{{{ordered-checkable item.system.upgradeTrack 6}}}</span>
-        <a data-action="upgrade" title="{{localizeHeart 'haunt' 'upgrade'}}"><span class="fas fa-level-up-alt"></span></a>
-        <a data-action="downgrade" title="{{localizeHeart 'haunt' 'downgrade'}}"><span class="fas fa-level-down-alt"></span></a>
+        <a data-action="upgrade" data-tooltip="heart.tip.haunt.upgrade"><span class="fas fa-level-up-alt"></span></a>
+        <a data-action="downgrade" data-tooltip="heart.tip.haunt.downgrade"><span class="fas fa-level-down-alt"></span></a>
     </div>
 {{/ "heart:items/base/preview.html"}}

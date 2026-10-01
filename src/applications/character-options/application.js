@@ -26,22 +26,44 @@ function bySourceOrder(a, b) {
     return String(a.name ?? a.label ?? "").localeCompare(String(b.name ?? b.label ?? ""));
 }
 
+// Cards per row and window size per picker (2026-09-30 review): the four
+// ancestries in one row, the nine callings three by three, the thirteen
+// classes five across in three rows. Every window fits its cards (no
+// scrolling) and stays resizable
+const CARD = 277;
+const LAYOUT = {
+    ancestry: { columns: 4, window: { width: 4 * CARD + 60, height: 'auto' } },
+    calling: { columns: 3, window: { width: 3 * CARD + 60, height: 'auto' } },
+    class: { columns: 5, window: { width: 5 * CARD + 60, height: 'auto' } },
+};
+
 export default class CharacterOptionsApplication extends Application {
     constructor(actor, itemType, options = {}) {
-        super(options);
+        super({ ...(LAYOUT[itemType] ?? LAYOUT.class).window, ...options });
         this.actor = actor;
         this.itemType = itemType;
     }
 
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
-            classes: ['heart', 'heart-options-browser'],
+            // heart-window: the class Heart's theme is scoped to (2026-09-30)
+            classes: ['heart', 'heart-window', 'heart-options-browser'],
             template: applicationHTML.path,
-            // cards, five across, with little scrolling (2026-09-30 review)
             width: 1450,
             height: 900,
             resizable: true,
         });
+    }
+
+    // A window sized to fit its cards opens at that height, then keeps it as
+    // a fixed height so it can still be resized (Foundry ignores vertical
+    // resizing while a window's height is 'auto')
+    async _render(force, options) {
+        await super._render(force, options);
+        if (!this._fitted && this.options.height === 'auto' && this.element?.length) {
+            this._fitted = true;
+            this.setPosition({ height: this.element.outerHeight() });
+        }
     }
 
     get id() {
@@ -79,7 +101,7 @@ export default class CharacterOptionsApplication extends Application {
         const current = this.actor.items.find(i => i.type === this.itemType);
         const currentName = current ? localizeHeart(current.name) : "";
         const entries = [...packEntries, ...worldEntries].map(e => ({ ...e, current: Boolean(currentName) && e.name === currentName }));
-        return { entries, currentName };
+        return { entries, currentName, columns: (LAYOUT[this.itemType] ?? LAYOUT.class).columns };
     }
 
     activateListeners(html) {

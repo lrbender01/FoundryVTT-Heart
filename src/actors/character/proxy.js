@@ -5,8 +5,10 @@ export default {
         return new Proxy(actor, {
             get(actor, name, proxy) {
                 if (name === 'totalStress') {
+                    // numbers, so a value stored as text adds instead of
+                    // concatenating (2026-09-30, found by the rules tests)
                     return Object.values(actor.system.resistances).reduce((sum, resistance) => {
-                        return sum + resistance.value;
+                        return sum + (Number(resistance?.value) || 0);
                     }, 0);
                 }
 
@@ -22,7 +24,8 @@ export default {
                 }
 
                 if (name === 'pronouns') {
-                    const pronouns = actor.find(x => x.type === 'pronouns');
+                    // (was actor.find, which threw; nothing reads it today)
+                    const pronouns = actor.items.find(x => x.type === 'pronouns');
                     return pronouns;
                 }
 

@@ -12,7 +12,9 @@
     "build-all": "npm run empty-dist && npm run build-prod && npm run build-manifest -- 0.10.5-pr94 && npm run build-template && npm run copy-static",
     "build-local": "npm run build-all",
     "build-prod": "webpack --mode production",
-    "launch": "npm run build-local && npx fvtt package workon heart --type System && npx fvtt launch"
+    "launch": "npm run build-local && npx fvtt package workon heart --type System && npx fvtt launch",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "foundryvtt"

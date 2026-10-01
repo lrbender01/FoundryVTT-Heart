@@ -1,16 +1,17 @@
 @use '../../util'
 
-// Global helpers from the upstream sheet. The delve and landmark stylesheets
-// define the same rules, so they are kept here unchanged for them.
-.sticky
+// Helpers from the upstream sheet. The delve and landmark stylesheets define
+// the same rules, so they are kept here unchanged for them. Scoped to Heart
+// (util.$in-heart, same specificity) 2026-09-30: they were global.
+#{util.$in-heart} .sticky
     position: sticky
     top: 0
     z-index: 1
 
-.section
+#{util.$in-heart} .section
     padding: 0.5em
 
-.item-list
+#{util.$in-heart} .item-list
     &> *
         padding: 0.5em
         margin: 0.5em 0
@@ -18,7 +19,7 @@
         background: util.$sunken
         border-radius: 5px
 
-a[disabled]
+#{util.$in-heart} a[disabled]
     opacity: 0.5
     pointer-events: none
 

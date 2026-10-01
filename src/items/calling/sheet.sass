@@ -4,16 +4,12 @@
 // (items/base/item-sheet.sass); this file styles the calling-only pieces.
 form.heart.item-sheet.calling
 
-    // Header (2026-09-30 review): "Completed Beats" on its own row, the
-    // three severities side by side under it
+    // Header (2026-09-30 review): Completed Beats and the three severities
+    // in one row, at the top right of the header
     .item-header > .item-stats
-        grid-auto-flow: row
+        grid-auto-flow: column
         grid-template-rows: none
-        grid-template-columns: repeat(3, auto)
-
-        .stat-total
-            grid-column: 1 / -1
-            justify-self: start
+        margin-left: auto
 
         // counts in the header's white, not red (2026-09-30 review)
         .stat .v

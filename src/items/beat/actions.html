@@ -6,13 +6,13 @@
 <div class="beat-actions" data-item-id="{{item.uuid}}">
   {{#if item.isOwner}}
     {{#if item.system.complete}}
-    <a class="beat-chip done" data-action="beat-uncomplete" title="{{localizeHeart 'beat' 'undo-complete'}}">{{localizeHeart "beat" "completed"}}</a>
+    <a class="beat-chip done" data-action="beat-uncomplete" data-tooltip="{{localizeHeart 'beat' 'undo-complete'}}">{{localizeHeart "beat" "completed"}}</a>
     {{else if item.system.active}}
-    <a class="beat-chip on" data-action="beat-deactivate" title="{{localizeHeart 'beat' 'deactivate-hint'}}">{{localizeHeart "beat" "pursued"}}</a>
-    <a class="beat-chip" data-action="beat-complete">{{localizeHeart "beat" "complete"}}</a>
+    <a class="beat-chip on" data-action="beat-deactivate" data-tooltip="{{localizeHeart 'beat' 'deactivate-hint'}}">{{localizeHeart "beat" "pursued"}}</a>
+    <a class="beat-chip" data-action="beat-complete" data-tooltip="heart.tip.beat.finish">{{localizeHeart "beat" "complete"}}</a>
     {{else}}
-    <a class="beat-chip" data-action="beat-activate">{{localizeHeart "beat" "activate"}}</a>
-    <span class="beat-chip disabled" title="{{localizeHeart 'beat' 'activate-first'}}">{{localizeHeart "beat" "complete"}}</span>
+    <a class="beat-chip" data-action="beat-activate" data-tooltip="heart.tip.beat.pursue">{{localizeHeart "beat" "activate"}}</a>
+    <span class="beat-chip disabled" data-tooltip="{{localizeHeart 'beat' 'activate-first'}}">{{localizeHeart "beat" "complete"}}</span>
     {{/if}}
   {{else}}
     {{#if item.system.complete}}<span class="beat-chip done static">{{localizeHeart "beat" "completed"}}</span>

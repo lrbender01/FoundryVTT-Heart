@@ -1,4 +1,5 @@
 import './chat-message.sass';
+import './ledger.sass';
 
 class HeartChatMessage extends ChatMessage {
     get isRollRequest() {
@@ -161,8 +162,16 @@ class HeartChatMessage extends ChatMessage {
         if(this.isRollRequest) {
             const data = this.getFlag('heart', 'roll-request');
             const content = await renderTemplate('heart:applications/prepare-roll-request/chat-message.html', data);
-            html.append(content)
+            // inside the message body, like every ledger card (2026-09-30)
+            const body = html.find('.message-content');
+            (body.length ? body : html).append(content);
         }
+
+        // Ledger cards: chained blocks (a stress roll under its Heart roll,
+        // the fallout under that) get a rule above them. Every block keeps
+        // its own hint line; the header is just the portrait and the name
+        // (2026-09-30, round-2 mock B review)
+        html.find('.ledger').slice(1).addClass('chained');
 
         return html;
     }
@@ -191,6 +200,11 @@ function activateListeners(html) {
         ev.preventDefault();
     });
 
+    // Ledger cards (2026-09-30 review): a button in the card never reaches
+    // Foundry's roll-card click, which toggles its tooltip on any click and
+    // broke the layout
+    html.on('click', '.ledger button', ev => ev.stopPropagation());
+
     html.on('click', 'form.roll-request [data-action=roll][data-character]', async (ev) => {
         const button = $(ev.currentTarget);
         const {
@@ -215,7 +229,10 @@ function activateListeners(html) {
         await roll.toMessage({speaker: ChatMessage.getSpeaker({ actor: game.actors.get(character) })});
     });
 
-    html.find('[data-item-id] [data-action=view]').click(async ev => {
+    // delegated (2026-09-30 review): previews posted after the log first
+    // rendered never got a handler when this bound once with html.find
+    html.on('click', '[data-item-id] [data-action=view]', async ev => {
+        ev.preventDefault();
         const target = $(ev.currentTarget);
         const uuid = target.closest('[data-item-id]').data('itemId');
         const item = await fromUuid(uuid);

@@ -22,9 +22,32 @@ Glyphs for the character sheet's skills, domains, resistances (plus the party's 
 | `resistances/mind.svg`       | [brain](https://game-icons.net/1x1/lorc/brain.html)                             | lorc       |
 | `resistances/provisions.svg` | [camp-cooking-pot](https://game-icons.net/1x1/delapouite/camp-cooking-pot.html) | delapouite |
 | `resistances/supplies.svg`   | [knapsack](https://game-icons.net/1x1/lorc/knapsack.html)                       | lorc       |
-| `severity/critical.svg`      | [skull-crack](https://game-icons.net/1x1/lorc/skull-crack.html)                 | lorc       |
-| `severity/major.svg`         | [broken-bone](https://game-icons.net/1x1/lorc/broken-bone.html)                 | lorc       |
-| `severity/minor.svg`         | [bandaged](https://game-icons.net/1x1/lorc/bandaged.html)                       | lorc       |
+| `sections/domains.svg` | [direction-signs](https://game-icons.net/1x1/delapouite/direction-signs.html) | delapouite |
+| `sections/equipment.svg` | [crossed-swords](https://game-icons.net/1x1/lorc/crossed-swords.html) | lorc |
+| `sections/fallout.svg` | [fallout-shelter](https://game-icons.net/1x1/delapouite/fallout-shelter.html) | delapouite |
+| `sections/inactive-gear.svg` | [wooden-crate](https://game-icons.net/1x1/delapouite/wooden-crate.html) | delapouite |
+| `sections/items.svg` | [feather](https://game-icons.net/1x1/lorc/feather.html) | lorc |
+| `sections/notes.svg` | [scroll-unfurled](https://game-icons.net/1x1/lorc/scroll-unfurled.html) | lorc |
+| `sections/descriptors.svg` | [portrait](https://game-icons.net/1x1/delapouite/portrait.html) | delapouite |
+| `sections/motivation.svg` | [grab](https://game-icons.net/1x1/lorc/grab.html) | lorc |
+| `sections/profile.svg` | [vitruvian-man](https://game-icons.net/1x1/delapouite/vitruvian-man.html) | delapouite |
+| `sections/special.svg` | [aura](https://game-icons.net/1x1/lorc/aura.html) (same as `items/ability.svg`) | lorc |
+| `sections/plots.svg` | [fishing-hook](https://game-icons.net/1x1/lorc/fishing-hook.html) | lorc |
+| `sections/services.svg` | [two-coins](https://game-icons.net/1x1/delapouite/two-coins.html) | delapouite |
+| `sections/dangers.svg` | [hazard-sign](https://game-icons.net/1x1/lorc/hazard-sign.html) | lorc |
+| `sections/connection.svg` | [trail](https://game-icons.net/1x1/delapouite/trail.html) | delapouite |
+| `sections/questions.svg` | [uncertainty](https://game-icons.net/1x1/lorc/uncertainty.html) | lorc |
+| `sections/core-traits.svg` | [heart-organ](https://game-icons.net/1x1/lorc/heart-organ.html) | lorc |
+| `sections/upgrades.svg` | [upgrade](https://game-icons.net/1x1/delapouite/upgrade.html) | delapouite |
+| `sections/effect.svg` | [broken-heart](https://game-icons.net/1x1/lorc/broken-heart.html) | lorc |
+| `sections/rule.svg` | [rule-book](https://game-icons.net/1x1/delapouite/rule-book.html) | delapouite |
+| `sections/party.svg` | [backup](https://game-icons.net/1x1/lorc/backup.html) | lorc |
+| `sections/resistances.svg` | [checked-shield](https://game-icons.net/1x1/lorc/checked-shield.html) | lorc |
+| `sections/resources.svg` | [cut-diamond](https://game-icons.net/1x1/lorc/cut-diamond.html) | lorc |
+| `sections/skills.svg` | [skills](https://game-icons.net/1x1/delapouite/skills.html) | delapouite |
+| `severity/critical.svg`      | three exclamation marks, drawn for this fork (2026-09-30; replaced skull-crack) | -          |
+| `severity/major.svg`         | two exclamation marks, drawn for this fork (2026-09-30; replaced broken-bone) | -          |
+| `severity/minor.svg`         | one exclamation mark, drawn for this fork (2026-09-30; replaced bandaged) | -          |
 | `skills/compel.svg`          | [convince](https://game-icons.net/1x1/delapouite/convince.html)                 | delapouite |
 | `skills/delve.svg`           | [lantern](https://game-icons.net/1x1/lorc/lantern.html)                         | lorc       |
 | `skills/discern.svg`         | [magnifying-glass](https://game-icons.net/1x1/lorc/magnifying-glass.html)       | lorc       |

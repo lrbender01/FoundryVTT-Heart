@@ -23,6 +23,8 @@ import {
     provisionsProtection,
     relievedValue,
 } from './rules';
+import { glyphFor } from '../../common/icons';
+import { diceRow, rollParts } from '../../rolls/dice';
 
 export const PARTY_TYPE = 'party';
 export const PARTY_IMG = 'systems/heart/assets/icons/resistances/provisions.svg';
@@ -131,6 +133,35 @@ export function upkeep({ die = UPKEEP_DIE, byActorId } = {}) {
     return markProvisions({ die, source: 'upkeep', byActorId });
 }
 
+// ---------------------------------------------------------------- cards
+// Ledger chat cards (2026-09-30, approved "Heart Chat Cards" mock B; styles
+// in chat-messages/ledger.sass). Built here for the Provisions actions that
+// are not a StressRoll card; the rolls ride along on the message so Dice So
+// Nice animates them (Foundry keeps custom content instead of drawing them).
+
+// Same layout as the roll cards (2026-09-30, round-2 mock B, no badge): the
+// hint line, the outcome led by its glyph, every die in one row, a small
+// note, who took what, then buttons
+async function ledgerCard({ what, glyph = '', bad = false, out, det = '', lines = [], acts = '', rolls = [] }) {
+    // rolls: a Roll, or { roll, label } to label its dice
+    const shown = rolls.filter(Boolean).map(r => (r.roll ? r : { roll: r, label: '' }));
+    const dice = diceRow(shown.flatMap(x => rollParts(x.roll, x.label)));
+    const lineHtml = lines.length
+        ? `<div class="ledger-lines">${lines.map(l => `<div class="ledger-line"><span>${l.name}</span><span class="v">${l.value}</span></div>`).join('')}</div>`
+        : '';
+    return `<div class="heart ledger-card"><div class="ledger">`
+        + `<div class="ledger-what">${what}</div>`
+        + `<div class="ledger-out${bad ? ' bad' : ''}">${glyph}${out}</div>`
+        + dice
+        + (det ? `<div class="ledger-det">${det}</div>` : '')
+        + lineHtml
+        + (acts ? `<div class="ledger-acts">${acts}</div>` : '')
+        + `</div></div>`;
+}
+
+const provisionsLabel = () => loc('heart.resistance.provisions');
+const provisionsWhat = (text) => `${glyphFor('resistance', 'provisions')}${text}`;
+
 // Remove stress from Provisions: roll `die` or take a fixed `amount`
 export async function relieveProvisions({ die = SCAVENGE_RELIEF, amount, source, byActorId } = {}) {
     const party = requireParty();
@@ -144,20 +175,29 @@ export async function relieveProvisions({ die = SCAVENGE_RELIEF, amount, source,
         roll = await new Roll(String(die).toLowerCase()).evaluate();
         relief = Number(roll.total) || 0;
     }
-    const before = provisionsOf(party).value;
+    const p = provisionsOf(party);
+    const before = p.value;
     const after = relievedValue(before, relief);
     await party.update({ 'system.provisions.value': after });
-    const text = loc('heart.party.chat.relieved', {
-        name: party.name, amount: relief, from: before, to: after, source: sourceLabel(source),
+
+    const dieLabel = fixed ? '' : String(die).toUpperCase();
+    const what = [esc(sourceLabel(source) || loc('heart.card.relief')), dieLabel].filter(Boolean).join(', ');
+    const content = await ledgerCard({
+        rolls: [{ roll, label: provisionsLabel() }],
+        what: provisionsWhat(what),
+        glyph: glyphFor('resistance', 'provisions'),
+        out: esc(loc('heart.card.provisions-out', { amount: `-${relief}` })),
+        lines: [{ name: esc(party.name), value: esc(loc('heart.card.provisions-change', { from: before, to: after, max: p.max })) }],
     });
-    if (roll) await roll.toMessage({ speaker: speakerFor(byActorId), flavor: text });
-    else await ChatMessage.create({ speaker: speakerFor(byActorId), content: `<p>${esc(text)}</p>` });
+    await ChatMessage.create({ speaker: speakerFor(byActorId), content, rolls: roll ? [roll] : [] });
     return { amount: relief, from: before, to: after };
 }
 
-// Restock: the payer marks D4 / D6 / D8 to their own Supplies (a normal
-// stress card, so their protection and their own fallout roll apply), then
-// Provisions loses one size larger (D6 / D8 / D10).
+// Restock: the payer marks D4 / D6 / D8 to their own Supplies (their
+// protection applies, and their own fallout can be rolled from the card),
+// then Provisions loses one size larger (D6 / D8 / D10). One card for both
+// (2026-09-30 review): "-6 Provisions Stress", "Resupplied D8 provisions.",
+// "Kettle pays D6: +4 Supplies Stress".
 export async function restock({ payerId, die = 'd4' } = {}) {
     let relief;
     try {
@@ -174,15 +214,43 @@ export async function restock({ payerId, die = 'd4' } = {}) {
         return null;
     }
     if (!requireOwner(payer)) return null;
-    const payment = await stressCard({
-        formula: String(die).toLowerCase(),
-        dieLabel: String(die).toLowerCase(),
-        resistance: 'supplies',
-        character: payer.id,
-        flavor: sourceLabel('restock'),
+
+    // the payment: an ordinary stress roll to the payer's Supplies
+    const StressRoll = game.heart.rolls.StressRoll;
+    const pay = StressRoll._build({ die_size: String(die).toLowerCase(), character: payer.id, resistance: 'supplies' }, {}, {});
+    await pay.evaluate();
+    const [paid] = await pay.takeStress();
+
+    // the relief: one die size larger off Provisions
+    const reliefRoll = await new Roll(relief).evaluate();
+    const p = provisionsOf(party);
+    const before = p.value;
+    const after = relievedValue(before, reliefRoll.total);
+    await party.update({ 'system.provisions.value': after });
+
+    const supplies = payer.system?.resistances?.supplies;
+    const payValue = [
+        loc('heart.card.pays-amount', { amount: paid?.amount ?? 0 }),
+        paid?.protection ? `(${loc('heart.card.protection', { protection: paid.protection })})` : '',
+        supplies ? `· ${loc('heart.card.track', { value: Number(supplies.value) || 0, max: 10 })}` : '',
+    ].filter(Boolean).join(' ');
+    const falloutButton = (paid?.amount ?? 0) > 0
+        ? `<button type="button" data-action="ledger-fallout" data-character="${esc(payer.id)}" data-resistance="supplies" data-tooltip="heart.term.fallout">${esc(loc('heart.card.fallout-for', { name: payer.name }))}</button>`
+        : '';
+    const content = await ledgerCard({
+        rolls: [{ roll: pay, label: loc('heart.resistance.supplies') }, { roll: reliefRoll, label: provisionsLabel() }],
+        what: provisionsWhat(esc(loc('heart.card.restock-what', { die: String(die).toUpperCase() }))),
+        glyph: glyphFor('resistance', 'provisions'),
+        out: esc(loc('heart.card.provisions-out', { amount: `-${reliefRoll.total}` })),
+        det: esc(loc('heart.card.restock-det', { die: String(relief).toUpperCase() })),
+        lines: [
+            { name: esc(loc('heart.card.pays', { name: payer.name, die: String(die).toUpperCase() })), value: esc(payValue) },
+            { name: esc(party.name), value: esc(loc('heart.card.provisions-change', { from: before, to: after, max: p.max })) },
+        ],
+        acts: falloutButton,
     });
-    const result = await relieveProvisions({ die: relief, source: 'restock', byActorId: payer.id });
-    return { payment, ...result };
+    await ChatMessage.create({ speaker: speakerFor(payer.id), content, rolls: [pay, reliefRoll] });
+    return { payment: pay, amount: reliefRoll.total, from: before, to: after };
 }
 
 // Scavenging succeeded (the Delve+Domain roll itself is an ordinary roll)
@@ -191,18 +259,20 @@ export function scavengeRelief({ byActorId } = {}) {
 }
 
 export async function setQuartermaster(actorId) {
+    // GM only (2026-09-30, Luke)
+    if (!game.user.isGM) {
+        ui.notifications.warn(loc('heart.party.gm-only-settings'));
+        return null;
+    }
     const party = requireParty();
-    if (!party || !requireOwner(party)) return null;
+    if (!party) return null;
     const actor = actorId ? game.actors.get(actorId) : null;
     if (actorId && (!actor || actor.type !== 'character')) {
         ui.notifications.warn(loc('heart.party.quartermaster-character'));
         return null;
     }
+    // no chat message: the sheets show the quartermaster (2026-09-30 review)
     await party.update({ 'system.quartermaster': actor ? actor.id : '' });
-    const text = actor
-        ? loc('heart.party.chat.quartermaster', { name: actor.name })
-        : loc('heart.party.chat.no-quartermaster');
-    await ChatMessage.create({ speaker: speakerFor(actor?.id), content: `<p>${esc(text)}</p>` });
     return actor;
 }
 
@@ -211,13 +281,15 @@ export async function clearProvisions({ source } = {}) {
     const party = requireParty();
     if (!party || !requireOwner(party)) return null;
     const before = provisionsOf(party).value;
+    // no chat notice (2026-09-30 review: the one-line cards are gone; the
+    // sheets show the track)
     await party.update({ 'system.provisions.value': 0 });
-    const text = loc('heart.party.chat.cleared', { name: party.name, from: before, source: sourceLabel(source) });
-    await ChatMessage.create({ speaker: ChatMessage.getSpeaker(), content: `<p>${esc(text)}</p>` });
     return { from: before, to: 0 };
 }
 
-// GM only: empty the track, drop the quartermaster and the party's fallouts
+// GM only: a fresh party for a new adventure (2026-09-30 review): Provisions
+// empty, no quartermaster, no members, no fallouts, no notes, and the
+// default name and portrait
 export async function reset() {
     if (!game.user.isGM) {
         ui.notifications.warn(loc('heart.party.gm-only'));
@@ -225,10 +297,17 @@ export async function reset() {
     }
     const party = requireParty();
     if (!party) return null;
-    await party.update({ 'system.provisions.value': 0, 'system.quartermaster': '' });
-    const ids = party.items.filter(i => i.type === 'fallout').map(i => i.id);
+    await party.update({
+        name: loc('heart.party.default-name'),
+        img: PARTY_IMG,
+        'system.provisions.value': 0,
+        'system.quartermaster': '',
+        'system.members': [],
+        'system.notes': '',
+    });
+    // every party item goes: fallouts and the shared gear (2026-09-30)
+    const ids = party.items.map(i => i.id);
     if (ids.length) await party.deleteEmbeddedDocuments('Item', ids);
-    await ChatMessage.create({ speaker: ChatMessage.getSpeaker(), content: `<p>${esc(loc('heart.party.chat.reset', { name: party.name }))}</p>` });
     return party;
 }
 
@@ -265,6 +344,47 @@ export async function ensureParty() {
 }
 
 export function registerPartyHooks() {
+    // The payer's fallout button on a restock card: rolls their fallout as
+    // its own card, then drops the button from this one
+    Hooks.on('renderChatMessage', (message, html) => {
+        html.find('[data-action=ledger-fallout]').on('click', async ev => {
+            ev.preventDefault();
+            const { character, resistance } = ev.currentTarget.dataset;
+            const actor = game.actors.get(character);
+            if (!actor?.isOwner) {
+                ui.notifications.warn(loc('heart.party.not-owner', { name: actor?.name ?? '' }));
+                return;
+            }
+            const roll = await game.heart.rolls.FalloutRoll.build({ character, resistance });
+            if (!roll) return;
+            await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }) });
+            if (message.isOwner) {
+                await message.update({ content: message.content.replace(/<div class="ledger-acts">[\s\S]*?<\/div>/, '') });
+            }
+        });
+    });
+
+    // GM-only party settings (2026-09-30, Luke): everyone owns the party (so
+    // Fallout, Provisions, items, and notes stay open to players), but only
+    // the GM renames it, picks the quartermaster, or adds members. A player
+    // may still take their own character out (the member list may shrink).
+    // Checked on the updating client, before anything is sent.
+    Hooks.on('preUpdateActor', (actor, changes, options, userId) => {
+        if (actor.type !== PARTY_TYPE || game.users.get(userId)?.isGM) return;
+        const blocked = [];
+        if ('name' in changes && changes.name !== actor.name) blocked.push('name');
+        if (foundry.utils.hasProperty(changes, 'system.quartermaster')
+            && foundry.utils.getProperty(changes, 'system.quartermaster') !== actor.system.quartermaster) blocked.push('quartermaster');
+        if (foundry.utils.hasProperty(changes, 'system.members')) {
+            const before = new Set(actor.system.members ?? []);
+            const after = foundry.utils.getProperty(changes, 'system.members') ?? [];
+            if (after.some(id => !before.has(id))) blocked.push('members');
+        }
+        if (!blocked.length) return;
+        if (userId === game.user.id) ui.notifications.warn(loc('heart.party.gm-only-settings'));
+        return false;
+    });
+
     // One party per world. The first one is owned by everyone, however it is
     // created. options.heartAllowSecondParty is the deliberate escape hatch.
     Hooks.on('preCreateActor', (doc, data, options, userId) => {

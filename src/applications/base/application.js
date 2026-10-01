@@ -1,7 +1,8 @@
 export default class HeartApplication extends FormApplication {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
-      classes: ["form", "heart", this.formType],
+      // heart-window: the class Heart's theme is scoped to (2026-09-30, Luke)
+      classes: ["form", "heart", "heart-window", this.formType],
       resizable: true,
     });
   }

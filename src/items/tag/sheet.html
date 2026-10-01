@@ -1,10 +1,10 @@
 {{#> "heart:items/base/sheet.html" type="tag"}}
   {{#*inline "item-stats"}}
-  <span class="stat" title="-1 = {{localizeHeart 'item-sheet' 'unlimited'}}"><b>{{localizeHeart "item-sheet" "uses"}}</b>
+  <span class="stat" data-tooltip="heart.tip.tag-uses"><b>{{localizeHeart "item-sheet" "uses"}}</b>
     <input type="number" name="system.limited_uses" value="{{system.limited_uses}}" min="-1" step="1" {{#unless editable}}disabled{{/unless}} />
     {{#if (lt system.limited_uses 0)}}<span>{{localizeHeart "item-sheet" "unlimited"}}</span>{{/if}}
   </span>
   {{/inline}}
 
-  {{> "heart:items/base/description.html" panelTitle=(localizeHeart "item-sheet" "rule")}}
+  {{> "heart:items/base/description.html" panelTitle=(localizeHeart "item-sheet" "rule") panelGlyph="rule"}}
 {{/ "heart:items/base/sheet.html"}}

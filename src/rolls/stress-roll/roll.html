@@ -1,28 +1,27 @@
-{{!-- Stress roll card (2026-09-30 rebuild): the stakes, the roll, who took
-     how much (less their Protection), and a fallout button per character who
-     took any. --}}
+{{!-- Stress card (2026-09-30, round-2 mock B, no badge): a hint line
+     ("D6 to Blood"), "+4 Blood Stress" led by the resistance glyph, the die,
+     then one line per character (or the party, for Provisions) with what got
+     through Protection and where the track now stands, then a fallout button
+     per character who took any. --}}
 <form class="dice-roll heart stress-roll">
     <input type="hidden" name="character" value="{{character}}"/>
-    {{#if flavor}}
-    <div class="dice-flavor">{{flavor}}</div>
-    {{/if}}
-    <div class="dice-result">
-        <div class="roll-summary">{{description}}</div>
-        <div class="roll-faces"><span class="roll-face kept">{{total}}</span></div>
-        {{{tooltip}}}
-        <div class="roll-outcome">{{total}} {{#if resistance}}{{{heartGlyph "resistance" resistance}}}{{titlecase (localizeHeart "resistance" resistance)}}{{/if}} {{localizeHeart 'stress'}}</div>
+    <div class="ledger">
+        <div class="ledger-what">{{{what}}}</div>
+        <div class="ledger-out">{{{heartGlyph "resistance" resistance}}}{{out}}</div>
+        {{{dice}}}
+        {{#if det}}<div class="ledger-det">{{det}}</div>{{/if}}
         {{#if applied.length}}
-        <ul class="stress-applied">
-            {{#each applied as |a|}}<li class="{{#unless a.amount}}blocked{{/unless}}">{{a.line}}{{#if a.protectionNote}} <span class="muted">{{a.protectionNote}}</span>{{/if}}</li>{{/each}}
-        </ul>
+        <div class="ledger-lines">
+            {{#each applied as |a|}}<div class="ledger-line {{#unless a.amount}}blocked{{/unless}}"><span>{{a.name}}</span><span class="v">{{a.value}}</span></div>{{/each}}
+        </div>
         {{/if}}
         {{#if (or showTakeStressButton falloutFor.length)}}
-        <div class="roll-buttons">
+        <div class="ledger-acts">
             {{#if showTakeStressButton}}
-            <button type="button" data-action="take-stress"><span class="fas fa-heart-broken"></span> {{localizeHeart 'rolls' 'stress-roll' 'take-stress'}}</button>
+            <button type="button" data-action="take-stress" data-tooltip="heart.tip.card.take-stress">{{localizeHeart 'rolls' 'stress-roll' 'take-stress'}}</button>
             {{/if}}
             {{#each falloutFor as |a|}}
-            <button type="button" data-action="roll-fallout" data-character="{{a.id}}"><span class="fas fa-radiation-alt"></span> {{localizeHeart 'rolls' 'fallout-roll' 'action'}}: {{a.name}}</button>
+            <button type="button" data-action="roll-fallout" data-character="{{a.id}}" data-tooltip="{{a.tip}}">{{a.button}}</button>
             {{/each}}
         </div>
         {{/if}}

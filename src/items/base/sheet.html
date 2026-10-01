@@ -17,7 +17,7 @@
 --}}
 <form class="heart sheet base Item item-sheet {{type}} {{cssClass}}" autocomplete="off">
   <header class="item-header">
-    <img class="item-icon" src="{{displayImg}}" title="{{localizeHeart item.name}}" data-edit="img" />
+    <img class="item-icon" src="{{displayImg}}" alt="{{localizeHeart item.name}}" data-edit="img" />
     <div class="item-ident">
       <input class="item-name" name="name" value="{{localizeHeart item.name}}" placeholder="{{localizeHeart type 'name'}}" {{#unless editable}}readonly{{/unless}} />
       <div class="item-type">{{localizeHeart type "label-single"}}{{#if parentName}} &middot; {{parentName}}{{/if}}</div>

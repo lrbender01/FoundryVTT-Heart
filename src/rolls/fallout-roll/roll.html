@@ -1,17 +1,15 @@
-{{!-- Fallout roll card (2026-09-29, approved sweep): fallout reads in bright
-     red; no fallout in the normal text colour. --}}
+{{!-- Fallout card (2026-09-30, round-2 mock B, no badge): a hint line
+     ("D12 vs 9 total Stress"), the outcome led by its severity glyph, the
+     d12, and the clear button named for what it clears. For Provisions at
+     the top of the track there is no roll, so no die. --}}
 <div class="dice-roll heart fallout-roll">
-    {{#if flavor}}
-    <div class="dice-flavor">{{flavor}}</div>
-    {{/if}}
-    <div class="dice-result">
-        <div class="roll-summary">{{description}}</div>
-        <div class="roll-faces"><span class="roll-face kept">{{total}}</span></div>
-        {{{tooltip}}}
-        <div class="roll-outcome {{#unless (eq result "no-fallout")}}bad{{/unless}}">{{{heartGlyph "severity" severity}}}{{localizeHeart 'rolls' 'fallout-roll' 'results' result}}</div>
+    <div class="ledger">
+        <div class="ledger-what">{{{what}}}</div>
+        <div class="ledger-out {{#if bad}}bad{{/if}} {{#if crit}}crit{{/if}}">{{{heartGlyph "severity" severity}}}{{localizeHeart 'rolls' 'fallout-roll' 'results' result}}</div>
+        {{{dice}}}
         {{#if showClearStressButton}}
-        <div class="roll-buttons">
-            <button type="button" data-action="clear-stress"><span class="fas fa-refresh"></span> {{localizeHeart 'rolls' 'fallout-roll' 'clear-stress-short'}}</button>
+        <div class="ledger-acts">
+            <button type="button" data-action="clear-stress" {{#if clearTip}}data-tooltip="{{clearTip}}"{{/if}}>{{clearLabel}}</button>
         </div>
         {{/if}}
     </div>
