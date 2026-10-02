@@ -1,0 +1,181 @@
+{{!--
+  Companion sheet (2026-10-01, pared down the same day, Luke's calls): one
+  sheet for hirelings and animals, which the book gives the same rules (W&M
+  W66). Panel-sheet chrome like the adversary and landmark sheets, with the
+  character sheet's own pieces where it does the same job: the header's
+  Stress and Fallout buttons, and the Resistances rows. Header: portrait,
+  Name (and what the book calls them), "Bond of" chips, Stress /
+  Fallout. Companion tab: Resistances, Fallout (the book's menu; the
+  picker switches one on), Abilities (+ to add, each its own item), Equipment
+  and Resources, Profile. Lore tab: Description, Examples, Notes.
+--}}
+{{#*inline "editorPanel"}}
+<div class="character-tab-container editor-panel {{panelClass}}">
+  <div class="container-title">{{#if glyph}}<span class="title-glyph">{{{heartGlyph "section" glyph}}}</span>{{/if}}{{title}}
+    {{#if editable}}
+    <a data-action="edit-editor" aria-label="{{localizeHeart 'adversary' 'edit'}}"><span class="fas fa-edit clickable section-button"></span></a>
+    {{/if}}
+  </div>
+  <div class="container-content">
+    {{editor content target=target button=true editable=editable owner=owner engine="prosemirror"}}
+  </div>
+</div>
+{{/inline}}
+
+<div>
+<form class="heart sheet actor hireling panel-sheet {{cssClass}}" autocomplete="off">
+
+  <!-- ART BANNER (2026-10-02): the companion's art from fvtt-heart-content
+       over the header, like the landmark sheet's (common/banner.js) -->
+  <div class="character-head{{#if art}} has-art{{/if}}">
+  {{#if art}}{{{heartArt actor "banner"}}}{{/if}}
+
+  <!-- HEADER: portrait, name, bond of and cost, Stress / Fallout -->
+  <div class="character-header">
+    <div class="header-col portrait">
+      <img class="profile" src="{{displayImg}}" alt="{{actor.name}}" data-edit="img" />
+    </div>
+
+    <div class="header-col header-box identity-box">
+      <label class="header-label">{{localizeHeart "adversary" "name"}}</label>
+      <input class="header-input" name="name" value="{{actor.name}}" />
+      <label class="header-label">{{localize "heart.bond.ui.role"}}</label>
+      <div class="header-chips"><span data-tooltip="{{companionTip}}">{{#if role}}{{role}}{{else}}{{localize "heart.bond.kind.companion"}}{{/if}}</span></div>
+    </div>
+
+    <div class="header-col header-box tracks-box hireling-box">
+      <label class="header-label">{{localize "heart.hireling.employed-by"}}</label>
+      <div class="header-chips">{{#each employers as |e|}}<span class="employer-chip" data-action="open-employer" data-actor-id="{{e.id}}" data-tooltip="{{e.tip}}">{{e.name}}</span>{{else}}<span class="hireling-unbonded">{{localize "heart.bond.ui.unbonded"}}</span>{{/each}}</div>
+      {{!-- (Cost left the header 2026-10-02, Luke: the book's texts are too
+           long for it; it stays in Profile) --}}
+    </div>
+
+    <!-- Stress and Fallout, as on the character sheet -->
+    <div class="header-col heart roll-buttons roll-buttons-container hireling-rolls">
+      <button type="button" data-action="stress-roll" class="stress-roll" data-tooltip="heart.term.stress">
+        {{localizeHeart "perform" "roll-stress"}} <span class="sheetD10 white"></span>
+      </button>
+      <button type="button" data-action="fallout-roll" class="fallout-roll" data-tooltip="heart.bond.ui.fallout-roll-tip">
+        {{localizeHeart "perform" "roll-fallout"}} <span class="sheetD10 white"></span>
+      </button>
+    </div>
+  </div>
+  </div>
+
+  <nav class="character-nav-tabs tabs" data-group="primary">
+    <a class="item" data-tab="main">{{localize "heart.bond.kind.companion"}}</a>
+    <a class="item" data-tab="lore">{{localizeHeart "landmark" "tab-lore"}}</a>
+  </nav>
+
+  <section class="tab-content">
+    <section class="tab" data-tab="main">
+      <div class="panel-body hireling-body">
+        <div class="column">
+          <!-- Resistances: the character sheet's block, verbatim; the names
+               roll Stress, the marks click (data-actor-track) -->
+          <div class="character-tab-container stress-container">
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "resistances"}}}</span>{{localizeHeart "character" "resistances-heading"}}</div>
+            <div class="container-content">
+              <div>
+                <div class="resistance-row">
+                  <span class="resistance-name"></span>
+                  <span class="resistance-stress red" data-tooltip="heart.term.stress">{{localizeHeart "character" "stress-heading"}} ({{localizeHeart "character" "total-label"}}: {{total}})</span>
+                  <span class="resistance-protection" data-tooltip="heart.term.protection">{{localizeHeart "character" "protection-heading"}}</span>
+                </div>
+                {{#each tracks as |t|}}
+                <div class="resistance-row" data-resistance="{{t.key}}">
+                  <span class="resistance-name clickable" data-action="stress-roll" data-resistance="{{t.key}}" data-tooltip="{{t.tip}}">{{{heartGlyph "resistance" t.key}}}{{localizeHeart "resistance" t.key}}</span>
+                  <span class="resistance-stress red" data-actor-track data-target="system.resistances.{{t.key}}.value">{{{ordered-checkable t.value 10}}}</span>
+                  <span class="resistance-protection protection" data-actor-track data-target="system.resistances.{{t.key}}.protection">{{{ordered-checkable t.protection 5}}}</span>
+                </div>
+                {{/each}}
+              </div>
+            </div>
+          </div>
+
+          <!-- Fallout: the book's menu, switched off; the Fallout picker (the
+               "+", or Pick Fallout on a check's card) switches one on, and it
+               shows on the bond row -->
+          <div class="character-tab-container fallout-container">
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "fallout"}}}</span>{{localize "heart.bond.sheet.fallouts"}}
+              {{#if owner}}<a data-action="add" data-type="fallout" aria-label="{{localize 'heart.fallout-picker.button'}}"><span class="addItem">+</span></a>{{/if}}
+            </div>
+            <div class="container-content">
+              {{#if taken.length}}
+              <div class="tab-item-list hireling-taken">
+                {{#each taken as |item|}}{{> "heart:items/fallout/preview.html" item=item showActivate=@root.owner showDelete=@root.owner}}{{/each}}
+              </div>
+              {{/if}}
+              {{#if menu.length}}
+              <div class="bond-resolved-label">{{localize "heart.bond.ui.fallout-menu"}}</div>
+              <div class="tab-item-list hireling-menu">
+                {{#each menu as |item|}}{{> "heart:items/fallout/preview.html" item=item showDelete=@root.owner}}{{/each}}
+              </div>
+              {{/if}}
+              {{#unless taken.length}}{{#unless menu.length}}<div class="bond-quiet">{{localize "heart.bond.ui.no-fallout"}}</div>{{/unless}}{{/unless}}
+            </div>
+          </div>
+        </div>
+
+        <div class="column">
+          <div class="character-tab-container abilities-container">
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "ability"}}}</span>{{localize "heart.bond.ui.abilities"}}
+              {{#if owner}}<a data-action="add" data-type="ability" data-data='{"active": true, "type": "core"}' aria-label="{{localize 'heart.bond.ui.add-ability'}}"><span class="addItem">+</span></a>{{/if}}
+            </div>
+            <div class="container-content">
+              <div class="tab-item-list">
+                {{#each abilities as |item|}}{{> "heart:items/ability/preview.html" item=item showDelete=@root.owner}}{{/each}}
+              </div>
+              {{#unless abilities.length}}<div class="bond-quiet">{{localize "heart.bond.ui.no-abilities"}}</div>{{/unless}}
+            </div>
+          </div>
+
+          <div class="character-tab-container equipment-container">
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "equipment"}}}</span>{{localize "heart.bond.ui.gear"}}
+              {{#if owner}}<a data-action="add" data-type="equipment" data-data='{"active": true}' aria-label="{{localizeHeart 'create-new' 'equipment'}}"><span class="addItem">+</span></a>{{/if}}
+            </div>
+            <div class="container-content">
+              <div class="tab-item-list">
+                {{#each equipment as |item|}}{{> "heart:items/equipment/preview.html" item=item showDelete=@root.owner showNote=true}}{{/each}}
+                {{#each resources as |item|}}{{> "heart:items/resource/preview.html" item=item showDelete=@root.owner showNote=true}}{{/each}}
+              </div>
+              {{#unless equipment.length}}{{#unless resources.length}}<div class="bond-quiet">{{localize "heart.bond.ui.no-gear"}}</div>{{/unless}}{{/unless}}
+            </div>
+          </div>
+
+          <div class="character-tab-container profile-container">
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "profile"}}}</span>{{localizeHeart "adversary" "profile"}}
+              {{#if editable}}
+              <a data-action="toggle-edit" aria-label="{{#if editing}}{{localizeHeart 'adversary' 'done'}}{{else}}{{localizeHeart 'adversary' 'edit'}}{{/if}}"><span class="fas {{#if editing}}fa-check{{else}}fa-edit{{/if}} clickable section-button"></span></a>
+              {{/if}}
+            </div>
+            <div class="container-content">
+              {{#if editing}}
+              <label class="profile-label">{{localize "heart.bond.ui.descriptions"}}</label>
+              <textarea class="profile-input" name="system.descriptors">{{actor.system.descriptors}}</textarea>
+              <label class="profile-label">{{localize "heart.bond.sheet.cost"}}</label>
+              <textarea class="profile-input" name="system.cost">{{actor.system.cost}}</textarea>
+              {{else}}
+              <div class="profile-grid">
+                <div class="profile-label">{{localize "heart.bond.ui.descriptions"}}</div>
+                <div class="profile-note-plain">{{actor.system.descriptors}}</div>
+                <div class="profile-label">{{localize "heart.bond.sheet.cost"}}</div>
+                <div class="profile-note-plain">{{{heartTerms actor.system.cost}}}</div>
+              </div>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab" data-tab="lore">
+      <div class="panel-lore">
+        {{> editorPanel panelClass="description-container" glyph="notes" title=(localizeHeart "adversary" "description") content=actor.system.description target="system.description"}}
+        {{> editorPanel panelClass="examples-container" glyph="descriptors" title=(localize "heart.bond.ui.examples") content=actor.system.examples target="system.examples"}}
+        {{> editorPanel panelClass="notes-container" glyph="notes" title=(localize "heart.bond.sheet.notes") content=actor.system.notes target="system.notes"}}
+      </div>
+    </section>
+  </section>
+</form>
+</div>

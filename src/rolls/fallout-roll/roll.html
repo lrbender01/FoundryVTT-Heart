@@ -7,9 +7,14 @@
         <div class="ledger-what">{{{what}}}</div>
         <div class="ledger-out {{#if bad}}bad{{/if}} {{#if crit}}crit{{/if}}">{{{heartGlyph "severity" severity}}}{{localizeHeart 'rolls' 'fallout-roll' 'results' result}}</div>
         {{{dice}}}
-        {{#if showClearStressButton}}
+        {{!-- Pick Fallout (GM only, 2026-10-01): the Fallout picker for this
+             character, party, or companion at this severity --}}
+        {{#if (or showClearStressButton pickButton)}}
         <div class="ledger-acts">
+            {{{pickButton}}}
+            {{#if showClearStressButton}}
             <button type="button" data-action="clear-stress" {{#if clearTip}}data-tooltip="{{clearTip}}"{{/if}}>{{clearLabel}}</button>
+            {{/if}}
         </div>
         {{/if}}
     </div>

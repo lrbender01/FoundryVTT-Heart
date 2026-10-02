@@ -19,7 +19,12 @@
 // ============================================================================
 
 // ---------- the message header: portrait and name ----------
-.chat-message .message-header
+// On Heart's cards and on roll cards only (2026-10-02, same specificity):
+// other modules' cards and plain chat keep Foundry's header. Roll cards stay
+// in because the landmark's Stress die posts a plain Foundry roll with no
+// Heart class (common/panel-sheet.js roll-die); once it carries one, drop
+// .dice-roll here and use util.$heart-card.
+.chat-message:where(:has(.heart, .ledger, .dice-roll)) .message-header
     display: flex
     flex-wrap: nowrap
     align-items: center
@@ -247,7 +252,9 @@
         &.blocked .v
             font-style: italic
 
-// pill buttons (beat the generic chat button rule in chat-message.sass)
+// the card's buttons: small primary, a ghost one small secondary (util.sass
+// controls, 2026-10-02; were bold 14px pills). Beat the generic chat button
+// rule in chat-message.sass.
 .chat-message .ledger .ledger-acts
     display: flex
     justify-content: flex-end
@@ -255,31 +262,14 @@
     gap: 6px
 
     button
+        @include util.button-primary(true)
         flex: 0 1 auto
-        width: auto
         max-width: 100%
-        height: auto
-        min-height: 26px
-        margin: 0
-        padding: 4px 11px
         white-space: normal
         text-align: center
-        border: 1px solid util.$red-mid
-        border-radius: 13px
-        background: util.$red-deep
-        color: util.$on-red
-        font-family: util.$font-label
-        font-weight: bold
-        font-size: 14px
-        line-height: 1.15
-
-        &:hover
-            background: util.$red-mid
 
         &.ghost
-            background: transparent
-            border-color: util.$line
-            color: util.$text
+            @include util.button-secondary(true)
 
         + button
             margin-top: 0
@@ -319,13 +309,12 @@
     .request-choice
         gap: 4px
 
-        .chip-toggle span
+        // compact choice chips (util.sass controls)
+        .chip-toggle > span
+            @include util.choice-chip-compact
             display: inline-flex
             align-items: center
             gap: 4px
-            padding: 2px 8px 1px
-            font-size: 14px
-            line-height: 1.2
 
         .heart-glyph
             width: 1em

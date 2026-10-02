@@ -16,6 +16,10 @@ import { glyphFor } from '../../common/icons';
 // The arithmetic (die steps, doubling, Protection) lives in rules.js, free of
 // webpack-only imports, so the rules tests can load it (2026-09-30, Luke).
 import { stressDie, stressFormula, afterProtection } from './rules';
+import { applyProvisions } from '../../actors/party/party';
+import { askGM } from '../../common/relay';
+import { oneAtATime } from '../../common/busy';
+import { mayRunStress, messageOf } from '../card-actions';
 
 export default class StressRoll extends Roll {
     static get CHAT_TEMPLATE() { return chatTemplateHTML.path; }
@@ -111,6 +115,10 @@ export default class StressRoll extends Roll {
 
     // Mark the stress on the roller and each helper. Returns (and stores in
     // options.applied, which is saved with the card) who took how much.
+    // Called only by the GM's client (rolls/card-actions.js, one request at a
+    // time since 2026-10-02), which owns everyone, so helpers played by other
+    // players are marked too; with no GM connected, the caller's own client
+    // marks the characters it owns.
     async takeStress() {
         const resistance = this.options.resistance;
         if (!resistance) return [];
@@ -144,10 +152,9 @@ export default class StressRoll extends Roll {
         }
         const p = party.proxy.provisions;
         const { protection, amount } = afterProtection(total, p.protection, this.options.ignoreProtection);
+        // from the track's value at this moment (we are in the GM's queue)
         const marked = amount > 0 && party.isOwner;
-        if (marked) {
-            await party.update({ 'system.provisions.value': Math.min(p.max, p.value + amount) });
-        }
+        if (marked) await applyProvisions({ mode: 'add', amount });
         const applied = [{ id: party.id, name: party.name, amount, protection, marked, shared: true }];
         this.options.applied = applied;
         return applied;
@@ -227,7 +234,9 @@ export default class StressRoll extends Roll {
             user: chatOptions.user,
             dice: isPrivate ? '' : diceRow(rollParts(this).map(p => ({ ...p, kept: true }))),
             applied: isPrivate ? [] : applied,
-            showTakeStressButton: isPrivate ? false : showTakeStressButton && !opts.applied,
+            // drawn per client: only the roller's player and the GM see it
+            showTakeStressButton: isPrivate ? false : showTakeStressButton && !opts.applied
+                && mayRunStress(game.user, game.actors.get(opts.character)),
             falloutFor,
             resistance: isPrivate ? '' : opts.resistance,
             total: isPrivate ? '?' : this.total,
@@ -238,54 +247,58 @@ export default class StressRoll extends Roll {
 
     static activateListeners(html) {
         // A standalone stress card (the character header's Stress button)
-        html.on('click', '.stress-roll [data-action=take-stress]', async function(ev) {
+        // Applied once by the GM's client, however many clicks (2026-10-02,
+        // rolls/card-actions.js); only the roller's player or the GM
+        html.on('click', '.stress-roll [data-action=take-stress]', function(ev) {
             ev.preventDefault();
-            const msg = game.messages.get($(ev.currentTarget).closest('.chat-message').data('messageId'));
-            const stressRoll = msg.stressRoll;
-            if (!stressRoll.options.resistance) {
-                ui.notifications.warn(game.i18n.localize('heart.rolls.stress-roll.no-resistance'));
-                return;
-            }
-            const applied = await stressRoll.takeStress();
-            const update = {
-                'flags.heart.show-take-stress-button': false,
-                'flags.heart.show-fallout-roll-button': applied.some(a => a.amount > 0),
-            };
-            if (msg.rolls[0] === stressRoll || msg.rolls[0] instanceof StressRoll) {
-                update.rolls = [JSON.stringify(stressRoll.toJSON())];
-            } else {
-                update['flags.heart.stress-roll'] = stressRoll.toJSON();
-            }
-            await msg.update(update);
-            ui.chat.scrollBottom();
+            const msg = messageOf(ev);
+            const stressRoll = msg?.stressRoll;
+            if (!stressRoll) return;
+            return oneAtATime(`${msg.id}:take-stress`, ev.currentTarget, async () => {
+                if (!stressRoll.options.resistance) {
+                    ui.notifications.warn(game.i18n.localize('heart.rolls.stress-roll.no-resistance'));
+                    return;
+                }
+                const roller = game.actors.get(stressRoll.options.character);
+                if (!mayRunStress(game.user, roller)) {
+                    ui.notifications.warn(game.i18n.format('heart.relay.stress-not-yours', { name: roller?.name ?? '' }));
+                    return;
+                }
+                if (await askGM('take-stress', { messageId: msg.id })) ui.chat.scrollBottom();
+            });
         });
 
         // Fallout for one character who took stress. The roller's fallout
-        // joins this card; a helper's fallout posts as its own card.
-        html.on('click', '.stress-roll [data-action=roll-fallout]', async function(ev) {
+        // joins this card; a helper's fallout posts as its own card. Claimed
+        // by the GM's client first, so each character's rolls once.
+        html.on('click', '.stress-roll [data-action=roll-fallout]', function(ev) {
             ev.preventDefault();
-            const msg = game.messages.get($(ev.currentTarget).closest('.chat-message').data('messageId'));
-            const stressRoll = msg.stressRoll;
+            const msg = messageOf(ev);
+            const stressRoll = msg?.stressRoll;
+            if (!stressRoll) return;
             const character = ev.currentTarget.dataset.character || stressRoll.options.character;
-            const falloutRoll = await game.heart.rolls.FalloutRoll.build({ character, resistance: stressRoll.options.resistance });
-            if (!falloutRoll) return;
+            return oneAtATime(`${msg.id}:fallout:${character}`, ev.currentTarget, async () => {
+                if (!(await askGM('claim-fallout', { messageId: msg.id, character }))) return;
+                let falloutRoll = null;
+                try {
+                    falloutRoll = await game.heart.rolls.FalloutRoll.build({ character, resistance: stressRoll.options.resistance });
+                } finally {
+                    // nothing rolled: the button comes back
+                    if (!falloutRoll) await askGM('release-fallout', { messageId: msg.id, character });
+                }
+                if (!falloutRoll) return;
 
-            const done = [...(msg.falloutDone ?? []), character];
-            // the party's Provisions fallout joins this card like the roller's
-            const joinsCard = character === stressRoll.options.character || game.actors.get(character)?.type === 'party';
-            if (!joinsCard) {
-                // Dice So Nice animates it as its own card is created
-                await falloutRoll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: game.actors.get(character) }) });
-                await msg.update({ 'flags.heart.fallout-done': done });
-                return;
-            }
-            await falloutRoll.evaluate();
-            await showDice(falloutRoll, { setting: 'showFalloutRoll3dDice' });
-            await msg.update({
-                'flags.heart.fallout-roll': falloutRoll.toJSON(),
-                'flags.heart.fallout-done': done,
+                // the party's Provisions fallout joins this card like the roller's
+                const joinsCard = character === stressRoll.options.character || game.actors.get(character)?.type === 'party';
+                if (!joinsCard) {
+                    // Dice So Nice animates it as its own card is created
+                    await falloutRoll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: game.actors.get(character) }) });
+                    return;
+                }
+                await falloutRoll.evaluate();
+                await showDice(falloutRoll, { setting: 'showFalloutRoll3dDice' });
+                if (await askGM('attach-fallout', { messageId: msg.id, roll: falloutRoll.toJSON() })) ui.chat.scrollBottom();
             });
-            ui.chat.scrollBottom();
         });
     }
 }

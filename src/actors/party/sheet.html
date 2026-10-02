@@ -20,7 +20,14 @@
 {{/inline}}
 
 <div>
-<form class="heart sheet actor party panel-sheet {{cssClass}}" autocomplete="off">
+{{!-- data-anchor marks the boxes the party art's decorations anchor to
+     (2026-10-02, actors/party/decor.js): the sheet, the header, each section --}}
+<form class="heart sheet actor party panel-sheet {{cssClass}}" autocomplete="off" data-anchor="sheet">
+
+  <!-- ART BANNER (2026-10-02): the content module's party art over the
+       header, the banner sheets' look (common/banner.js, actors/party/art.js) -->
+  <div class="character-head{{#if art}} has-art{{/if}}" data-anchor="header">
+  {{#if art}}{{{heartArt art "banner"}}}{{/if}}
 
   <!-- HEADER: portrait, name + quartermaster, Provisions + protection -->
   <div class="character-header">
@@ -39,16 +46,18 @@
     </div>
 
     <div class="header-col header-box tracks-box provisions-box">
-      <label class="header-label">{{localizeHeart "party" "provisions"}}</label>
+      {{!-- "Provisions Stress", no count beside the marks (2026-10-02, Luke);
+           the tooltip still says the number --}}
+      <label class="header-label">{{localizeHeart "party-sheet" "provisions-stress"}}</label>
       <div class="track provisions-track" data-tooltip="{{provisions.trackTip}}">
         <span class="prov-rows">{{> provisionsBoxes rows=provisions.rows}}</span>
-        <span class="count">{{provisions.value}} / {{provisions.max}}</span>
       </div>
       <label class="header-label">{{localizeHeart "resistance" "protection" "label-single"}}</label>
       <div class="track protection" data-tooltip="{{provisions.protectionTip}}">
         {{#each provisions.shields as |s|}}<a class="ordered-checkable-box readonly {{#if s.checked}}checked{{/if}}"></a>{{/each}}
       </div>
     </div>
+  </div>
   </div>
 
   <nav class="character-nav-tabs static-strip" aria-hidden="true"></nav>
@@ -62,8 +71,9 @@
       <div class="panel-body party-body">
         <!-- Members: class icon, name, and ancestry / class / calling; drop
              characters anywhere on the sheet -->
-        <div class="character-tab-container members-container">
+        <div class="character-tab-container members-container" data-anchor="members">
           <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "party"}}}</span>{{localizeHeart "party-sheet" "members"}}
+            {{#if qmWarning}}<a class="heart-warn" data-action="pick-quartermaster" data-tooltip="{{qmWarning}}">!</a>{{/if}}
             {{#if user.isGM}}<a data-action="add-member" aria-label="{{localizeHeart 'party-sheet' 'add-member'}}"><span class="addItem">+</span></a>{{/if}}
           </div>
           <div class="container-content">
@@ -77,6 +87,8 @@
                   <span class="member-name">{{m.name}}</span>
                   {{#if m.traits}}<span class="member-traits">{{m.traits}}</span>{{/if}}
                 </a>
+                {{#if m.volunteer}}<button type="button" class="member-volunteer" data-action="volunteer-quartermaster" data-member-id="{{m.id}}" data-tooltip="heart.tip.party.volunteer">{{localizeHeart "party-sheet" "volunteer"}}</button>{{/if}}
+                {{#if m.resign}}<button type="button" class="member-volunteer member-resign" data-action="resign-quartermaster" data-member-id="{{m.id}}" data-tooltip="heart.tip.party.resign">{{localizeHeart "party-sheet" "resign"}}</button>{{/if}}
                 {{#if m.removable}}<a class="member-remove" data-action="remove-member" aria-label="{{localizeHeart 'party-sheet' 'remove-member'}}"><span class="fas fa-times"></span></a>{{/if}}
               </div>
               {{/each}}
@@ -87,8 +99,31 @@
           </div>
         </div>
 
+        <!-- Companions (2026-10-01, Luke's pick): the hirelings and animals
+             bonded to members (bonds/view.js companionCards), as member
+             cards: the kind on top, "Cook, Bond of Vess" under the name -->
+        {{#if companions.length}}
+        <div class="character-tab-container members-container companions-container" data-anchor="companions">
+          <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "bonds"}}}</span>{{localize "heart.bond.ui.companions"}} <span class="panel-count">{{companions.length}}</span></div>
+          <div class="container-content">
+            <div class="member-strip">
+              {{#each companions as |c|}}
+              <div class="member-card companion-card">
+                <a class="member-open" data-action="open-companion" data-uuid="{{c.uuid}}" aria-label="{{c.label}}">
+                  <span class="member-role">{{c.kindLabel}}</span>
+                  <span class="member-icon">{{#if c.img}}<img src="{{c.img}}" alt="" />{{else}}<span class="chip-fallback fas fa-user"></span>{{/if}}</span>
+                  <span class="member-name">{{c.name}}</span>
+                  <span class="member-traits">{{c.traits}}</span>
+                </a>
+              </div>
+              {{/each}}
+            </div>
+          </div>
+        </div>
+        {{/if}}
+
         <!-- Party fallouts: they befall every delver -->
-        <div class="character-tab-container fallout-container">
+        <div class="character-tab-container fallout-container" data-anchor="fallouts">
           <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "fallout"}}}</span>{{localizeHeart "party-sheet" "fallout"}}
             {{#if owner}}<a data-action="add" data-type="fallout" data-data='{"active": true}' aria-label="{{localizeHeart 'create-new' 'fallout'}}"><span class="addItem">+</span></a>{{/if}}
           </div>
@@ -107,7 +142,7 @@
              the character sheet's items: name and one line on when to use it,
              then its controls under the text, right-justified, chips in the
              beat-chip style. Every action posts its own chat card -->
-        <div class="character-tab-container provisions-actions">
+        <div class="character-tab-container provisions-actions" data-anchor="provisions">
           <div class="container-title"><span class="title-glyph">{{{heartGlyph "resistance" "provisions"}}}</span>{{localizeHeart "party-sheet" "actions"}}</div>
           <div class="container-content">
             {{#if owner}}
@@ -187,7 +222,7 @@
         <!-- Party items (2026-09-30, Luke): what the party carries together.
              Equipment, resources, and plain items, as the character sheet
              shows them; drop them here or use + for a new item -->
-        <div class="character-tab-container items-container party-items-container">
+        <div class="character-tab-container items-container party-items-container" data-anchor="items">
           <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "items"}}}</span>{{localizeHeart "party-sheet" "items"}}
             {{#if owner}}<a data-action="add" data-type="item" aria-label="{{localizeHeart 'create-new' 'item'}}"><span class="addItem">+</span></a>{{/if}}
           </div>
@@ -201,7 +236,7 @@
           </div>
         </div>
 
-        <div class="character-tab-container editor-panel notes-container">
+        <div class="character-tab-container editor-panel notes-container" data-anchor="notes">
           <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "notes"}}}</span>{{localizeHeart "party-sheet" "notes"}}
             {{#if editable}}
             <a data-action="edit-editor" aria-label="{{localizeHeart 'party-sheet' 'notes-edit'}}">
@@ -218,7 +253,7 @@
              full text, so the party can work on them together. Read-only:
              Pursue / Finish stay on each character's own sheet -->
         {{#if members.length}}
-        <div class="character-tab-container party-beats-container">
+        <div class="character-tab-container party-beats-container" data-anchor="beats">
           <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "beat"}}}</span>{{localizeHeart "party-sheet" "beats"}}</div>
           <div class="container-content">
             <div class="party-beats">

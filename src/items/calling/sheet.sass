@@ -5,20 +5,19 @@
 form.heart.item-sheet.calling
 
     // Header (2026-09-30 review): Completed Beats and the three severities
-    // in one row, at the top right of the header
+    // in one row. At the bottom right (2026-10-01, Luke): the row's bottom
+    // edge level with the icon's (10px top padding + 66px icon in the 104px
+    // header row), clear of the torn edge, which starts about 88px down
     .item-header > .item-stats
         grid-auto-flow: column
         grid-template-rows: none
         margin-left: auto
+        align-self: flex-end
+        margin-bottom: 28px
 
         // counts in the header's white, not red (2026-09-30 review)
         .stat .v
             color: util.$header-fg
-
-    .active-beats-container
-        .beats-hint
-            margin-top: 6px
-            @include util.text-secondary
 
     .calling-text
         p

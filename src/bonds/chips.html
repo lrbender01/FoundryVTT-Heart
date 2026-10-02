@@ -1,0 +1,3 @@
+{{!-- A row of bond buttons, as beat chips (items/base/preview.sass); a
+     greyed one says why in its tooltip --}}
+{{#each list as |a|}}{{#if a.disabled}}<span class="beat-chip disabled" data-tooltip="{{a.tip}}">{{a.label}}</span>{{else}}<a class="beat-chip{{#if a.on}} on{{/if}}" data-action="{{a.action}}"{{#if a.tip}} data-tooltip="{{a.tip}}"{{/if}}>{{a.label}}</a>{{/if}}{{/each}}

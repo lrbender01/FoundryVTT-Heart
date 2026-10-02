@@ -1,11 +1,10 @@
-{{#> "heart:items/base/sheet.html" type="equipment"}}
+{{#> "heart:items/base/sheet.html" type="equipment" statsBar=true activeKey="equipped"}}
   {{#*inline "item-stats"}}
   <span class="stat"><b>{{localizeHeart "item-sheet" "skill"}}</b>
     {{#if editable}}<select name="system.type">{{selectOptions equipment_types selected=system.type}}</select>{{else}}<span class="v">{{lookup equipment_types system.type}}</span>{{/if}}
   </span>
   <span class="stat"><b>{{localizeHeart "item-sheet" "die"}}</b>
     {{#if editable}}<select name="system.die_size">{{selectOptions die_sizes selected=system.die_size}}</select>{{else}}<span class="v">{{system.die_size}}</span>{{/if}}
-    <a data-action="item-roll-self" aria-label="{{localizeHeart 'item-sheet' 'roll'}}"><span class="sheetD10"></span></a>
   </span>
   {{/inline}}
 

@@ -7,6 +7,12 @@
 // Card edge (2026-09-30, Luke): solid black on every card. !important beats
 // the inline player-colour border a chat-portrait module paints on the card;
 // the player's colour stays on the avatar at the top only.
+// Deliberately on EVERY chat message (checked 2026-10-02): the card colours
+// and edge here, the whisper / emote colours, the core dice colours, and the
+// content-link chips below are the chat log's colour theme. theme.sass turns
+// Foundry's text colours light on every .chat-message in the dark scheme, so
+// a card left on Foundry's light background would be unreadable. Layout and
+// type restyles are scoped to Heart's cards (util.$heart-card).
 .chat-message
     background: util.$surface
     color: util.$text
@@ -17,7 +23,8 @@
         background: none
         color: util.$text
 
-    .item-type
+    // (Heart's cards only, 2026-10-02: the item roll's flavour names the type)
+    &#{util.$heart-card} .item-type
         text-transform: capitalize
 
     // (the message header is the ledger's top line: chat-messages/ledger.sass)
@@ -71,13 +78,11 @@
         text-align: center
         color: util.$red-bright
 
+    // any other button in a Heart card: small primary (util.sass controls),
+    // full width as Foundry lays chat buttons out
     button
-        background: util.$red-deep
-        color: util.$on-red
-        border: 1px solid util.$red-mid
-
-        &:hover
-            background: util.$red-mid
+        @include util.button-primary(true)
+        width: 100%
 
         .fas
             padding: 0 0.5em
@@ -108,15 +113,26 @@
         text-decoration: line-through
 
 
-// ============================================================================
-// Roll cards (2026-09-29, approved sweep): summary, dice faces, outcome word,
-// labelled buttons. Shared by the Heart, stress and fallout rolls.
-// ============================================================================
+// Plain Foundry roll cards: the flavour line under the speaker. Left on every
+// roll card (checked 2026-10-02) with the core dice rules above and the
+// total below: Heart's own cards hold no core dice parts, and the one plain
+// Foundry roll Heart posts (the landmark's Stress die, common/panel-sheet.js
+// roll-die) carries no Heart class to scope to.
 .chat-message .dice-roll
     .dice-flavor
         color: util.$muted
         font-size: util.$fs-secondary
 
+// ============================================================================
+// Roll cards (2026-09-29, approved sweep): summary, dice faces, outcome word,
+// labelled buttons. Shared by the Heart, stress and fallout rolls.
+// Kept for chat messages posted before 2026-09-30 (the ledger layout,
+// chat-messages/ledger.sass); no current template emits these classes.
+// Scoped to Heart's roll cards (.dice-roll.heart, at the old specificity)
+// 2026-10-02. Heart's roll cards re-render from their rolls on every load,
+// so these probably never match any more; delete once confirmed in Foundry.
+// ============================================================================
+.chat-message .dice-roll:where(.heart)
     // everything on the card centred in the narrow chat log (2026-09-30)
     .roll-summary
         color: util.$muted
@@ -222,7 +238,8 @@
             @include util.text-chip
             font-size: util.$fs-body
 
-// Plain Foundry rolls (item rolls use the core roll template): the total as a
-// big word like the Heart cards
+// Plain Foundry rolls (the landmark's Stress die; /roll and module rolls
+// too): the total as a big word like the Heart cards. On every roll card,
+// see .dice-flavor above for why.
 .chat-message .dice-roll .dice-total
     @include util.text-section

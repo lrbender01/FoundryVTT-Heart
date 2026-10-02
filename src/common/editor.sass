@@ -38,53 +38,42 @@
             &.heart-editor-cancel
                 margin-left: auto
 
-            &.concurrent-users:empty
+            // Foundry's "collaborating users" box: hidden unless someone is
+            // co-editing, but the li rule above showed it as an empty box
+            // with an orange glow beside Save (2026-10-01, Luke). It holds
+            // whitespace, so :empty never matched; always hidden here.
+            &.concurrent-users
                 display: none
 
+        // Cancel small secondary, Save small primary (util.sass controls,
+        // 2026-10-02; were 13 to 14px)
         button
-            @include util.text-chip
+            @include util.button-secondary(true)
             flex: 0 0 auto
-            width: auto
             min-width: 30px
-            height: 26px
-            margin: 0
-            padding: 0 8px
-            line-height: 1
-            font-size: 13px
-            border: 1px solid util.$line
-            border-radius: 5px
-            background: util.$bg
-            color: util.$text
             box-shadow: none
 
-            &:hover
-                border-color: util.$red-mid
-                color: util.$red-bright
-
             &.active
-                background: util.$red-deep
-                border-color: util.$red-mid
-                color: util.$on-red
+                @include util.choice-chip-on
 
         .heart-editor-save button
-            background: util.$red-deep
-            border-color: util.$red-mid
-            color: util.$on-red
+            @include util.button-primary(true)
+            box-shadow: none
 
-            &:hover
-                background: util.$red-mid
-                color: util.$on-red
-
+        // the label takes the button's own face and size
         .heart-editor-label
-            font-family: util.$font-label
-            font-size: 14px
-            letter-spacing: 0.02em
+            font: inherit
+            letter-spacing: inherit
 
     .editor-container
         flex: 1 1 auto
         min-height: 6em
         max-height: 60vh
         overflow-y: auto
+        // centred in its panel (2026-10-01, Luke): Foundry's own
+        // ".prosemirror .editor-container" margin is 0.5rem 0.5rem 1rem 1rem,
+        // 16px left and 8px right
+        margin: 0
         padding: 8px 10px
         border: 1px solid util.$line
         border-radius: 6px

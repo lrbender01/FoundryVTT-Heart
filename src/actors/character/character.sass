@@ -71,8 +71,9 @@ $nav-overlap: 20px
 
 %header-label-style
   @include util.text-section
-  // header labels a step smaller than section titles: the fields matter more
-  font-size: util.$fs-chip-mosherif
+  // header labels a step smaller than section titles: the fields matter
+  // more. One size on every sheet (util.$header-label-fs, 2026-10-02)
+  font-size: util.$header-label-fs
   line-height: 1
   color: $header-label-color
   align-self: center
@@ -317,11 +318,9 @@ $nav-overlap: 20px
   mask-repeat: no-repeat
 
 // Dice icon colours by ROLE (class names kept for template compatibility):
-// .red = accent, .black = body-text colour, .white = header (fixed dark art)
+// .red = accent, .white = header (fixed dark art)
 .heart .sheetD10.red
   background-color: util.$red-bright
-.heart .sheetD10.black
-  background-color: util.$text
 .heart .sheetD10.white
   background-color: util.$header-fg
 
@@ -364,6 +363,93 @@ $nav-overlap: 20px
   margin-bottom: 0
   min-height: $header-height
   max-height: $header-height
+
+// Art banner (2026-10-01): ancestry, calling, class art in three panes, each
+// one canvas from a lead strip above the header down behind the header (about
+// 309 x 248px, Luke's call), over the header texture and under the header's
+// boxes and text, torn along the bottom with the header. Each pane frames its
+// piece (common/art.js), hard edges, its name small in the top left. Hovered,
+// the art eases in a little before a click opens the whole piece. Hidden per
+// player from the title bar's Art button; without it the header is as before
+// (the wrapper adds nothing).
+$art-lead: $header-height
+
+#{util.$in-heart} .character-head
+  flex: 0 0 auto
+  position: relative
+  z-index: 1
+
+  &.has-art
+    padding-top: $art-lead
+    background-image: url('../../../static/assets/ui/header_background.webp')
+    // solid over the lead strip, the header's torn edge below it
+    mask-image: linear-gradient(#000, #000), url('../../../static/assets/ui/header_nav.svg')
+    mask-size: 100% $art-lead, auto $header-height
+    mask-repeat: no-repeat, repeat-x
+    mask-position: left top, -0.5px $art-lead
+
+    > .character-header
+      position: relative
+      background-image: none
+      mask-image: none
+      text-shadow: 0 0 3px #000, 0 0 8px #000
+      // clicks between the header's boxes reach the art below
+      pointer-events: none
+      // back fairly quickly when the pointer leaves the art (0.6s, Luke)
+      transition: opacity 0.6s ease
+
+      > *
+        pointer-events: auto
+
+    // hovering the art fades the header away over two seconds (Luke), so
+    // the whole piece shows; moving onto a header box brings it back
+    &:has(.art-pane:hover) > .character-header
+      opacity: 0
+      transition: opacity 2s ease
+
+#{util.$in-heart} .character-art-band
+  position: absolute
+  inset: 0
+  display: grid
+  grid-template-columns: repeat(3, minmax(0, 1fr))
+  gap: 2px
+
+  .art-pane
+    position: relative
+    display: block
+    overflow: hidden
+
+    .heart-art-canvas
+      transition: transform 0.25s ease-out
+
+    &[data-action]
+      cursor: zoom-in
+
+      &:hover .heart-art-canvas
+        transform: scale(1.06)
+
+  .art-pane-label
+    position: absolute
+    top: 4px
+    left: 6px
+    font-family: util.$font-label
+    font-size: 12px
+    letter-spacing: util.$track-label
+    line-height: 1
+    color: #c4c4c4
+    text-shadow: 0 0 3px #000, 0 0 6px #000
+    pointer-events: none
+
+// the Art button hides the art behind gear rows too (2026-10-01)
+#{util.$in-heart}.art-hidden .item.preview.has-art > .row-art
+  display: none
+
+// The title bar's Art button: white while the banner shows, grey when hidden
+.window-header .heart-art-toggle
+  color: #fff
+
+  &.art-off
+    color: #808080
 
 // Header Columns — generic shrink-with-priority base
 // Each variant below overrides `flex` weights so Name dominates Pronouns,
@@ -413,24 +499,12 @@ $nav-overlap: 20px
     white-space: nowrap
     min-width: 0
 
-  // Row 2: Ancestry Label & Input
+  // Row 2: Ancestry Label (the slot below; the free-text input it once
+  // labelled was removed 2026-08-24)
   .ancestry-label
     grid-column: 1
     grid-row: 2
     @extend %header-label-style
-
-  .ancestry-input
-    grid-column: 2
-    grid-row: 2
-    @extend %header-input-style
-    overflow: hidden
-    text-overflow: ellipsis
-    white-space: nowrap
-    min-width: 0
-
-    &::placeholder
-      color: util.$header-fg
-      opacity: 0.5
 
   // Ancestry item slot - mirrors .class-content styling in the header grid
   .ancestry-content
@@ -449,24 +523,24 @@ $nav-overlap: 20px
   max-width: 32em
   @extend %item-input
 
-  // Row 1: Class Label & Content
-  .class-label
+  // Row 1: Calling Label & Content (calling on top since 2026-10-01)
+  .calling-label
     grid-column: 1
     grid-row: 1
     @extend %header-label-style
 
-  .class-content
+  .calling-content
     grid-column: 2
     grid-row: 1
     @extend %header-item-slot
 
-  // Row 2: Calling Label & Content
-  .calling-label
+  // Row 2: Class Label & Content
+  .class-label
     grid-column: 1
     grid-row: 2
     @extend %header-label-style
 
-  .calling-content
+  .class-content
     grid-column: 2
     grid-row: 2
     @extend %header-item-slot
@@ -525,6 +599,9 @@ $nav-overlap: 20px
     @extend %header-input-style
     border: 1px solid util.$header-fg
     @extend %header-label-style
+    // the Roll / Stress / Fallout buttons keep their own size (the label
+    // size grew to util.$header-label-fs on 2026-10-02)
+    font-size: util.$fs-chip-mosherif
     margin: 0
     padding: 0 0.5em
     display: flex
@@ -532,8 +609,9 @@ $nav-overlap: 20px
     justify-content: center
     gap: 0.3em
 
+    // the one hover (util.sass controls)
     &:hover
-      background-color: util.$red-mid
+      border-color: util.$red-bright
   
   // Roll: a square filling the left, label over the die; Stress above
   // Fallout on the right (2026-09-30 review)
@@ -618,21 +696,22 @@ $shield-col: 4.75rem
       vertical-align: 0
       margin-right: 0.35em
 
+  // marks spaced by the shared scale (util.sass, 2026-10-02)
   .resistance-stress
     font-weight: bold
     display: inline-flex
     align-items: center
-    gap: 0.2rem
+    gap: util.$mark-gap
 
   .resistance-protection
     font-weight: bold
     display: inline-flex
     align-items: center
-    gap: 0.2rem
+    gap: util.$mark-gap
 
 // Provisions (house rule, 2026-09-30): the party's shared track under the
-// five, set off by a thin line. The name stacks over a quiet "Party - QM"
-// line; the twenty boxes are two rows of ten under the Stress heading.
+// five, set off by a thin line; the twenty boxes are two rows of ten under
+// the Stress heading.
 #{util.$in-heart} .resistance-row .provisions-name
   flex-direction: column
   align-items: flex-start
@@ -642,33 +721,17 @@ $shield-col: 4.75rem
     display: inline-flex
     align-items: center
 
-  // wraps inside the name column ("Party ·" / "QM Vess") so it never
-  // widens the grid past the box
-  .provisions-sub
-    font-weight: normal
-    font-size: util.$fs-secondary
-    line-height: 1.2
-    color: util.$muted
-    white-space: normal
-    overflow-wrap: anywhere
-
-    &.is-quartermaster
-      color: util.$red-bright
-
-    a
-      color: util.$muted
-      margin-left: 3px
-
-      &:hover
-        color: util.$red-bright
-
 #{util.$in-heart} .resistance-row .provisions-track
   flex-direction: column
   align-items: flex-start
   gap: 4px
 
+  // small marks: a readout of the party's track (util.sass, 2026-10-02)
+  .prov-row .ordered-checkable-box
+    @include util.mark-size(util.$mark-sm)
+
 #{util.$in-heart} .protection input[type=checkbox]
-  $size: 12px
+  $size: util.$shield
   flex: $size 0 0
   appearance: none
   display: inline-block
@@ -692,18 +755,13 @@ $shield-col: 4.75rem
     background-color: util.$disabled
     cursor: not-allowed
 
-  &.invert
-    border-color: util.$header-fg
-    &:checked
-      background-color: util.$header-fg
-
 // Protection shields: a filled shield shape, grey empty / red marked.
 // (.heart prefix: the shared mark rule in index.sass - ".heart
 // .ordered-checkable-box::after", outline + transparent fill - has the same
 // weight and could win on load order, leaving only a faint dotted outline
 // through the shield mask. Found in review, 2026-09-29.)
 .heart .protection .ordered-checkable-box
-  $size: 12px
+  $size: util.$shield
   flex: $size 0 0
 
   &::after
@@ -724,10 +782,11 @@ $shield-col: 4.75rem
 
 // A marked shield had the generic box's 10px + 1px border and so sat larger
 // and spaced differently from the empty ones (2026-09-30 review): on the
-// character sheet (Resistances and Party) both states are exactly 12px, no
-// border, same margin. (.heart.sheet outranks index.sass's mark rules.)
+// character sheet (Resistances and Party) both states are exactly the shield
+// size (util.$shield), no border, same margin. (.heart.sheet outranks
+// index.sass's mark rules.)
 .heart.sheet .protection .ordered-checkable-box
-  flex: 12px 0 0
+  flex: util.$shield 0 0
   margin: 0
 
   // block in both states: the generic mark rule made a marked shield an
@@ -738,8 +797,8 @@ $shield-col: 4.75rem
   &::after, &.checked::after
     display: block
     box-sizing: border-box
-    width: 12px
-    height: 12px
+    width: util.$shield
+    height: util.$shield
     border: none
 
 // Skill / domain rows (2026-09-29 review): the name, then its knack on the
@@ -747,8 +806,8 @@ $shield-col: 4.75rem
 // A grid (not wrapping flex) so the knack always starts on the name's line;
 // a long knack wraps inside its own column.
 // Skill / domain rows (2026-09-30 review): a grid sized by how many there
-// are - one row alone, two or more in two columns - centred horizontally and
-// vertically in the box (both boxes share the taller one's height). Columns
+// are - one row alone, two or more in two columns - from the left of the box
+// (2026-10-01; centred before), at its top (both boxes share the taller one's height). Columns
 // are only as wide as their rows; a long knack still wraps inside its column.
 .heart.character
   // Skills above Domains, each full width, so knacks have room (2026-09-30)
@@ -760,12 +819,13 @@ $shield-col: 4.75rem
     display: flex
     flex-direction: column
 
-    // cards of a fixed width, three across, the set centred (2026-09-30)
+    // cards of a fixed width, three across, the set starting from the left
+    // of the section (2026-10-01, Luke; centred before)
     > .container-content
       flex: 1 1 auto
       display: grid
       // three per row; with only one or two cards (cols-1 / cols-2) the
-      // grid narrows so they sit centred
+      // grid narrows to them
       grid-template-columns: repeat(3, minmax(0, 6.4rem))
 
       &.cols-1
@@ -773,7 +833,7 @@ $shield-col: 4.75rem
 
       &.cols-2
         grid-template-columns: repeat(2, minmax(0, 6.4rem))
-      justify-content: center
+      justify-content: start
       // just as tall as its rows of three (2026-09-30 review: one row sat
       // in a box sized for two)
       align-content: start
@@ -984,23 +1044,11 @@ $shield-col: 4.75rem
     &:hover
       color: util.$red-bright
 
-  .trinket-reset
-    color: util.$muted
-
-    &:hover
-      color: util.$red-bright
-
+  // a call to action (util.sass controls)
   .trinket-roll
-    width: auto
-    height: auto
+    @include util.action-chip
+    @include util.action-chip-cta
     margin: 0
-    padding: 3px 12px 2px
-    @include util.text-chip
-    font-size: util.$fs-secondary
-    background: util.$red-deep
-    border: 1px solid util.$red-mid
-    color: util.$on-red
-    border-radius: 5px
 
 // Warning badge (2026-09-30): a round "!" with a tooltip saying what is
 // missing; in a header slot's corner, or inline after a section title.
@@ -1108,6 +1156,14 @@ $shield-col: 4.75rem
 
   .resistance-row
     display: contents
+
+// Volunteer (2026-10-01, Luke): after "No quartermaster yet", in the
+// Roll keepsake chip's red
+// (a call to action, util.sass controls)
+#{util.$in-heart} .party-container .party-qm .qm-volunteer
+  @include util.action-chip
+  @include util.action-chip-cta
+  margin: 0 0 0 0.6em
 
 #{util.$in-heart} .party-chips
   display: flex

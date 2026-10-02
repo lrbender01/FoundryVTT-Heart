@@ -3,6 +3,7 @@ import templateJSON from './template.json';
 import HeartItemSheet from '../base/sheet';
 import { needsEquipmentPick } from './equipment';
 import { heartDialogOptions } from '../../common/dialog';
+import { shareOfCharacter } from '../../common/window-sizes';
 
 import './sheet.sass';
 
@@ -15,13 +16,10 @@ const data = Object.freeze({
 export default class extends HeartItemSheet {
     static get type() { return data.type; }
 
-    // Open wide enough to read (was Foundry's 560px item default); slightly
-    // narrower than the 1250px character sheet (2026-09-29).
+    // 85% of the character sheet, like the calling and ancestry sheets, so
+    // the three share one art canvas (2026-10-01; was 1050 x 900)
     static get defaultOptions() {
-        return foundry.utils.mergeObject(super.defaultOptions, {
-            width: 1050,
-            height: 900,
-        });
+        return foundry.utils.mergeObject(super.defaultOptions, shareOfCharacter());
     }
 
     get template() {
@@ -172,13 +170,7 @@ export default class extends HeartItemSheet {
         });
     }
 
-    async _canDragDropItem(item) {
-        if(item.type === 'ability' && item.type === undefined) {
-            await item.update({'system.type': 'core'});
-        }
-
-        return ['ability', 'resource', 'equipment'].includes(item.type);
-    }
+    // (what may be dropped here: common/drops.js, checked by the base sheet)
 }
 
 export {

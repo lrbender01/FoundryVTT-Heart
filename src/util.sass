@@ -50,9 +50,14 @@ $header-field-bg: rgba(0, 0, 0, 0.35)
 //   $in-heart-or-chat  the same, plus chat messages
 //   $themed-window     a window the dark theme paints: Heart's and Mythic's
 //                      (use as .window-app#{$themed-window})
+//   $heart-card        a chat message that holds a Heart card (2026-10-02):
+//                      every roll card, ledger card, roll request, draw card,
+//                      and item preview carries .heart, and every ledger
+//                      block .ledger (use as .chat-message#{$heart-card})
 // ============================================================================
 $in-heart: ':where(.heart-window, .heart)'
 $in-heart-or-chat: ':where(.heart-window, .heart, .chat-message)'
+$heart-card: ':where(:has(.heart, .ledger))'
 // Mythic GME Tools (2.10.x) gives its windows no class of its own: its panels
 // are Applications with ids ending "_panel_window" (m1e_, m2e_, mvars1_,
 // mvars2_, pum_, pum8_, sum_, sum7_, gum_, gum2_, gma_), and its dialogs are
@@ -133,6 +138,185 @@ $track-display: 0.03em
     font-weight: 500
     font-size: $fs-chip
     letter-spacing: 0.03em
+
+// ============================================================================
+// CONTROLS (2026-10-02, Luke's values from the "Heart Style Unification"
+// mock). About fifteen chip and button styles became five designs, each one
+// shape, one hover, and at most two sizes. Every chip or button in the
+// system uses one of these mixins; never restate a control's size, padding,
+// radius, or hover by hand.
+//
+//   choice-chip     a pick in a dialog, prompt, or picker (on = deep fill);
+//                   choice-chip-compact where space is tight (the chat
+//                   column, the picker's filters)
+//   action-chip     a small action on a row (Activate, Finish, Learn, die
+//                   choices); action-chip-on, action-chip-done, and
+//                   action-chip-cta (a call to action, filled: Volunteer,
+//                   Roll keepsake)
+//   button-primary  the action in a dialog, prompt, or card (deep fill)
+//   button-secondary  backing out (Cancel, Keep): an outline
+//   info-chip       a fact, not a control (domain chips, header chips)
+//
+// One hover for everything interactive: the outline brightens
+// (hover-outline; red-bright on a border is the hover state's one job).
+// ============================================================================
+$radius: 5px
+$chip-fs: 18px
+$chip-fs-compact: 15px
+$chip-pad-y: 2px
+$chip-pad-x: 6px
+$action-fs: 14px
+$action-h: 20px
+$action-pad-x: 4px
+$button-fs: 17px
+$button-h: 35px
+$button-pad-x: 10px
+$button-fs-small: 15px
+$button-h-small: 26px
+$info-fs: 12px
+$info-pad-y: 1px
+$info-pad-x: 6px
+
+// Marks (same mock): small for inline readouts (a character's Provisions
+// row, a bond's pool, checkboxes), standard for every track, the shield for
+// Protection
+$mark-sm: 10px
+$mark-md: 12px
+$shield: 13px
+$mark-gap: 2px
+$mark-group-gap: 5px
+
+// One header label size on every sheet (was 23px on the character sheet,
+// 28px on the panel sheets)
+$header-label-fs: 25px
+
+@mixin hover-outline($text: false)
+    &:hover
+        border-color: $red-bright
+        @if $text
+            color: $red-bright
+
+@mixin choice-chip
+    @include text-chip
+    font-style: normal
+    font-size: $chip-fs
+    padding: ($chip-pad-y + 1px) $chip-pad-x $chip-pad-y
+    line-height: 1.2
+    height: auto
+    width: auto
+    margin: 0
+    box-sizing: border-box
+    border: 1px solid $line
+    border-radius: $radius
+    background: $sunken
+    color: $text
+    cursor: pointer
+
+// only the compact size, over a chip already drawn by choice-chip (so a
+// segmented set keeps its square inner corners)
+@mixin choice-chip-compact
+    font-size: $chip-fs-compact
+    padding: max(0px, $chip-pad-y - 1px) max(2px, $chip-pad-x - 4px) max(0px, $chip-pad-y - 2px)
+
+@mixin choice-chip-on
+    background: $red-deep
+    border-color: $red-mid
+    color: $on-red
+
+@mixin action-chip
+    @include text-chip
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    box-sizing: border-box
+    font-size: $action-fs
+    font-style: normal
+    line-height: 1
+    height: $action-h
+    min-height: 0
+    width: auto
+    padding: 2px $action-pad-x 0
+    border: 1px solid $line
+    border-radius: $radius
+    background: $bg
+    color: $text
+    white-space: nowrap
+    vertical-align: middle
+    cursor: pointer
+    @include hover-outline(true)
+
+@mixin action-chip-on
+    background: $red-deep
+    border-color: $red-mid
+    color: $on-red
+
+    &:hover
+        border-color: $red-bright
+        color: $on-red
+
+@mixin action-chip-done
+    background: $good-deep
+    border-color: $good
+    color: $good
+
+@mixin action-chip-cta
+    background: $red-deep
+    border-color: $red-mid
+    color: $on-red
+
+    &:hover
+        border-color: $red-bright
+        color: $on-red
+
+@mixin button-base($small: false)
+    @include text-chip
+    font-style: normal
+    box-sizing: border-box
+    border-radius: $radius
+    margin: 0
+    width: auto
+    cursor: pointer
+    @if $small
+        font-size: $button-fs-small
+        height: auto
+        min-height: $button-h-small
+        line-height: 1.15
+        padding: 3px ($button-pad-x - 3px) 1px
+    @else
+        font-size: $button-fs
+        height: $button-h
+        min-height: 0
+        line-height: 1
+        padding: 2px $button-pad-x 0
+
+@mixin button-primary($small: false)
+    @include button-base($small)
+    background: $red-deep
+    border: 1px solid $red-mid
+    color: $on-red
+    @include hover-outline
+
+@mixin button-secondary($small: false)
+    @include button-base($small)
+    background: transparent
+    border: 1px solid $line
+    color: $text
+    @include hover-outline(true)
+
+@mixin info-chip
+    @include text-chip
+    font-size: $info-fs
+    line-height: 1.2
+    padding: ($info-pad-y + 1px) $info-pad-x $info-pad-y
+    border-radius: $radius
+
+// a box of the mark scale: its flex basis and its drawn square
+@mixin mark-size($size)
+    flex: $size 0 0
+
+    &::after, &.checked::after
+        width: $size
+        height: $size
 
 // Rich-text areas (descriptions, notes). Upstream painted ruled-paper lines
 // behind every line of text with a repeating gradient; removed 2026-09-29

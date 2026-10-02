@@ -22,6 +22,7 @@
   "author": "hitcherland",
   "license": "ISC",
   "devDependencies": {
+    "@foundryvtt/foundryvtt-cli": "^1.0.0-rc.4",
     "css-loader": "^5.2.6",
     "eslint": "^7.29.0",
     "gh-pages": "^3.2.3",
@@ -34,8 +35,6 @@
     "webpack-cli": "^4.7.2",
     "webpack-dev-server": "^4.15.1",
     "webpack-import-glob-loader": "^1.6.3",
-    "yaml": "^1.10.2",
-    "@foundryvtt/foundryvtt-cli": "^1.0.0-rc.4"
-  },
-  "dependencies": {}
+    "yaml": "^1.10.2"
+  }
 }

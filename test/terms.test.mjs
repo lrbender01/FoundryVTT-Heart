@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from "vitest";
 import { emphasizeTerms } from "../src/common/terms.js";
-import { highlights, abilityRefs, plainText } from "./helpers.mjs";
+import { highlights, abilityRefs, plainText, termTooltips } from "./helpers.mjs";
 
 const check = (input, expected, options) => {
   const out = emphasizeTerms(input, options);
@@ -94,6 +94,56 @@ describe("difficulties, tags, Mastery, and the generic names", () => {
     ["Pick two Domains and a Knack.", ["Domains", "Knack"]],
     ["Each Resistance has its own track.", ["Resistance"]],
   ])("%s", (input, expected) => check(input, expected));
+});
+
+describe("tags and severities added in the 2026-10-01 sweep", () => {
+  it.each([
+    ["The weapon becomes Limited 5.", ["Limited 5"]],
+    ["It has the Limited X tag.", ["Limited X"]],
+    ["Value D8, Rare", ["D8", "Rare"]],
+    ["Downgrade a Major to a Minor.", ["Major", "Minor"]],
+    ["Two Minors combine into a Major.", ["Minors", "Major"]],
+    ["Fallout: Severed. [Major, Fortune/Supplies]", ["Fallout", "Major", "Fortune", "Supplies"]],
+    // a beat's or an ability's level, or part of a name, is not a severity
+    ["Pick a Minor beat and a Major ability.", []],
+    ["One of the Minor or Major abilities.", []],
+    ["For each Major advance you possess.", []],
+    ["You suffer a Critical Injury.", []],
+    ["Minor injuries heal.", []],
+  ])("%s", (input, expected) => check(input, expected));
+});
+
+// Every word in a phrase keeps its own rule (2026-10-01, Luke): a phrase
+// with a rule of its own, or whose words all name one rule, has one tooltip
+describe("tooltips", () => {
+  const tips = (input) => termTooltips(emphasizeTerms(input));
+  it.each([
+    ["Mark it as Supplies Stress.", [["Supplies Stress", [["Supplies", "heart.tip.resistance.supplies"], ["Stress", "heart.term.stress"]]]]],
+    ["Mark it as Provisions Stress.", [["Provisions Stress", [["Provisions", "heart.tip.resistance.provisions"], ["Stress", "heart.term.stress"]]]]],
+    ["Take D6 Stress to Mind.", [["D6 Stress to Mind", [["Stress", "heart.term.stress"], ["Mind", "heart.tip.resistance.mind"]]]]],
+    ["Gain +1 Blood and Mind Protection.", [["+1 Blood and Mind Protection", [
+      ["Blood", "heart.tip.resistance.blood"], ["Mind", "heart.tip.resistance.mind"], ["Protection", "heart.term.protection"]]]]],
+    ["Roll Endure+Occult to resist.", [["Endure+Occult", [["Endure", "heart.tip.skill.endure"], ["Occult", "heart.tip.domain.occult"]]]]],
+    ["Roll Discern+[Domain] to know.", [["Discern+[Domain]", [["Discern", "heart.tip.skill.discern"], ["[Domain]", "heart.term.domain"]]]]],
+    ["You gain the Kill Skill.", [["Kill Skill", [["Kill", "heart.tip.skill.kill"], ["Skill", "heart.term.skill"]]]]],
+    ["You have the Technology Knack.", [["Technology Knack", [["Technology", "heart.tip.domain.technology"], ["Knack", "heart.term.knack"]]]]],
+    ["Take Minor Blood Fallout.", [["Minor Blood Fallout", [
+      ["Minor", "heart.term.minor-fallout"], ["Blood", "heart.tip.resistance.blood"], ["Fallout", "heart.term.minor-fallout"]]]]],
+    ["Take Major or Critical Fallout.", [["Major or Critical Fallout", [
+      ["Major", "heart.term.major-fallout"], ["Critical", "heart.term.critical-fallout"], ["Fallout", "heart.term.fallout"]]]]],
+    // one rule for the whole phrase
+    ["Take Minor Fallout.", [["Minor Fallout", "heart.term.minor-fallout"]]],
+    ["Roll the Stress dice again.", [["Stress dice", "heart.term.stress"]]],
+    ["Take D6 Stress.", [["D6 Stress", "heart.term.stress"]]],
+    ["Roll Skill+Domain as usual.", [["Skill+Domain", "heart.term.roll"]]],
+    ["A gun with Extreme Range.", [["Extreme Range", "heart.term.tag.extreme_range"]]],
+    ["A Point-Blank weapon.", [["Point-Blank", "heart.term.tag.point_blank"]]],
+    ["The weapon becomes Limited 5.", [["Limited 5", "heart.term.tag.limited"]]],
+    ["The fight is Dangerous.", [["Dangerous", "heart.term.dangerous"]]],
+    ["Downgrade a Major.", [["Major", "heart.term.major-fallout"]]],
+    // dice name no rule
+    ["Roll 2D10 and keep both.", [["2D10", null]]],
+  ])("%s", (input, expected) => expect(tips(input)).toEqual(expected));
 });
 
 describe("the sentence-start rule", () => {

@@ -1,6 +1,10 @@
 @use '../../util'
 
-.item.preview
+// Every rule here is scoped to Heart (util.$in-heart, 2026-10-02; same
+// specificity): previews render in Heart windows, and in chat and journals
+// inside the div.heart.sheet HeartTextEditor wraps them in. Foundry's and
+// other modules' ".item" lists keep their own look.
+#{util.$in-heart} .item.preview
     position: relative
     border: 1px solid util.$line
     border-radius: 5px
@@ -8,6 +12,22 @@
     color: util.$text
     padding: 0.5em
     margin: 0.5em 0
+
+    // Book art behind gear rows (2026-10-01, Luke; common/art.js): the
+    // piece fills the row, framed for rows, under the text and icons; the
+    // text keeps a dark halo to stay legible over it
+    &.has-art
+        overflow: hidden
+        isolation: isolate
+        text-shadow: 0 0 3px #000, 0 0 6px #000, 0 0 10px #000
+
+        > .row-art
+            z-index: 0
+            border-radius: inherit
+
+        > :not(.row-art, .actionbar)
+            position: relative
+            z-index: 1
 
     // Equipment / resource rows: the skill or domain and the rollable die read
     // in the accent red, tags in italics (2026-09-29); the resistance a piece
@@ -97,7 +117,7 @@
 // Beat rows (2026-09-29 review): level, text, and stacked Activate / Complete
 // buttons (items/beat/actions.html). No checkbox. A completed beat is greyed
 // out entirely, its term highlights included.
-.item.preview.beat
+#{util.$in-heart} .item.preview.beat
     .beat-row
         display: flex
         align-items: center
@@ -143,42 +163,26 @@
             margin: 0
 
 // Activate and Complete side by side (2026-09-30 review)
-.beat-actions
+#{util.$in-heart} .beat-actions
     flex: 0 0 auto
     display: flex
     flex-wrap: nowrap
     align-items: flex-start
     gap: 4px
 
+    // an action chip (util.sass controls)
     .beat-chip
-        @include util.text-chip
-        font-size: util.$fs-secondary
-        line-height: 1.2
+        @include util.action-chip
         text-align: center
-        padding: 2px 8px 1px
-        border-radius: 5px
-        border: 1px solid util.$line
-        background: util.$bg
-        color: util.$text
-        white-space: nowrap
-        cursor: pointer
-
-        &:hover
-            border-color: util.$red-mid
-            color: util.$red-bright
 
         // chasing it now
         &.on
-            background: util.$red-deep
-            border-color: util.$red-mid
-            color: util.$on-red
+            @include util.action-chip-on
 
         // Finished: green, filled (the row itself greys out); click to undo.
         // Finish (available) stays neutral like Activate.
         &.done
-            background: util.$good-deep
-            border-color: util.$good
-            color: util.$good
+            @include util.action-chip-done
 
         // not available yet (Complete before Activate, Activate after done)
         &.disabled
@@ -201,64 +205,60 @@
     margin-left: 4px
 
 // "1 of 2 beats active. Choose another" - a quiet line, not an alarm
-.beat-slots
+#{util.$in-heart} .beat-slots
     margin-top: 6px
     font-size: util.$fs-secondary
     color: util.$muted
 
+    // a link reads as the bold text it is, no underline (2026-10-02, the
+    // no-lines rule)
     a
         color: util.$text
-        text-decoration: underline
-        text-decoration-color: util.$red-mid
-        text-underline-offset: 3px
+        font-weight: bold
 
         &:hover
             color: util.$red-bright
 
 // Ability lock state on a character's class (2026-09-30): Locked / Unlock
 // / Unlocked, beside the ability's name
-.item.preview.ability .lock-chip
-    display: inline-block
+// (an action chip, util.sass controls; "Locked" alone is a state, muted and
+// not clickable)
+#{util.$in-heart} .item.preview.ability .lock-chip
+    @include util.action-chip
     margin-left: 8px
-    @include util.text-chip
-    font-size: util.$fs-secondary
-    line-height: 1.2
-    padding: 2px 8px 1px
-    border-radius: 5px
-    border: 1px solid util.$line
-    background: util.$bg
     color: util.$muted
-    vertical-align: 2px
-    white-space: nowrap
+    cursor: default
+
+    &:hover
+        border-color: util.$line
+        color: util.$muted
 
     // Learn: neutral like Finish
     &[data-action=ability-unlock]
         color: util.$text
         cursor: pointer
-
-        &:hover
-            border-color: util.$red-mid
-            color: util.$red-bright
+        @include util.hover-outline(true)
 
     // Learned: green like Finished
     &.unlocked
-        background: util.$good-deep
-        border-color: util.$good
-        color: util.$good
+        @include util.action-chip-done
 
+        &:hover
+            color: util.$good
+
+    // (a learned one can be unlearned: its outline answers the pointer)
     &[data-action=ability-lock]
         cursor: pointer
+
+        &:hover
+            border-color: util.$red-bright
 
     // Learn again (a repeatable ability): a small + beside Learned
     &.again
         margin-left: 4px
-        padding: 2px 6px 1px
         color: util.$text
         cursor: pointer
-
-        &:hover
-            border-color: util.$red-mid
-            color: util.$red-bright
+        @include util.hover-outline(true)
 
     // not yet (the major ability isn't learned)
     &.disabled
@@ -267,7 +267,7 @@
         cursor: not-allowed
 
 // A major ability's options: columns beneath it, as many as fit
-.item.preview.ability .nested-abilities
+#{util.$in-heart} .item.preview.ability .nested-abilities
     display: grid
     grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr))
     gap: 6px
@@ -282,7 +282,7 @@
 // Class / calling / ancestry rows (2026-09-30 review, identity-preview.html):
 // a link to one in chat or a journal. Icon and name, the type in the small
 // label face, the pitch muted under it
-.item.preview:is(.calling, .class, .ancestry)
+#{util.$in-heart} .item.preview:is(.calling, .class, .ancestry)
     .identity-row
         display: flex
         flex-direction: column
@@ -319,7 +319,7 @@ strong.heart-term.heart-ability-ref
 
 // Learned more than once (2026-09-30, Luke): "x2" after the title, in the
 // title face, red like the other counts
-.item.preview.ability .ability-times
+#{util.$in-heart} .item.preview.ability .ability-times
     margin-left: 0.35em
     color: util.$red-bright
     font-variant-numeric: lining-nums tabular-nums

@@ -6,6 +6,9 @@ import { buildPool, poolFormula } from './pool';
 import { showDice, diceRow } from '../dice';
 import { glyphFor } from '../../common/icons';
 import { emphasizeTerms } from '../../common/terms';
+import { askGM } from '../../common/relay';
+import { oneAtATime } from '../../common/busy';
+import { mayRunStress, messageOf } from '../card-actions';
 // The result tables and lookups live in results.js, free of webpack-only
 // imports, so the rules tests can load them (2026-09-30, Luke)
 import { normal_results, difficult_results, stress_results, heartResult, markPool } from './results';
@@ -126,7 +129,9 @@ export default class HeartRoll extends Roll {
             user: chatOptions.user,
             // each die with its source (Base, Wild, a helper, Difficult)
             dice: isPrivate ? '' : diceRow(faces.map(f => ({ label: f.flavor, faces: 10, value: f.result, kept: f.kept, removed: f.removed }))),
-            showStressRollButton: isPrivate ? false : showStressRollButton && stress_results.includes(this.result),
+            // drawn per client: only the roller's player and the GM see it
+            showStressRollButton: isPrivate ? false : showStressRollButton && stress_results.includes(this.result)
+                && mayRunStress(game.user, game.actors.get(opts.character)),
             total: isPrivate ? "?" : this.total,
             result: isPrivate ? "?" : this.result
         };
@@ -165,39 +170,40 @@ export default class HeartRoll extends Roll {
     }
 
     static activateListeners(html) {
-        html.on('click', '.heart-roll [data-action=roll-stress]', async function(ev) {
-            const target = $(ev.currentTarget);
-            const msgElement = target.closest('.chat-message');
-            const messageId = msgElement.data('messageId');
-            const msg = game.messages.get(messageId);
-            const roll = msg.rolls[0];
-            
-            if (!roll._evaluated) await roll.evaluate();
-            // Stakes are named after the roll (Luke, 2026-09-30): one short,
-            // prefilled picker, then the stress is rolled and marked on the
-            // roller and every helper
-            const stressRoll = await game.heart.rolls.StressRoll.build({
-                character: roll.options.character,
-                result: roll.result,
-                helpers: roll.options.helpers ?? [],
-            }, msg);
-            if (!stressRoll) return;
+        html.on('click', '.heart-roll [data-action=roll-stress]', function(ev) {
+            ev.preventDefault();
+            const msg = messageOf(ev);
+            const roll = msg?.rolls?.[0];
+            if (!roll) return;
+            return oneAtATime(`${msg.id}:roll-stress`, ev.currentTarget, async () => {
+                // only the roller's player or the GM (Luke, 2026-10-02)
+                const roller = game.actors.get(roll.options.character);
+                if (!mayRunStress(game.user, roller)) {
+                    ui.notifications.warn(game.i18n.format('heart.relay.stress-not-yours', { name: roller?.name ?? '' }));
+                    return;
+                }
+                if (msg.getFlag('heart', 'stress-roll')) {
+                    ui.notifications.warn(game.i18n.localize('heart.relay.already'));
+                    return;
+                }
+                if (!roll._evaluated) await roll.evaluate();
+                // Stakes are named after the roll (Luke, 2026-09-30): one short,
+                // prefilled picker, then the stress is rolled and marked on the
+                // roller and every helper
+                const stressRoll = await game.heart.rolls.StressRoll.build({
+                    character: roll.options.character,
+                    result: roll.result,
+                    helpers: roll.options.helpers ?? [],
+                }, msg);
+                if (!stressRoll) return;
 
-            await stressRoll.evaluate();
-            await showDice(stressRoll, { setting: 'showStressRoll3dDice' });
-            const applied = await stressRoll.takeStress();
-
-            // one update: stress card attached, stress already taken, fallout
-            // offered only if some got through Protection (HCB p.78)
-            await msg.update({
-                'flags.heart.stress-roll': stressRoll.toJSON(),
-                'flags.heart.show-stress-roll-button': false,
-                'flags.heart.show-take-stress-button': false,
-                'flags.heart.show-fallout-roll-button': applied.some(a => a.amount > 0),
+                await stressRoll.evaluate();
+                await showDice(stressRoll, { setting: 'showStressRoll3dDice' });
+                // marked and attached by the GM's client, once (2026-10-02,
+                // rolls/card-actions.js): a second click or a second player
+                // is told it was already taken
+                if (await askGM('attach-stress', { messageId: msg.id, roll: stressRoll.toJSON() })) ui.chat.scrollBottom();
             });
-
-            await ui.chat.updateMessage(msg, true);
-            ui.chat.scrollBottom();
         });
     }
 }

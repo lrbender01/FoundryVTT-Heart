@@ -1,5 +1,6 @@
 import './panel-sheet.sass';
 import { highlightRendered } from './terms';
+import { shareOfCharacter } from './window-sizes';
 
 // Shared behaviour for the "panel" actor sheets - adversary, landmark, delve
 // (2026-09-29). They share the character sheet's chrome (torn header, tab
@@ -22,8 +23,8 @@ export const PANEL_SHEET_CLASS = 'heart-panel-sheet';
 export function panelSheetDefaults(defaultOptions, extra = {}) {
     return foundry.utils.mergeObject(defaultOptions, {
         classes: [...defaultOptions.classes, PANEL_SHEET_CLASS],
-        width: 920,
-        height: 780,
+        // 85% of the character sheet (2026-10-01; was 920 x 780)
+        ...shareOfCharacter(),
         dragDrop: [{ dragSelector: '.item', dropSelector: null }],
         ...extra,
     });

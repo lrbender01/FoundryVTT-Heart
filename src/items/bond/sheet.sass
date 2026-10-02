@@ -1,0 +1,70 @@
+@use '../../util'
+
+// Bond item sheet (2026-10-01). The pool's marks and the row styles come
+// from bonds/bonds.sass.
+form.heart.item-sheet.bond
+
+    // Kind and Stress at the bottom right of the title bar, in the header's
+    // white with no red (Luke, 2026-10-01): their bottom edge level with the
+    // icon's (10px padding + 66px icon in the 104px header row), as the
+    // calling's chips sit
+    .item-header > .item-stats
+        grid-auto-flow: column
+        grid-template-rows: none
+        align-self: flex-end
+        margin-left: auto
+        margin-bottom: 28px
+
+        .stat .v
+            color: util.$header-fg
+            font-weight: normal
+
+        .stat.bond-status.clickable
+            cursor: pointer
+
+            &:hover
+                border-color: util.$header-fg
+                background: rgba(255, 255, 255, 0.08)
+
+    .bond-link
+        display: flex
+        align-items: center
+        gap: 8px
+        margin-bottom: 6px
+
+        .content-link
+            @include util.text-body
+
+    .bond-unlink
+        color: util.$muted
+        font-size: 13px
+
+        &:hover
+            color: util.$red-bright
+
+    .bond-drop
+        margin-top: 4px
+        padding: 6px 10px
+        border: 1px dashed util.$line
+        border-radius: 5px
+        @include util.text-secondary
+        text-align: center
+
+    .bond-pool-container
+        .bond-body
+            margin-bottom: 3px
+
+        .bond-actions
+            margin-top: 6px
+
+    // resolved Fallout kept as history (Luke's pick): struck and muted
+    // (its label is shared, bonds/bonds.sass)
+    .bond-resolved .item.preview.fallout
+        opacity: 0.6
+
+        .fallout-title
+            text-decoration: line-through
+            color: util.$muted
+
+        :is(.heart-term, strong), > div
+            color: util.$muted

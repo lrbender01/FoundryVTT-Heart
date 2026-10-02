@@ -1,0 +1,135 @@
+@use '../util'
+
+// The Fallout picker (2026-10-01): a Heart dialog (common/dialog.js) with
+// the bond dialogs' chip choices (bonds/bonds.sass .bond-dialog); the list
+// scrolls between the filters and Write your own.
+.heart-fallout-picker .window-content
+    display: flex
+    flex-direction: column
+
+    .dialog-content
+        flex: 1 1 auto
+        min-height: 0
+        display: flex
+        flex-direction: column
+
+.heart.form.fallout-picker
+    flex: 1 1 auto
+    min-height: 0
+
+    .picker-filters
+        display: flex
+        flex-direction: column
+        gap: 6px
+
+        input[type=search]
+            height: 30px
+            padding: 0 8px
+            @include util.text-body
+            background: util.$sunken
+            color: util.$text
+            border: 1px solid util.$line
+            border-radius: 5px
+
+    .picker-list
+        flex: 1 1 auto
+        min-height: 8em
+        overflow-y: auto
+        display: flex
+        flex-direction: column
+        gap: 4px
+        padding: 2px
+
+    // the filters: compact choice chips (util.sass controls), so the
+    // resistances fit one row
+    .picker-filters .chip-toggle > span
+        @include util.choice-chip-compact
+
+    // a row is a label like a chip: its radio is hidden, the picked row's
+    // red border shows the pick (and the name stays bold, the text secondary:
+    // ".heart.form label" makes every label bold)
+    .picker-row
+        position: relative
+        display: flex
+        gap: 8px
+        align-items: flex-start
+        padding: 5px 8px
+        border: 1px solid util.$line
+        border-radius: 5px
+        background: util.$sunken
+        cursor: pointer
+        font-weight: normal
+
+        &[hidden]
+            display: none
+
+        > input
+            position: absolute
+            opacity: 0
+            width: 1px
+            height: 1px
+            pointer-events: none
+
+        &:hover
+            border-color: util.$red-mid
+
+        &:has(> input:checked)
+            border-color: util.$red-bright
+            background: util.$surface
+
+            .picker-text
+                -webkit-line-clamp: unset
+
+        &:has(> input:focus-visible)
+            outline: 2px solid util.$red-bright
+            outline-offset: 1px
+
+    .picker-row-body
+        display: flex
+        flex-direction: column
+        gap: 2px
+        min-width: 0
+        flex: 1 1 auto
+
+    .picker-row-head
+        display: flex
+        align-items: center
+        flex-wrap: wrap
+        gap: 0 6px
+
+        .heart-glyph
+            margin: 0
+
+        small
+            @include util.text-secondary
+            margin-left: auto
+
+    // two lines until picked (the whole text on hover and once picked)
+    .picker-text
+        @include util.text-secondary
+        color: util.$text
+        display: -webkit-box
+        -webkit-box-orient: vertical
+        -webkit-line-clamp: 2
+        overflow: hidden
+
+    .picker-empty[hidden]
+        display: none
+
+    // Write your own: its fields open once it's picked
+    .picker-custom:not(:has(> input:checked)) :is(input[type=text], textarea)
+        display: none
+
+    .picker-custom
+        :is(input[type=text], textarea)
+            width: 100%
+            box-sizing: border-box
+            @include util.text-body
+            background: util.$bg
+            color: util.$text
+            border: 1px solid util.$line
+            border-radius: 5px
+            padding: 3px 8px
+
+        textarea
+            resize: vertical

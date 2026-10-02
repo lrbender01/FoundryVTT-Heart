@@ -1,0 +1,12 @@
+{
+    "Actor": {
+        "hireling": {
+            "templates": ["resistance"],
+            "description": "",
+            "descriptors": "",
+            "cost": "",
+            "examples": "",
+            "notes": ""
+        }
+    }
+}

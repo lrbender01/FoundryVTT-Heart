@@ -1,0 +1,19 @@
+{{!-- Bonds section on the character sheet's Character tab (2026-10-01,
+     Luke's picks: under every other section except Inactive Items, compact
+     rows; no "+" or empty slot, since the GM grants bonds by dropping an
+     actor on the sheet). A titled container: the bond glyph, "Bonds", the
+     count of three (its tooltip says what bonds are for). The rows come from
+     bonds/view.js. The content box is a size container, so the rows lay out
+     in two lines in the Character-tab column and in one line wherever there
+     is room. --}}
+<div class="character-tab-container bonds-container">
+  <div class="container-title" data-tooltip="heart.bond.ui.section-tip"><span class="title-glyph">{{{heartGlyph "section" "bonds"}}}</span>{{localize "heart.bond.label-multiple"}} <span class="panel-count">{{bonds.length}} / 3</span></div>
+  <div class="container-content">
+    <div class="bond-list">
+      {{#each bonds as |b|}}
+      {{> "heart:bonds/row.html" b=b isGM=@root.user.isGM}}
+      {{/each}}
+    </div>
+    {{#unless bonds.length}}<div class="bond-quiet">{{localize "heart.bond.ui.none"}}</div>{{/unless}}
+  </div>
+</div>

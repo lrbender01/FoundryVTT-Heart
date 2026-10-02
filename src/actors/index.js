@@ -68,7 +68,9 @@ export function initialise() {
         Actors.registerSheet('heart', Sheet, {
             types: [type],
             makeDefault: true,
-            label: `heart.${type}`
+            // a string key (2026-10-02): `heart.${type}` names a lang section,
+            // which Sheet Config showed as "[object Object]"
+            label: `heart.${type}.label-single`
         });
     });
 

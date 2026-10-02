@@ -28,43 +28,19 @@
 // Luke): util.$in-heart / $in-heart-or-chat keep it inside Heart's windows,
 // forms, previews, and chat, at its old specificity.
 
-#{util.$in-heart-or-chat} .title-font
-    font-family: util.$font-display
+// A button whose work is running (common/busy.js, 2026-10-02): dimmed and
+// deaf until it is done
+.heart-busy
+    pointer-events: none
+    opacity: 0.55
 
 // No lines under headings (decided 2026-09-29) in Heart's and Mythic's
-// windows and in chat (2026-09-30: no longer anywhere while Heart is
-// loaded): Foundry core underlines h1-h3 and Heart's own dialogs ruled their
-// section h3s. !important is deliberate - it has to beat core's
+// windows and in Heart's chat cards (2026-10-02: other chat cards keep
+// Foundry's look): Foundry core underlines h1-h3 and Heart's own dialogs
+// ruled their section h3s. !important is deliberate - it has to beat core's
 // higher-specificity application selectors too.
-:where(.window-app#{util.$themed-window}, .chat-message) :is(h1, h2, h3, h4, h5, h6)
+:where(.window-app#{util.$themed-window}, .chat-message#{util.$heart-card}) :is(h1, h2, h3, h4, h5, h6)
     border-bottom: none !important
-
-#{util.$in-heart-or-chat} input.hidden
-    display: none !important
-
-#{util.$in-heart-or-chat} input.toggle-display
-    & ~ *
-        max-height: 0
-        overflow: hidden
-        transition: max-height 0.2s ease-out
-
-    &:checked ~ *
-        max-height: 20em
-        transition: max-height 0.2s ease-in
-
-#{util.$in-heart-or-chat} .toggle-button
-    @include util.text-section
-    color: util.$text
-    text-align: center
-    display: flex
-    flex-flow: row wrap
-    justify-content: center
-    padding: 0.2em
-    margin: 0.3em 0
-    border-radius: 0.2em
-    background: util.$surface
-    border: 3px solid util.$red-mid
-    cursor: pointer
 
 // (Chat card styling lives in chat-messages/chat-message.sass; the duplicate
 // block that used to sit here was folded into it 2026-09-29.)
@@ -80,16 +56,15 @@
     input, select, textarea
         font-family: inherit
 
-    // Buttons speak in the chip face (they choose / do something)
+    // Buttons speak in the chip face (they choose / do something); the one
+    // hover everywhere: the outline brightens (util.sass controls)
     button
         @include util.text-chip
         background: util.$red-deep
         color: util.$on-red
         border-color: util.$red-mid
         cursor: pointer
-
-        &:hover
-            background: util.$red-mid
+        @include util.hover-outline
 
     &.buttons
         display: flex
@@ -106,8 +81,9 @@
     // Marks: one rule everywhere (2026-09-29) - grey outline when empty,
     // bright-red fill when marked. Stress boxes and checkboxes follow it; the
     // protection shields use the same two colours on their shield shape.
+    // (the standard mark size, util.$mark-md, 2026-10-02: was 10px)
     .ordered-checkable-box
-        $size: 10px
+        $size: util.$mark-md
         flex: $size 0 0
 
         &::after, &.checked::after
@@ -124,8 +100,9 @@
             background-color: util.$mark-on
             border-color: util.$mark-on
 
+    // (a checkbox is a small mark, util.$mark-sm)
     input[type=checkbox]
-        $size: 10px
+        $size: util.$mark-sm
         flex: $size 0 0
         appearance: none
         display: inline-block
@@ -148,14 +125,10 @@
         &:disabled:checked
             background-color: util.$muted
 
-        &.invert
-            border-color: util.$header-fg
-            &:checked
-                background-color: util.$header-fg
-
-    // Gap between the two groups of five (was 1rem; tightened 2026-09-29)
+    // Gap between the two groups of five (was 1rem; tightened 2026-09-29;
+    // the shared scale's util.$mark-group-gap since 2026-10-02)
     .ordered-checkable-box:nth-of-type(5)
-        margin-right: 0.45rem
+        margin-right: util.$mark-group-gap
 
     // Provisions track (2026-09-30): shown, never clicked (marks go through
     // the party API); two rows of ten; boxes from the Critical line (13) on
@@ -167,7 +140,7 @@
             cursor: default
 
     .prov-row
-        --prov-gap: 0.2rem
+        --prov-gap: #{util.$mark-gap}
         display: flex
         align-items: center
         gap: var(--prov-gap)
@@ -195,7 +168,7 @@
         background: util.$red-bright
 
     input[type=checkbox]:nth-of-type(5)
-        margin-right: 0.45rem
+        margin-right: util.$mark-group-gap
 
     // Historic "red" stress track variant: now identical to the base marks
     // (Luke preferred grey empties over red outlines when reviewing the preview)
@@ -215,8 +188,9 @@
     & > *
         padding: 8px
 
-// (chat too: the GM roll request card is a grid-2 form)
-#{util.$in-heart-or-chat} .grid-2
+// (Heart only since 2026-10-02: the roll request card in chat, once a grid-2
+// form, is a ledger card now, and any Heart markup in chat sits inside .heart)
+#{util.$in-heart} .grid-2
     display: grid
     grid-template-columns: 1fr 1fr
     place-items: stretch
@@ -229,12 +203,6 @@
 
     .wide
         grid-column: 1 / 3
-
-    &.place-center
-        place-content: center
-
-    &.place-top
-        align-items: start
 
 #{util.$in-heart} .version-tabs
     flex-wrap: wrap
@@ -274,8 +242,9 @@
 :where(.heart-window, .heart, .chat-message, [id^="compendium-heart."], [id^="compendium-fvtt-heart-content."]) img:is([src*="systems/heart/assets/icons/"], [src*="modules/fvtt-heart-content/assets/icons/"])
     filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.9))
 
-// an icon and its word never split across lines
-:is(span, a, label, button, div, h3, h4):has(> .heart-glyph, > .heart-item-thumb)
+// an icon and its word never split across lines (Heart windows, previews,
+// and chat only, 2026-10-02)
+#{util.$in-heart-or-chat} :is(span, a, label, button, div, h3, h4):has(> .heart-glyph, > .heart-item-thumb)
     white-space: nowrap
 
 .heart-item-thumb
@@ -287,7 +256,7 @@
 
 // Item-type glyph before a section title (ability / beat / haunt / tag,
 // 2026-09-30): the size of the title's eye and "+" icons
-.container-title .title-glyph
+#{util.$in-heart} .container-title .title-glyph
     display: inline-flex
     align-self: center
     // centred on the capitals, not the line box: measured 1 to 1.5px low in
@@ -302,7 +271,7 @@
 
 // Fallout rows: severity glyph, resistance glyph, name (tooltips name them),
 // all centred on one line (2026-09-30 review: the glyphs sat above the text)
-.fallout-title
+#{util.$in-heart} .fallout-title
     display: flex
     align-items: center
     gap: 0.3em
@@ -315,6 +284,6 @@
             margin: 0
             vertical-align: 0
 
-.fallout-title .fallout-extra
+#{util.$in-heart} .fallout-title .fallout-extra
     font-weight: normal
     color: var(--heart-muted)

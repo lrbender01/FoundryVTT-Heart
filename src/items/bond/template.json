@@ -1,0 +1,11 @@
+{
+    "Item": {
+        "bond": {
+            "templates": ["has_description", "has_children"],
+            "kind": "person",
+            "target": "",
+            "stress": {"value": 0, "max": 10},
+            "notes": ""
+        }
+    }
+}

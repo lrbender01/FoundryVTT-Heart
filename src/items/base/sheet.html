@@ -11,28 +11,40 @@
     {{/ "heart:items/base/sheet.html"}}
 
   An Active toggle is added automatically when the item has that field (pass
-  hideToggles=true to suppress it). No generic Complete toggle since
+  hideToggles=true to suppress it, activeKey="equipped" to relabel it).
+  statsBar=true lays the chips out as one compact white bar in the header's
+  bottom right corner (equipment, resources; 2026-10-01). No generic Complete toggle since
   2026-09-30: resources carried one from the upstream data model, and beats
   have their own Activate / Complete buttons.
 --}}
 <form class="heart sheet base Item item-sheet {{type}} {{cssClass}}" autocomplete="off">
+  {{!-- The torn header block. Book art (2026-10-01): classes, callings and
+       ancestries with art from fvtt-heart-content get a lead strip above the
+       header row, and the art spans the whole block (the full sheet width,
+       framed per piece), over the header texture and under the icon, name,
+       and chips. Click the art to open the whole piece. --}}
+  <div class="item-head{{#if art}} has-art{{/if}}">
+  {{#if art}}
+  {{{heartArt item "item"}}}
+  {{/if}}
   <header class="item-header">
     <img class="item-icon" src="{{displayImg}}" alt="{{localizeHeart item.name}}" data-edit="img" />
     <div class="item-ident">
       <input class="item-name" name="name" value="{{localizeHeart item.name}}" placeholder="{{localizeHeart type 'name'}}" {{#unless editable}}readonly{{/unless}} />
       <div class="item-type">{{localizeHeart type "label-single"}}{{#if parentName}} &middot; {{parentName}}{{/if}}</div>
     </div>
-    <div class="item-stats">
+    <div class="item-stats{{#if statsBar}} stats-bar{{/if}}">
       {{#> item-stats}}{{/item-stats}}
       {{#unless hideToggles}}
       {{#if (not (undef system.active))}}
       <a class="stat toggle {{#if system.active}}on{{/if}}" {{#if item.isOwner}}data-action="toggle-field" data-field="system.active"{{/if}}>
-        <b>{{localizeHeart "item-sheet" "active"}}</b>
+        <b>{{#if activeKey}}{{localizeHeart "item-sheet" activeKey}}{{else}}{{localizeHeart "item-sheet" "active"}}{{/if}}</b>
       </a>
       {{/if}}
       {{/unless}}
     </div>
   </header>
+  </div>
 
   {{#> item-tabs}}<div class="item-no-tabs"></div>{{/item-tabs}}
 

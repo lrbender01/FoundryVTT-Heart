@@ -9,6 +9,12 @@
 
 $head-height: 104px
 $icon: 66px
+// a chip's value: lining figures at this size are exactly as tall as the
+// chip label's Mosherif capitals (see .stat)
+$chip-figures: 18px
+// book art (2026-10-01): the strip above the header row; the art's canvas is
+// this plus the header row (220 + 104 = 324px, Luke's call)
+$art-lead: 220px
 
 // Full-bleed like the actor sheets
 .heart-item-sheet .window-content
@@ -29,10 +35,57 @@ form.heart.item-sheet
     // Children of the form get "flex: 1" from a shared rule; pin the header,
     // tab strip and no-tabs spacer to their own size or the empty spacer grows
     // into a large gap above the body (found in the 2026-09-29 review).
-    > .item-header, > .item-no-tabs, > .character-nav-tabs
+    > .item-head, > .item-no-tabs, > .character-nav-tabs
         flex: 0 0 auto
 
     // ---------- header ----------
+    // The torn header block: the texture, the torn bottom edge (mask), the
+    // header row. Book art (2026-10-01): with art the block gains a lead strip
+    // above the header row, and the art spans the whole block (one canvas,
+    // the full sheet width x lead + header row), over the texture and under
+    // the icon, name, and chips, torn along the bottom with the rest.
+    .item-head
+        position: relative
+        z-index: 1
+        background-color: transparent
+        background-image: url('../../../static/assets/ui/header_background.webp')
+        background-size: cover
+        mask-image: url('../../../static/assets/ui/header_nav.svg')
+        mask-size: auto $head-height
+        mask-repeat: repeat-x
+        mask-position: -0.5px top
+
+        &.has-art
+            padding-top: $art-lead
+            // solid over the lead strip, the torn edge along the header row
+            mask-image: linear-gradient(#000, #000), url('../../../static/assets/ui/header_nav.svg')
+            mask-size: 100% $art-lead, auto $head-height
+            mask-repeat: no-repeat, repeat-x
+            mask-position: left top, -0.5px $art-lead
+
+            overflow: hidden
+
+            // the name and type line stay legible over the art
+            .item-ident
+                text-shadow: 0 0 3px #000, 0 0 8px #000
+
+            // the art itself is the button, as on the character sheet's
+            // banner: hovered it eases in a little, a click opens the whole
+            // piece. Clicks between the header's own controls reach it.
+            > .heart-art-canvas
+                pointer-events: auto
+                cursor: zoom-in
+                transition: transform 0.25s ease-out
+
+                &:hover
+                    transform: scale(1.06)
+
+            > .item-header
+                pointer-events: none
+
+                > *
+                    pointer-events: auto
+
     .item-header
         position: relative
         z-index: 1
@@ -45,13 +98,6 @@ form.heart.item-sheet
         padding: 10px 14px 0
         min-height: $head-height
         box-sizing: border-box
-        background-color: transparent
-        background-image: url('../../../static/assets/ui/header_background.webp')
-        background-size: cover
-        mask-image: url('../../../static/assets/ui/header_nav.svg')
-        mask-size: auto $head-height
-        mask-repeat: repeat-x
-        mask-position: -0.5px top
 
     .item-icon
         flex: 0 0 $icon
@@ -92,8 +138,8 @@ form.heart.item-sheet
         height: auto
         color: util.$header-fg
         background: transparent
+        // (no dashed line under the name since 2026-10-02, the no-lines rule)
         border: 0
-        border-bottom: 1px dashed rgba(244, 238, 232, 0.35)
         border-radius: 0
         padding: 0 0 2px
 
@@ -102,7 +148,6 @@ form.heart.item-sheet
         user-select: text
 
         &[readonly], &:disabled
-            border-bottom-color: transparent
             color: util.$header-fg
 
     .item-type
@@ -124,6 +169,27 @@ form.heart.item-sheet
         margin-left: 8px
         min-width: 0
 
+        // equipment / resources (2026-10-01, Luke): skill or domain, die, and
+        // Equipped on one line in the header's bottom right corner (clear of
+        // the torn edge), as narrow as the chips allow, all in white
+        &.stats-bar
+            grid-template-rows: auto
+            gap: 5px
+            margin-left: auto
+            margin-bottom: 16px
+            align-self: flex-end
+
+            .stat
+                height: 30px
+                padding: 0 7px
+                gap: 4px
+
+            .v, select, input
+                color: util.$header-fg
+
+            select
+                padding: 0
+
     // ---------- stat chips ----------
     .stat
         display: inline-flex
@@ -132,10 +198,16 @@ form.heart.item-sheet
         height: 36px
         padding: 0 11px
         border: 1px solid util.$header-fg
-        border-radius: 5px
+        border-radius: util.$radius
         background: util.$header-field-bg
         color: util.$header-fg
-        font-size: util.$fs-body
+        // Numbers level with the label (2026-10-01, Luke; measured in a
+        // render of the calling chips): Alegreya's default old-style figures
+        // stood 9px tall beside the label's 11px capitals, 2px short at the
+        // top. Lining figures at 18px fill exactly the capitals' rows, and
+        // share their baseline.
+        font-size: $chip-figures
+        font-variant-numeric: lining-nums tabular-nums
         white-space: nowrap
         box-sizing: border-box
 
@@ -149,7 +221,7 @@ form.heart.item-sheet
         .v
             color: util.$red-bright
             font-weight: bold
-            font-size: util.$fs-body
+            font-size: $chip-figures
 
         select, input
             height: 26px
@@ -160,7 +232,8 @@ form.heart.item-sheet
             background: transparent
             color: util.$red-bright
             font-weight: bold
-            font-size: util.$fs-body
+            font-size: $chip-figures
+            font-variant-numeric: lining-nums tabular-nums
 
             option
                 background: util.$surface
@@ -191,11 +264,12 @@ form.heart.item-sheet
             display: block
             line-height: 0
 
+            // standard marks (util.sass mark scale)
             &::after
                 display: block
                 box-sizing: border-box
-                width: 12px
-                height: 12px
+                width: util.$mark-md
+                height: util.$mark-md
 
     // ---------- tabs (reuses the actor tab strip) ----------
     .character-nav-tabs
@@ -261,19 +335,13 @@ form.heart.item-sheet
         flex-wrap: wrap
         gap: 5px
 
+        // choice chips (util.sass controls)
         .chip
-            @include util.text-chip
-            padding: 3px 12px 2px
-            border-radius: 5px
-            background: util.$sunken
-            border: 1px solid util.$line
-            color: util.$text
-            cursor: pointer
+            @include util.choice-chip
+            @include util.hover-outline
 
             &.on
-                background: util.$red-deep
-                border-color: util.$red-mid
-                color: util.$on-red
+                @include util.choice-chip-on
 
     // "+" in panel titles: small, not title-sized (2026-09-29 review)
     .panel-add
@@ -320,11 +388,11 @@ form.heart.item-sheet
         gap: 2px
 
     // Questions (ancestry, calling): read-only, dense, thin red separators
+    // between the questions (no line under the prompt since 2026-10-02, the
+    // no-lines rule)
     .questions-prompt
         @include util.text-secondary
-        padding-bottom: 0.4em
-        margin-bottom: 0.1em
-        border-bottom: 1px solid util.$line
+        margin-bottom: 0.3em
 
     .question-list
         list-style: none

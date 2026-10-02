@@ -1,4 +1,5 @@
 import { orderByFlag } from './reorder';
+import { bondsOf } from '../../bonds/bonds';
 
 export default {
     'character': function Character(actor) {
@@ -17,6 +18,9 @@ export default {
                 if (name === 'provisions') {
                     return game.heart?.party?.proxy?.provisions;
                 }
+
+                // the character's bond items (2026-10-01)
+                if (name === 'bonds') return bondsOf(actor);
 
                 if (name === 'isQuartermaster') {
                     const party = game.heart?.party;

@@ -29,7 +29,7 @@ export default class HeartRollPrompt extends Application {
             template: applicationHTML.path,
             // heart-window: the class Heart's theme is scoped to (2026-09-30)
             classes: ['heart', 'heart-window', 'heart-roll-prompt'],
-            width: 600,
+            width: 500,   // 2026-10-01 (was 600)
             height: 'auto',
             resizable: true,
         });

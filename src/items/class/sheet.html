@@ -101,8 +101,10 @@
                 {{/if}}
                 {{/if}}
                 <div class="option-items">
+                  {{!-- on a character's class, an option they didn't choose
+                       can't be opened or edited (2026-10-01, Luke) --}}
                   {{#each option.items as |equipment|}}
-                  {{> "heart:items/equipment/preview.html" item=equipment showActivate=false showDelete=(and @root.user.isGM (not @root.item.isOwned))}}
+                  {{> "heart:items/equipment/preview.html" item=equipment showActivate=false showDelete=(and @root.user.isGM (not @root.item.isOwned)) noActionbar=(and @root.item.isOwned (not option.active))}}
                   {{/each}}
                 </div>
                 {{#if (and @root.user.isGM (not @root.item.isOwned))}}

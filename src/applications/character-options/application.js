@@ -1,4 +1,6 @@
 import applicationHTML from './application.html';
+import { artOf, showArt } from '../../common/art';
+import { popoutBox } from './popout';
 
 // Character Options picker (2026-09-29). The "+" on the character sheet's
 // Class / Calling / Ancestry slots opens this instead of raw compendiums:
@@ -27,13 +29,15 @@ function bySourceOrder(a, b) {
 }
 
 // Cards per row and window size per picker (2026-09-30 review): the four
-// ancestries in one row, the nine callings three by three, the thirteen
-// classes five across in three rows. Every window fits its cards (no
-// scrolling) and stays resizable
+// ancestries in one row, the thirteen classes five across in three rows.
+// Every window fits its cards (no scrolling) and stays resizable.
+// 2026-10-01 (book art): callings five across like classes, and the
+// ancestry window taller than its one row of cards, so the hover popout has
+// room to show the art large.
 const CARD = 277;
 const LAYOUT = {
-    ancestry: { columns: 4, window: { width: 4 * CARD + 60, height: 'auto' } },
-    calling: { columns: 3, window: { width: 3 * CARD + 60, height: 'auto' } },
+    ancestry: { columns: 4, window: { width: 4 * CARD + 60, height: 720 } },
+    calling: { columns: 5, window: { width: 5 * CARD + 60, height: 'auto' } },
     class: { columns: 5, window: { width: 5 * CARD + 60, height: 'auto' } },
 };
 
@@ -82,6 +86,9 @@ export default class CharacterOptionsApplication extends Application {
             name: localizeHeart(doc.name),
             img: doc.img,
             pitch: foundry.utils.getProperty(doc, `flags.${CONTENT}.pitch`) ?? "",
+            // book art (2026-10-01): the card's faint background, the hover
+            // popout, and the view-art button (index entries carry the flags)
+            art: artOf(doc),
             order: sourceOrder(doc),
         });
         const packEntries = [];
@@ -112,6 +119,33 @@ export default class CharacterOptionsApplication extends Application {
             const doc = await fromUuid(ev.currentTarget.closest('.option-card').dataset.uuid);
             doc?.sheet.render(true);
         });
+
+        // The whole piece in Foundry's image viewer
+        html.find('[data-action=view-art]').click(async ev => {
+            ev.preventDefault();
+            showArt(await fromUuid(ev.currentTarget.closest('.option-card').dataset.uuid));
+        });
+
+        // Hover popout: the art as large as fits beside the card (popoutBox)
+        const content = this.element?.find('.window-content')[0];
+        if (content) {
+            const pop = document.createElement('div');
+            pop.className = 'option-art-pop';
+            pop.hidden = true;
+            pop.innerHTML = '<img alt="">';
+            content.append(pop);
+            html.find('.option-card[data-art]').on('mouseenter', ev => {
+                const card = ev.currentTarget;
+                const C = content.getBoundingClientRect(), R = card.getBoundingClientRect();
+                const box = popoutBox({ W: content.clientWidth, H: content.clientHeight },
+                    { l: R.left - C.left, t: R.top - C.top, r: R.right - C.left, b: R.bottom - C.top },
+                    Number(card.dataset.ar) || 1);
+                if (!box) { pop.hidden = true; return; }
+                pop.querySelector('img').src = card.dataset.art;
+                Object.assign(pop.style, { left: `${box.left}px`, top: `${box.top}px`, width: `${box.width}px`, height: `${box.height}px` });
+                pop.hidden = false;
+            }).on('mouseleave', () => { pop.hidden = true; });
+        }
 
         html.find('[data-action=choose]').click(async ev => {
             ev.preventDefault();

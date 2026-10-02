@@ -310,6 +310,8 @@ export function initialise() {
     CONFIG.ChatMessage.documentClass = HeartChatMessage;
     TextEditor = HeartTextEditor;
 
-    Hooks.once('renderChatLog', (app, html, data) => activateListeners(html));
-    Hooks.once('renderChatPopout', (app, html, data) => activateListeners(html));
+    // every render (2026-10-02): a re-drawn log or a second chat popout is
+    // new markup that needs its handlers (the roll cards bind the same way)
+    Hooks.on('renderChatLog', (app, html, data) => activateListeners(html));
+    Hooks.on('renderChatPopout', (app, html, data) => activateListeners(html));
 }

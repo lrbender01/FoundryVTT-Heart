@@ -119,6 +119,29 @@ export function trinketItemOf(item) {
     try { return fromUuidSync(uuid) ?? null; } catch (e) { return null; }
 }
 
+// What an ancestry / calling / class put on the character as items of its
+// own (2026-10-01, Luke): the rolled keepsake or trinket (flags.heart.
+// trinketOf on the item, or the source's flags.heart.trinket on older
+// rolls). Its abilities, equipment, and beats live inside it and go with it.
+export function grantedItemsOf(item, actor = item?.actor) {
+    if (!actor || !item) return [];
+    const recorded = item.flags?.heart?.trinket?.uuid ?? '';
+    return actor.items.filter(i => i.id !== item.id
+        && (i.flags?.heart?.trinketOf === item.uuid || (recorded && i.uuid === recorded)));
+}
+
+// Removing an ancestry, calling, or class (the trash icon, or picking
+// another) deletes what it granted
+export function registerGrantCleanup() {
+    Hooks.on('deleteItem', async (item, options, userId) => {
+        if (game.user.id !== userId) return;
+        if (!['ancestry', 'calling', 'class'].includes(item.type)) return;
+        const actor = item.actor;
+        const ids = grantedItemsOf(item, actor).map(i => i.id);
+        if (ids.length) await actor.deleteEmbeddedDocuments('Item', ids);
+    });
+}
+
 // Buttons: [data-action=roll-trinket] inside
 // an element carrying the ancestry / calling's data-item-id;
 // [data-action=view-trinket][data-uuid] opens the rolled item

@@ -34,6 +34,11 @@
 <div>
 <form class="heart sheet actor adversary panel-sheet {{cssClass}}" autocomplete="off">
 
+  <!-- ART BANNER (2026-10-02): the adversary's art from fvtt-heart-content
+       over the header, like the landmark sheet's (common/banner.js) -->
+  <div class="character-head{{#if art}} has-art{{/if}}">
+  {{#if art}}{{{heartArt actor "banner"}}}{{/if}}
+
   <!-- HEADER: portrait, identity, tracks -->
   <div class="character-header">
     <div class="header-col portrait">
@@ -61,6 +66,7 @@
       <label class="header-label" data-tooltip="heart.tip.adversary.protection">{{localizeHeart "protection" "label-single"}}</label>
       <div class="track protection" data-actor-track data-target="system.protection">{{{ordered-checkable actor.system.protection 10}}}</div>
     </div>
+  </div>
   </div>
 
   <nav class="character-nav-tabs static-strip" aria-hidden="true"></nav>

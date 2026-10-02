@@ -8,6 +8,15 @@ import { activateQuestionListeners } from '../../items/ancestry/questions';
 import { needsEquipmentPick } from '../../items/class/equipment';
 import { enableReorder, orderByFlag, orderKeys } from './reorder';
 import { provisionsView, memberView, partyMembers } from '../party/view';
+import { canVolunteer, canResign } from '../party/party';
+import { bondsOf, bondTarget, bondFallouts, bondState } from '../../bonds/bonds';
+import { bondRowView } from '../../bonds/view';
+import { grantBond, requestBond } from '../../bonds/flow';
+import { visitDialog, healDialog, bondActionDialog } from '../../bonds/dialogs';
+import { heartDialogOptions } from '../../common/dialog';
+import { confirmRemoval } from '../../items/removal';
+import { artOf, artCanvas, showArt } from '../../common/art';
+import { characterSize } from '../../common/window-sizes';
 
 class HeartTabs {
     constructor({ navSelector, contentSelector, initial, sheet }) {
@@ -69,11 +78,34 @@ export default class CharacterSheet extends HeartActorSheet {
     static get defaultOptions() {
         const defaultOptions = super.defaultOptions;
         return foundry.utils.mergeObject(defaultOptions, {
-            // default size (2026-09-30 review): fits the Character tab
-            width: 930,
-            height: 920,
+            // default size (2026-10-01, Luke): 940 wide, as tall as the
+            // Foundry window less 100px, so the art banner and the Character
+            // tab both fit; other sheets size from it (common/window-sizes)
+            ...characterSize(),
             dragDrop: [{ dragSelector: '.item:not(.non-draggable)', dropSelector: null }]
         })
+    }
+
+    // Art in the title bar (2026-10-01): shows or hides the art banner for
+    // this player (client setting heart.showCharacterArt; every open
+    // character sheet redraws)
+    _getHeaderButtons() {
+        const buttons = super._getHeaderButtons();
+        buttons.unshift({
+            label: game.i18n.localize('heart.art.toggle'),
+            class: 'heart-art-toggle',
+            icon: 'fas fa-image',
+            onclick: () => game.settings.set('heart', 'showCharacterArt', !game.settings.get('heart', 'showCharacterArt')),
+        });
+        return buttons;
+    }
+
+    // the title bar is drawn once, so the Art button's on / off look (white /
+    // grey, character.sass) is refreshed after every render
+    async _render(...args) {
+        await super._render(...args);
+        this.element?.find('.window-header .heart-art-toggle')
+            .toggleClass('art-off', !game.settings.get('heart', 'showCharacterArt'));
     }
 
     // workaround for nested-children uuids not dragging properly
@@ -134,18 +166,20 @@ export default class CharacterSheet extends HeartActorSheet {
                 return;
             }
 
-            // This essentially overwrites pre-existing callings and removes all associated items
-            if (itemData.type === 'calling') {
-                this.actor.itemTypes.calling.forEach(item => {
-                    item.delete();
-                });
+            // A new calling or class replaces the old one and everything it
+            // gave. Waited for (2026-10-01): removing a class resets the
+            // skills and domains (index.js), which must happen before the new
+            // class marks its core skill and domain.
+            // A class with learned abilities, a calling with tracked beats,
+            // or an ancestry with written questions asks first (2026-10-01,
+            // Luke; items/removal.js); declining keeps the old one
+            if (['calling', 'class', 'ancestry'].includes(itemData.type)) {
+                for (const old of this.actor.itemTypes[itemData.type]) {
+                    if (!(await confirmRemoval(old))) return;
+                }
             }
-
-            // This essentially overwrites pre-existing classes and removes all associated items
-            if (itemData.type === 'class') {
-                this.actor.itemTypes.class.forEach(item => {
-                    item.delete();
-                });
+            if (itemData.type === 'calling' || itemData.type === 'class') {
+                await Promise.all(this.actor.itemTypes[itemData.type].map(item => item.delete()));
             }
 
             // Generic items have no active flag; everything else lands active.
@@ -179,6 +213,17 @@ export default class CharacterSheet extends HeartActorSheet {
         data.callingItem = callingItem;
         data.classItem = classItem;
         data.ancestryItem = ancestryItem;
+        // the art banner (2026-10-01): ancestry, calling, class, each pane
+        // framed for the banner; none at all when the player hid it or no
+        // slot has art
+        data.showArt = game.settings.get('heart', 'showCharacterArt');
+        if (data.showArt) {
+            const panes = [ancestryItem, callingItem, classItem].map(item => {
+                const art = artOf(item);
+                return { art: Boolean(art), uuid: item?.uuid ?? '', name: item ? localizeHeart(item.name) : '', html: artCanvas(art, 'band') };
+            });
+            data.artBand = panes.some(p => p.art) ? panes : null;
+        }
         // the Items section in the player's order (dragged on the sheet)
         data.orderedItems = orderByFlag(this.actor, this.actor.itemTypes.item ?? [], 'itemOrder');
         // the Biography's keepsake / trinket: the item's current name (it
@@ -201,8 +246,10 @@ export default class CharacterSheet extends HeartActorSheet {
         data.warnings = {
             ancestry: join([!ancestryItem && t('no-ancestry'),
                 ancestryItem && fromBook(ancestryItem) && !ancestryItem.flags?.heart?.trinket && t('keepsake')]),
-            // equipment warns on the Equipment section, beats on Pursued Beats
-            class: join([!classItem && t('no-class')]),
+            // beats warn on Pursued Beats; equipment on the Equipment section
+            // and on the class slot too (2026-10-01, Luke), whose badge opens
+            // the class's Overview, where it is picked
+            class: join([!classItem && t('no-class'), data.classNeedsEquipment && t('equipment')]),
             calling: join([!callingItem && t('no-calling'),
                 callingItem && fromBook(callingItem) && !callingItem.flags?.heart?.trinket && t('trinket')]),
             equipment: data.classNeedsEquipment ? t('equipment') : '',
@@ -258,15 +305,42 @@ export default class CharacterSheet extends HeartActorSheet {
             data.partyMembers = partyMembers(party).filter(a => a.id !== this.actor.id).map(a => memberView(a, party));
             data.isQuartermaster = Boolean(this.actor.proxy.isQuartermaster);
             data.partyQm = p.quartermaster ? f('qm-line', { name: p.quartermasterName }) : f('qm-none-line');
-            data.warnings.party = data.inParty ? '' : game.i18n.localize('heart.warn.party');
+            // only this character's owner, only while the post is empty
+            data.canVolunteer = !game.user.isGM && canVolunteer(party, this.actor);
+            // and the quartermaster's owner may resign it
+            data.canResign = !game.user.isGM && canResign(party, this.actor);
+            // and a party with nobody to protect Provisions (2026-10-01, Luke)
+            data.warnings.party = [
+                data.inParty ? '' : game.i18n.localize('heart.warn.party'),
+                p.quartermaster ? '' : game.i18n.localize('heart.warn.no-quartermaster'),
+            ].filter(Boolean).join('\n');
         }
+
+        // Bonds (2026-10-01, Luke's picks): compact rows on the Character
+        // tab, under everything but Inactive Items (bonds/view.js)
+        data.bonds = bondsOf(this.actor).map(bond => {
+            const target = bondTarget(bond);
+            return bondRowView(bond, {
+                target,
+                fallouts: bondFallouts(bond),
+                companionItems: target?.items ?? [],
+                // who runs a companion rolls its Stress and Fallout
+                canRun: Boolean(target?.isOwner),
+            });
+        });
         return data;
     }
 
     // Dropping the party actor on this sheet makes the character a member
-    // (the other way: drop the character on the party sheet)
+    // (the other way: drop the character on the party sheet). Any other
+    // actor is a bond (2026-10-01): the GM grants it, a player's drop asks
+    // the GM (bonds/flow.js)
     async _onDropActor(event, data) {
         const dropped = await Actor.implementation.fromDropData(data);
+        if (dropped && dropped.type !== 'party' && this.actor.type === 'character' && this.actor.isOwner) {
+            if (dropped.id === this.actor.id) return false;
+            return game.user.isGM ? grantBond(this.actor, dropped) : requestBond(this.actor, dropped);
+        }
         if (dropped?.type !== 'party') return super._onDropActor(event, data);
         if (!this.actor.isOwner || this.actor.type !== 'character') return false;
         // only the GM adds members (2026-09-30, Luke)
@@ -279,8 +353,92 @@ export default class CharacterSheet extends HeartActorSheet {
         return dropped;
     }
 
+    // The Bonds section's buttons (2026-10-01). Each finds its bond from the
+    // row and calls game.heart.bonds, which checks who may do what and posts
+    // the card; the dialogs only ask (bonds/dialogs.js).
+    _activateBondListeners(html) {
+        const actor = this.actor;
+        const bondOf = (el) => actor.items.get(el.closest('[data-bond-id]')?.dataset.bondId);
+        const api = () => game.heart.bonds;
+        const on = (action, fn) => html.find(`.bonds-container [data-action="${action}"]`).on('click', async ev => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            await fn(ev.currentTarget, bondOf(ev.currentTarget));
+        });
+        const ids = (bond) => ({ characterId: actor.id, bondId: bond.id });
+
+        on('view-bond', (el, bond) => bond?.sheet.render(true));
+        on('open-target', async (el) => (await fromUuid(el.dataset.uuid))?.sheet.render(true));
+        on('open-companion', (el, bond) => bond && bondTarget(bond)?.sheet.render(true));
+        on('open-companion-fallout', async (el) => (await fromUuid(el.dataset.uuid))?.sheet.render(true));
+        on('remove-bond', async (el, bond) => {
+            if (!bond) return;
+            const ok = await Dialog.confirm({
+                title: game.i18n.format('heart.bond.dialog.remove-title', { bond: bond.name }),
+                content: `<p>${Handlebars.escapeExpression(game.i18n.format('heart.bond.dialog.remove-body', { bond: bond.name, name: actor.name }))}</p>`,
+                defaultYes: false,
+                options: heartDialogOptions(),
+            });
+            if (ok) await api().removeBond(ids(bond));
+        });
+        on('bond-visit', async (el, bond) => {
+            const resistance = bond && await visitDialog(actor, bond);
+            if (resistance) await api().transferStress({ ...ids(bond), resistance });
+        });
+        on('bond-heal', async (el, bond) => {
+            const falloutId = bond && await healDialog(actor, bond);
+            if (falloutId) await api().healFallout({ ...ids(bond), falloutId });
+        });
+        on('bond-action', async (el, bond) => {
+            const answer = bond && await bondActionDialog(bond);
+            if (answer) await api().bondAction({ ...ids(bond), ...answer });
+        });
+        on('bond-check', (el, bond) => bond && api().rollBondFallout(ids(bond)));
+        // a companion's Stress and Fallout: the ordinary rolls, for them
+        // (the Stress roll's stakes picker; the Fallout card's Pick Fallout)
+        on('companion-stress', async (el, bond) => {
+            const target = bond && bondState(bond).target;
+            if (!target) return;
+            const roll = await game.heart.rolls.StressRoll.build({ character: target.id });
+            if (roll) await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: target }) });
+        });
+        on('companion-fallout', async (el, bond) => {
+            const target = bond && bondState(bond).target;
+            if (!target) return;
+            const roll = await game.heart.rolls.FalloutRoll.build({ character: target.id });
+            if (roll) await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: target }) });
+        });
+        // the GM sets a person bond's pool by its marks: click to mark up to a
+        // box, the last marked again to clear it
+        html.find('.bonds-container [data-bond-pool] .ordered-checkable-box').on('click', async ev => {
+            ev.preventDefault();
+            if (!game.user.isGM) return;
+            const bond = bondOf(ev.currentTarget);
+            if (!bond) return;
+            const index = Number(ev.currentTarget.dataset.index) || 0;
+            const value = Number(bond.system.stress?.value) || 0;
+            const next = ev.currentTarget.classList.contains('checked') && index + 1 === value ? index : index + 1;
+            await api().setBondStress({ ...ids(bond), value: next });
+        });
+        // the GM resolves a person bond's Fallout: kept, struck, as history
+        on('resolve-bond-fallout', async (el) => {
+            if (!game.user.isGM) return;
+            const fallout = await fromUuid(el.dataset.uuid);
+            await fallout?.update({ 'system.complete': true });
+        });
+    }
+
     activateListeners(html) {
         super.activateListeners(html);
+
+        // Art banner: a pane opens its whole piece in the image viewer
+        html.find('.character-art-band [data-action=view-art]').click(async ev => {
+            ev.preventDefault();
+            showArt(await fromUuid(ev.currentTarget.dataset.itemId));
+        });
+
+        // Bonds: every row button (bonds/view.js names the actions)
+        this._activateBondListeners(html);
 
         // Beats: Activate / Complete on the Active Beats rows, and the eye /
         // "Choose another" that open the calling on its Beats tab
@@ -315,6 +473,16 @@ export default class CharacterSheet extends HeartActorSheet {
             ev.preventDefault();
             game.heart.party?.sheet.render(true);
         });
+        // this character takes the empty quartermaster post (2026-10-01, Luke)
+        html.find('[data-action=volunteer-quartermaster]').click(ev => {
+            ev.preventDefault();
+            game.heart.party?.proxy.volunteerQuartermaster(this.actor.id);
+        });
+        // ...or gives it up
+        html.find('[data-action=resign-quartermaster]').click(ev => {
+            ev.preventDefault();
+            game.heart.party?.proxy.resignQuartermaster(this.actor.id);
+        });
         // a party member chip opens that character (if this user may see it)
         html.find('.party-chips [data-action=open-member]').click(ev => {
             ev.preventDefault();
@@ -327,6 +495,17 @@ export default class CharacterSheet extends HeartActorSheet {
             if (!cls) return;
             cls.sheet._activeTab = 'overview';
             cls.sheet.render(true);
+        });
+
+        // the calling's warning badge (trinket not rolled) opens it on its
+        // Overview tab, where the trinket is rolled, whichever tab it last
+        // showed (2026-10-01, Luke: it reopened on Beats)
+        html.find('[data-action=open-calling-overview]').click(ev => {
+            ev.preventDefault();
+            const calling = this.actor.items.find(i => i.type === 'calling');
+            if (!calling) return;
+            calling.sheet._activeTab = 'overview';
+            calling.sheet.render(true);
         });
 
         // Abilities: the eye opens the class on its Abilities tab, where
@@ -347,12 +526,16 @@ export default class CharacterSheet extends HeartActorSheet {
         });
         this.heartTabs.bind(html);
 
+        // Tracks whose box group names its field (data-target). A bond's pool
+        // marks have their own handler (_activateBondListeners) and no
+        // target; they used to fire this too, sending update({undefined: n})
+        // on every GM click (2026-10-02)
         html.find('.ordered-checkable-box:not(.checked):not(.readonly)').click(ev => {
-            ev.preventDefault();
             const element = ev.currentTarget;
+            const target = element.parentElement?.dataset.target;
+            if (!target) return;
+            ev.preventDefault();
             const index = parseInt(element.dataset.index);
-            const parent = element.parentElement;
-            const target = parent.dataset.target;
 
             const data = {};
             data[target] = index + 1;
@@ -360,11 +543,11 @@ export default class CharacterSheet extends HeartActorSheet {
         });
 
         html.find('.ordered-checkable-box.checked:not(.readonly)').click(ev => {
-            ev.preventDefault();
             const element = ev.currentTarget;
+            const target = element.parentElement?.dataset.target;
+            if (!target) return;
+            ev.preventDefault();
             const index = parseInt(element.dataset.index);
-            const parent = element.parentElement;
-            const target = parent.dataset.target;
 
             const data = {};
             if (index + 1 === foundry.utils.getProperty(this.actor, target)) {

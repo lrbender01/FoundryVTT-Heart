@@ -3,6 +3,10 @@ import './roll.sass';
 import { glyphFor } from '../../common/icons';
 import { diceRow, rollParts } from '../dice';
 import { heartDialogOptions } from '../../common/dialog';
+import { pickFalloutButton } from '../../fallout-picker/button';
+import { askGM } from '../../common/relay';
+import { oneAtATime } from '../../common/busy';
+import { messageOf } from '../card-actions';
 import { partyFalloutResult, isPastRolling, PARTY_FALLOUT_RESULTS } from '../../actors/party/rules';
 // The character thresholds live in results.js, free of webpack-only imports,
 // so the rules tests can load them (2026-09-30, Luke)
@@ -127,8 +131,17 @@ export default class FalloutRoll extends Roll {
             : result === 'minor-fallout' ? 'heart.term.minor-fallout'
             : '';
 
+        // the GM's Fallout picker for whoever rolled, at this severity
+        // (2026-10-01): a character, the party, or a companion
+        const severity = String(result ?? '').replace(/-fallout$/, '');
+        const pickTarget = opts.party ? (game.actors.get(opts.character) ?? game.heart.party) : game.actors.get(opts.character);
+        const pickButton = !isPrivate && result && result !== 'no-fallout' && pickTarget
+            ? pickFalloutButton({ targetUuid: pickTarget.uuid, severity, resistance: resistance ?? '' })
+            : '';
+
         // Define chat data
         const chatData = {
+            pickButton,
             what: isPrivate ? '???' : what,
             formula: isPrivate ? "???" : this._formula,
             user: chatOptions.user,
@@ -151,118 +164,102 @@ export default class FalloutRoll extends Roll {
         return output;
     }
 
+    // The card's Clear button (stress is only ever cleared by this hand
+    // click): a Provisions fallout clears the party's track, a Major every
+    // resistance, a Minor the one that triggered it (asked when unknown).
+    // Confirmed first, then written by the GM's client as single keys, once
+    // (2026-10-02, rolls/card-actions.js). Resolves when done or declined.
     async clearStress(msg) {
-      return new Promise((resolve, reject) => {
-          let character = this.options.character || msg.rolls[0].options.character || msg.speaker.actor;
-          let stressType = this.options.resistance || msg.stressRoll?.options?.resistance || msg.rolls[0].options.resistance || '';
+        const character = this.options.character || msg.rolls[0]?.options?.character || msg.speaker.actor;
+        let stressType = this.options.resistance || msg.stressRoll?.options?.resistance || msg.rolls[0]?.options?.resistance || '';
+        const esc = (text) => Handlebars.escapeExpression(String(text ?? ''));
+        const ask = (data) => askGM('clear-stress', { messageId: msg.id, ...data });
 
-          // Provisions fallout of any severity clears the party's track
-          if (this.options.party) {
+        if (this.options.party) {
             const party = game.actors.get(character) ?? game.heart.party;
-            if (!party) return resolve();
-            confirmClear({
-              content: game.i18n.format('heart.party.confirm-clear', {
-                name: escape(party.name), count: Number(party.system.provisions?.value) || 0,
-              }),
-              clearLabel: game.i18n.localize('heart.party.clear'),
-              onClear: () => {
-                party.update({ 'system.provisions.value': 0 });
-                msg.showClearStressButton = false;
-              }
+            if (!party) return;
+            const ok = await confirmClear({
+                content: game.i18n.format('heart.party.confirm-clear', {
+                    name: esc(party.name), count: Number(party.system.provisions?.value) || 0,
+                }),
+                clearLabel: game.i18n.localize('heart.party.clear'),
             });
-            return resolve();
-          }
+            if (ok) await ask({ party: true });
+            return;
+        }
 
-          let actor = game.actors.get(character);
-          let resistances = actor.system.resistances;
+        const actor = game.actors.get(character);
+        if (!actor) return;
+        if (!actor.isOwner) {
+            ui.notifications.warn(game.i18n.format('heart.party.not-owner', { name: actor.name }));
+            return;
+        }
+        const resistances = actor.system.resistances ?? {};
 
-          if (this.result == 'major-fallout') {
+        if (this.result === 'major-fallout') {
             const count = Object.values(resistances).reduce((sum, r) => sum + (Number(r.value) || 0), 0);
-            confirmClear({
-              content: game.i18n.format('heart.rolls.fallout-roll.confirm-major', { name: escape(actor.name), count }),
-              clearLabel: game.i18n.localize('heart.rolls.fallout-roll.confirm-clear-all'),
-              onClear: () => {
-                Object.keys(resistances).forEach(key =>{Object.assign(resistances[key], { value: 0 });});
-            
-                let data = {};
-                data["system.resistances"] = resistances;
-                actor.update(data);
-                msg.showClearStressButton = false
-              }
+            const ok = await confirmClear({
+                content: game.i18n.format('heart.rolls.fallout-roll.confirm-major', { name: esc(actor.name), count }),
+                clearLabel: game.i18n.localize('heart.rolls.fallout-roll.confirm-clear-all'),
             });
-          }
-          if (this.result == 'minor-fallout' && stressType) {
-            removeMinorStress(stressType, actor, resistances);
-          }
-          if (this.result == 'minor-fallout' && stressType == '') {
-            game.heart.applications.RequirementApplication.build({
-              requirements: {
-                  resistance: {
-                      options: game.heart.resistances.reduce((map, resistance) => {
-                          map[resistance] = game.i18n.localize(`heart.resistance.${resistance}`)
-                          return map;
-                      }, {})
-                  }
-              },
-              callback: ({resistance}) => {
+            if (ok) await ask({ actorId: actor.id, scope: 'all' });
+            return;
+        }
 
-                removeMinorStress(resistance, actor, resistances);
-              },
-              type: "clear-stress"
-            });
-          }
-      });
-
-      // Confirmations say exactly what will happen, with numbers, and the
-      // buttons name the action (2026-09-29, approved sweep)
-      function escape(text) {
-        return Handlebars.escapeExpression(String(text ?? ''));
-      }
-
-      function confirmClear({ content, clearLabel, onClear }) {
-        new Dialog({
-          title: game.i18n.localize('heart.rolls.fallout-roll.confirm-title'),
-          content: `<p>${content}</p><p>${game.i18n.localize('heart.rolls.fallout-roll.confirm-final')}</p>`,
-          buttons: {
-            keep: { icon: '<i class="fas fa-times"></i>', label: game.i18n.localize('heart.rolls.fallout-roll.confirm-keep') },
-            clear: { icon: '<i class="fas fa-eraser"></i>', label: clearLabel, callback: onClear },
-          },
-          default: 'clear',
-        }, heartDialogOptions()).render(true);
-      }
-
-      function removeMinorStress(stressType, actor, resistances) {
+        if (this.result !== 'minor-fallout') return;
+        if (!stressType) stressType = await pickResistance();
+        if (!stressType || !resistances[stressType]) return;
         const label = game.i18n.localize(`heart.resistance.${stressType}`);
-        confirmClear({
-          content: game.i18n.format('heart.rolls.fallout-roll.confirm-minor', {
-            name: escape(actor.name), resistance: escape(label), count: Number(resistances[stressType]?.value) || 0,
-          }),
-          clearLabel: game.i18n.format('heart.rolls.fallout-roll.confirm-clear-one', { resistance: label }),
-          onClear: () => {
-            resistances[stressType].value = 0;
-
-            let data = {};
-            data["system.resistances"] = resistances;
-            actor.update(data);
-            msg.showClearStressButton = false;
-          }
+        const ok = await confirmClear({
+            content: game.i18n.format('heart.rolls.fallout-roll.confirm-minor', {
+                name: esc(actor.name), resistance: esc(label), count: Number(resistances[stressType]?.value) || 0,
+            }),
+            clearLabel: game.i18n.format('heart.rolls.fallout-roll.confirm-clear-one', { resistance: label }),
         });
-      }
+        if (ok) await ask({ actorId: actor.id, scope: stressType });
+
+        // Confirmations say exactly what will happen, with numbers, and the
+        // buttons name the action (2026-09-29, approved sweep). True only
+        // when Clear was pressed.
+        function confirmClear({ content, clearLabel }) {
+            return new Promise(resolve => {
+                new Dialog({
+                    title: game.i18n.localize('heart.rolls.fallout-roll.confirm-title'),
+                    content: `<p>${content}</p><p>${game.i18n.localize('heart.rolls.fallout-roll.confirm-final')}</p>`,
+                    buttons: {
+                        keep: { icon: '<i class="fas fa-times"></i>', label: game.i18n.localize('heart.rolls.fallout-roll.confirm-keep'), callback: () => resolve(false) },
+                        clear: { icon: '<i class="fas fa-eraser"></i>', label: clearLabel, callback: () => resolve(true) },
+                    },
+                    default: 'clear',
+                    close: () => resolve(false),
+                }, heartDialogOptions()).render(true);
+            });
+        }
+
+        // A Minor whose resistance is unknown: which one to clear
+        function pickResistance() {
+            return new Promise(resolve => {
+                game.heart.applications.RequirementApplication.build({
+                    requirements: {
+                        resistance: {
+                            options: Object.fromEntries(game.heart.resistances.map(r => [r, game.i18n.localize(`heart.resistance.${r}`)])),
+                        },
+                    },
+                    callback: ({ resistance }) => resolve(resistance),
+                    cancel: () => resolve(null),
+                    type: 'clear-stress',
+                });
+            });
+        }
     }
 
     static activateListeners(html) {
-      html.on('click', '.fallout-roll [data-action=clear-stress]', async function(ev) {
-        ev.preventDefault();
-        const target = $(ev.currentTarget);
-        const msgElement = target.closest('.chat-message');
-        const messageId = msgElement.data('messageId');
-        const msg = game.messages.get(messageId);
-        const falloutRoll = msg.falloutRoll;
-
-        await falloutRoll.clearStress(msg);
-
-        await ui.chat.updateMessage(msg, true);
-        ui.chat.scrollBottom();
-    });
-  }
+        html.on('click', '.fallout-roll [data-action=clear-stress]', function(ev) {
+            ev.preventDefault();
+            const msg = messageOf(ev);
+            const falloutRoll = msg?.falloutRoll;
+            if (!falloutRoll) return;
+            return oneAtATime(`${msg.id}:clear-stress`, ev.currentTarget, () => falloutRoll.clearStress(msg));
+        });
+    }
 }

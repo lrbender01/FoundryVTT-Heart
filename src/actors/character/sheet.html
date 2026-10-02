@@ -26,7 +26,26 @@
 
 <div>
   <!-- Use a single form that wraps the entire sheet -->
-  <form class="heart sheet actor character {{cssClass}}" autocomplete="off">
+  <form class="heart sheet actor character {{cssClass}}{{#unless showArt}} art-hidden{{/unless}}" autocomplete="off">
+
+    <!-- ART BANNER (2026-10-01): ancestry, calling, and class art in three
+         panes that run from a lead strip above the header down behind it,
+         over the header texture and under the header's boxes and text; each
+         framed per piece (common/art.js); click one for the whole piece. Per
+         player: the Art button in the title bar hides it, and the art behind
+         gear rows with it (art-hidden). -->
+    <div class="character-head{{#if artBand}} has-art{{/if}}">
+    {{#if artBand}}
+    <div class="character-art-band">
+      {{#each artBand as |pane|}}
+      {{#if pane.art}}
+      <a class="art-pane" data-action="view-art" data-item-id="{{pane.uuid}}" aria-label="{{pane.name}}">{{{pane.html}}}<span class="art-pane-label">{{pane.name}}</span></a>
+      {{else}}
+      <div class="art-pane empty"></div>
+      {{/if}}
+      {{/each}}
+    </div>
+    {{/if}}
 
     <!-- HEADER -->
     <div class="character-header">
@@ -76,9 +95,40 @@
         {{/if}}
       </div>
 
-      <!-- Column 3: Class and Calling -->
+      <!-- Column 3: Calling and Class (calling on top since 2026-10-01) -->
       <div class="header-col class-calling-container">
-        <!-- Row 1: Class -->
+        <!-- Row 1: Calling -->
+        <label class="calling-label">{{localizeHeart "character" "calling"}}</label>
+        {{#if callingItem}}
+        <div data-item-id="{{callingItem.uuid}}" class="calling-content flexrow item non-draggable">
+          {{#if warnings.calling}}<a class="slot-flag heart-warn" data-action="open-calling-overview" data-tooltip="{{warnings.calling}}">!</a>{{/if}}
+          <div class="name">{{{heartIcon callingItem.img}}}{{localizeHeart callingItem.name}}</div>
+          <div class="right">
+            <a data-action="view" aria-label="{{localizeHeart 'base' 'view'}}">
+              <span class="fas fa-eye"></span>
+            </a>
+            {{#if callingItem.isOwner}}
+            <a data-action="delete" aria-label="{{localizeHeart 'base' 'delete'}}">
+              <span class="fas fa-trash"></span>
+            </a>
+            {{/if}}
+          </div>
+        </div>
+        {{else}}
+        {{#if actor.isOwner}}
+        <div class="calling-content flexrow item non-draggable slot-empty" data-action="choose-option" data-item-type="calling">
+          {{#if warnings.calling}}<a class="slot-flag heart-warn" data-action="choose-option" data-item-type="calling" data-tooltip="{{warnings.calling}}">!</a>{{/if}}
+          <div class="name placeholder">{{localizeHeart "character" "calling-prompt"}}</div>
+          <div class="right">
+            <a data-action="choose-option" data-item-type="calling">
+              <span class="fas fa-plus white"></span>
+            </a>
+          </div>
+        </div>
+        {{/if}}
+        {{/if}}
+
+        <!-- Row 2: Class -->
         <label class="class-label">{{localizeHeart "character" "class"}}</label>
         {{#if classItem}}
         <div data-item-id="{{classItem.uuid}}" class="class-content flexrow item non-draggable">
@@ -108,37 +158,6 @@
         </div>
         {{/if}}
         {{/if}}
-
-        <!-- Row 2: Calling -->
-        <label class="calling-label">{{localizeHeart "character" "calling"}}</label>
-        {{#if callingItem}}
-        <div data-item-id="{{callingItem.uuid}}" class="calling-content flexrow item non-draggable">
-          {{#if warnings.calling}}<a class="slot-flag heart-warn" data-action="view" data-tooltip="{{warnings.calling}}">!</a>{{/if}}
-          <div class="name">{{{heartIcon callingItem.img}}}{{localizeHeart callingItem.name}}</div>
-          <div class="right">
-            <a data-action="view" aria-label="{{localizeHeart 'base' 'view'}}">
-              <span class="fas fa-eye"></span>
-            </a>
-            {{#if callingItem.isOwner}}
-            <a data-action="delete" aria-label="{{localizeHeart 'base' 'delete'}}">
-              <span class="fas fa-trash"></span>
-            </a>
-            {{/if}}
-          </div>
-        </div>
-        {{else}}
-        {{#if actor.isOwner}}
-        <div class="calling-content flexrow item non-draggable slot-empty" data-action="choose-option" data-item-type="calling">
-          {{#if warnings.calling}}<a class="slot-flag heart-warn" data-action="choose-option" data-item-type="calling" data-tooltip="{{warnings.calling}}">!</a>{{/if}}
-          <div class="name placeholder">{{localizeHeart "character" "calling-prompt"}}</div>
-          <div class="right">
-            <a data-action="choose-option" data-item-type="calling">
-              <span class="fas fa-plus white"></span>
-            </a>
-          </div>
-        </div>
-        {{/if}}
-        {{/if}}
       </div>
 
       <!-- Column 4: Roll Buttons -->
@@ -155,6 +174,7 @@
           {{localizeHeart "perform" "roll-fallout"}} <span class="sheetD10 white"></span>
         </button>
       </div>
+    </div>
     </div>
     <!-- END HEADER -->
 
@@ -231,7 +251,7 @@
                     <span class="resistance-protection protection" data-tooltip="{{provisions.protectionTip}}">{{#each provisions.shields as |s|}}<a class="ordered-checkable-box readonly {{#if s.checked}}checked{{/if}}"></a>{{/each}}</span>
                   </div>
                 </div>
-                <div class="party-qm">{{partyQm}}</div>
+                <div class="party-qm">{{partyQm}}{{#if canVolunteer}}<button type="button" class="qm-volunteer" data-action="volunteer-quartermaster" data-tooltip="heart.tip.party.volunteer">{{localizeHeart "party-sheet" "volunteer"}}</button>{{/if}}{{#if canResign}}<button type="button" class="qm-volunteer" data-action="resign-quartermaster" data-tooltip="heart.tip.party.resign">{{localizeHeart "party-sheet" "resign"}}</button>{{/if}}</div>
                 <div class="party-chips">
                   {{#each partyMembers as |m|}}
                   <a class="party-chip {{#if m.quartermaster}}is-quartermaster{{/if}}" data-action="open-member" data-member-id="{{m.id}}" data-label="{{m.label}}" aria-label="{{m.label}}">{{{heartIcon m.icon}}}<span class="chip-fallback fas fa-user"></span></a>
@@ -326,6 +346,10 @@
                 {{> characterTabItemList type="item" list=orderedItems}}
               </div>
             </div>
+
+            <!-- Bonds (2026-10-01, Luke's pick): below everything but Inactive
+                 Items; compact rows, bonds/section.html -->
+            {{> "heart:bonds/section.html"}}
 
             <!-- Inactive Items -->
             <div class="character-tab-container inactive-items-container">

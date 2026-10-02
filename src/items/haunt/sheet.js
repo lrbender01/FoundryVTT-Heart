@@ -127,18 +127,8 @@ export default class extends HeartItemSheet {
         });
     }
 
-    async _canDragDropItem(item) {
-        if(item.type === 'service' && item.type === undefined) {
-            await item.update({'system.type': 'core'});
-        }
-        
-        return ['service'].includes(item.type);
-    }
-
-    async _onDropItem(event, data) {
-
-        return super._onDropItem(event, data);
-    }
+    // (a haunt holds no child items: its services are rows in its own data;
+    // common/drops.js)
 }
 
 export {

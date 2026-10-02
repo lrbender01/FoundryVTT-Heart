@@ -31,6 +31,14 @@
 <div>
 <form class="heart sheet actor landmark panel-sheet {{cssClass}}" autocomplete="off">
 
+  <!-- ART BANNER (2026-10-02): the landmark's art from fvtt-heart-content,
+       one canvas from a lead strip above the header down behind it, framed
+       per piece (common/art.js), like the class sheets and the character
+       banner. Click it for the whole piece; the title bar's Art button hides
+       it for this player, and the GM's Show players shares it. -->
+  <div class="character-head{{#if art}} has-art{{/if}}">
+  {{#if art}}{{{heartArt actor "banner"}}}{{/if}}
+
   <!-- HEADER: portrait, identity, place strip -->
   <div class="character-header">
     <div class="header-col portrait">
@@ -67,6 +75,7 @@
           aria-label="{{localizeHeart 'landmark' 'roll-stress'}}"><span class="sheetD10 red"></span></a>
       </div>
     </div>
+  </div>
   </div>
 
   <nav class="character-nav-tabs tabs" data-group="primary">

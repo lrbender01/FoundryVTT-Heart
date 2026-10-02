@@ -14,11 +14,12 @@ $box-height: 2 * $row + 6px + 2 * 6px + 4px
 
 // Track marks (2026-09-29 review): squares and shields share one visual size,
 // render as blocks so they centre on their label, and wrap in rows of ten
-// (two groups of five) so a 20-point track is two even rows.
-$mark: 13px
-$shield: 14px
-$mark-gap: 3px
-$group-gap: 7px
+// (two groups of five) so a 20-point track is two even rows. Sizes from the
+// shared mark scale (util.sass, 2026-10-02: were 13 / 14 / 3 / 7px).
+$mark: util.$mark-md
+$shield: util.$shield
+$mark-gap: util.$mark-gap
+$group-gap: util.$mark-group-gap
 $track-row-width: 10 * $mark + 9 * $mark-gap + $group-gap
 
 // Full-bleed like the character sheet (world, token and compendium sheets)
@@ -64,8 +65,10 @@ $track-row-width: 10 * $mark + 9 * $mark-gap + $group-gap
         grid-template-rows: auto auto
         align-content: center
 
+    // one header label size on every sheet (util.sass, 2026-10-02)
     .header-label
         @include util.text-section
+        font-size: util.$header-label-fs
         line-height: 1
         color: util.$header-fg
         align-self: center
@@ -95,10 +98,9 @@ $track-row-width: 10 * $mark + 9 * $mark-gap + $group-gap
         gap: 5px
         min-width: 0
 
+        // info chips on the dark header (util.sass controls)
         > span
-            @include util.text-chip
-            padding: 1px 9px
-            border-radius: 5px
+            @include util.info-chip
             border: 1px solid util.$header-fg
             background: util.$header-field-bg
             color: util.$header-fg
@@ -261,10 +263,9 @@ $track-row-width: 10 * $mark + 9 * $mark-gap + $group-gap
         flex-wrap: wrap
         gap: 5px
 
+        // info chips (util.sass controls)
         span
-            @include util.text-chip
-            padding: 2px 10px
-            border-radius: 5px
+            @include util.info-chip
             background: util.$sunken
             border: 1px solid util.$line
 
@@ -277,7 +278,8 @@ $track-row-width: 10 * $mark + 9 * $mark-gap + $group-gap
         box-sizing: border-box
 
 // ---------- haunt rows (landmark sheet; also any haunt preview) ----------
-.item.preview.haunt
+// (scoped to Heart like every preview rule, 2026-10-02; same specificity)
+#{util.$in-heart} .item.preview.haunt
     .haunt-services
         display: flex
         flex-wrap: wrap
@@ -295,8 +297,9 @@ $track-row-width: 10 * $mark + 9 * $mark-gap + $group-gap
             .sheetD10
                 margin: 0 0.15em 0 0
 
+        // (no underline on hover since 2026-10-02, the no-lines rule)
         &:hover .item-roll
-            text-decoration: underline
+            color: util.$text
 
     .haunt-upgrade
         display: flex
@@ -354,3 +357,32 @@ $track-row-width: 10 * $mark + 9 * $mark-gap + $group-gap
 
         .profile-note
             margin-top: 3px
+
+
+// ---------- art banner (2026-10-02) ----------
+// Landmarks, adversaries, and companions (common/banner.js): the character
+// sheet's art header (actors/character/character.sass, .character-head.has-art)
+// with one canvas and a taller lead strip, 200px above the 124px header, a
+// 788 x 324 canvas on the default sheet, the same as the class sheets' (Luke's
+// call in the "Heart Landmark Art Placement" mock). Hovered, the art eases in
+// and the header fades away over two seconds so the whole banner shows; a
+// click opens the whole piece.
+$banner-lead: 200px
+$banner-header: 124px
+
+.heart.sheet.panel-sheet .character-head.has-art
+    padding-top: $banner-lead
+    mask-size: 100% $banner-lead, auto $banner-header
+    mask-position: left top, -0.5px $banner-lead
+
+    > .heart-art-canvas
+        pointer-events: auto
+        cursor: zoom-in
+        transition: transform 0.25s ease-out
+
+        &:hover
+            transform: scale(1.06)
+
+    &:has(> .heart-art-canvas:hover) > .character-header
+        opacity: 0
+        transition: opacity 2s ease

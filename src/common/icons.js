@@ -17,8 +17,9 @@ const GLYPH_DIRS ={ skill: 'skills', domain: 'domains', resistance: 'resistances
 const GLYPH_IDS = {
     skill: () => game.heart?.skills ?? [],
     domain: () => game.heart?.domains ?? [],
-    // the five personal tracks plus the party's Provisions (2026-09-30)
-    resistance: () => [...(game.heart?.resistances ?? []), ...(game.heart?.party_resistances ?? [])],
+    // the five personal tracks plus the party's Provisions (2026-09-30) and
+    // Bond, a Fallout that befalls a bond or hireling (2026-10-01)
+    resistance: () => [...(game.heart?.resistances ?? []), ...(game.heart?.party_resistances ?? []), 'bond'],
     // fallout severity badges: minor / major / critical (2026-09-30)
     severity: () => game.heart?.fallout_levels ?? ['minor', 'major', 'critical'],
     // item-type glyphs: section titles, tag lists (2026-09-30)
@@ -29,7 +30,10 @@ const GLYPH_IDS = {
     section: () => ['resistances', 'party', 'fallout', 'skills', 'domains', 'equipment', 'resources', 'items', 'inactive-gear', 'notes',
         // Luke's picks from the glyph candidate sheet (2026-09-30)
         'descriptors', 'motivation', 'profile', 'special', 'plots', 'services', 'dangers', 'connection',
-        'questions', 'core-traits', 'upgrades', 'effect', 'rule'],
+        'questions', 'core-traits', 'upgrades', 'effect', 'rule',
+        // the Bonds section and the party's Companions (2026-10-01, Luke's
+        // pick: shaking-hands, the same file as the bond resistance)
+        'bonds'],
 };
 
 // The fork's generic type images (each sheet type's fallback) and Foundry's

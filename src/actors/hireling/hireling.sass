@@ -1,0 +1,75 @@
+@use '../../util'
+
+// Companion sheet (2026-10-01): the panel-sheet chrome (common/panel-sheet.sass)
+// and the character sheet's header buttons and Resistances rows
+// (actors/character/character.sass); only what those don't give is here.
+.heart.sheet.actor.hireling.panel-sheet
+    // the left column is the character sheet's 390px, so the Resistances
+    // rows line up with the character sheet's (at half the panel they sat
+    // 9px further left)
+    .panel-body.hireling-body
+        grid-template-columns: 390px minmax(0, 1fr)
+        align-items: start
+
+        > .column
+            display: flex
+            flex-direction: column
+            gap: 1.15rem
+            min-width: 0
+
+    // the name gets the room (a long name like "Sweetest-Onion-Of-Summer"
+    // was cut off); Bond of takes the rest
+    .identity-box
+        flex: 1.6 1 300px
+
+        .header-chips
+            flex-wrap: nowrap
+            min-width: 0
+            overflow: hidden
+
+            > span
+                white-space: nowrap
+                overflow: hidden
+                text-overflow: ellipsis
+
+    .hireling-box
+        flex: 1 1 220px
+
+    .header-chips > span.employer-chip
+        cursor: pointer
+
+        &:hover
+            border-color: util.$red-bright
+            color: util.$red-bright
+
+    .hireling-unbonded
+        @include util.text-secondary
+        color: util.$header-fg
+
+    // the character sheet's Stress / Fallout pair, without its Roll square
+    .header-col.roll-buttons-container.hireling-rolls
+        grid-template-columns: minmax(0, 1fr)
+        flex: 0 1 11em
+        min-width: 9em
+
+        button.stress-roll, button.fallout-roll
+            grid-column: 1
+
+    // Fallout taken (a red edge) above the book's menu
+    .hireling-taken .item.preview.fallout
+        border-color: util.$red-mid
+
+    .profile-note-plain
+        line-height: 1.35
+
+        .heart-term
+            color: util.$red-bright
+            font-weight: bold
+
+    // the book's named examples, each led by its name
+    .examples-container .editor-content h3
+        @include util.text-section
+        font-size: util.$fs-chip-mosherif
+        margin: 0 0 4px
+        color: util.$text
+        border: 0

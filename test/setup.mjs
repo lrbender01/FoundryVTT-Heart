@@ -7,10 +7,20 @@
  * assert which string was asked for), game.actors (a Map the helpers fill),
  * game.heart (the party, if a test sets one), Handlebars.escapeExpression,
  * foundry.utils, and ui.notifications. Add a stub here when a newly tested
- * module needs one; never import a module that pulls in .html or .sass.
+ * module needs one.
+ *
+ * 2026-10-02: vitest.config.mjs now stands in for the webpack-only .html and
+ * .sass imports, so the roll classes, the chat message class, and the sheets
+ * load too. The classes they extend when they load (Roll, ChatMessage,
+ * ActorSheet, ItemSheet, TextEditor, DragDrop, Dialog) and CONST / CONFIG are
+ * installed below from test/helpers.mjs (installFoundryClasses), only where
+ * missing. Per-test world state for the document tests (users, messages,
+ * settings, hooks, uuids) is NOT reset here: those tests call resetWorld()
+ * from the helpers in their own beforeEach.
  */
 
 import { beforeEach, vi } from "vitest";
+import { installFoundryClasses } from "./helpers.mjs";
 
 // game.actors: Foundry's WorldCollection, as far as the rules read it
 class MockActors extends Map {
@@ -73,6 +83,10 @@ globalThis.foundry = {
 globalThis.ui = {
   notifications: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
 };
+
+// the classes src/ modules extend as they load (after foundry.utils exists,
+// which it extends with setProperty, hasProperty, and randomID)
+installFoundryClasses();
 
 // every test starts with no actors, no party, and clean notification spies
 beforeEach(() => {

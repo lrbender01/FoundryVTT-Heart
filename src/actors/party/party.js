@@ -21,10 +21,12 @@ import {
     SCAVENGE_RELIEF,
     restockRelief,
     provisionsProtection,
-    relievedValue,
+    provisionsChange,
 } from './rules';
 import { glyphFor } from '../../common/icons';
-import { diceRow, rollParts } from '../../rolls/dice';
+import { ledgerCard } from '../../common/ledger';
+import { askGM } from '../../common/relay';
+import { oneAtATime } from '../../common/busy';
 
 export const PARTY_TYPE = 'party';
 export const PARTY_IMG = 'systems/heart/assets/icons/resistances/provisions.svg';
@@ -56,6 +58,27 @@ export function provisionsOf(party) {
         criticalFrom: CRITICAL_FROM,
         pastRolling: value >= max,
     };
+}
+
+// Every change to the track is made by the GM's client, one at a time, from
+// the value it holds then (2026-10-02, Luke: two players marking at once
+// must both count; common/relay.js). Only for relay handlers: anyone else
+// calls changeProvisions().
+export async function applyProvisions({ mode, amount } = {}, userId) {
+    const party = getParty();
+    if (!party) return { status: 'no-party' };
+    const user = game.users?.get(userId);
+    if (user && !party.testUserPermission(user, 'OWNER')) return { status: 'not-allowed' };
+    const { value: before, max } = provisionsOf(party);
+    const after = provisionsChange(before, max, { mode, amount });
+    if (after !== before) await party.update({ 'system.provisions.value': after });
+    return { status: 'done', from: before, to: after, max };
+}
+
+// { from, to, max } once the GM's client made the change, else null (the
+// user was told why)
+export function changeProvisions(change) {
+    return askGM('provisions', change);
 }
 
 function requireParty() {
@@ -93,7 +116,11 @@ async function stressCard({ formula, dieLabel, resistance, character, ignoreProt
         helpers: [],
     });
     await roll.evaluate();
-    const applied = await roll.takeStress();
+    // marked by the GM's client (common/relay.js, rolls/card-actions.js)
+    const answer = await askGM('apply-stress', { roll: roll.toJSON() });
+    if (!answer) return null;
+    const applied = answer.applied ?? [];
+    roll.options.applied = applied;
     await roll.toMessage({
         speaker: speakerFor(character),
         flavor: flavor || undefined,
@@ -134,30 +161,8 @@ export function upkeep({ die = UPKEEP_DIE, byActorId } = {}) {
 }
 
 // ---------------------------------------------------------------- cards
-// Ledger chat cards (2026-09-30, approved "Heart Chat Cards" mock B; styles
-// in chat-messages/ledger.sass). Built here for the Provisions actions that
-// are not a StressRoll card; the rolls ride along on the message so Dice So
-// Nice animates them (Foundry keeps custom content instead of drawing them).
-
-// Same layout as the roll cards (2026-09-30, round-2 mock B, no badge): the
-// hint line, the outcome led by its glyph, every die in one row, a small
-// note, who took what, then buttons
-async function ledgerCard({ what, glyph = '', bad = false, out, det = '', lines = [], acts = '', rolls = [] }) {
-    // rolls: a Roll, or { roll, label } to label its dice
-    const shown = rolls.filter(Boolean).map(r => (r.roll ? r : { roll: r, label: '' }));
-    const dice = diceRow(shown.flatMap(x => rollParts(x.roll, x.label)));
-    const lineHtml = lines.length
-        ? `<div class="ledger-lines">${lines.map(l => `<div class="ledger-line"><span>${l.name}</span><span class="v">${l.value}</span></div>`).join('')}</div>`
-        : '';
-    return `<div class="heart ledger-card"><div class="ledger">`
-        + `<div class="ledger-what">${what}</div>`
-        + `<div class="ledger-out${bad ? ' bad' : ''}">${glyph}${out}</div>`
-        + dice
-        + (det ? `<div class="ledger-det">${det}</div>` : '')
-        + lineHtml
-        + (acts ? `<div class="ledger-acts">${acts}</div>` : '')
-        + `</div></div>`;
-}
+// Ledger chat cards for the Provisions actions that are not a StressRoll
+// card (the builder is shared with bonds: common/ledger.js)
 
 const provisionsLabel = () => loc('heart.resistance.provisions');
 const provisionsWhat = (text) => `${glyphFor('resistance', 'provisions')}${text}`;
@@ -175,10 +180,9 @@ export async function relieveProvisions({ die = SCAVENGE_RELIEF, amount, source,
         roll = await new Roll(String(die).toLowerCase()).evaluate();
         relief = Number(roll.total) || 0;
     }
-    const p = provisionsOf(party);
-    const before = p.value;
-    const after = relievedValue(before, relief);
-    await party.update({ 'system.provisions.value': after });
+    const change = await changeProvisions({ mode: 'relieve', amount: relief });
+    if (!change) return null;
+    const { from: before, to: after, max } = change;
 
     const dieLabel = fixed ? '' : String(die).toUpperCase();
     const what = [esc(sourceLabel(source) || loc('heart.card.relief')), dieLabel].filter(Boolean).join(', ');
@@ -187,7 +191,7 @@ export async function relieveProvisions({ die = SCAVENGE_RELIEF, amount, source,
         what: provisionsWhat(what),
         glyph: glyphFor('resistance', 'provisions'),
         out: esc(loc('heart.card.provisions-out', { amount: `-${relief}` })),
-        lines: [{ name: esc(party.name), value: esc(loc('heart.card.provisions-change', { from: before, to: after, max: p.max })) }],
+        lines: [{ name: esc(party.name), value: esc(loc('heart.card.provisions-change', { from: before, to: after, max })) }],
     });
     await ChatMessage.create({ speaker: speakerFor(byActorId), content, rolls: roll ? [roll] : [] });
     return { amount: relief, from: before, to: after };
@@ -219,14 +223,17 @@ export async function restock({ payerId, die = 'd4' } = {}) {
     const StressRoll = game.heart.rolls.StressRoll;
     const pay = StressRoll._build({ die_size: String(die).toLowerCase(), character: payer.id, resistance: 'supplies' }, {}, {});
     await pay.evaluate();
-    const [paid] = await pay.takeStress();
+    // both writes by the GM's client (common/relay.js)
+    const payment = await askGM('apply-stress', { roll: pay.toJSON() });
+    if (!payment) return null;
+    pay.options.applied = payment.applied ?? [];
+    const [paid] = pay.options.applied;
 
     // the relief: one die size larger off Provisions
     const reliefRoll = await new Roll(relief).evaluate();
-    const p = provisionsOf(party);
-    const before = p.value;
-    const after = relievedValue(before, reliefRoll.total);
-    await party.update({ 'system.provisions.value': after });
+    const change = await changeProvisions({ mode: 'relieve', amount: reliefRoll.total });
+    if (!change) return null;
+    const { from: before, to: after, max } = change;
 
     const supplies = payer.system?.resistances?.supplies;
     const payValue = [
@@ -235,7 +242,7 @@ export async function restock({ payerId, die = 'd4' } = {}) {
         supplies ? `· ${loc('heart.card.track', { value: Number(supplies.value) || 0, max: 10 })}` : '',
     ].filter(Boolean).join(' ');
     const falloutButton = (paid?.amount ?? 0) > 0
-        ? `<button type="button" data-action="ledger-fallout" data-character="${esc(payer.id)}" data-resistance="supplies" data-tooltip="heart.term.fallout">${esc(loc('heart.card.fallout-for', { name: payer.name }))}</button>`
+        ? `<button type="button" data-action="ledger-fallout" data-claim="fallout-${esc(payer.id)}" data-character="${esc(payer.id)}" data-resistance="supplies" data-tooltip="heart.term.fallout">${esc(loc('heart.card.fallout-for', { name: payer.name }))}</button>`
         : '';
     const content = await ledgerCard({
         rolls: [{ roll: pay, label: loc('heart.resistance.supplies') }, { roll: reliefRoll, label: provisionsLabel() }],
@@ -245,7 +252,7 @@ export async function restock({ payerId, die = 'd4' } = {}) {
         det: esc(loc('heart.card.restock-det', { die: String(relief).toUpperCase() })),
         lines: [
             { name: esc(loc('heart.card.pays', { name: payer.name, die: String(die).toUpperCase() })), value: esc(payValue) },
-            { name: esc(party.name), value: esc(loc('heart.card.provisions-change', { from: before, to: after, max: p.max })) },
+            { name: esc(party.name), value: esc(loc('heart.card.provisions-change', { from: before, to: after, max })) },
         ],
         acts: falloutButton,
     });
@@ -276,15 +283,56 @@ export async function setQuartermaster(actorId) {
     return actor;
 }
 
+// A player may volunteer their own character as quartermaster (2026-10-01,
+// Luke): only a member they own, and only while nobody holds the post. The
+// GM still picks or changes anyone from the party sheet.
+export function canVolunteer(party, actor, user = game.user) {
+    if (!party || actor?.type !== 'character') return false;
+    if (!actor.testUserPermission(user, 'OWNER')) return false;
+    if (!(party.system.members ?? []).includes(actor.id)) return false;
+    return !provisionsOf(party).quartermaster;
+}
+
+export async function volunteerQuartermaster(actorId) {
+    const party = requireParty();
+    if (!party) return null;
+    const actor = game.actors.get(actorId);
+    if (!canVolunteer(party, actor)) {
+        ui.notifications.warn(loc('heart.party.volunteer-refused'));
+        return null;
+    }
+    await party.update({ 'system.quartermaster': actor.id });
+    return actor;
+}
+
+// ...and resign it the same way (2026-10-01, Luke): only the quartermaster's
+// own player, leaving the post empty for anyone to volunteer
+export function canResign(party, actor, user = game.user) {
+    if (!party || actor?.type !== 'character') return false;
+    if (!actor.testUserPermission(user, 'OWNER')) return false;
+    return Boolean(actor.id) && party.system.quartermaster === actor.id;
+}
+
+export async function resignQuartermaster(actorId) {
+    const party = requireParty();
+    if (!party) return null;
+    const actor = game.actors.get(actorId);
+    if (!canResign(party, actor)) {
+        ui.notifications.warn(loc('heart.party.resign-refused'));
+        return null;
+    }
+    await party.update({ 'system.quartermaster': '' });
+    return actor;
+}
+
 // Clear the track (what a Provisions fallout does, or a rest in Derelictus)
 export async function clearProvisions({ source } = {}) {
     const party = requireParty();
     if (!party || !requireOwner(party)) return null;
-    const before = provisionsOf(party).value;
     // no chat notice (2026-09-30 review: the one-line cards are gone; the
     // sheets show the track)
-    await party.update({ 'system.provisions.value': 0 });
-    return { from: before, to: 0 };
+    const change = await changeProvisions({ mode: 'set', amount: 0 });
+    return change ? { from: change.from, to: change.to } : null;
 }
 
 // GM only: a fresh party for a new adventure (2026-09-30 review): Provisions
@@ -318,6 +366,8 @@ export const PARTY_API = {
     restock,
     scavengeRelief,
     setQuartermaster,
+    volunteerQuartermaster,
+    resignQuartermaster,
     clearProvisions,
     reset,
 };
@@ -345,40 +395,65 @@ export async function ensureParty() {
 
 export function registerPartyHooks() {
     // The payer's fallout button on a restock card: rolls their fallout as
-    // its own card, then drops the button from this one
+    // its own card. The GM's client claims the button first (2026-10-02,
+    // rolls/card-actions.js), so it rolls once however many clicks; a claimed
+    // button is left out when the card is drawn.
     Hooks.on('renderChatMessage', (message, html) => {
-        html.find('[data-action=ledger-fallout]').on('click', async ev => {
+        const claimed = message.getFlag('heart', 'claimed') ?? {};
+        const keyOf = (el) => el.dataset.claim || `fallout-${el.dataset.character}`;
+        html.find('[data-action=ledger-fallout]').each((i, el) => {
+            if (claimed[keyOf(el)]) el.remove();
+        });
+        html.find('.ledger-acts').each((i, el) => {
+            if (!el.querySelector('button, a')) el.remove();
+        });
+        html.find('[data-action=ledger-fallout]').on('click', ev => {
             ev.preventDefault();
-            const { character, resistance } = ev.currentTarget.dataset;
-            const actor = game.actors.get(character);
-            if (!actor?.isOwner) {
-                ui.notifications.warn(loc('heart.party.not-owner', { name: actor?.name ?? '' }));
-                return;
-            }
-            const roll = await game.heart.rolls.FalloutRoll.build({ character, resistance });
-            if (!roll) return;
-            await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }) });
-            if (message.isOwner) {
-                await message.update({ content: message.content.replace(/<div class="ledger-acts">[\s\S]*?<\/div>/, '') });
-            }
+            const button = ev.currentTarget;
+            const { character, resistance } = button.dataset;
+            const key = keyOf(button);
+            return oneAtATime(`${message.id}:${key}`, button, async () => {
+                const actor = game.actors.get(character);
+                if (!actor?.isOwner) {
+                    ui.notifications.warn(loc('heart.party.not-owner', { name: actor?.name ?? '' }));
+                    return;
+                }
+                if (!(await askGM('claim-card-button', { messageId: message.id, key }))) return;
+                const roll = await game.heart.rolls.FalloutRoll.build({ character, resistance });
+                if (!roll) return;
+                await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }) });
+            });
         });
     });
 
     // GM-only party settings (2026-09-30, Luke): everyone owns the party (so
     // Fallout, Provisions, items, and notes stay open to players), but only
     // the GM renames it, picks the quartermaster, or adds members. A player
-    // may still take their own character out (the member list may shrink).
-    // Checked on the updating client, before anything is sent.
+    // may still take their own character out (the member list may shrink),
+    // volunteer their own character while there is no quartermaster
+    // (canVolunteer), and resign their own character from the post
+    // (canResign). Checked on the updating client, before anything is sent.
     Hooks.on('preUpdateActor', (actor, changes, options, userId) => {
-        if (actor.type !== PARTY_TYPE || game.users.get(userId)?.isGM) return;
+        const user = game.users.get(userId);
+        if (actor.type !== PARTY_TYPE || user?.isGM) return;
         const blocked = [];
         if ('name' in changes && changes.name !== actor.name) blocked.push('name');
-        if (foundry.utils.hasProperty(changes, 'system.quartermaster')
-            && foundry.utils.getProperty(changes, 'system.quartermaster') !== actor.system.quartermaster) blocked.push('quartermaster');
+        if (foundry.utils.hasProperty(changes, 'system.quartermaster')) {
+            const qm = foundry.utils.getProperty(changes, 'system.quartermaster');
+            const volunteer = qm && canVolunteer(actor, game.actors.get(qm), user);
+            const resign = !qm && canResign(actor, game.actors.get(actor.system.quartermaster), user);
+            if (qm !== actor.system.quartermaster && !volunteer && !resign) blocked.push('quartermaster');
+        }
         if (foundry.utils.hasProperty(changes, 'system.members')) {
             const before = new Set(actor.system.members ?? []);
             const after = foundry.utils.getProperty(changes, 'system.members') ?? [];
-            if (after.some(id => !before.has(id))) blocked.push('members');
+            // a player only takes out their own characters (2026-10-02,
+            // found by the tests); an id whose actor is gone may still go
+            const takesOthers = [...before].some(id => {
+                const member = game.actors.get(id);
+                return !after.includes(id) && member && !member.testUserPermission(user, 'OWNER');
+            });
+            if (after.some(id => !before.has(id)) || takesOthers) blocked.push('members');
         }
         if (!blocked.length) return;
         if (userId === game.user.id) ui.notifications.warn(loc('heart.party.gm-only-settings'));

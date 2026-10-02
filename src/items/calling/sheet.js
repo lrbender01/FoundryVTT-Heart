@@ -3,6 +3,7 @@ import templateJSON from './template.json';
 import HeartItemSheet from '../base/sheet';
 import { activeBeatsOf, allBeatsOf, beatLevel, createCustomBeat } from '../beat/actions';
 import { trinketItemOf } from '../trinkets';
+import { shareOfCharacter } from '../../common/window-sizes';
 
 import './sheet.sass';
 
@@ -15,8 +16,9 @@ const data = Object.freeze({
 export default class extends HeartItemSheet {
     static get type() { return data.type; }
 
+    // 85% of the character sheet (2026-10-01; was 960 x 820)
     static get defaultOptions() {
-        return foundry.utils.mergeObject(super.defaultOptions, { width: 960, height: 820 });
+        return foundry.utils.mergeObject(super.defaultOptions, shareOfCharacter());
     }
 
     get template() {
@@ -91,21 +93,7 @@ export default class extends HeartItemSheet {
         });
     }
 
-    async _canDragDropItem(item) {
-        if(item.type === 'ability' && item.type === undefined) {
-            await item.update({'system.type': 'core'});
-        }
-        
-        if(item.type === 'beat' && item.type === undefined) {
-            await item.update({'system.type': 'minor'});
-        }
-        return ['ability', 'beat'].includes(item.type);
-    }
-
-    async _onDropItem(event, data) {
-
-        return super._onDropItem(event, data);
-    }
+    // (what may be dropped here: common/drops.js, checked by the base sheet)
 }
 
 // Loose custom beats live on the actor, not the calling: when one changes,

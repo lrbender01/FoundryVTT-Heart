@@ -1,0 +1,370 @@
+@use '../util'
+
+// Bonds (2026-10-01, Luke's picks from the Heart Bonds Mock): the character
+// sheet's Bonds section and rows, the bond dialogs, and the party sheet's
+// Companions strip. The bond item sheet and the hireling sheet have their
+// own files (items/bond/sheet.sass, actors/hireling/hireling.sass). Rows
+// are .item.preview cards with beat-chip buttons; marks are the shared
+// .ordered-checkable-box.
+
+// ---------------------------------------------------------------- the section
+#{util.$in-heart} .bonds-container .container-content
+    container-type: inline-size
+
+#{util.$in-heart} .bond-list
+    display: flex
+    flex-direction: column
+    gap: 6px
+
+    > .item.preview
+        margin: 0
+
+// a compact row: two lines in the Character-tab column ... (.item.preview
+// in the selector: it outranks the preview card's own padding)
+#{util.$in-heart} .item.preview.bond-row
+    display: grid
+    grid-template-columns: 44px minmax(0, 1fr)
+    column-gap: 9px
+    row-gap: 5px
+    align-items: start
+    padding: 6px 8px 7px
+
+    > .bond-portrait
+        grid-column: 1
+        grid-row: 1
+
+    > .bond-main
+        grid-column: 2
+        grid-row: 1
+
+    > .bond-actions
+        grid-column: 1 / -1
+        grid-row: 2
+
+    > .bond-gm
+        grid-column: 1 / -1
+
+    // the row icons: small, as on equipment and resource rows
+    > .actionbar
+        top: 0.4em
+        gap: 0.4em
+        font-size: 12px
+
+// ... and one line wherever the box is 600px or more
+@container (min-width: 600px)
+    #{util.$in-heart} .item.preview.bond-row
+        grid-template-columns: 48px minmax(0, 1fr) auto
+        column-gap: 12px
+
+        > .bond-portrait
+            grid-row: 1 / span 2
+            width: 48px
+            height: 48px
+
+        > .bond-actions
+            grid-column: 3
+            grid-row: 1
+            align-self: end
+
+        > .bond-gm
+            grid-column: 2 / -1
+
+#{util.$in-heart} .bond-portrait
+    display: grid
+    place-items: center
+    width: 44px
+    height: 44px
+    border-radius: 50%
+    border: 1px solid util.$line
+    background: util.$bg
+    overflow: hidden
+    color: util.$muted
+
+    img
+        width: 100%
+        height: 100%
+        object-fit: cover
+        border: 0
+        display: block
+
+    .fas
+        font-size: 18px
+
+    &:hover
+        border-color: util.$red-mid
+
+#{util.$in-heart} .bond-main
+    min-width: 0
+    display: flex
+    flex-direction: column
+    gap: 3px
+
+#{util.$in-heart} .bond-head
+    display: flex
+    flex-wrap: wrap
+    align-items: center
+    gap: 2px 7px
+    // room for the row icons, top right
+    padding-right: 3.4em
+    line-height: 1.3
+
+#{util.$in-heart} .bond-name
+    font-weight: bold
+    color: util.$text
+    overflow-wrap: anywhere
+
+    &:hover
+        color: util.$red-bright
+        text-shadow: none
+
+// the kind: an info chip (util.sass controls)
+#{util.$in-heart} .bond-kind
+    @include util.info-chip
+    border: 1px solid util.$line
+    color: util.$muted
+    white-space: nowrap
+
+#{util.$in-heart} .bond-body
+    display: flex
+    flex-wrap: wrap
+    align-items: center
+    gap: 4px 12px
+
+#{util.$in-heart} .bond-pool
+    display: inline-flex
+    align-items: center
+    gap: 8px
+
+// the pool's marks: one size whether filled or not (Luke, 2026-10-01: the
+// shared rules sized the two states differently: index.sass's
+// "form.heart.item-sheet .ordered-checkable-box.checked::after" outranked a
+// plain rule for marked boxes only). Both states are restated here, the
+// marked one with one class more, so each outranks its shared rule.
+#{util.$in-heart} .bond-pool .bond-marks
+    display: inline-flex
+    align-items: center
+    gap: util.$mark-gap
+    line-height: 0
+
+    // small marks (util.sass mark scale, 2026-10-02: were 12px)
+    .ordered-checkable-box.bond-mark
+        display: block
+        flex: 0 0 auto
+        margin: 0
+
+        &::after, &.checked::after
+            display: block
+            box-sizing: border-box
+            width: util.$mark-sm
+            height: util.$mark-sm
+
+    .ordered-checkable-box:nth-of-type(5)
+        margin-right: util.$mark-group-gap
+
+    // the GM's marks click (set or clear the pool); the player's are shown
+    &[data-bond-pool] .ordered-checkable-box.bond-mark::after
+        cursor: pointer
+
+#{util.$in-heart} :is(.bond-count, .bond-total)
+    font-size: util.$fs-secondary
+    color: util.$muted
+    font-variant-numeric: lining-nums tabular-nums
+    white-space: nowrap
+
+#{util.$in-heart} .bond-fallouts
+    display: inline-flex
+    flex-wrap: wrap
+    gap: 4px
+
+#{util.$in-heart} .bond-fallout
+    display: inline-flex
+    align-items: center
+    gap: 4px
+    padding: 0 7px
+    border: 1px solid util.$red-mid
+    border-radius: 5px
+    background: util.$bg
+    color: util.$red-bright
+    font-weight: bold
+    font-size: util.$fs-secondary
+    line-height: 1.5
+    white-space: nowrap
+
+    .heart-glyph
+        margin: 0
+
+#{util.$in-heart} .bond-fallout-resolve
+    color: util.$muted
+    font-size: 11px
+    margin-left: 2px
+
+    &:hover
+        color: util.$red-bright
+
+// a companion's tracks in one line, then its taken Fallout as party chips
+#{util.$in-heart} .bond-summary
+    font-size: util.$fs-secondary
+    gap: 2px 6px
+
+    .sep
+        color: util.$muted
+
+    .bond-total
+        margin-left: 6px
+
+#{util.$in-heart} .bond-track
+    display: inline-flex
+    align-items: center
+    white-space: nowrap
+
+    .heart-glyph
+        margin-right: 0.25em
+
+    .n
+        color: util.$red-bright
+        font-weight: bold
+        margin-left: 0.25em
+
+#{util.$in-heart} .bond-fallout-chips
+    display: inline-flex
+    flex-wrap: wrap
+    gap: 4px
+    margin-left: 4px
+
+// (a little smaller than the party's 34px chips, so the line stays low)
+#{util.$in-heart} .party-chip.bond-fallout-chip
+    width: 24px
+    height: 24px
+    font-size: 16px
+    border-radius: 6px
+    color: util.$red-bright
+    border-color: util.$red-mid
+
+// a small label over a second list: "Resolved" on the bond sheet, "Their
+// Fallouts" on the companion sheet
+#{util.$in-heart} .bond-resolved-label
+    @include util.text-label
+    color: util.$muted
+    margin: 8px 0 3px
+
+#{util.$in-heart} :is(.bond-none, .bond-missing, .bond-quiet)
+    @include util.text-secondary
+
+// buttons: beat chips, right-justified, wrapping; the GM's on their own line
+#{util.$in-heart} .bond-actions
+    flex-wrap: wrap
+    justify-content: flex-end
+
+#{util.$in-heart} .bond-gm
+    display: flex
+    align-items: center
+    gap: 4px 8px
+    padding-top: 5px
+    border-top: 1px solid util.$line
+
+#{util.$in-heart} .bond-gm-label
+    @include util.text-label
+    color: util.$muted
+    margin-right: auto
+
+// missing: the companion is gone
+#{util.$in-heart} .item.preview.bond.is-missing
+    border-style: dashed
+
+    .bond-name
+        color: util.$muted
+        text-decoration: line-through
+
+// ---------------------------------------------------------------- dialogs
+// (common/dialog.js chrome; chips from applications/application.sass)
+.heart.form.bond-dialog
+    display: flex
+    flex-direction: column
+    gap: 6px
+    @include util.text-body
+
+    p
+        margin: 0
+        line-height: 1.35
+
+    .requirement-title
+        margin: 4px 0 0
+
+    .chip-set
+        gap: 6px
+
+    // (the size is the shared choice chip's, util.sass controls)
+    .chip-toggle > span
+        display: inline-flex
+        align-items: center
+
+    .chip-toggle .heart-glyph
+        margin-right: 0.35em
+
+    .chip-count
+        color: util.$red-bright
+        font-weight: bold
+        margin-left: 0.35em
+        font-variant-numeric: lining-nums
+
+    input:checked + span .chip-count
+        color: inherit
+
+    .chip-toggle.disabled
+        cursor: not-allowed
+
+        > span
+            opacity: 0.4
+
+        &:hover > span
+            border-color: util.$line
+
+    .chip-col
+        flex-direction: column
+        align-items: stretch
+
+        .chip-toggle > span
+            width: 100%
+            box-sizing: border-box
+
+    .chip-outcome
+        margin-left: auto
+        padding-left: 12px
+        @include util.text-secondary
+
+    input:checked + span .chip-outcome
+        color: inherit
+
+    .bond-dialog-note
+        @include util.text-secondary
+
+        b
+            font-style: normal
+            color: util.$text
+
+    .bond-field
+        display: flex
+        flex-direction: column
+        gap: 3px
+
+        input
+            height: 30px
+            padding: 0 8px
+            @include util.text-body
+
+    .bond-checks
+        display: flex
+        flex-wrap: wrap
+        gap: 6px
+
+// ---------------------------------------------------------------- party sheet: Companions
+.heart.sheet.actor.party.panel-sheet .companion-card
+    .member-icon img
+        width: 64px
+        height: 64px
+        border-radius: 50%
+        border: 1px solid util.$line
+        object-fit: cover
+
+    .member-open:hover .member-icon img
+        border-color: util.$red-mid

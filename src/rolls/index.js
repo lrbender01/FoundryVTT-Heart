@@ -1,8 +1,11 @@
 import rollModules from './*/roll.js';
 import './roll.sass';
+import { registerCardActions } from './card-actions';
 
 export function initialise() {
     console.log('heart | Registering rolls');
+    // what the cards' buttons write, run by the GM's client (2026-10-02)
+    registerCardActions();
     rollModules.forEach((module) => {
         const Roll = module.default;
 

@@ -1,0 +1,80 @@
+{{!-- Bond item sheet (2026-10-01, pared down the same day; items/bond/
+     sheet.js). Kind and Stress at the bottom left of the title bar; the
+     Bonded Actor; a person bond's pool and its own Fallout; Notes. --}}
+{{#> "heart:items/base/sheet.html" type="bond" hideToggles=true}}
+  {{#*inline "item-stats"}}
+  <span class="stat" data-tooltip="{{kindTip}}"><b>{{localize "heart.bond.sheet.kind"}}</b><span class="v">{{kindLabel}}</span></span>
+  {{#unless companion}}<span class="stat" data-tooltip="{{poolTip}}"><b>{{localize "heart.bond.sheet.stress"}}</b><span class="v">{{pool.value}} / {{pool.max}}</span></span>{{/unless}}
+  {{/inline}}
+
+  <div class="item-cols even">
+    <div class="column">
+      <div class="character-tab-container bond-link-container">
+        <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "bonds"}}}</span>{{localize "heart.bond.ui.bonded"}}</div>
+        <div class="container-content">
+          {{#if target}}
+          <div class="bond-link">
+            <a class="content-link" draggable="true" data-link data-uuid="{{target.uuid}}" data-type="Actor" data-tooltip="heart.bond.ui.open-bonded"><i class="fas fa-user"></i>{{target.name}}</a>
+            {{#if user.isGM}}<a class="bond-unlink" data-action="unlink" data-tooltip="heart.bond.ui.unlink-tip"><span class="fas fa-unlink"></span></a>{{/if}}
+          </div>
+          {{else if missing}}
+          <div class="bond-quiet">{{localize "heart.bond.ui.missing-sheet"}}</div>
+          {{else}}
+          <div class="bond-quiet">{{localize "heart.bond.ui.no-bonded"}}</div>
+          {{/if}}
+          {{#if user.isGM}}<div class="bond-drop">{{#if target}}{{localize "heart.bond.ui.drop-change"}}{{else}}{{localize "heart.bond.ui.drop-hint"}}{{/if}}</div>{{/if}}
+        </div>
+      </div>
+
+      {{#if companion}}
+      <div class="character-tab-container bond-companion-container">
+        <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "resistances"}}}</span>{{localize "heart.bond.sheet.stress"}}</div>
+        <div class="container-content">
+          <div class="bond-quiet">{{localize "heart.bond.ui.companion-sheet-hint"}}</div>
+          {{#if target}}<div class="beat-actions bond-actions"><a class="beat-chip" data-action="open-bonded">{{localize "heart.bond.ui.open-sheet"}}</a></div>{{/if}}
+        </div>
+      </div>
+      {{else}}
+      <div class="character-tab-container bond-pool-container">
+        <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "resistances"}}}</span>{{localize "heart.bond.sheet.stress"}}</div>
+        <div class="container-content">
+          <div class="bond-body"><span class="bond-pool" data-tooltip="{{poolTip}}"><span class="bond-marks{{#if user.isGM}} editable{{/if}}" {{#if user.isGM}}data-bond-pool{{/if}}>{{#each marks as |m|}}<a data-index="{{@index}}" class="ordered-checkable-box bond-mark{{#unless @root.user.isGM}} readonly{{/unless}}{{#if m}} checked{{/if}}"></a>{{/each}}</span><span class="bond-count">{{pool.value}} / {{pool.max}}</span></span></div>
+          <div class="bond-quiet">{{localize "heart.bond.ui.pool-hint"}}</div>
+          {{#if canAct}}<div class="beat-actions bond-actions">
+            <a class="beat-chip" data-action="bond-check" data-tooltip="heart.bond.ui.check-tip">{{localize "heart.bond.ui.check"}}</a>
+            <a class="beat-chip" data-action="bond-clear" data-tooltip="heart.bond.ui.clear-tip">{{localize "heart.bond.ui.clear"}}</a>
+          </div>{{/if}}
+        </div>
+      </div>
+      {{/if}}
+    </div>
+
+    <div class="column">
+      {{#unless companion}}
+      <div class="character-tab-container fallout-container bond-fallout-container">
+        <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "fallout"}}}</span>{{localize "heart.bond.sheet.fallouts"}}{{#if user.isGM}}<a class="panel-add" data-action="pick-bond-fallout" aria-label="{{localize 'heart.bond.ui.add-fallout'}}"><span class="fas fa-plus"></span></a>{{/if}}</div>
+        <div class="container-content">
+          <div class="tab-item-list">
+            {{#each fallouts as |item|}}{{> "heart:items/fallout/preview.html" item=item showComplete=@root.user.isGM showDelete=@root.user.isGM}}{{else}}<div class="bond-quiet">{{localize "heart.bond.ui.no-fallout"}}</div>{{/each}}
+          </div>
+          {{#if resolved.length}}
+          <div class="bond-resolved-label">{{localize "heart.bond.ui.resolved"}}</div>
+          <div class="tab-item-list bond-resolved">
+            {{#each resolved as |item|}}{{> "heart:items/fallout/preview.html" item=item showComplete=@root.user.isGM showDelete=@root.user.isGM}}{{/each}}
+          </div>
+          {{/if}}
+        </div>
+      </div>
+      {{/unless}}
+
+      <div class="character-tab-container editor-panel notes-panel">
+        <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "notes"}}}</span>{{localize "heart.bond.sheet.notes"}}
+          {{#if editable}}<a data-action="edit-editor" aria-label="{{localize 'heart.bond.ui.edit-notes'}}"><span class="fas fa-edit clickable section-button"></span></a>{{/if}}
+        </div>
+        <div class="container-content">
+          {{editor system.notes target="system.notes" button=true editable=editable owner=owner engine="prosemirror"}}
+        </div>
+      </div>
+    </div>
+  </div>
+{{/ "heart:items/base/sheet.html"}}

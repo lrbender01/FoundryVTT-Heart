@@ -4,12 +4,14 @@ import HeartActorSheet from '../base/sheet';
 import template from './template.json';
 import { activatePanelSheet, panelSheetDefaults, toChips } from '../../common/panel-sheet';
 import { iconFor } from '../../common/icons';
+import { BannerSheet } from '../../common/banner';
 
 // Landmark sheet (redesigned 2026-09-29). Layout in sheet.html; shared
 // tabs / editor / edit-toggle / die-roll behaviour in common/panel-sheet.js.
 // Haunt rows keep their own controls (service rolls, upgrade track,
 // upgrade / downgrade); services themselves are edited on the haunt's sheet.
-export default class LandmarkSheet extends HeartActorSheet {
+// The art banner, its Art and Show players buttons: common/banner.js.
+export default class LandmarkSheet extends BannerSheet(HeartActorSheet) {
     static get defaultOptions() {
         return panelSheetDefaults(super.defaultOptions);
     }

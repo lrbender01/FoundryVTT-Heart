@@ -1,12 +1,8 @@
 @use '../../util'
 
 // Scoped to Heart (util.$in-heart, same specificity) 2026-09-30: these
-// upstream helpers were global
-#{util.$in-heart} .sticky
-    position: sticky
-    top: 0
-    z-index: 1
-
+// upstream helpers were global (their unused .sticky helper was removed
+// 2026-10-02)
 #{util.$in-heart} .section
     padding: 0.5em
 
@@ -23,4 +19,5 @@
     pointer-events: none
 
 // The landmark sheet's styles live in src/common/panel-sheet.sass, shared with
-// the adversary and landmark/delve sheets (2026-09-29).
+// the adversary and landmark/delve sheets (2026-09-29). The art banner moved
+// there too (2026-10-02, shared with adversaries and companions).

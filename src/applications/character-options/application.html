@@ -9,7 +9,9 @@
     {{#if entries.length}}
     <div class="option-cards" style="--option-cols: {{columns}}">
       {{#each entries as |entry|}}
-      <div class="option-card {{#if entry.current}}is-current{{/if}}" data-uuid="{{entry.uuid}}" data-name="{{entry.name}}">
+      <div class="option-card {{#if entry.current}}is-current{{/if}}" data-uuid="{{entry.uuid}}" data-name="{{entry.name}}"{{#if entry.art}} data-art="{{entry.art.src}}" data-ar="{{entry.art.ar}}"{{/if}}>
+        {{!-- book art (2026-10-01): faint behind the card, brighter on hover --}}
+        {{{heartArt entry.art "card" class="option-art"}}}
         <div class="option-head">
           {{#if entry.img}}<span class="option-glyph">{{{heartIcon entry.img}}}</span>{{/if}}
           <a class="option-name" data-action="preview">{{entry.name}}</a>
@@ -17,6 +19,7 @@
         {{#if entry.pitch}}<p class="option-pitch">{{entry.pitch}}</p>{{/if}}
         <div class="option-actions">
           <a class="option-preview" data-action="preview" aria-label="{{localizeHeart 'applications' 'character-options' 'preview'}}"><span class="fas fa-eye"></span></a>
+          {{#if entry.art}}<a class="option-preview option-view-art" data-action="view-art" data-tooltip="heart.art.view" aria-label="{{localize 'heart.art.view'}}"><span class="fas fa-image"></span></a>{{/if}}
           <button type="button" class="option-choose" data-action="choose">{{localizeHeart "applications" "character-options" "choose"}}</button>
         </div>
       </div>

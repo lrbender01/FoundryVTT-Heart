@@ -17,7 +17,7 @@ import {
   markedValue,
   relievedValue,
 } from "../src/actors/party/rules.js";
-import { provisionsOf } from "../src/actors/party/party.js";
+import { provisionsOf, canVolunteer, canResign } from "../src/actors/party/party.js";
 import { provisionsView, partyMembers } from "../src/actors/party/view.js";
 import { makeActor, makeFallout, addActors } from "./helpers.mjs";
 
@@ -245,5 +245,86 @@ describe("partyMembers", () => {
     );
     const members = partyMembers({ system: { members: ["z", "gone", "m", "a"] } });
     expect(members.map((m) => m.name)).toEqual(["Ash", "Zell"]);
+  });
+});
+
+// Volunteering (2026-10-01, Luke): a player's own member, only while the
+// post is empty
+describe("canVolunteer: taking the empty quartermaster post", () => {
+  const player = { id: "p1", isGM: false };
+  const member = (id, owners = ["p1"]) => {
+    const a = makeActor({ id, name: id });
+    a.testUserPermission = (user) => owners.includes(user.id);
+    return a;
+  };
+  const party = ({ members = ["vess", "kettle"], quartermaster = "" } = {}) => ({
+    id: "party",
+    type: "party",
+    system: { provisions: { value: 0, max: 20 }, quartermaster, members },
+    items: [],
+  });
+
+  it("lets a player volunteer their own member when nobody is quartermaster", () => {
+    const [vess] = addActors(member("vess"));
+    expect(canVolunteer(party(), vess, player)).toBe(true);
+  });
+
+  it("refuses someone else's character", () => {
+    const [kettle] = addActors(member("kettle", ["p2"]));
+    expect(canVolunteer(party(), kettle, player)).toBe(false);
+  });
+
+  it("refuses a character who is not a member", () => {
+    const [ash] = addActors(member("ash"));
+    expect(canVolunteer(party(), ash, player)).toBe(false);
+  });
+
+  it("refuses while someone holds the post", () => {
+    const [vess, kettle] = addActors(member("vess"), member("kettle", ["p2"]));
+    expect(canVolunteer(party({ quartermaster: "kettle" }), vess, player)).toBe(false);
+    expect(kettle).toBeTruthy();
+  });
+
+  it("counts a quartermaster who no longer exists as an empty post", () => {
+    const [vess] = addActors(member("vess"));
+    expect(canVolunteer(party({ quartermaster: "deleted" }), vess, player)).toBe(true);
+  });
+
+  it("refuses non-characters and a missing party", () => {
+    const [vess] = addActors(member("vess"));
+    expect(canVolunteer(null, vess, player)).toBe(false);
+    expect(canVolunteer(party(), { ...vess, type: "adversary" }, player)).toBe(false);
+  });
+});
+
+// Resigning (2026-10-01, Luke): only the quartermaster's own player
+describe("canResign: giving up the quartermaster post", () => {
+  const player = { id: "p1", isGM: false };
+  const character = (id, owners = ["p1"]) => {
+    const a = makeActor({ id, name: id });
+    a.testUserPermission = (user) => owners.includes(user.id);
+    return a;
+  };
+  const party = (quartermaster) => ({
+    id: "party",
+    type: "party",
+    system: { provisions: { value: 0, max: 20 }, quartermaster, members: ["vess", "kettle"] },
+    items: [],
+  });
+
+  it("lets the quartermaster's own player resign", () => {
+    const [vess] = addActors(character("vess"));
+    expect(canResign(party("vess"), vess, player)).toBe(true);
+  });
+
+  it("refuses for someone else's quartermaster", () => {
+    const [kettle] = addActors(character("kettle", ["p2"]));
+    expect(canResign(party("kettle"), kettle, player)).toBe(false);
+  });
+
+  it("refuses a character who is not the quartermaster, or an empty post", () => {
+    const [vess] = addActors(character("vess"));
+    expect(canResign(party("kettle"), vess, player)).toBe(false);
+    expect(canResign(party(""), vess, player)).toBe(false);
   });
 });

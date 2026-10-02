@@ -1,11 +1,10 @@
-{{#> "heart:items/base/sheet.html" type="resource"}}
+{{#> "heart:items/base/sheet.html" type="resource" statsBar=true activeKey="equipped"}}
   {{#*inline "item-stats"}}
   <span class="stat"><b>{{localizeHeart "item-sheet" "domain"}}</b>
     {{#if editable}}<select name="system.domain">{{selectOptions domains selected=system.domain}}</select>{{else}}<span class="v">{{localizeHeart "domain" system.domain}}</span>{{/if}}
   </span>
   <span class="stat"><b>{{localizeHeart "item-sheet" "die"}}</b>
     {{#if editable}}<select name="system.die_size">{{selectOptions die_sizes selected=system.die_size}}</select>{{else}}<span class="v">{{system.die_size}}</span>{{/if}}
-    <a data-action="item-roll-self" aria-label="{{localizeHeart 'item-sheet' 'roll'}}"><span class="sheetD10"></span></a>
   </span>
   {{/inline}}
 

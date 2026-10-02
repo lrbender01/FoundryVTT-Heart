@@ -1,4 +1,7 @@
-<div data-item-id="{{item.uuid}}" data-document-id="{{item.uuid}}" class="item preview {{item.type}} type-{{item.type}}">
+<div data-item-id="{{item.uuid}}" data-document-id="{{item.uuid}}" class="item preview {{item.type}} type-{{item.type}}{{#if (heartHasRowArt item)}} has-art{{/if}}">
+    {{!-- Book art (2026-10-01): gear with art from fvtt-heart-content has
+         it behind the whole row, framed per piece for rows --}}
+    {{#if (heartHasRowArt item)}}{{{heartArt item "row" class="row-art"}}}{{/if}}
     {{!-- noActionbar: a row that places these icons itself (beats, beside
          their Pursue / Finish buttons) --}}
     {{#unless noActionbar}}

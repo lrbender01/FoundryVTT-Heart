@@ -1,12 +1,8 @@
 @use '../../util'
 
 // Scoped to Heart (util.$in-heart, same specificity) 2026-09-30: these
-// upstream helpers were global
-#{util.$in-heart} .sticky
-    position: sticky
-    top: 0
-    z-index: 1
-
+// upstream helpers were global (their unused .sticky helper was removed
+// 2026-10-02)
 #{util.$in-heart} .section
     padding: 0.5em
 

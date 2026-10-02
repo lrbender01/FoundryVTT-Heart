@@ -1,27 +1,5 @@
 @use '../util'
 
-.heart.form, .chat-message
-    .options
-        display: flex
-
-        align-items: center
-        justify-content: start
-
-        .option
-            @include util.text-chip
-            color: util.$text
-            border: 1px solid util.$line
-            border-radius: 5px
-            background: util.$sunken
-            margin: 2px
-            padding: 4px
-            display: inline-block
-
-    input:checked + .option
-        background: util.$red-deep
-        border-color: util.$red-mid
-        color: util.$on-red
-
 .heart.form
     .window-content
         background: util.$bg
@@ -35,9 +13,6 @@
         align-items: center
         justify-content: start
         text-align: left
-
-    label.requirement-label
-        @include util.text-section
 
     .description
         text-align: center
@@ -66,10 +41,12 @@
 // (window-content prefix: outranks the global ".window-content > *" padding)
 // Top padding leaves room for the container title, which sits on the box's
 // top border like the character sheet's (2026-09-30, Luke)
-.window-app .window-content > :is(.skills-manager, .domains-manager)
+// (These rules are scoped to Heart with :where() since 2026-10-02, at the
+// same specificity: the popups are Heart windows, the tab a Heart sheet.)
+.window-app:where(.heart-window) .window-content > :is(.skills-manager, .domains-manager)
     padding: 18px 12px 10px
 
-.skills-manager, .domains-manager
+#{util.$in-heart} .skills-manager, #{util.$in-heart} .domains-manager
     // no padding from the global .section rule (landmark.sass)
     .section
         padding: 0
@@ -114,7 +91,7 @@
 // a flex container for checkbox + label inside its grid cell.
 // Distinct class from .skill-row / .domain-row (which the Character tab uses
 // for read-only DISPLAY of selected skills with click-to-roll dice).
-.skill-edit-row, .domain-edit-row
+#{util.$in-heart} .skill-edit-row, #{util.$in-heart} .domain-edit-row
     display: flex
     align-items: center
     gap: 0.5em
@@ -139,8 +116,8 @@
 
 // Knack inputs — both textarea (multi-line wrap) and legacy text input.
 // `.knack-input` class on the element drives the styling regardless of tag.
-textarea.knack-input,
-input[type="text"].knack-input
+#{util.$in-heart} textarea.knack-input,
+#{util.$in-heart} input[type="text"].knack-input
     width: 100%
     box-sizing: border-box
     padding: 0.3em 0.5em
@@ -198,8 +175,30 @@ form.heart.form.beat-tracker
     background: util.$bg
     color: util.$text
     padding: 0
+    // the hover popout is placed in these coordinates (2026-10-01)
+    position: relative
 
-.options-browser
+// Book art popout (2026-10-01): the whole piece beside the hovered card, as
+// large as the window allows, no label; it never takes the pointer
+#{util.$in-heart} .option-art-pop
+    position: absolute
+    z-index: 30
+    pointer-events: none
+    box-sizing: border-box
+    padding: 6px
+    background: util.$bg
+    border: 1px solid util.$line
+    border-radius: 8px
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45)
+
+    img
+        display: block
+        width: 100%
+        height: 100%
+        object-fit: contain
+        border: none
+
+#{util.$in-heart} .options-browser
     display: flex
     flex-direction: column
     gap: 0.5rem
@@ -233,9 +232,16 @@ form.heart.form.beat-tracker
     .option-cards
         display: grid
         grid-template-columns: repeat(var(--option-cols, 5), minmax(0, 1fr))
+        // every card as tall as the tallest, so each picker's cards share one
+        // art canvas size (the art is framed per piece against it, 2026-10-01)
+        grid-auto-rows: 1fr
         gap: 10px
 
     .option-card
+        // the art sits behind the text inside the card (2026-10-01)
+        position: relative
+        overflow: hidden
+        isolation: isolate
         display: flex
         flex-direction: column
         gap: 6px
@@ -244,8 +250,18 @@ form.heart.form.beat-tracker
         border-radius: 8px
         background: util.$sunken
 
+        // book art: very faint at rest, a little brighter on hover (Luke's
+        // 20% / 40%, 2026-10-01)
+        .option-art
+            z-index: -1
+            opacity: 0.2
+            transition: opacity 220ms ease
+
         &:hover
             border-color: util.$red-mid
+
+            .option-art
+                opacity: 0.4
 
             .option-glyph
                 color: util.$red-bright
@@ -299,17 +315,8 @@ form.heart.form.beat-tracker
                 color: util.$red-bright
 
         .option-choose
+            @include util.button-primary(true)
             flex: 0 0 auto
-            width: auto
-            margin: 0
-            padding: 2px 14px
-            background: util.$red-deep
-            color: util.$on-red
-            border: 1px solid util.$red-mid
-            @include util.text-chip
-
-            &:hover
-                background: util.$red-mid
 
     .options-empty
         @include util.text-secondary
@@ -331,10 +338,15 @@ form.heart.form.beat-tracker
         color: util.$muted
         margin-bottom: 4px
 
+    // the form's Cancel and its action (base/application.html), full width in
+    // their two columns (util.sass controls)
+    button[data-action=cancel]
+        @include util.button-secondary
+        width: 100%
+
     button.primary
-        background: util.$red-deep
-        border-color: util.$red-mid
-        color: util.$on-red
+        @include util.button-primary
+        width: 100%
 
 // Roll / Roll with Mastery prompt (2026-09-29 review round 2): legible at a
 // glance - larger description, headings and chips; the window grows to fit.
@@ -357,18 +369,12 @@ form.heart.form.beat-tracker
     .heart.form .chip-set
         gap: 7px
 
-    .heart.form .chip-toggle span
-        line-height: 1.2
-        padding: 6px 16px 3px
-        border-radius: 6px
-
     .heart.form button
-        height: 42px
-        line-height: 1
-        padding: 0
         align-self: end
 
-.heart.form, .chat-message
+// (in chat: Heart's cards only, util.$heart-card, 2026-10-02; the roll
+// request card's chips)
+.heart.form, .chat-message#{util.$heart-card}
     .chip-set
         display: flex
         flex-wrap: wrap
@@ -377,17 +383,20 @@ form.heart.form.beat-tracker
         &.segmented
             gap: 0
 
-            .chip-toggle span
+            .chip-toggle > span
                 border-radius: 0
                 border-right-width: 0
 
-            .chip-toggle:first-child span
-                border-radius: 6px 0 0 6px
+            .chip-toggle:first-child > span
+                border-radius: util.$radius 0 0 util.$radius
 
-            .chip-toggle:last-child span
-                border-radius: 0 6px 6px 0
+            .chip-toggle:last-child > span
+                border-radius: 0 util.$radius util.$radius 0
                 border-right-width: 1px
 
+    // (the chip is the label's own span: "> span", 2026-10-01, so a glyph or
+    // a count inside a chip, also spans, no longer gets a chip box of its
+    // own; the Stakes picker and the bond dialogs showed it)
     .chip-toggle
         display: inline-flex
         margin: 0
@@ -400,28 +409,22 @@ form.heart.form.beat-tracker
             height: 1px
             pointer-events: none
 
-        span
-            @include util.text-chip
-            padding: 3px 11px 1px
-            border-radius: 5px
-            border: 1px solid util.$line
-            background: util.$sunken
-            color: util.$text
+        // a choice chip (util.sass controls)
+        > span
+            @include util.choice-chip
 
-        &:hover span
-            border-color: util.$red-mid
+        &:hover > span
+            border-color: util.$red-bright
 
         input:checked + span
-            background: util.$red-deep
-            border-color: util.$red-mid
-            color: util.$on-red
+            @include util.choice-chip-on
 
         input:focus-visible + span
             outline: 2px solid util.$red-bright
             outline-offset: 1px
 
 // Knack boxes that can't take input yet (skill/domain not ticked)
-textarea.knack-input:disabled
+#{util.$in-heart} textarea.knack-input:disabled
     opacity: 0.45
     cursor: not-allowed
 
@@ -443,16 +446,12 @@ textarea.knack-input:disabled
                 flex-direction: column
                 align-items: stretch
 
+    // the action filled, backing out an outline (util.sass controls)
     .dialog-buttons button
-        @include util.text-chip
+        @include util.button-secondary
 
         &.default, &[data-button="yes"], &[data-button="clear"], &[data-button="ok"]
-            background: util.$red-deep
-            border-color: util.$red-mid
-            color: util.$on-red
-
-            &:hover
-                background: util.$red-mid
+            @include util.button-primary
 
 // Startup / changelog dialog
 .heart-changelog

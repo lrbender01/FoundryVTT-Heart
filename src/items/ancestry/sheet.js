@@ -7,6 +7,7 @@ import templateJSON from './template.json';
 import HeartItemSheet from '../base/sheet';
 import { trinketItemOf } from '../trinkets';
 import { activateQuestionListeners } from './questions';
+import { shareOfCharacter } from '../../common/window-sizes';
 
 import './sheet.sass';
 
@@ -20,9 +21,10 @@ export default class extends HeartItemSheet {
     static get type() { return data.type; }
 
     // A fixed starting size, not 'auto': Foundry ignores vertical resizing on
-    // an auto-height window, and this one should resize freely (2026-09-30)
+    // an auto-height window, and this one should resize freely (2026-09-30).
+    // 85% of the character sheet (2026-10-01; was 960 x 820).
     static get defaultOptions() {
-        return foundry.utils.mergeObject(super.defaultOptions, { width: 960, height: 820, resizable: true });
+        return foundry.utils.mergeObject(super.defaultOptions, { ...shareOfCharacter(), resizable: true });
     }
 
     get template() {

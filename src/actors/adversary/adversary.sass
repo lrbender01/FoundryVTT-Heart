@@ -2,12 +2,8 @@
 
 // Helpers from the upstream sheet. The delve and landmark stylesheets define
 // the same rules, so they are kept here unchanged for them. Scoped to Heart
-// (util.$in-heart, same specificity) 2026-09-30: they were global.
-#{util.$in-heart} .sticky
-    position: sticky
-    top: 0
-    z-index: 1
-
+// (util.$in-heart, same specificity) 2026-09-30: they were global. (Their
+// unused .sticky helper was removed 2026-10-02.)
 #{util.$in-heart} .section
     padding: 0.5em
 

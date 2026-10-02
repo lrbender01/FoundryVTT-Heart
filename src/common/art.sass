@@ -1,0 +1,109 @@
+// Book art crops (2026-10-01, common/art.js). The canvas fills its parent;
+// the art is sized from the canvas with container query units: --W is the
+// width that just covers the canvas, times the zoom, and the art's centre
+// sits at (x, y) of the canvas. Hard edges, no fade (Luke, 2026-10-01).
+.heart-art-canvas
+    position: absolute
+    inset: 0
+    overflow: hidden
+    container-type: size
+    pointer-events: none
+
+    img
+        --W: calc(max(100cqw, 100cqh * var(--ar)) * var(--z))
+        position: absolute
+        max-width: none
+        max-height: none
+        border: none
+        margin: 0
+        width: var(--W)
+        height: calc(var(--W) / var(--ar))
+        left: calc(100cqw * var(--x) - var(--W) / 2)
+        top: calc(100cqh * var(--y) - var(--W) / var(--ar) / 2)
+        // gear art only (r in its framing); 0deg otherwise
+        transform: rotate(var(--r, 0deg))
+        user-select: none
+
+// The art viewer (common/art.js ArtViewer): the piece fitted in the window
+// on black, arrows at the sides, the count / kind / pick along the bottom
+.heart-art-viewer
+    .window-content
+        padding: 0
+        background: #000
+        overflow: hidden
+
+    .art-viewer
+        position: relative
+        width: 100%
+        height: 100%
+
+    .art-stage
+        position: absolute
+        inset: 0 0 34px
+
+        img
+            width: 100%
+            height: 100%
+            object-fit: contain
+            border: none
+            user-select: none
+
+    .art-step
+        position: absolute
+        top: 50%
+        transform: translateY(-50%)
+        display: grid
+        place-items: center
+        width: 38px
+        height: 64px
+        font-size: 20px
+        color: #fff
+        background: rgba(0, 0, 0, 0.45)
+        opacity: 0.6
+        transition: opacity 0.12s
+
+        &:hover
+            opacity: 1
+            text-shadow: none
+
+        &.prev
+            left: 0
+            border-radius: 0 6px 6px 0
+
+        &.next
+            right: 0
+            border-radius: 6px 0 0 6px
+
+    .art-caption
+        position: absolute
+        left: 0
+        right: 0
+        bottom: 0
+        height: 34px
+        display: flex
+        align-items: center
+        gap: 12px
+        padding: 0 12px
+        color: #c4c4c4
+        font-size: 13px
+
+    .art-count
+        font-variant-numeric: lining-nums tabular-nums
+
+    .art-kind
+        flex: 1 1 auto
+
+    .art-pick
+        padding: 3px 10px 2px
+        border: 1px solid #c4c4c4
+        border-radius: 5px
+        color: #fff
+        white-space: nowrap
+
+        &[data-action]:hover
+            border-color: #fff
+            text-shadow: none
+
+        &.on
+            border-color: transparent
+            color: #808080

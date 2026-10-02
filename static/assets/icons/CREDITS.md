@@ -21,6 +21,7 @@ Glyphs for the character sheet's skills, domains, resistances (plus the party's 
 | `resistances/fortune.svg`    | [horseshoe](https://game-icons.net/1x1/delapouite/horseshoe.html)               | delapouite |
 | `resistances/mind.svg`       | [brain](https://game-icons.net/1x1/lorc/brain.html)                             | lorc       |
 | `resistances/provisions.svg` | [camp-cooking-pot](https://game-icons.net/1x1/delapouite/camp-cooking-pot.html) | delapouite |
+| `resistances/bond.svg` | [shaking-hands](https://game-icons.net/1x1/delapouite/shaking-hands.html) (Luke's pick, 2026-10-01; replaced the knot placeholder) | delapouite |
 | `resistances/supplies.svg`   | [knapsack](https://game-icons.net/1x1/lorc/knapsack.html)                       | lorc       |
 | `sections/domains.svg` | [direction-signs](https://game-icons.net/1x1/delapouite/direction-signs.html) | delapouite |
 | `sections/equipment.svg` | [crossed-swords](https://game-icons.net/1x1/lorc/crossed-swords.html) | lorc |
@@ -42,6 +43,7 @@ Glyphs for the character sheet's skills, domains, resistances (plus the party's 
 | `sections/effect.svg` | [broken-heart](https://game-icons.net/1x1/lorc/broken-heart.html) | lorc |
 | `sections/rule.svg` | [rule-book](https://game-icons.net/1x1/delapouite/rule-book.html) | delapouite |
 | `sections/party.svg` | [backup](https://game-icons.net/1x1/lorc/backup.html) | lorc |
+| `sections/bonds.svg` | [shaking-hands](https://game-icons.net/1x1/delapouite/shaking-hands.html) | delapouite |
 | `sections/resistances.svg` | [checked-shield](https://game-icons.net/1x1/lorc/checked-shield.html) | lorc |
 | `sections/resources.svg` | [cut-diamond](https://game-icons.net/1x1/lorc/cut-diamond.html) | lorc |
 | `sections/skills.svg` | [skills](https://game-icons.net/1x1/delapouite/skills.html) | delapouite |

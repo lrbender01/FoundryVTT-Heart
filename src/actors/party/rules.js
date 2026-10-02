@@ -59,3 +59,15 @@ export function markedValue(value, amount, max = PROVISIONS_MAX) {
 export function relievedValue(value, amount) {
     return Math.max(0, (Number(value) || 0) - Math.max(0, Number(amount) || 0));
 }
+
+// One change to the track, as the GM's client applies it (2026-10-02,
+// common/relay.js): 'add' marks, 'relieve' removes, 'set' puts it at a value;
+// always on the track, from the value the GM holds at that moment
+export function provisionsChange(value, max, { mode, amount } = {}) {
+    const top = Number(max) || PROVISIONS_MAX;
+    const n = Math.max(0, Math.floor(Number(amount) || 0));
+    if (mode === 'add') return markedValue(value, n, top);
+    if (mode === 'relieve') return relievedValue(value, n);
+    if (mode === 'set') return Math.min(top, n);
+    throw new Error(`heart | unknown Provisions change "${mode}"`);
+}

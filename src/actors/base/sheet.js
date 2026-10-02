@@ -3,6 +3,8 @@ import sheetHTML from './sheet.html';
 import HeartSheetMixin from '../../common/sheet';
 import { iconFor } from '../../common/icons';
 import { heartDialogOptions } from '../../common/dialog';
+import { removalLoss, confirmRemoval } from '../../items/removal';
+import { actorDropRefusal } from '../../common/drops';
 
 export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
     static get type() { return 'base'; }
@@ -13,6 +15,28 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
 
     get img() {
         return this.default_img;
+    }
+
+    // Every Heart actor sheet's drop ends here (each type's own rules run
+    // first and call super). Only clear mistakes are refused (2026-10-02,
+    // common/drops.js): a class, calling, or ancestry off a character, a tag
+    // on an actor, a haunt off a landmark.
+    async _onDropItemCreate(itemData) {
+        const list = (Array.isArray(itemData) ? itemData : [itemData]).filter(Boolean);
+        const kept = [];
+        for (const data of list) {
+            const reason = actorDropRefusal(this.actor.type, data.type);
+            if (!reason) {
+                kept.push(data);
+                continue;
+            }
+            ui.notifications.warn(game.i18n.format(`heart.drop.refused-actor.${reason}`, {
+                item: data.name ?? '',
+                actor: this.actor.name,
+            }));
+        }
+        if (!kept.length) return [];
+        return super._onDropItemCreate(Array.isArray(itemData) ? kept : kept[0]);
     }
 
     getData() {
@@ -41,6 +65,13 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
           const type = target.data('type');
           const itemData = target.data('data') || {};
 
+          // a Fallout "+" opens the Fallout picker (2026-10-01, Luke: one
+          // picker wherever Fallout goes; Write your own makes a blank one)
+          if (type === 'fallout' && game.heart.fallout?.pick) {
+            game.heart.fallout.pick({ target: this.actor, severity: 'minor', resistance: this.actor.type === 'hireling' ? 'bond' : '' });
+            return;
+          }
+
           const doc = new CONFIG.Item.documentClass({
               type,
               name: `New ${type}`,
@@ -59,6 +90,13 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
         html.find('[data-action=delete]').click(async ev => {
             const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
             const item = await fromUuid(uuid);
+            if (!item) return;
+            // a class, calling, or ancestry with the character's work in it
+            // asks once, saying what goes with it (items/removal.js)
+            if (removalLoss(item)) {
+                if (await confirmRemoval(item)) await item.delete();
+                return;
+            }
             await item.deleteDialog(heartDialogOptions());
         });
 

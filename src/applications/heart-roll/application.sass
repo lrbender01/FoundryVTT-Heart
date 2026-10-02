@@ -51,27 +51,13 @@
         flex-wrap: wrap
         gap: 7px
 
+    // a choice chip (util.sass controls)
     .roll-chip
-        @include util.text-chip
-        width: auto
-        height: auto
-        margin: 0
-        line-height: 1.15
-        padding: 0.32em 0.8em 0.24em
-        border-radius: 6px
-        border: 1px solid util.$line
-        background: util.$sunken
-        color: util.$text
-        cursor: pointer
-
-        &:hover
-            border-color: util.$red-mid
-            background: util.$sunken
+        @include util.choice-chip
+        @include util.hover-outline
 
         &.on
-            background: util.$red-deep
-            border-color: util.$red-mid
-            color: util.$on-red
+            @include util.choice-chip-on
 
         // the roller doesn't have it: still pickable (a helper may), dashed
         &.lack
@@ -226,22 +212,14 @@
         grid-template-columns: 1fr 1.6fr
         gap: 8px
 
-        button
-            @include util.text-chip
-            height: 44px
-            margin: 0
-            border-radius: 4px
-            cursor: pointer
-
+        // Cancel and Roll (util.sass controls)
         .ghost
-            background: util.$sunken
-            border: 1px solid util.$line
-            color: util.$text
+            @include util.button-secondary
+            width: 100%
 
         .primary
-            background: util.$red-deep
-            border: 1px solid util.$red-mid
-            color: util.$on-red
+            @include util.button-primary
+            width: 100%
 
             &:disabled
                 opacity: 0.45

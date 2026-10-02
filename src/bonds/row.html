@@ -1,0 +1,39 @@
+{{!-- One compact bond row (bonds/view.js bondRowView): a recessed
+     .item.preview card. Portrait, name, kind chip (its tooltip says what
+     the kind can do), then what the bond carries; the player's buttons, then
+     the GM's on their own line. Row icons (open the bonded actor, open the
+     bond, remove) in the usual top-right .actionbar. A person's pool marks
+     click for the GM (set or clear); a companion's taken Fallout shows as
+     small square chips, like the party chips. --}}
+<div class="item preview bond bond-row kind-{{b.kind}}{{#if b.missing}} is-missing{{/if}}" data-item-id="{{b.uuid}}" data-bond-id="{{b.id}}">
+  {{#unless b.missing}}
+  <div class="actionbar">
+    {{#if b.targetTip}}<a data-action="open-target" data-uuid="{{b.targetUuid}}" data-tooltip="{{b.targetTip}}"><span class="fas fa-user"></span></a>{{/if}}
+    <a data-action="view-bond" data-tooltip="heart.bond.ui.open-bond"><span class="fas fa-edit"></span></a>
+    <a data-action="remove-bond" data-tooltip="heart.bond.ui.remove-tip"><span class="fas fa-trash"></span></a>
+  </div>
+  {{/unless}}
+  <a class="bond-portrait" data-action="{{b.openAction}}" data-tooltip="{{b.openTip}}">{{#if b.missing}}<span class="fas fa-user-slash"></span>{{else}}{{#if b.img}}<img src="{{b.img}}" alt="" />{{else}}<span class="fas fa-user"></span>{{/if}}{{/if}}</a>
+  <div class="bond-main">
+    <div class="bond-head">
+      <a class="bond-name" data-action="{{b.openAction}}">{{b.name}}</a>
+      <span class="bond-kind" data-tooltip="{{b.kindTip}}">{{b.kindLabel}}</span>
+    </div>
+    {{#if b.missing}}
+    <div class="bond-missing">{{b.missingLine}}</div>
+    {{else if b.companion}}
+    <div class="bond-body bond-summary">
+      {{#each b.summary as |s|}}<span class="bond-track" data-tooltip="{{s.tip}}">{{{heartGlyph "resistance" s.key}}}<b>{{s.label}}</b> <span class="n">{{s.value}}</span></span>{{#unless @last}}<span class="sep">&middot;</span>{{/unless}}{{else}}<span class="bond-none">{{localize "heart.bond.ui.no-stress"}}</span>{{/each}}
+      <span class="bond-total" data-tooltip="{{b.totalTip}}">{{b.totalLine}}</span>
+      {{#if b.companionFallouts.length}}<span class="bond-fallout-chips">{{#each b.companionFallouts as |f|}}<a class="party-chip bond-fallout-chip severity-{{f.type}}" data-action="open-companion-fallout" data-uuid="{{f.uuid}}" data-tooltip="{{f.tip}}" aria-label="{{f.name}}">{{{heartGlyph "severity" f.type}}}</a>{{/each}}</span>{{/if}}
+    </div>
+    {{else}}
+    <div class="bond-body">
+      <span class="bond-pool" data-tooltip="{{b.poolTip}}"><span class="bond-marks"{{#if isGM}} data-bond-pool{{/if}}>{{#each b.pool.marks as |m|}}<a data-index="{{@index}}" class="ordered-checkable-box bond-mark{{#unless ../isGM}} readonly{{/unless}}{{#if m}} checked{{/if}}"></a>{{/each}}</span><span class="bond-count">{{b.pool.value}} / {{b.pool.max}}</span></span>
+      {{#if b.fallouts.length}}<span class="bond-fallouts">{{#each b.fallouts as |f|}}<span class="bond-fallout" data-uuid="{{f.uuid}}" data-tooltip="{{f.tip}}">{{{heartGlyph "severity" f.type}}}{{f.name}}{{#if ../isGM}}<a class="bond-fallout-resolve" data-action="resolve-bond-fallout" data-uuid="{{f.uuid}}" data-tooltip="heart.bond.ui.resolve-tip"><span class="fas fa-check"></span></a>{{/if}}</span>{{/each}}</span>{{/if}}
+    </div>
+    {{/if}}
+  </div>
+  {{#if b.actions.length}}<div class="beat-actions bond-actions">{{> "heart:bonds/chips.html" list=b.actions}}</div>{{/if}}
+  {{#if isGM}}{{#if b.gmActions.length}}<div class="bond-gm"><span class="bond-gm-label">{{localize "heart.bond.ui.gm"}}</span><span class="beat-actions bond-actions">{{> "heart:bonds/chips.html" list=b.gmActions}}</span></div>{{/if}}{{/if}}
+</div>

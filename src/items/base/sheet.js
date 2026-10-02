@@ -8,8 +8,13 @@ import { heartDialogOptions } from '../../common/dialog';
 import { learnedTimes } from '../ability/repeat';
 import { activateBeatListeners } from '../beat/actions';
 import { activateTrinketListeners } from '../trinkets';
+import { artOf, showArt } from '../../common/art';
+import { canHoldChild } from '../../common/drops';
 
 let measureContext;
+// the item types that carry book art (fvtt-heart-content, 2026-10-01; gear
+// too since the item art landed)
+const ART_TYPES = new Set(['class', 'calling', 'ancestry', 'equipment', 'resource', 'item']);
 
 // Size an input to its text (or placeholder) in its own font; refits as the
 // user types and once the display font has loaded
@@ -37,8 +42,9 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         const defaultOptions = super.defaultOptions;
         return foundry.utils.mergeObject(defaultOptions, {
             // Shared item chrome (2026-09-29): full-bleed header, readable size
+            // (650 wide since 2026-10-01; was 720)
             classes: [...defaultOptions.classes, 'heart-item-sheet'],
-            width: 720,
+            width: 650,
             // fits its content (fallout / tag / beat sheets were mostly empty
             // space at a fixed 600px); long sheets set their own height
             height: 'auto',
@@ -51,6 +57,46 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
 
     get template() {
         return sheetHTML.path;
+    }
+
+    // Art in the title bar (2026-10-01, Luke): the character sheet's button,
+    // on every class, calling, ancestry, and gear sheet with book art. Each sheet
+    // remembers its own choice for this player (client setting
+    // heart.hiddenItemArt: the item uuids whose art is hidden), across
+    // reopening the sheet and logging in again.
+    _hasArt() {
+        return ART_TYPES.has(this.item.type) && Boolean(artOf(this.item));
+    }
+
+    _artHidden() {
+        return Boolean(game.settings.get('heart', 'hiddenItemArt')?.[this.item.uuid]);
+    }
+
+    async _toggleArt() {
+        const hidden = { ...(game.settings.get('heart', 'hiddenItemArt') ?? {}) };
+        if (hidden[this.item.uuid]) delete hidden[this.item.uuid];
+        else hidden[this.item.uuid] = true;
+        await game.settings.set('heart', 'hiddenItemArt', hidden);
+    }
+
+    _getHeaderButtons() {
+        const buttons = super._getHeaderButtons();
+        if (this._hasArt()) {
+            buttons.unshift({
+                label: game.i18n.localize('heart.art.toggle'),
+                class: 'heart-art-toggle',
+                icon: 'fas fa-image',
+                onclick: () => this._toggleArt(),
+            });
+        }
+        return buttons;
+    }
+
+    // the title bar is drawn once, so the Art button's white / grey look
+    // (character.sass) is refreshed after every render
+    async _render(...args) {
+        await super._render(...args);
+        this.element?.find('.window-header .heart-art-toggle').toggleClass('art-off', this._artHidden());
     }
 
     get default_img() {
@@ -87,6 +133,12 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         // references ("as per HEARTSBLOOD", 2026-09-30, Luke)
         highlightRendered(html[0], '.editor-panel .editor-content, .class-description, .calling-text',
             { abilityRefs: ['ability', 'class', 'calling'].includes(this.item.type) });
+
+        // Book art: a click on the art opens the whole piece
+        html.find('.item-head.has-art > .heart-art-canvas').click(ev => {
+            ev.preventDefault();
+            showArt(this.item);
+        });
 
         // The name field is as wide as its text, so the header chips sit
         // right after the name instead of a fixed field width away
@@ -278,6 +330,12 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
             return map;
         }, {});
 
+        // a Fallout may also hit Provisions or a bond (2026-10-01)
+        data.fallout_resistances = game.heart.fallout_resistances.reduce((map, resistance) => {
+            map[resistance] = game.i18n.localize(`heart.resistance.${resistance}`);
+            return map;
+        }, {});
+
         data.beat_levels = game.heart.beat_levels.reduce((map, beat_level) => {
           map[beat_level] = game.i18n.localize(`heart.beat.level.${beat_level}`);
           return map;
@@ -301,116 +359,74 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         data.children = this.children;
         data.childrenTypes = this.childrenTypes;
         data.system = this.item.system;
+        // book art banner (2026-10-01, common/art.js), unless this player hid
+        // it on this sheet (the Art button)
+        data.art = this._hasArt() && !this._artHidden() ? artOf(this.item) : null;
 
         return data;
     }
 
+    // Drops onto an item sheet (2026-10-02: the type check now runs; it was
+    // async, so its promise always passed and any owned item could land
+    // hidden inside any other; the upstream debugging logs are gone)
     async _onDrop(event) {
-        console.log("=== _onDrop triggered ===");
-        
-        // Try to extract the data
         let data;
         try {
             data = JSON.parse(event.dataTransfer.getData('text/plain'));
-            console.log("Extracted drop data:", data);
         } catch (err) {
-            console.error("Error parsing drop data:", err);
             return false;
         }
-
-        // Handle the drop with a Hooked function
-        const allowed = Hooks.call("dropItemSheetData", this.item, this, data);
-        console.log("Hooks result for dropItemSheetData:", allowed);
-        if (allowed === false) {
-            console.log("Drop prevented by hook");
-            return;
-        }
-
-        // Handle different data types
-        switch (data.type) {
-            case "Item":
-                console.log("Dropped data type: Item");
-                data.documentName = 'Item';
-                return this._onDropItem(event, data);
-            default:
-                console.warn("Dropped data type not handled:", data.type);
-        }
+        if (Hooks.call('dropItemSheetData', this.item, this, data) === false) return;
+        if (data?.type !== 'Item') return;
+        data.documentName = 'Item';
+        return this._onDropItem(event, data);
     }
 
     async _onDropItem(event, data) {
-        console.log("=== _onDropItem triggered ===");
-        console.log("Data received for drop:", data);
-
-        if (!this.item.isOwner) {
-            console.warn("Current user is not the owner of the item; drop not allowed.");
+        if (!this.item.isOwner) return false;
+        const item = await Item.implementation.fromDropData(data);
+        if (!item || item.uuid === this.item.uuid) return false;
+        if (!this._canDragDropItem(item)) {
+            const label = (type) => game.i18n.localize(CONFIG.Item.typeLabels?.[type] ?? type);
+            ui.notifications.warn(game.i18n.format('heart.drop.refused-child', { child: label(item.type), parent: label(this.item.type) }));
             return false;
         }
-
-        const item = await Item.implementation.fromDropData(data);
-        console.log("Item created from drop data:", item);
-
-        if (!this._canDragDropItem(item)) {
-            console.warn("Drag drop not allowed for item:", item);
-            return;
-        }
-
-        if(item.parent == null) {
-            console.log("Item has no parent; not duplicating on drop.");
-            return;
-        }
-
+        // (upstream behaviour, kept: only an item from an actor or another
+        // item is copied in; a world or compendium item dropped here is not)
+        if (item.parent == null) return;
+        // dragged out of this sheet and back onto it
+        if (data.parentItemId === this.item.id) return;
         const itemData = item.toObject();
-        console.log("Item data object:", itemData);
         itemData.documentName = 'Item';
-
-        const parentItem = this.item;
-        let sameActor = (data.parentItemId === parentItem.id);
-        console.log("Same actor check:", sameActor);
-        if (sameActor) {
-            console.log("Dropped item belongs to the same actor; skipping duplicate.");
-            return;
-        }
-
-        console.log("Adding dropped item as a child to parent item:", parentItem.id);
-        return parentItem.addChildren([itemData]);
+        return this.item.addChildren([itemData]);
     }
 
-    async _canDragDropItem(item) {
-        console.log("Checking if item can be drag-dropped:", item);
-        let result = false;
-        console.log("_canDragDropItem result:", result);
-        return result;
+    // The child types this sheet shows (common/drops.js); synchronous, so a
+    // refusal refuses
+    _canDragDropItem(item) {
+        return canHoldChild(this.item.type, item?.type);
     }
 
     async _onDragStart(event) {
-        console.log("=== _onDragStart triggered ===");
         const li = event.currentTarget;
-        if (event.target.classList.contains("entity-link")) {
-            console.log("Drag start ignored because target has class 'entity-link'");
-            return;
-        }
+        if (event.target.classList.contains("entity-link")) return;
 
-        let dragData = {
+        const dragData = {
             parentItemId: this.item.id,
             uuid: event.target.dataset.documentId,
             type: "Item"
         };
 
-        console.log("Initial dragData:", dragData);
-
-        // Owned Items (Compendium Items)
-        if (dragData.uuid.startsWith('Compendium')) {
-            console.log("DragData indicates a Compendium item");
+        // Compendium items: the data itself, without an id, so the drop
+        // makes a new item
+        if (dragData.uuid?.startsWith('Compendium')) {
             const item = await fromUuid(li.dataset.itemId);
-            console.log("Fetched item from Compendium:", item);
+            if (!item) return;
             dragData.data = item.toObject();
-            // Delete _id so that Foundry creates a new item on drop.
             delete dragData.data._id;
             delete dragData.uuid;
-            console.log("Modified dragData for compendium item:", dragData);
         }
 
         event.dataTransfer.setData("text/plain", JSON.stringify(dragData));
-        console.log("Drag data set on dataTransfer:", dragData);
     }
 }
