@@ -69,43 +69,70 @@
       {{/if}}
 
       <div class="panel-body party-body">
-        <!-- Members: class icon, name, and ancestry / class / calling; drop
-             characters anywhere on the sheet -->
-        <div class="character-tab-container members-container" data-anchor="members">
-          <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "party"}}}</span>{{localizeHeart "party-sheet" "members"}}
-            {{#if qmWarning}}<a class="heart-warn" data-action="pick-quartermaster" data-tooltip="{{qmWarning}}">!</a>{{/if}}
-            {{#if user.isGM}}<a data-action="add-member" aria-label="{{localizeHeart 'party-sheet' 'add-member'}}"><span class="addItem">+</span></a>{{/if}}
-          </div>
-          <div class="container-content">
-            {{#if members.length}}
-            <div class="member-strip">
-              {{#each members as |m|}}
-              <div class="member-card {{#if m.quartermaster}}is-quartermaster{{/if}}" data-member-id="{{m.id}}">
-                <a class="member-open" data-action="open-member" aria-label="{{m.label}}">
-                  <span class="member-role">{{#if m.quartermaster}}{{localizeHeart "party" "quartermaster"}}{{/if}}</span>
-                  <span class="member-icon">{{{heartIcon m.icon}}}<span class="chip-fallback fas fa-user"></span></span>
-                  <span class="member-name">{{m.name}}</span>
-                  {{#if m.traits}}<span class="member-traits">{{m.traits}}</span>{{/if}}
-                </a>
-                {{#if m.volunteer}}<button type="button" class="member-volunteer" data-action="volunteer-quartermaster" data-member-id="{{m.id}}" data-tooltip="heart.tip.party.volunteer">{{localizeHeart "party-sheet" "volunteer"}}</button>{{/if}}
-                {{#if m.resign}}<button type="button" class="member-volunteer member-resign" data-action="resign-quartermaster" data-member-id="{{m.id}}" data-tooltip="heart.tip.party.resign">{{localizeHeart "party-sheet" "resign"}}</button>{{/if}}
-                {{#if m.removable}}<a class="member-remove" data-action="remove-member" aria-label="{{localizeHeart 'party-sheet' 'remove-member'}}"><span class="fas fa-times"></span></a>{{/if}}
-              </div>
-              {{/each}}
+        <!-- Members and Party Fallout side by side (2026-10-02, Luke) -->
+        <div class="party-pair">
+          <!-- Members: class icon, name, and ancestry / class / calling; drop
+               characters anywhere on the sheet -->
+          <div class="character-tab-container members-container" data-anchor="members">
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "party"}}}</span>{{localizeHeart "party-sheet" "members"}}
+              {{#if qmWarning}}<a class="heart-warn" data-action="pick-quartermaster" data-tooltip="{{qmWarning}}">!</a>{{/if}}
+              {{#if user.isGM}}<a data-action="add-member" aria-label="{{localizeHeart 'party-sheet' 'add-member'}}"><span class="addItem">+</span></a>{{/if}}
             </div>
-            {{else}}
-            <div class="muted-line">{{localizeHeart "party-sheet" "no-members"}}</div>
-            {{/if}}
+            <div class="container-content">
+              {{#if members.length}}
+              {{!-- balanced rows of three at most, each centred (2026-10-02, Luke;
+                   view.js memberRows) --}}
+              <div class="member-rows">
+                {{#each memberRows as |row|}}
+                <div class="member-row">
+                {{#each row as |m|}}
+                <div class="member-card {{#if m.quartermaster}}is-quartermaster{{/if}}" data-member-id="{{m.id}}">
+                  <a class="member-open" data-action="open-member" aria-label="{{m.label}}">
+                    <span class="member-role">{{#if m.quartermaster}}{{localizeHeart "party" "quartermaster"}}{{/if}}</span>
+                    <span class="member-icon">{{{heartIcon m.icon}}}<span class="chip-fallback fas fa-user"></span></span>
+                    <span class="member-name">{{m.name}}</span>
+                    {{#if m.traits}}<span class="member-traits">{{m.traits}}</span>{{/if}}
+                  </a>
+                  {{#if m.volunteer}}<button type="button" class="member-volunteer" data-action="volunteer-quartermaster" data-member-id="{{m.id}}" data-tooltip="heart.tip.party.volunteer">{{localizeHeart "party-sheet" "volunteer"}}</button>{{/if}}
+                  {{#if m.resign}}<button type="button" class="member-volunteer member-resign" data-action="resign-quartermaster" data-member-id="{{m.id}}" data-tooltip="heart.tip.party.resign">{{localizeHeart "party-sheet" "resign"}}</button>{{/if}}
+                  {{#if m.removable}}<a class="member-remove" data-action="remove-member" aria-label="{{localizeHeart 'party-sheet' 'remove-member'}}"><span class="fas fa-times"></span></a>{{/if}}
+                </div>
+                {{/each}}
+                </div>
+                {{/each}}
+              </div>
+              {{else}}
+              <div class="muted-line">{{localizeHeart "party-sheet" "no-members"}}</div>
+              {{/if}}
+            </div>
+          </div>
+
+          <!-- Party fallouts: they befall every delver -->
+          <div class="character-tab-container fallout-container" data-anchor="fallouts">
+            <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "fallout"}}}</span>{{localizeHeart "party-sheet" "fallout"}}
+              {{#if owner}}<a data-action="add" data-type="fallout" data-data='{"active": true}' aria-label="{{localizeHeart 'create-new' 'fallout'}}"><span class="addItem">+</span></a>{{/if}}
+            </div>
+            <div class="container-content">
+              <div class="tab-item-list fallout-grid">
+                {{#each fallouts as |item|}}
+                {{> "heart:items/fallout/preview.html" item=item showDelete=../owner}}
+                {{/each}}
+              </div>
+              {{#unless fallouts.length}}<div class="muted-line">{{localizeHeart "party-sheet" "fallout-hint"}}</div>{{/unless}}
+            </div>
           </div>
         </div>
 
         <!-- Companions (2026-10-01, Luke's pick): the hirelings and animals
              bonded to members (bonds/view.js companionCards), as member
-             cards: the kind on top, "Cook, Bond of Vess" under the name -->
-        {{#if companions.length}}
+             cards: the kind on top, "Cook, Bond of Vess" under the name.
+             Always shown, with a hint while there are none (2026-10-02,
+             Luke: like Party Fallout and Party Items; it vanished before) -->
         <div class="character-tab-container members-container companions-container" data-anchor="companions">
-          <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "bonds"}}}</span>{{localize "heart.bond.ui.companions"}} <span class="panel-count">{{companions.length}}</span></div>
+          <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "bonds"}}}</span>{{localize "heart.bond.ui.companions"}}{{#if companions.length}} <span class="panel-count">{{companions.length}}</span>{{/if}}</div>
           <div class="container-content">
+            {{#unless companions.length}}<div class="muted-line">{{localize "heart.bond.ui.no-companions"}}</div>{{/unless}}
+            {{#if companions.length}}
             <div class="member-strip">
               {{#each companions as |c|}}
               <div class="member-card companion-card">
@@ -118,22 +145,7 @@
               </div>
               {{/each}}
             </div>
-          </div>
-        </div>
-        {{/if}}
-
-        <!-- Party fallouts: they befall every delver -->
-        <div class="character-tab-container fallout-container" data-anchor="fallouts">
-          <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "fallout"}}}</span>{{localizeHeart "party-sheet" "fallout"}}
-            {{#if owner}}<a data-action="add" data-type="fallout" data-data='{"active": true}' aria-label="{{localizeHeart 'create-new' 'fallout'}}"><span class="addItem">+</span></a>{{/if}}
-          </div>
-          <div class="container-content">
-            <div class="tab-item-list fallout-grid">
-              {{#each fallouts as |item|}}
-              {{> "heart:items/fallout/preview.html" item=item showDelete=../owner}}
-              {{/each}}
-            </div>
-            {{#unless fallouts.length}}<div class="muted-line">{{localizeHeart "party-sheet" "fallout-hint"}}</div>{{/unless}}
+            {{/if}}
           </div>
         </div>
 
@@ -236,34 +248,50 @@
           </div>
         </div>
 
-        <div class="character-tab-container editor-panel notes-container" data-anchor="notes">
-          <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "notes"}}}</span>{{localizeHeart "party-sheet" "notes"}}
-            {{#if editable}}
-            <a data-action="edit-editor" aria-label="{{localizeHeart 'party-sheet' 'notes-edit'}}">
-              <span class="fas fa-edit clickable section-button"></span>
-            </a>
-            {{/if}}
+        <!-- Notes: the party's board (2026-10-02, Luke; board.js): any number
+             of notes, three across, each a title and rich text. "+" pins a
+             new one; a click on a card opens it in its own window to read
+             or edit (note-window.js); the trash takes it off. Rows are as
+             tall as their tallest card, up to a cap; a longer note fades
+             out at the bottom (is-long, set after render) -->
+        <div class="character-tab-container notes-container" data-anchor="notes">
+          <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "notes"}}}</span>{{localizeHeart "party-sheet" "notes"}}{{#if board.length}} <span class="panel-count">{{board.length}}</span>{{/if}}
+            {{#if editable}}<a data-action="add-note" aria-label="{{localize 'heart.party-sheet.note-add'}}" data-tooltip="heart.party-sheet.note-add"><span class="addItem">+</span></a>{{/if}}
           </div>
           <div class="container-content">
-            {{editor actor.system.notes target="system.notes" button=true editable=editable owner=owner engine="prosemirror"}}
+            {{#if board.length}}
+            <div class="note-board">
+              {{#each board as |n|}}
+              <div class="board-note" data-note-id="{{n.id}}" data-action="open-note" aria-label="{{localize 'heart.party-sheet.note-open'}}">
+                <div class="board-note-head">
+                  <span class="board-note-title {{#unless n.title}}untitled{{/unless}}">{{#if n.title}}{{n.title}}{{else}}{{localize "heart.party-sheet.note-untitled"}}{{/if}}</span>
+                  {{#if ../editable}}<a class="board-note-delete" data-action="delete-note" data-note-id="{{n.id}}" aria-label="{{localize 'heart.party-sheet.note-delete'}}" data-tooltip="heart.party-sheet.note-delete"><span class="fas fa-trash"></span></a>{{/if}}
+                </div>
+                <div class="board-note-body">{{{n.html}}}</div>
+              </div>
+              {{/each}}
+            </div>
+            {{else}}
+            <div class="muted-line">{{localize "heart.party-sheet.board-empty"}}</div>
+            {{/if}}
           </div>
         </div>
 
         <!-- Pursued beats (2026-09-30, Luke): every member's beats with their
              full text, so the party can work on them together. Read-only:
              Pursue / Finish stay on each character's own sheet -->
-        {{#if members.length}}
+        {{!-- only members with beats they are pursuing; no section when
+             nobody has one (2026-10-02, Luke) --}}
+        {{#if beatMembers.length}}
         <div class="character-tab-container party-beats-container" data-anchor="beats">
           <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "beat"}}}</span>{{localizeHeart "party-sheet" "beats"}}</div>
           <div class="container-content">
             <div class="party-beats">
-              {{#each members as |m|}}
+              {{#each beatMembers as |m|}}
               <section class="member-beats" data-member-id="{{m.id}}">
                 <a class="member-beats-name" data-action="open-member" aria-label="{{m.label}}">{{{heartIcon m.icon}}}<span>{{m.name}}</span><span class="panel-count" data-tooltip="heart.tip.beats-limit">{{m.beats.length}} / 2</span></a>
                 {{#each m.beats as |b|}}
                 <div class="item preview beat"><div class="beat-row"><span class="beat-level">{{localizeHeart "beat" "level" b.type}}</span><span class="beat-text">{{{heartTerms (localizeHeart b.text)}}}</span></div></div>
-                {{else}}
-                <div class="muted-line">{{localizeHeart "party-sheet" "no-beats"}}</div>
                 {{/each}}
               </section>
               {{/each}}

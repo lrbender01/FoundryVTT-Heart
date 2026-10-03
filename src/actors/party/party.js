@@ -23,6 +23,7 @@ import {
     provisionsProtection,
     provisionsChange,
 } from './rules';
+import { legacyNotesUpdate, boardClear } from './board';
 import { glyphFor } from '../../common/icons';
 import { ledgerCard } from '../../common/ledger';
 import { askGM } from '../../common/relay';
@@ -352,6 +353,8 @@ export async function reset() {
         'system.quartermaster': '',
         'system.members': [],
         'system.notes': '',
+        // every note off the board (board.js)
+        ...boardClear(party.system.board),
     });
     // every party item goes: fallouts and the shared gear (2026-09-30)
     const ids = party.items.map(i => i.id);
@@ -382,6 +385,10 @@ export async function ensureParty() {
         // parties made before Provisions had its own glyph used Supplies'
         // (2026-09-30); only that untouched placeholder is replaced
         if (existing.img === 'systems/heart/assets/icons/resistances/supplies.svg') await existing.update({ img: PARTY_IMG });
+        // the old single Notes text becomes the board's first note, once
+        // (2026-10-02, board.js)
+        const moved = legacyNotesUpdate(existing.system, foundry.utils.randomID(), loc('heart.party-sheet.notes'));
+        if (moved) await existing.update(moved);
         return;
     }
     await Actor.create({

@@ -59,3 +59,4 @@ Glyphs for the character sheet's skills, domains, resistances (plus the party's 
 | `skills/kill.svg`            | [dripping-blade](https://game-icons.net/1x1/lorc/dripping-blade.html)           | lorc       |
 | `skills/mend.svg`            | [toolbox](https://game-icons.net/1x1/delapouite/toolbox.html)                   | delapouite |
 | `skills/sneak.svg`           | [domino-mask](https://game-icons.net/1x1/lorc/domino-mask.html)                 | lorc       |
+| `pause/ouroboros.svg`        | [ouroboros](https://game-icons.net/1x1/lorc/ouroboros.html) (the paused screen's spinning icon, Luke's pick 2026-10-02) | lorc |

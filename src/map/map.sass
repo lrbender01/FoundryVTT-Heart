@@ -1,0 +1,23 @@
+// The Heart map's dialogs (2026-10-02, map/dialogs.js). The map itself is
+// drawn on the canvas (map/render.js) and needs no styles. Chips are the
+// shared choice chips (applications/application.sass).
+@use '../util'
+
+.heart.form.map-dialog
+    display: flex
+    flex-direction: column
+    gap: 6px
+    @include util.text-body
+
+    p
+        margin: 0
+        line-height: 1.35
+
+    .requirement-title
+        margin: 4px 0 0
+
+    .chip-set
+        gap: 6px
+
+    .map-dialog-note
+        @include util.text-secondary

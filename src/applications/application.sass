@@ -175,28 +175,6 @@ form.heart.form.beat-tracker
     background: util.$bg
     color: util.$text
     padding: 0
-    // the hover popout is placed in these coordinates (2026-10-01)
-    position: relative
-
-// Book art popout (2026-10-01): the whole piece beside the hovered card, as
-// large as the window allows, no label; it never takes the pointer
-#{util.$in-heart} .option-art-pop
-    position: absolute
-    z-index: 30
-    pointer-events: none
-    box-sizing: border-box
-    padding: 6px
-    background: util.$bg
-    border: 1px solid util.$line
-    border-radius: 8px
-    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45)
-
-    img
-        display: block
-        width: 100%
-        height: 100%
-        object-fit: contain
-        border: none
 
 #{util.$in-heart} .options-browser
     display: flex
@@ -295,11 +273,13 @@ form.heart.form.beat-tracker
         &:hover
             color: util.$red-bright
 
+    // the description field's body size (2026-10-02, Luke; was the
+    // secondary 15px)
     .option-pitch
         flex: 1 1 auto
         margin: 0
-        font-size: util.$fs-secondary
-        line-height: 1.35
+        font-size: util.$fs-body
+        line-height: 1.4
         color: util.$text
 
     .option-actions
@@ -397,13 +377,24 @@ form.heart.form.beat-tracker
     // (the chip is the label's own span: "> span", 2026-10-01, so a glyph or
     // a count inside a chip, also spans, no longer gets a chip box of its
     // own; the Stakes picker and the bond dialogs showed it)
+    // The hidden input sits INSIDE its chip (position: relative here, the
+    // input at the chip's corner). Unanchored, in a chat card it escaped the
+    // log's clipping and made the whole chat panel taller than its window;
+    // Foundry's scrollIntoView on the newest message (every load, every new
+    // message) and the focus on a clicked chip then scrolled the panel itself
+    // up, leaving the chat squeezed at the top until the card was deleted
+    // (2026-10-02, Luke: the roll request card's Mastery chip).
     .chip-toggle
+        position: relative
         display: inline-flex
         margin: 0
         cursor: pointer
 
         input
             position: absolute
+            top: 0
+            left: 0
+            margin: 0
             opacity: 0
             width: 1px
             height: 1px

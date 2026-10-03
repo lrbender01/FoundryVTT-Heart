@@ -7,6 +7,12 @@
 // the character sheet and live in index.sass.
 // ============================================================================
 
+// the Members / Party Fallout gap, and a section box's border and padding
+// (character.sass %dynamic-container): the companion cards' size uses them
+$pair-gap: 14px
+$box-border: 2px
+$box-pad: 0.6rem
+
 .heart.sheet.actor.party.panel-sheet
     // ---------- header ----------
     .provisions-box
@@ -43,6 +49,8 @@
         grid-template-columns: minmax(0, 1fr)
         row-gap: 1.15rem
         align-items: start
+        // the companion cards size from this width (see .member-strip)
+        container: party-body / inline-size
 
         > .character-tab-container
             margin: 0
@@ -50,13 +58,88 @@
     .muted-line
         @include util.text-secondary
 
-    // ---------- members (2026-09-30 review): class icon, name, traits ----------
-    // five across, each card the largest square that fits (alphabetical;
-    // no manual ordering)
-    .member-strip
+    // Members and Party Fallout side by side (2026-10-02, Luke): Members 60%
+    // of the width, Fallout the rest, both boxes as tall as the taller
+    .party-pair
         display: grid
-        grid-template-columns: repeat(5, minmax(0, 1fr))
-        gap: 10px
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr)
+        column-gap: $pair-gap
+        align-items: stretch
+
+        > .character-tab-container
+            margin: 0
+
+        // half the sheet: one fallout to a row
+        .fallout-grid
+            grid-template-columns: minmax(0, 1fr)
+
+    // The members in balanced rows of three at most, each row centred
+    // (view.js memberRows: 4 -> 2 + 2, 5 -> 3 + 2)
+    .member-rows
+        display: flex
+        flex-direction: column
+        gap: 8px
+
+    .member-row
+        display: flex
+        justify-content: center
+        gap: 8px
+
+        > .member-card
+            flex: 0 0 calc((100% - 16px) / 3)
+
+        .member-card
+            .member-open
+                gap: 2px
+                padding: 6px 6px 7px
+
+            .member-icon
+                width: 46px
+                height: 46px
+                font-size: 42px
+
+            .member-name
+                font-size: util.$fs-secondary
+
+            .member-traits
+                font-size: 12px
+
+    // ---------- companions (2026-10-02, Luke): never larger than a member ----------
+    // Cards 30% smaller than the member cards, wrapping and centred like the
+    // member rows. A member card is a third of the Members box's content
+    // (60% of the body, less the pair's gap, the box's border and padding,
+    // and two card gaps), worked out here from the body's width (cqw).
+    .member-strip
+        display: flex
+        flex-wrap: wrap
+        // left to right (2026-10-02, Luke), unlike the centred member rows
+        justify-content: flex-start
+        gap: 8px
+
+        > .companion-card
+            flex: 0 0 calc((60cqw - #{$pair-gap * 0.6} - #{2 * $box-border} - #{2 * $box-pad} - 16px) / 3 * 0.7)
+
+        .companion-card
+            .member-open
+                gap: 1px
+                padding: 4px 4px 5px
+
+            .member-icon
+                width: 36px
+                height: 36px
+
+                img
+                    width: 36px
+                    height: 36px
+
+            .member-role
+                font-size: 12px
+
+            .member-name
+                font-size: 13px
+
+            .member-traits
+                font-size: 11px
 
     .member-card
         position: relative
@@ -333,72 +416,103 @@
         > .item.preview
             margin: 0
 
-    // ---------- decorations (2026-10-02, decor.js / sheet.js _drawDecor) ----------
-    // The Heart Party Sheet Art tool's rules, kept identical: each image is
-    // placed by its centre, turned, mirrored, faded, and blended; it never
-    // takes the pointer. Layers: behind (under the sections, which are
-    // opaque, so it shows around and between them), in (inside a section,
-    // behind its content; clipped to its rounded box when asked), over.
-    &.has-decor > :not(.party-decor-layer)
-        position: relative
-        z-index: 1
+    // ---------- the note board (2026-10-02, Luke; board.js) ----------
+    // Three across; each row as tall as its tallest card, up to the body's
+    // cap, past which a note fades out at the bottom (is-long, sheet.js).
+    // A card is a recessed row card that opens its note on click.
+    .note-board
+        display: grid
+        grid-template-columns: repeat(3, minmax(0, 1fr))
+        gap: 8px
+        align-items: stretch
 
-    .party-decor-layer
-        position: absolute
-        inset: 0
-        z-index: 0
-        pointer-events: none
-        overflow: hidden
+    .board-note
+        display: flex
+        flex-direction: column
+        gap: 4px
+        min-width: 0
+        padding: 6px 9px 8px
+        border: 1px solid util.$line
+        border-radius: util.$radius
+        background: util.$sunken
+        cursor: pointer
+        @include util.hover-outline
 
-        &.over
-            z-index: 6
+        .board-note-head
+            display: flex
+            align-items: baseline
+            gap: 6px
 
-    .decor-host
-        isolation: isolate
+        .board-note-title
+            flex: 1
+            min-width: 0
+            font-weight: bold
+            overflow-wrap: anywhere
 
-        > .container-title
-            z-index: 2
+            &.untitled
+                @include util.text-secondary
 
-        > .container-content
-            position: relative
-            z-index: 1
-
-    .party-decor-clip
-        position: absolute
-        inset: 0
-        z-index: 0
-        overflow: hidden
-        border-radius: inherit
-        pointer-events: none
-
-    .party-decor
-        position: absolute
-        z-index: 0
-        max-width: none
-        height: auto
-        border: 0
-        pointer-events: none
-        user-select: none
-        transform: translate(-50%, -50%) rotate(var(--r)) scaleX(var(--fx))
-        opacity: var(--o)
-        mix-blend-mode: var(--blend)
-        transition: opacity 0.35s ease, filter 0.35s ease, transform 0.35s ease
-
-        // hover behaviours, while the pointer is over the decoration's anchor
-        &.hov.h-fade
-            opacity: calc(var(--o) * 0.25)
-
-        &.hov.h-reveal
-            opacity: max(var(--o), 0.9)
-
-        &.hov.h-glow
-            filter: brightness(1.3) drop-shadow(0 0 6px color-mix(in srgb, #{util.$red-bright} 60%, transparent))
-
-        &.hov.h-lift
-            transform: translate(-50%, calc(-50% - 6px)) rotate(var(--r)) scaleX(var(--fx)) scale(1.05)
-
-        &.hov.h-hide
+        .board-note-delete
+            font-size: 12px
+            color: util.$muted
             opacity: 0
 
-        @media (prefers-reduced-motion: reduce)
-            transition: none
+            &:hover
+                color: util.$red-bright
+
+        &:hover .board-note-delete
+            opacity: 1
+
+        .board-note-body
+            @include util.text-secondary
+            font-style: normal
+            color: util.$text
+            max-height: 11em
+            overflow: hidden
+
+            p
+                margin: 0
+
+                & + p
+                    margin-top: 0.5em
+
+        &.is-long .board-note-body
+            mask-image: linear-gradient(#000 65%, transparent)
+
+    // the decorations: common/decor.sass (shared with the character sheet)
+
+// One note in its own window (2026-10-02, note-window.js): the title over
+// Heart's editor, which fills the rest of the window
+.heart-note-window
+    .window-content
+        padding: 8px 10px 10px
+
+    .heart-note-form
+        display: flex
+        flex-direction: column
+        gap: 8px
+        height: 100%
+
+    .note-title-row
+        display: flex
+        align-items: center
+        gap: 8px
+
+        .note-title-label
+            @include util.text-label
+            color: util.$muted
+
+        input
+            flex: 1
+            font-weight: bold
+
+    .note-body
+        flex: 1
+        min-height: 0
+        display: flex
+        flex-direction: column
+
+        .editor
+            flex: 1
+            min-height: 0
+            @include util.notepad

@@ -58,7 +58,8 @@ beforeEach(() => {
   globalThis.window = { innerHeight: 900 };
   globalThis.localizeHeart = (s) => s;
   CONFIG.Item = { typeLabels: Object.fromEntries(ITEM_TYPES.map((t) => [t, `TYPES.Item.${t}`])) };
-  game.settings.store.set("heart.showCharacterArt", false);
+  // the one per-user art switch (common/art-toggle.js), off for these tests
+  game.settings.store.set("heart.showArt", false);
   game.settings.store.set("heart.showTotalStress", true);
   game.heart = {
     resistances: RES,

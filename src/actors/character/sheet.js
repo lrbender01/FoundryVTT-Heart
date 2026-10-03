@@ -7,7 +7,7 @@ import { activateTrinketListeners, trinketItemOf } from '../../items/trinkets';
 import { activateQuestionListeners } from '../../items/ancestry/questions';
 import { needsEquipmentPick } from '../../items/class/equipment';
 import { enableReorder, orderByFlag, orderKeys } from './reorder';
-import { provisionsView, memberView, partyMembers } from '../party/view';
+import { provisionsView, memberView, partyMembers, memberRows } from '../party/view';
 import { canVolunteer, canResign } from '../party/party';
 import { bondsOf, bondTarget, bondFallouts, bondState } from '../../bonds/bonds';
 import { bondRowView } from '../../bonds/view';
@@ -15,7 +15,10 @@ import { grantBond, requestBond } from '../../bonds/flow';
 import { visitDialog, healDialog, bondActionDialog } from '../../bonds/dialogs';
 import { heartDialogOptions } from '../../common/dialog';
 import { confirmRemoval } from '../../items/removal';
-import { artOf, artCanvas, showArt } from '../../common/art';
+import { artOf, artCanvas, piecesOf, gearPieces, plainPiece, showGallery, startAt, startAtSrc } from '../../common/art';
+import { SheetDecor } from '../../common/decor-dom';
+import { artShown, artToggleButton, markArtButton } from '../../common/art-toggle';
+import { CHARACTER_ANCHORS, CHARACTER_SECTIONS, characterArt, characterArtUrl, loadCharacterArt } from './decor';
 import { characterSize } from '../../common/window-sizes';
 
 class HeartTabs {
@@ -78,7 +81,8 @@ export default class CharacterSheet extends HeartActorSheet {
     static get defaultOptions() {
         const defaultOptions = super.defaultOptions;
         return foundry.utils.mergeObject(defaultOptions, {
-            // default size (2026-10-01, Luke): 940 wide, as tall as the
+            // default size (2026-10-01, Luke): 1000 wide (940 until
+            // 2026-10-02; common/window-sizes.js), as tall as the
             // Foundry window less 100px, so the art banner and the Character
             // tab both fit; other sheets size from it (common/window-sizes)
             ...characterSize(),
@@ -86,17 +90,11 @@ export default class CharacterSheet extends HeartActorSheet {
         })
     }
 
-    // Art in the title bar (2026-10-01): shows or hides the art banner for
-    // this player (client setting heart.showCharacterArt; every open
-    // character sheet redraws)
+    // Art in the title bar (2026-10-01): the one per-user art switch since
+    // 2026-10-02 (common/art-toggle.js), every open Heart window redraws
     _getHeaderButtons() {
         const buttons = super._getHeaderButtons();
-        buttons.unshift({
-            label: game.i18n.localize('heart.art.toggle'),
-            class: 'heart-art-toggle',
-            icon: 'fas fa-image',
-            onclick: () => game.settings.set('heart', 'showCharacterArt', !game.settings.get('heart', 'showCharacterArt')),
-        });
+        buttons.unshift(artToggleButton());
         return buttons;
     }
 
@@ -104,8 +102,50 @@ export default class CharacterSheet extends HeartActorSheet {
     // grey, character.sass) is refreshed after every render
     async _render(...args) {
         await super._render(...args);
-        this.element?.find('.window-header .heart-art-toggle')
-            .toggleClass('art-off', !game.settings.get('heart', 'showCharacterArt'));
+        markArtButton(this);
+    }
+
+    // Decorations (2026-10-02, Luke; actors/character/decor.js, drawn by
+    // common/decor-dom.js): the Heart Character Sheet Art tool's layout on
+    // every character sheet, hidden with the art band by the Art button; a
+    // click on one (with nothing clickable in the way) opens the gallery at it
+    get _decor() {
+        this.__decor ??= new SheetDecor({
+            art: () => characterArt(),
+            url: characterArtUrl,
+            anchors: CHARACTER_ANCHORS,
+            sections: CHARACTER_SECTIONS,
+            hidden: () => !artShown(),
+            open: (index) => {
+                const d = characterArt()?.decor?.[index];
+                if (d) this._showGallery({ src: characterArtUrl(d.img) });
+            },
+        });
+        return this.__decor;
+    }
+
+    // The character's gallery (2026-10-02, one gallery for every sheet,
+    // common/art.js): the ancestry, calling, and class pieces (key art,
+    // alternates to pick, the book's drawings), the art of the gear on the
+    // sheet, then the decorations showing, named for the section they sit
+    // on; at the clicked document or picture
+    _showGallery({ doc = null, src = null } = {}) {
+        const p = this.actor.proxy;
+        const form = this.element?.find('form')[0];
+        const sectionName = (key) => form?.querySelector(`[data-anchor="${key}"] .container-title`)?.textContent.replace(/\s+/g, ' ').trim() || this.actor.name;
+        const decor = artShown() ? characterArt()?.decor ?? [] : [];
+        const pieces = [
+            ...[p.ancestry, p.calling, p.class].filter(Boolean).flatMap(item => piecesOf(item)),
+            ...gearPieces([...(p.equipment ?? []), ...(p.resources ?? []), ...(this.actor.itemTypes.item ?? [])]),
+            ...decor.map(d => plainPiece(characterArtUrl(d.img), sectionName(d.anchor))),
+        ];
+        const start = src ? startAtSrc(pieces, src) : startAt(pieces, doc);
+        showGallery(pieces, { title: this.actor.name, start });
+    }
+
+    async close(...args) {
+        this._decor.stop();
+        return super.close(...args);
     }
 
     // workaround for nested-children uuids not dragging properly
@@ -216,7 +256,7 @@ export default class CharacterSheet extends HeartActorSheet {
         // the art banner (2026-10-01): ancestry, calling, class, each pane
         // framed for the banner; none at all when the player hid it or no
         // slot has art
-        data.showArt = game.settings.get('heart', 'showCharacterArt');
+        data.showArt = artShown();
         if (data.showArt) {
             const panes = [ancestryItem, callingItem, classItem].map(item => {
                 const art = artOf(item);
@@ -266,6 +306,10 @@ export default class CharacterSheet extends HeartActorSheet {
         };
         data.skillList = traitList('skills', 'skillOrder');
         data.domainList = traitList('domains', 'domainOrder');
+        // the cards in balanced rows of three, each centred, like the party
+        // sheet's members (2026-10-02, Luke: 4 as 2 + 2, 5 as 3 + 2)
+        data.skillRows = memberRows(data.skillList);
+        data.domainRows = memberRows(data.domainList);
         data.beatSlots = game.i18n.format('heart.beat.slots', { count: this.actor.proxy.beats?.length ?? 0 });
         data.showTotalStress = game.settings.get('heart', 'showTotalStress');
 
@@ -431,10 +475,15 @@ export default class CharacterSheet extends HeartActorSheet {
     activateListeners(html) {
         super.activateListeners(html);
 
-        // Art banner: a pane opens its whole piece in the image viewer
+        // Art banner: a pane opens the character's gallery at its piece
         html.find('.character-art-band [data-action=view-art]').click(async ev => {
             ev.preventDefault();
-            showArt(await fromUuid(ev.currentTarget.dataset.itemId));
+            this._showGallery({ doc: await fromUuid(ev.currentTarget.dataset.itemId) });
+        });
+        // the decorations, once their file is read (once; at once after that)
+        const decorForm = SheetDecor.formOf(html);
+        loadCharacterArt().then(() => {
+            if (decorForm?.isConnected) this._decor.attach(decorForm);
         });
 
         // Bonds: every row button (bonds/view.js names the actions)
@@ -472,6 +521,18 @@ export default class CharacterSheet extends HeartActorSheet {
         html.find('[data-action=open-party]').click(ev => {
             ev.preventDefault();
             game.heart.party?.sheet.render(true);
+        });
+        // The Party warning badge (2026-10-02, Luke): not a member yet, it
+        // only says how to join (drag the party from the Actors sidebar onto
+        // this sheet) and never opens the party sheet; a member whose party
+        // lacks a quartermaster is taken to the party sheet, where one is
+        // picked
+        html.find('[data-action=party-warning]').click(ev => {
+            ev.preventDefault();
+            const party = game.heart.party;
+            const member = Boolean(party && (party.system.members ?? []).includes(this.actor.id));
+            if (member) party.sheet.render(true);
+            else ui.notifications.info(game.i18n.localize('heart.warn.party'));
         });
         // this character takes the empty quartermaster post (2026-10-01, Luke)
         html.find('[data-action=volunteer-quartermaster]').click(ev => {

@@ -13,6 +13,7 @@ import HeartItemSheet from '../base/sheet';
 import { bondState, BOND_IMG } from '../../bonds/bonds';
 import { poolMarks } from '../../bonds/view';
 import { BOND_STRESS_MAX } from '../../bonds/rules';
+import { scaledWidth } from '../../common/window-sizes';
 
 import './sheet.sass';
 
@@ -28,7 +29,8 @@ export default class extends HeartItemSheet {
     static get type() { return data.type; }
 
     static get defaultOptions() {
-        return foundry.utils.mergeObject(super.defaultOptions, { width: 760 });
+        // 760 beside the 940px character sheet, grown with it
+        return foundry.utils.mergeObject(super.defaultOptions, { width: scaledWidth(760) });
     }
 
     get template() {

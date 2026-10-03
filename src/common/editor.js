@@ -74,8 +74,10 @@ function cancelEditor(sheet, name) {
     sheet.render();
 }
 
-// For a sheet's _configureProseMirrorPlugins(name, { remove })
-export function heartProseMirrorPlugins(sheet, name, { remove = true } = {}) {
+// For a sheet's _configureProseMirrorPlugins(name, { remove }); onCancel
+// replaces the default (close the editor unsaved), e.g. a window that is
+// only an editor closes itself (actors/party/note-window.js)
+export function heartProseMirrorPlugins(sheet, name, { remove = true, onCancel = null } = {}) {
     const schema = ProseMirror.defaultSchema;
     const onSave = () => sheet.saveEditor(name, { remove: true });
     return {
@@ -83,7 +85,7 @@ export function heartProseMirrorPlugins(sheet, name, { remove = true } = {}) {
             // every Heart editor closes on save (2026-09-30, Luke)
             destroyOnSave: true,
             onSave,
-            onCancel: () => cancelEditor(sheet, name),
+            onCancel: onCancel ?? (() => cancelEditor(sheet, name)),
         }),
         keyMaps: ProseMirror.ProseMirrorKeyMaps.build(schema, { onSave }),
     };

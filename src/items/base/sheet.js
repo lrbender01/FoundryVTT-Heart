@@ -8,8 +8,10 @@ import { heartDialogOptions } from '../../common/dialog';
 import { learnedTimes } from '../ability/repeat';
 import { activateBeatListeners } from '../beat/actions';
 import { activateTrinketListeners } from '../trinkets';
-import { artOf, showArt } from '../../common/art';
+import { artOf, piecesOf, gearPieces, showGallery, startAt } from '../../common/art';
 import { canHoldChild } from '../../common/drops';
+import { scaledWidth } from '../../common/window-sizes';
+import { artShown, toggleArt } from '../../common/art-toggle';
 
 let measureContext;
 // the item types that carry book art (fvtt-heart-content, 2026-10-01; gear
@@ -42,9 +44,10 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         const defaultOptions = super.defaultOptions;
         return foundry.utils.mergeObject(defaultOptions, {
             // Shared item chrome (2026-09-29): full-bleed header, readable size
-            // (650 wide since 2026-10-01; was 720)
+            // (650 wide beside the 940px character sheet since 2026-10-01, was
+            // 720; grown with the character sheet, common/window-sizes.js)
             classes: [...defaultOptions.classes, 'heart-item-sheet'],
-            width: 650,
+            width: scaledWidth(650),
             // fits its content (fallout / tag / beat sheets were mostly empty
             // space at a fixed 600px); long sheets set their own height
             height: 'auto',
@@ -60,23 +63,19 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
     }
 
     // Art in the title bar (2026-10-01, Luke): the character sheet's button,
-    // on every class, calling, ancestry, and gear sheet with book art. Each sheet
-    // remembers its own choice for this player (client setting
-    // heart.hiddenItemArt: the item uuids whose art is hidden), across
-    // reopening the sheet and logging in again.
+    // on every class, calling, ancestry, and gear sheet with book art. Since
+    // 2026-10-02 it is the one per-user art switch (common/art-toggle.js):
+    // off here, off everywhere.
     _hasArt() {
         return ART_TYPES.has(this.item.type) && Boolean(artOf(this.item));
     }
 
     _artHidden() {
-        return Boolean(game.settings.get('heart', 'hiddenItemArt')?.[this.item.uuid]);
+        return !artShown();
     }
 
     async _toggleArt() {
-        const hidden = { ...(game.settings.get('heart', 'hiddenItemArt') ?? {}) };
-        if (hidden[this.item.uuid]) delete hidden[this.item.uuid];
-        else hidden[this.item.uuid] = true;
-        await game.settings.set('heart', 'hiddenItemArt', hidden);
+        await toggleArt();
     }
 
     _getHeaderButtons() {
@@ -134,10 +133,13 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         highlightRendered(html[0], '.editor-panel .editor-content, .class-description, .calling-text',
             { abilityRefs: ['ability', 'class', 'calling'].includes(this.item.type) });
 
-        // Book art: a click on the art opens the whole piece
+        // Book art: a click opens the sheet's gallery (2026-10-02, one gallery
+        // for every sheet): the item's pieces, then the art of the gear it
+        // holds (a class's starting equipment)
         html.find('.item-head.has-art > .heart-art-canvas').click(ev => {
             ev.preventDefault();
-            showArt(this.item);
+            const pieces = [...piecesOf(this.item), ...gearPieces(this.item.children ?? [])];
+            showGallery(pieces, { title: localizeHeart(this.item.name), start: startAt(pieces, this.item) });
         });
 
         // The name field is as wide as its text, so the header chips sit

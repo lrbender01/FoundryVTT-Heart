@@ -44,9 +44,12 @@ describe("normalizing the export", () => {
     expect(normalizeArt({ decor: [{ anchor: "members" }] })).toBeNull();
   });
 
+  // hover: lift when unknown or missing (2026-10-02, Luke: new pieces lift)
   it("unknown values fall back to the tool's defaults", () => {
     const [d] = normalizeArt({ decor: [{ img: "a", anchor: "attic", corner: "zz", layer: "under", blend: "weird", hover: "spin", o: 300, w: -5 }] }).decor;
-    expect(d).toMatchObject({ anchor: "sheet", corner: "c", layer: "over", blend: "normal", hover: "none", o: 100, w: 1 });
+    expect(d).toMatchObject({ anchor: "sheet", corner: "c", layer: "over", blend: "normal", hover: "lift", o: 100, w: 1 });
+    expect(one({}).decor[0].hover).toBe("lift");
+    expect(one({ hover: "none" }).decor[0].hover).toBe("none");
   });
 
   it("the banner off still keeps the decorations", () => {
@@ -116,7 +119,16 @@ describe("layout", () => {
 describe("style", () => {
   it("turn, mirror, opacity, blend, and width, as the tool's custom properties", () => {
     const [d] = normalizeArt({ decor: [{ img: "x", r: -12, flip: true, o: 45, blend: "screen", w: 260 }] }).decor;
-    expect(decorStyle(d)).toBe("--r:-12deg;--fx:-1;--o:0.45;--blend:screen;width:260px");
+    expect(decorStyle(d)).toBe("--r:-12deg;--fx:-1;--o:0.45;--blend:screen;--lift:1.0769;width:260px");
+  });
+
+  // the lift is a set number of pixels (20), not a share of the size
+  it("the lift adds 20px of width to a piece of any size", () => {
+    for (const w of [100, 400, 1000]) {
+      const [d] = normalizeArt({ decor: [{ img: "x", w }] }).decor;
+      const lift = Number(decorStyle(d).match(/--lift:([\d.]+)/)[1]);
+      expect(w * lift - w).toBeCloseTo(20, 1);
+    }
   });
 
   it("unflipped is scaleX 1", () => {

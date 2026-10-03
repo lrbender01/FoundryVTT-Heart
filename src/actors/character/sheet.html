@@ -26,7 +26,7 @@
 
 <div>
   <!-- Use a single form that wraps the entire sheet -->
-  <form class="heart sheet actor character {{cssClass}}{{#unless showArt}} art-hidden{{/unless}}" autocomplete="off">
+  <form class="heart sheet actor character {{cssClass}}{{#unless showArt}} art-hidden{{/unless}}" autocomplete="off" data-anchor="sheet">
 
     <!-- ART BANNER (2026-10-01): ancestry, calling, and class art in three
          panes that run from a lead strip above the header down behind it,
@@ -34,7 +34,7 @@
          framed per piece (common/art.js); click one for the whole piece. Per
          player: the Art button in the title bar hides it, and the art behind
          gear rows with it (art-hidden). -->
-    <div class="character-head{{#if artBand}} has-art{{/if}}">
+    <div class="character-head{{#if artBand}} has-art{{/if}}" data-anchor="header">
     {{#if artBand}}
     <div class="character-art-band">
       {{#each artBand as |pane|}}
@@ -187,12 +187,12 @@
     <!-- 2) TAB CONTENT WRAPPER -->
     <section class="tab-content">
       <!-- ===== CHARACTER TAB ===== -->
-      <section class="tab" data-tab="character">
+      <section class="tab" data-tab="character" data-anchor="tab-character">
         <div class="character-tab">
           <!-- LEFT COLUMN -->
           <div class="column left-column">
             <!-- Stress & Resistances & Protection -->
-            <div class="character-tab-container stress-container">
+            <div class="character-tab-container stress-container" data-anchor="resistances">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "resistances"}}}</span>{{localizeHeart "character" "resistances-heading"}}</div>
               <div class="container-content">
                 <!-- TODO: Add Stress, Resistances & Protection content -->
@@ -233,9 +233,9 @@
                  Supplies protection), then the members as class-icon chips
                  whose "Name: Ancestry Class Calling" shows on hover. -->
             {{#if provisions}}
-            <div class="character-tab-container party-container">
+            <div class="character-tab-container party-container" data-anchor="party">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "party"}}}</span>{{partyName}}
-                {{#if warnings.party}}<a class="heart-warn" data-action="open-party" data-tooltip="{{warnings.party}}">!</a>{{/if}}
+                {{#if warnings.party}}<a class="heart-warn" data-action="party-warning" data-tooltip="{{warnings.party}}">!</a>{{/if}}
                 <a data-action="open-party" aria-label="{{localizeHeart 'party-sheet' 'open'}}"><span class="fas fa-eye clickable section-button"></span></a>
               </div>
               <div class="container-content">
@@ -266,53 +266,51 @@
             </div>
             {{/if}}
 
-            <!-- Skills & Domains (subcolumns) -->
-            <div class="skills-domains-container">
+            <!-- Skills and Domains (2026-10-02, Luke): one continuous box, so art can
+                 sit on it. Skills is titled on its border; Domains is a heading
+                 inside, at the same left, after a gap (no line between). The cards
+                 sit in balanced rows of three, each row centred, like the party
+                 sheet's members (party/view.js memberRows: 4 as 2 + 2, 5 as 3 + 2);
+                 drag one onto another to move it. -->
+            <div class="character-tab-container skills-domains-container" data-anchor="skills-domains">
+              <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "skills"}}}</span>{{localizeHeart "skill" "label-multiple"}}
+                {{#if actor.isOwner}}<a data-action="edit" data-type="skills" data-data='{"active": true}'><span class="fas fa-edit editItem"></span></a>{{/if}}
+              </div>
               <div class="container-content">
-                <div class="subcolumns">
-                  <div class="subcolumn character-tab-container skills-container">
-                    <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "skills"}}}</span>{{localizeHeart "skill" "label-multiple"}}
-                      {{#if actor.isOwner}}
-                        <a data-action="edit" data-type="skills" data-data='{"active": true}'>
-                          <span class="fas fa-edit editItem"></span>
-                        </a>
-                      {{/if}}
-                  </div>
-                    <div class="container-content {{#if (lt skillCount 3)}}cols-{{skillCount}}{{/if}}">
-                        {{!-- cards in the player's order; drag one onto another to move it --}}
-                        {{#each skillList as |s|}}
-                            <div class="skill-row roll-row" data-action="skill-roll" data-skill="{{s.name}}" data-knack="{{s.knack}}" data-tooltip="{{heartTip 'skill' s.name}}">
-                              <span class="skill-name clickable">{{localizeHeart "skill" s.name}}</span>
-                              <span class="trait-glyph">{{{heartGlyph "skill" s.name}}}</span>
-                              {{#if s.knack}}<span class="knack-label" data-tooltip="heart.term.knack">{{s.knack}}</span>{{/if}}
-                            </div>
-                        {{/each}}
-                    </div>
-                  </div>
-                  <div class="subcolumn character-tab-container domains-container">
-                    <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "domains"}}}</span>{{localizeHeart "domain" "label-multiple"}}
-                      {{#if actor.isOwner}}
-                        <a data-action="edit" data-type="domains" data-data='{"active": true}'>
-                          <span class="fas fa-edit editItem"></span>
-                        </a>
-                      {{/if}}
-                    </div>
-                    <div class="container-content {{#if (lt domainCount 3)}}cols-{{domainCount}}{{/if}}">
-                      {{#each domainList as |d|}}
-                        <div class="domain-row roll-row" data-action="domain-roll" data-domain="{{d.name}}" data-knack="{{d.knack}}" data-tooltip="{{heartTip 'domain' d.name}}">
-                              <span class="domain-name clickable">{{localizeHeart "domain" d.name}}</span>
-                              <span class="trait-glyph">{{{heartGlyph "domain" d.name}}}</span>
-                              {{#if d.knack}}<span class="knack-label" data-tooltip="heart.term.knack">{{d.knack}}</span>{{/if}}
-                            </div>
-                    {{/each}}
-                    </div>
-                  </div>
+                <div class="trait-rows skills-container">
+              {{#each skillRows as |row|}}
+              <div class="trait-row">
+              {{#each row as |s|}}
+                <div class="skill-row roll-row" data-action="skill-roll" data-skill="{{s.name}}" data-knack="{{s.knack}}" data-tooltip="{{heartTip 'skill' s.name}}">
+                  <span class="skill-name clickable">{{localizeHeart "skill" s.name}}</span>
+                  <span class="trait-glyph">{{{heartGlyph "skill" s.name}}}</span>
+                  {{#if s.knack}}<span class="knack-label" data-tooltip="heart.term.knack">{{s.knack}}</span>{{/if}}
+                </div>
+              {{/each}}
+              </div>
+              {{/each}}
+                </div>
+                <div class="trait-heading"><span class="title-glyph">{{{heartGlyph "section" "domains"}}}</span>{{localizeHeart "domain" "label-multiple"}}
+                  {{#if actor.isOwner}}<a data-action="edit" data-type="domains" data-data='{"active": true}'><span class="fas fa-edit editItem"></span></a>{{/if}}
+                </div>
+                <div class="trait-rows domains-container">
+              {{#each domainRows as |row|}}
+              <div class="trait-row">
+              {{#each row as |d|}}
+                <div class="domain-row roll-row" data-action="domain-roll" data-domain="{{d.name}}" data-knack="{{d.knack}}" data-tooltip="{{heartTip 'domain' d.name}}">
+                  <span class="domain-name clickable">{{localizeHeart "domain" d.name}}</span>
+                  <span class="trait-glyph">{{{heartGlyph "domain" d.name}}}</span>
+                  {{#if d.knack}}<span class="knack-label" data-tooltip="heart.term.knack">{{d.knack}}</span>{{/if}}
+                </div>
+              {{/each}}
+              </div>
+              {{/each}}
                 </div>
               </div>
             </div>
 
             <!-- Equipment -->
-            <div class="character-tab-container equipment-container">
+            <div class="character-tab-container equipment-container" data-anchor="equipment">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "equipment"}}}</span>{{localizeHeart "character" "equipment-heading"}}{{#if warnings.equipment}} <a class="heart-warn" data-action="open-class-overview" data-tooltip="{{warnings.equipment}}">!</a>{{/if}} {{#if actor.isOwner}}<a data-action="add" data-type="equipment" aria-label="{{localizeHeart 'create-new' 'equipment'}}"
                   data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}
               </div>
@@ -328,7 +326,7 @@
             </div>
 
             <!-- Resources -->
-            <div class="character-tab-container resources-container">
+            <div class="character-tab-container resources-container" data-anchor="resources">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "resources"}}}</span>{{localizeHeart "character" "resources-heading"}} {{#if actor.isOwner}}<a data-action="add" data-type="resource" aria-label="{{localizeHeart 'create-new' 'resource'}}"
                   data-data='{"active": true}'><span class="addItem">+</span></a>{{/if}}
               </div>
@@ -339,7 +337,7 @@
             </div>
 
             <!-- Items (generic, no roll automation: trinkets, keepsakes, loot) -->
-            <div class="character-tab-container items-container">
+            <div class="character-tab-container items-container" data-anchor="items">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "items"}}}</span>{{localizeHeart "character" "items-heading"}} {{#if actor.isOwner}}<a data-action="add" data-type="item" aria-label="{{localizeHeart 'create-new' 'item'}}"><span class="addItem">+</span></a>{{/if}}
               </div>
               <div class="container-content">
@@ -352,7 +350,7 @@
             {{> "heart:bonds/section.html"}}
 
             <!-- Inactive Items -->
-            <div class="character-tab-container inactive-items-container">
+            <div class="character-tab-container inactive-items-container" data-anchor="inactive">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "inactive-gear"}}}</span>{{localizeHeart "character" "inactive-items-heading"}}</div>
               <div class="container-content">
                 <!-- TODO: Add Equipment content -->
@@ -366,7 +364,7 @@
           <!-- RIGHT COLUMN -->
           <div class="column right-column">
             <!-- Active Beats -->
-            <div class="character-tab-container active-beats-container">
+            <div class="character-tab-container active-beats-container" data-anchor="beats">
               <!-- Active Beats (2026-09-29 review): count; eye opens the calling on
                    its Beats tab; "+" (GM only) adds a one-off beat outside the
                    calling; rows carry Activate / Finish; a quiet line offers
@@ -389,7 +387,7 @@
             </div>
 
             <!-- Fallout -->
-            <div class="character-tab-container fallout-container">
+            <div class="character-tab-container fallout-container" data-anchor="fallout">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "fallout"}}}</span>{{localizeHeart "character" "fallout-heading"}} {{#if actor.isOwner}}<a data-action="add" data-type="fallout"
                   data-data='{"active": true}' aria-label="{{localizeHeart 'create-new' 'fallout'}}"><span class="addItem">+</span></a>{{/if}}</div>
               <div class="container-content">
@@ -400,7 +398,7 @@
             </div>
 
             <!-- Abilities -->
-            <div class="character-tab-container abilities-container">
+            <div class="character-tab-container abilities-container" data-anchor="abilities">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "item" "ability"}}}</span>{{localizeHeart "character" "abilities-heading"}}
                 {{#if classItem}}<a data-action="open-class-abilities" aria-label="{{localizeHeart 'ability' 'open-class'}}"><span class="fas fa-eye clickable section-button"></span></a>{{/if}}
                 {{#if actor.isOwner}}<a data-action="add" data-type="ability" aria-label="{{localizeHeart 'create-new' 'ability'}}"
@@ -415,12 +413,12 @@
 
       </section>
       <!-- ===== BIOGRAPHY TAB ===== -->
-      <section class="tab" data-tab="biography">
+      <section class="tab" data-tab="biography" data-anchor="tab-biography">
         <div class="biography-tab">
           <!-- Notes: the player's own background, first (2026-09-29). The edit
                button sits in the title like the other sections and opens the
                editor inline; Foundry's floating editor button is hidden. -->
-          <div class="character-tab-container notes-container">
+          <div class="character-tab-container notes-container" data-anchor="notes">
             <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "notes"}}}</span>{{localizeHeart "character" "notes"}}
               {{#if actor.isOwner}}
               <a data-action="edit-notes" aria-label="{{localizeHeart 'character' 'notes-edit'}}">
@@ -434,7 +432,7 @@
           </div>
 
           <!-- Calling: description + answerable questions (order: notes, calling, ancestry, class) -->
-          <div class="character-tab-container questions-container">
+          <div class="character-tab-container questions-container" data-anchor="calling">
             <!-- Check if there are any items of type "calling" -->
             {{#if (some actor.items "type calling")}}
             <!-- Iterate over actor items -->
@@ -490,7 +488,7 @@
             {{/if}}
           </div>
           <!-- Ancestry: description + answerable questions (same shape as calling) -->
-          <div class="character-tab-container ancestry-container">
+          <div class="character-tab-container ancestry-container" data-anchor="ancestry">
             {{#if ancestryItem}}
             <div data-item-id="{{ancestryItem.uuid}}" data-document-id="{{ancestryItem.uuid}}">
               <div class="heart sheet base Item ancestry {{cssClass}} editable">
@@ -552,7 +550,7 @@
           </div>
 
           <!-- Class: description only, placed last (Luke, 2026-09-29) -->
-          <div class="character-tab-container class-container">
+          <div class="character-tab-container class-container" data-anchor="class">
             {{#if classItem}}
             <div data-item-id="{{classItem.uuid}}" data-document-id="{{classItem.uuid}}">
               <div class="heart sheet base Item class {{cssClass}} editable">
@@ -581,14 +579,14 @@
         </div>
       </section>
 
-      <section class="tab" data-tab="skills-temp">
+      <section class="tab" data-tab="skills-temp" data-anchor="tab-skills">
         <div class="skills-tab">
           <div class="subcolumns">
             {{!-- Same rows as the Edit Skills / Edit Domains windows (2026-09-30):
                  tick, glyph, name, knack; saves as you change them. Own
                  container classes, so the Character tab's card grid rules
                  don't reach these lists. --}}
-            <div class="subcolumn character-tab-container trait-edit-container">
+            <div class="subcolumn character-tab-container trait-edit-container" data-anchor="skill-list">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "skills"}}}</span>{{localizeHeart "skill" "label-multiple"}}</div>
               <div class="container-content">
                 <div class="trait-edit-grid">
@@ -606,7 +604,7 @@
               </div>
             </div>
 
-            <div class="subcolumn character-tab-container trait-edit-container">
+            <div class="subcolumn character-tab-container trait-edit-container" data-anchor="domain-list">
               <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "domains"}}}</span>{{localizeHeart "domain" "label-multiple"}}</div>
               <div class="container-content">
                 <div class="trait-edit-grid">

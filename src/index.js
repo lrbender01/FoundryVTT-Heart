@@ -10,6 +10,7 @@ import { migrateAdversaryLore } from './actors/adversary/migrate';
 import { heartDialogOptions } from './common/dialog';
 import { registerHeartTooltips } from './common/tooltip';
 import { registerRelay } from './common/relay';
+import { ART_SETTING, applyArtClass, carryOldArtSetting, redrawArtWindows } from './common/art-toggle';
 import { isRepeatable } from './items/ability/repeat';
 import { registerGrantCleanup } from './items/trinkets';
 import { clearedTraits, coreTraitsOf } from './actors/character/traits';
@@ -64,22 +65,20 @@ function registerSettings() {
       type: Boolean,
     });
 
-    // Character art banner (2026-10-01): ancestry, calling, and class art
-    // above the character sheet's header. Per player; the Art button in the
-    // sheet's title bar flips it, and open character sheets redraw at once.
-    game.settings.register('heart', 'showCharacterArt', {
-      name: 'Show Art Banner on Character Sheets',
-      hint: 'Show the ancestry, calling, and class art above the character sheet header (needs the Heart content module).',
+    // The books' art, one switch per user (2026-10-02, Luke; common/
+    // art-toggle.js): the Art button in any window's title bar flips it for
+    // every window. Replaced showCharacterArt and hiddenItemArt.
+    game.settings.register('heart', ART_SETTING, {
+      name: 'Show Book Art',
+      hint: 'Show the books\' art across Heart: sheet banners and headers, decorations, the art behind gear rows, and the Choose cards (needs the Heart content module). The Art button in any window\'s title bar flips it.',
       scope: 'client',
       config: true,
       default: true,
       type: Boolean,
-      onChange: () => {
-        for (const app of Object.values(ui.windows)) {
-          if (app.actor?.type === 'character' && app.rendered) app.render(false);
-        }
-      },
+      onChange: redrawArtWindows,
     });
+    carryOldArtSetting();
+    applyArtClass();
 
     // Set once the older adversaries' lore has been moved out of GM Notes
     // (actors/adversary/migrate.js, 2026-10-02): it never runs again
@@ -90,23 +89,6 @@ function registerSettings() {
       type: Boolean,
     });
 
-    // The same Art button on class, calling, and ancestry sheets (2026-10-01,
-    // Luke), remembered per sheet: the uuids of the items whose art this
-    // player hid (items/base/sheet.js). Open item sheets redraw at once.
-    game.settings.register('heart', 'hiddenItemArt', {
-      scope: 'client',
-      config: false,
-      default: {},
-      type: Object,
-      // every sheet with an Art button: item sheets (class, calling,
-      // ancestry, and gear since 2026-10-01) and the banner sheets
-      // (landmark, adversary, companion, and the party's art; 2026-10-02)
-      onChange: () => {
-        for (const app of Object.values(ui.windows)) {
-          if ((app.item || ['landmark', 'adversary', 'hireling', 'party'].includes(app.actor?.type)) && app.rendered) app.render(false);
-        }
-      },
-    });
 }
 
 // Colour scheme (2026-09-29). Dark is the system default; each user can pick
@@ -138,7 +120,7 @@ function registerColourScheme() {
 function initialise() {
     registerColourScheme();
     // every setting at init (2026-10-02): the chat log draws its item link
-    // previews before ready, and those read hiddenItemArt
+    // previews before ready, and those read the art switch
     registerSettings();
     // the GM's client answers the writes players' clients ask for
     // (common/relay.js); listening from init so no request is missed

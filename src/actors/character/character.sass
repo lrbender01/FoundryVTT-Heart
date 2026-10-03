@@ -246,11 +246,6 @@ $nav-overlap: 20px
   gap: $section-gap
   min-width: 0
 
-// Skills + Domains: the wrapper is not a titled container, so it needs no
-// title clearance of its own.
-#{util.$in-heart} .skills-domains-container > .container-content
-  margin-top: 0
-
 // Subcolumns
 #{util.$in-heart} .subcolumns
   display: grid
@@ -395,17 +390,12 @@ $art-lead: $header-height
       text-shadow: 0 0 3px #000, 0 0 8px #000
       // clicks between the header's boxes reach the art below
       pointer-events: none
-      // back fairly quickly when the pointer leaves the art (0.6s, Luke)
-      transition: opacity 0.6s ease
 
       > *
         pointer-events: auto
 
-    // hovering the art fades the header away over two seconds (Luke), so
-    // the whole piece shows; moving onto a header box brings it back
-    &:has(.art-pane:hover) > .character-header
-      opacity: 0
-      transition: opacity 2s ease
+    // hovering a pane lifts its art (.art-pane below); the header stays (the
+    // fade that hid it went 2026-10-02, Luke)
 
 #{util.$in-heart} .character-art-band
   position: absolute
@@ -419,14 +409,12 @@ $art-lead: $header-height
     display: block
     overflow: hidden
 
-    .heart-art-canvas
-      transition: transform 0.25s ease-out
-
     &[data-action]
       cursor: zoom-in
 
+      // the lift: a set number of pixels (common/art.sass)
       &:hover .heart-art-canvas
-        transform: scale(1.06)
+        --lift: #{util.$art-lift}
 
   .art-pane-label
     position: absolute
@@ -809,35 +797,47 @@ $shield-col: 4.75rem
 // are - one row alone, two or more in two columns - from the left of the box
 // (2026-10-01; centred before), at its top (both boxes share the taller one's height). Columns
 // are only as wide as their rows; a long knack still wraps inside its column.
+// Skills and Domains (2026-10-02, Luke): one continuous box. Skills is
+// titled on its border; Domains is a heading inside it at the same left
+// as that title, after a gap, with no line between. The cards sit in
+// balanced rows of three (sheet.js skillRows / domainRows), each row
+// centred, every card a third of the box (like the party's members).
 .heart.character
-  // Skills above Domains, each full width, so knacks have room (2026-09-30)
-  .skills-domains-container .subcolumns
-    grid-template-columns: minmax(0, 1fr)
-    row-gap: 1.2rem
-
-  .skills-container, .domains-container
-    display: flex
-    flex-direction: column
-
-    // cards of a fixed width, three across, the set starting from the left
-    // of the section (2026-10-01, Luke; centred before)
-    > .container-content
-      flex: 1 1 auto
-      display: grid
-      // three per row; with only one or two cards (cols-1 / cols-2) the
-      // grid narrows to them
-      grid-template-columns: repeat(3, minmax(0, 6.4rem))
-
-      &.cols-1
-        grid-template-columns: minmax(0, 6.4rem)
-
-      &.cols-2
-        grid-template-columns: repeat(2, minmax(0, 6.4rem))
-      justify-content: start
-      // just as tall as its rows of three (2026-09-30 review: one row sat
-      // in a box sized for two)
-      align-content: start
+  .skills-domains-container
+    .trait-rows
+      display: flex
+      flex-direction: column
       gap: 0.5rem
+
+    .trait-row
+      display: flex
+      justify-content: center
+      gap: 0.5rem
+
+      > .skill-row, > .domain-row
+        flex: 0 0 calc((100% - 1rem) / 3)
+        min-width: 0
+        box-sizing: border-box
+
+    // the Domains heading: the title's face, at the title's left (the
+    // title sits 0.75rem in, with 0.4rem padding, from the box's border;
+    // the content starts $container-padding in)
+    .trait-heading
+      @include util.text-section
+      line-height: $container-title-size
+      display: flex
+      align-items: baseline
+      gap: 6px
+      margin: 1.1rem 0 0.5rem calc(1.15rem - #{$container-padding})
+      white-space: nowrap
+      color: util.$text
+
+      // the pencil centred on the line, as in the titles
+      > a
+        align-self: center
+        display: inline-flex
+        align-items: center
+        line-height: 1
 
 // A skill / domain card: name, then its glyph large, then the knack
 #{util.$in-heart} .skill-row, #{util.$in-heart} .domain-row

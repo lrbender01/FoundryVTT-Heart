@@ -75,10 +75,10 @@ form.heart.item-sheet
             > .heart-art-canvas
                 pointer-events: auto
                 cursor: zoom-in
-                transition: transform 0.25s ease-out
 
+                // the lift: a set number of pixels (common/art.sass)
                 &:hover
-                    transform: scale(1.06)
+                    --lift: #{util.$art-lift}
 
             > .item-header
                 pointer-events: none

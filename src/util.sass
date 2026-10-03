@@ -186,6 +186,13 @@ $shield: 13px
 $mark-gap: 2px
 $mark-group-gap: 5px
 
+// The art lift (2026-10-02, Luke): hovered art grows by this many pixels of
+// width, centred, whatever its size, so every lift feels the same (it was a
+// percentage: big banners leapt, small pieces barely moved). Art canvases
+// add it to their --W (common/art.sass); decorations turn it into a scale
+// per piece (common/decor.js LIFT_PX, kept equal).
+$art-lift: 20px
+
 // One header label size on every sheet (was 23px on the character sheet,
 // 28px on the panel sheets)
 $header-label-fs: 25px

@@ -59,6 +59,25 @@ export function memberView(actor, party) {
     };
 }
 
+// The member cards in balanced rows, three at most (2026-10-02, Luke): as
+// few rows as three across allows, sized as evenly as they go, the fuller
+// rows first. 4 -> 2 + 2, 5 -> 3 + 2, 7 -> 3 + 2 + 2. The sheet centres
+// each row.
+export function memberRows(list, perRow = 3) {
+    const items = [...(list ?? [])];
+    if (!items.length) return [];
+    const rows = Math.ceil(items.length / perRow);
+    const base = Math.floor(items.length / rows);
+    const extra = items.length % rows;
+    const out = [];
+    for (let r = 0, i = 0; r < rows; r++) {
+        const size = base + (r < extra ? 1 : 0);
+        out.push(items.slice(i, i + size));
+        i += size;
+    }
+    return out;
+}
+
 // A member's pursued beats for the party sheet's Beats section (2026-09-30,
 // Luke): read-only, in the order the member keeps them on their own sheet,
 // with the full text

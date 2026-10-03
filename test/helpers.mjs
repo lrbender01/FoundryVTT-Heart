@@ -638,6 +638,8 @@ export function installFoundryClasses() {
   g.ChatMessage ??= FakeChatMessage;
   g.ActorSheet ??= class ActorSheet extends FakeDocumentSheet {};
   g.ItemSheet ??= class ItemSheet extends FakeDocumentSheet {};
+  // the party note window (actors/party/note-window.js, 2026-10-02)
+  g.FormApplication ??= class FormApplication extends FakeDocumentSheet {};
   g.Dialog ??= class Dialog {
     static opened = [];
     constructor(data = {}, options = {}) {

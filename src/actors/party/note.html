@@ -1,0 +1,12 @@
+{{!-- One note on the party's board (2026-10-02, Luke; note-window.js): a
+     title, then the text in Heart's editor (Cancel / Save in its bar; Enter
+     in the title saves too) --}}
+<form class="heart heart-note-form" autocomplete="off">
+  <label class="note-title-row">
+    <span class="note-title-label">{{localize "heart.party-sheet.note-title"}}</span>
+    <input type="text" name="title" value="{{title}}" placeholder="{{localize 'heart.party-sheet.note-title-placeholder'}}" />
+  </label>
+  <div class="note-body">
+    {{editor text target="text" button=false editable=true engine="prosemirror"}}
+  </div>
+</form>

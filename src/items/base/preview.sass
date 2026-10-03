@@ -21,9 +21,12 @@
         isolation: isolate
         text-shadow: 0 0 3px #000, 0 0 6px #000, 0 0 10px #000
 
+        // art inside another sheet is 30% (2026-10-02, Luke: every art
+        // placement but the header banners, which stay solid)
         > .row-art
             z-index: 0
             border-radius: inherit
+            opacity: 0.3
 
         > :not(.row-art, .actionbar)
             position: relative

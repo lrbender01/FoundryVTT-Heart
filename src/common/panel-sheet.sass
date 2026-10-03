@@ -364,9 +364,9 @@ $track-row-width: 10 * $mark + 9 * $mark-gap + $group-gap
 // sheet's art header (actors/character/character.sass, .character-head.has-art)
 // with one canvas and a taller lead strip, 200px above the 124px header, a
 // 788 x 324 canvas on the default sheet, the same as the class sheets' (Luke's
-// call in the "Heart Landmark Art Placement" mock). Hovered, the art eases in
-// and the header fades away over two seconds so the whole banner shows; a
-// click opens the whole piece.
+// call in the "Heart Landmark Art Placement" mock). Hovered, the art lifts
+// (eases in); the header stays (the fade that hid it went 2026-10-02, Luke);
+// a click opens the whole piece.
 $banner-lead: 200px
 $banner-header: 124px
 
@@ -378,11 +378,7 @@ $banner-header: 124px
     > .heart-art-canvas
         pointer-events: auto
         cursor: zoom-in
-        transition: transform 0.25s ease-out
 
+        // the lift: a set number of pixels (common/art.sass)
         &:hover
-            transform: scale(1.06)
-
-    &:has(> .heart-art-canvas:hover) > .character-header
-        opacity: 0
-        transition: opacity 2s ease
+            --lift: #{util.$art-lift}

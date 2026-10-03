@@ -194,6 +194,27 @@ async function _onDragStart(event) {
     event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
 }
 
+// The chat panel (and the sidebar around it) never scrolls: only the log
+// inside it does. Foundry's scrollIntoView on the newest message scrolls
+// every ancestor that has overflow, so content poking out of a card once
+// pushed the whole panel up and squeezed the chat to the top of the screen
+// until the card was deleted (2026-10-02, Luke). The cause is fixed in
+// application.sass (.chip-toggle); this puts the panel back if anything,
+// a module included, ever scrolls it again.
+function pinChatPanel(html) {
+    const panel = html?.[0] ?? html;
+    for (const el of [panel, panel?.closest?.('#sidebar')]) {
+        if (!el || el.dataset.heartPinned) continue;
+        el.dataset.heartPinned = '1';
+        el.addEventListener('scroll', () => {
+            if (el.scrollTop || el.scrollLeft) {
+                el.scrollTop = 0;
+                el.scrollLeft = 0;
+            }
+        });
+    }
+}
+
 function activateListeners(html) {
 
     html.on('click', 'form button', ev => {
@@ -312,6 +333,9 @@ export function initialise() {
 
     // every render (2026-10-02): a re-drawn log or a second chat popout is
     // new markup that needs its handlers (the roll cards bind the same way)
-    Hooks.on('renderChatLog', (app, html, data) => activateListeners(html));
+    Hooks.on('renderChatLog', (app, html, data) => {
+        activateListeners(html);
+        pinChatPanel(html);
+    });
     Hooks.on('renderChatPopout', (app, html, data) => activateListeners(html));
 }

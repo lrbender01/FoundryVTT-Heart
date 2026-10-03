@@ -5,9 +5,8 @@
 // it (the template draws {{{heartArt actor "banner"}}} when data.art is set),
 // a 200px lead strip over the 124px header (panel-sheet.sass).
 //
-// The title bar gets the item sheets' Art button (hidden per player and
-// per sheet, client setting heart.hiddenItemArt, keyed by the actor's uuid)
-// and, for the GM, Show players: the whole piece in Foundry's image viewer
+// The title bar gets the Art button (the one per-user art switch,
+// common/art-toggle.js, since 2026-10-02) and, for the GM, Show players: the whole piece in Foundry's image viewer
 // for everyone, the moment the party meets it. A click on the banner opens
 // the whole piece for this user (and pages through any extras).
 //
@@ -16,21 +15,20 @@
 // The sheet's own getData / activateListeners call super, so the mixin's
 // run first.
 import { artOf, showArt } from './art';
+import { artShown, toggleArt } from './art-toggle';
 
 export const BannerSheet = (Base) => class extends Base {
     _art() {
         return artOf(this.actor);
     }
 
+    // the one art switch for this user (common/art-toggle.js, 2026-10-02)
     _artHidden() {
-        return Boolean(game.settings.get('heart', 'hiddenItemArt')?.[this.actor.uuid]);
+        return !artShown();
     }
 
     async _toggleArt() {
-        const hidden = { ...(game.settings.get('heart', 'hiddenItemArt') ?? {}) };
-        if (hidden[this.actor.uuid]) delete hidden[this.actor.uuid];
-        else hidden[this.actor.uuid] = true;
-        await game.settings.set('heart', 'hiddenItemArt', hidden);
+        await toggleArt();
     }
 
     _showPlayers() {

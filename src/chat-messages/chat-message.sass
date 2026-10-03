@@ -5,8 +5,9 @@
 // looking equally urgent. Consolidates the duplicate block that used to live
 // in index.sass.
 // Card edge (2026-09-30, Luke): solid black on every card. !important beats
-// the inline player-colour border a chat-portrait module paints on the card;
-// the player's colour stays on the avatar at the top only.
+// the inline player-colour border a chat-portrait module paints on the card.
+// No player colour anywhere in chat (2026-10-02, Luke): the portrait's
+// coloured frame goes too (below).
 // Deliberately on EVERY chat message (checked 2026-10-02): the card colours
 // and edge here, the whisper / emote colours, the core dice colours, and the
 // content-link chips below are the chat log's colour theme. theme.sass turns
@@ -22,6 +23,13 @@
     .heart.sheet
         background: none
         color: util.$text
+
+    // Chat Portrait frames the speaker's portrait in the player's colour, as
+    // an inline style; no player colour in chat (2026-10-02, Luke), so the
+    // frame goes (!important beats the inline style)
+    img[class*="chat-portrait-message-portrait"]
+        border: none !important
+        box-shadow: none !important
 
     // (Heart's cards only, 2026-10-02: the item roll's flavour names the type)
     &#{util.$heart-card} .item-type

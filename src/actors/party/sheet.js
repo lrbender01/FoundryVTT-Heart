@@ -4,15 +4,20 @@ import HeartActorSheet from '../base/sheet';
 import template from './template.json';
 import { activatePanelSheet, panelSheetDefaults } from '../../common/panel-sheet';
 import { getParty, canVolunteer, canResign } from './party';
-import { provisionsView, memberView, partyMembers, memberBeats } from './view';
+import { provisionsView, memberView, partyMembers, memberBeats, memberRows } from './view';
+import { characterSize } from '../../common/window-sizes';
 import { highlightRendered } from '../../common/terms';
 import { heartDialogOptions } from '../../common/dialog';
 import { oneAtATime } from '../../common/busy';
 import { companionCards } from '../../bonds/view';
 import { bondTarget } from '../../bonds/bonds';
 import { BannerSheet } from '../../common/banner';
+import { plainPiece, showGallery, startAtSrc } from '../../common/art';
+import { SheetDecor } from '../../common/decor-dom';
 import { loadPartyArt, partyArt, partyBanner } from './art';
-import { decorLayout, partyArtUrl, ANCHORS } from './decor';
+import { partyArtUrl, ANCHORS, SECTION_ANCHORS } from './decor';
+import { boardNotes, noteRemoval } from './board';
+import { openPartyNote } from './note-window';
 
 // Party sheet (2026-09-30): the world's one party actor (party.js). Header:
 // portrait, name and quartermaster, the shared Provisions track with its
@@ -26,9 +31,9 @@ import { decorLayout, partyArtUrl, ANCHORS } from './decor';
 //
 // Art (2026-10-02, docs/plans/heart-party-art.md): the banner sheets' look
 // (common/banner.js) with the content module's party-art.json as its art
-// (art.js), plus that file's decorations, laid out by decor.js and drawn by
-// _drawDecor. The title bar's Art button hides both for this player; there
-// is no Show players.
+// (art.js), plus that file's decorations, laid out and drawn by the shared
+// decoration code (common/decor.js, common/decor-dom.js). The title bar's
+// Art button hides both for this player; there is no Show players.
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const esc = (text) => Handlebars.escapeExpression(String(text ?? ''));
@@ -42,8 +47,9 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
     static get type() { return Object.keys(template.Actor)[0]; }
 
     static get defaultOptions() {
-        // the panel sheets' size since 2026-10-01 (was 980 x 860)
-        return panelSheetDefaults(super.defaultOptions);
+        // the character sheet's size (2026-10-02, Luke; the panel sheets'
+        // 85% from 2026-10-01, and 980 x 860 before that)
+        return panelSheetDefaults(super.defaultOptions, characterSize());
     }
 
     constructor(...args) {
@@ -100,96 +106,48 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
         return buttons;
     }
 
-    // The decorations, placed from the boxes as drawn (decor.js). Sheet-level
-    // ones go in a layer under or over everything; an "in" one inside its
-    // section, behind the content. Redrawn on every render and whenever the
-    // form changes size (a resized window, a section that grew).
-    _drawDecor(html) {
-        const form = html[0]?.closest?.('form') ?? html.find('form')[0] ?? html[0];
-        if (!form) return;
-        form.querySelectorAll('.party-decor-layer, .party-decor-clip, .party-decor').forEach(el => el.remove());
-        form.classList.remove('has-decor');
-        const art = partyArt();
-        if (!art?.decor?.length || this._artHidden()) return;
-
-        // every box relative to the form, in its own (unscaled) pixels
-        const origin = form.getBoundingClientRect();
-        const scale = form.offsetWidth ? origin.width / form.offsetWidth : 1;
-        const boxes = {};
-        for (const key of ANCHORS) {
-            const el = key === 'sheet' ? form : form.querySelector(`[data-anchor="${key}"]`);
-            if (!el) continue;
-            const r = el.getBoundingClientRect();
-            boxes[key] = { left: (r.left - origin.left) / scale, top: (r.top - origin.top) / scale, width: r.width / scale, height: r.height / scale };
-        }
-        const placed = decorLayout(art, boxes);
-        if (!placed.length) return;
-        form.classList.add('has-decor');
-
-        const layer = (name) => {
-            let el = form.querySelector(`:scope > .party-decor-layer.${name}`);
-            if (!el) {
-                el = document.createElement('div');
-                el.className = `party-decor-layer ${name}`;
-                el.setAttribute('aria-hidden', 'true');
-                if (name === 'behind') form.prepend(el);
-                else form.append(el);
-            }
-            return el;
-        };
-        for (const d of placed) {
-            let host;
-            if (d.layer === 'in') {
-                const section = form.querySelector(`[data-anchor="${d.host}"]`);
-                section.classList.add('decor-host');
-                if (d.clip) {
-                    host = section.querySelector(':scope > .party-decor-clip');
-                    if (!host) {
-                        host = document.createElement('div');
-                        host.className = 'party-decor-clip';
-                        host.setAttribute('aria-hidden', 'true');
-                        section.prepend(host);
-                    }
-                } else host = section;
-            } else host = layer(d.layer);
-            const img = document.createElement('img');
-            img.className = `party-decor h-${d.hover}`;
-            img.dataset.anchorOf = d.anchor;
-            img.src = partyArtUrl(d.img);
-            img.alt = '';
-            img.draggable = false;
-            img.setAttribute('style', `${d.style};left:${d.left}px;top:${d.top}px`);
-            host.append(img);
-        }
+    // The decorations (common/decor-dom.js): drawn on every render, kept on
+    // their sections as the form changes size; a click on one (with nothing
+    // clickable in the way) opens the gallery at it
+    get _decor() {
+        this.__decor ??= new SheetDecor({
+            art: () => partyArt(),
+            url: partyArtUrl,
+            anchors: ANCHORS,
+            sections: SECTION_ANCHORS,
+            hidden: () => this._artHidden(),
+            open: (index) => this._showGallery(index),
+        });
+        return this.__decor;
     }
 
-    // keep the decorations on their sections as the form changes size
-    _watchDecor(html) {
-        this._decorObserver?.disconnect();
-        this._decorObserver = null;
-        const form = html[0]?.closest?.('form') ?? html.find('form')[0] ?? html[0];
-        if (!form || !partyArt()?.decor?.length || typeof ResizeObserver === 'undefined') return;
-        let pending = false;
-        this._decorObserver = new ResizeObserver(() => {
-            if (pending) return;
-            pending = true;
-            requestAnimationFrame(() => { pending = false; this._drawDecor(html); });
-        });
-        this._decorObserver.observe(form);
-        for (const el of form.querySelectorAll('[data-anchor]')) this._decorObserver.observe(el);
-
-        // hover behaviour: while the pointer is over a decoration's anchor
-        // (the innermost one, as the tool does)
-        form.addEventListener('mouseover', ev => {
-            const key = ev.target.closest?.('[data-anchor]')?.dataset.anchor ?? '';
-            form.querySelectorAll('.party-decor').forEach(el => el.classList.toggle('hov', el.dataset.anchorOf === key));
-        });
-        form.addEventListener('mouseleave', () => form.querySelectorAll('.party-decor.hov').forEach(el => el.classList.remove('hov')));
+    // The party's gallery (2026-10-02, Luke: every piece on the sheet; the
+    // one gallery for every sheet, common/art.js): the banner, then each
+    // decoration, named for the section it sits on; at decoration `index`
+    // when one was clicked
+    _showGallery(index = null) {
+        const art = partyArt();
+        if (!art) return;
+        const sectionName = {
+            members: loc('heart.party-sheet.members'),
+            companions: loc('heart.bond.ui.companions'),
+            fallouts: loc('heart.party-sheet.fallout'),
+            provisions: loc('heart.party-sheet.actions'),
+            items: loc('heart.party-sheet.items'),
+            notes: loc('heart.party-sheet.notes'),
+            beats: loc('heart.party-sheet.beats'),
+        };
+        const banner = this._art();
+        const pieces = [
+            banner ? plainPiece(banner.src, this.actor.name, banner.ar) : null,
+            ...art.decor.map(d => plainPiece(partyArtUrl(d.img), sectionName[d.anchor] ?? this.actor.name)),
+        ].filter(Boolean);
+        const clicked = art.decor[index];
+        showGallery(pieces, { title: this.actor.name, start: clicked ? startAtSrc(pieces, partyArtUrl(clicked.img)) : 0 });
     }
 
     async close(...args) {
-        this._decorObserver?.disconnect();
-        this._decorObserver = null;
+        this._decor.stop();
         return super.close(...args);
     }
 
@@ -214,6 +172,10 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
             resign: !game.user.isGM && canResign(this.actor, a),
             beats: memberBeats(a),
         }));
+        // Pursued Beats: only members actually pursuing one (2026-10-02, Luke)
+        data.beatMembers = data.members.filter(m => m.beats.length);
+        // the cards in balanced rows of three at most (2026-10-02, Luke)
+        data.memberRows = memberRows(data.members);
 
         // a quartermaster who has left the party still shows, so the picker
         // doesn't silently claim "None" while they still protect Provisions
@@ -245,6 +207,12 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
         data.fallouts = this.actor.itemTypes.fallout ?? [];
         // party-shared gear (2026-09-30, Luke): equipment, resources, items
         data.partyItems = PARTY_ITEM_TYPES.flatMap(type => this.actor.itemTypes[type] ?? []);
+        // the note board (2026-10-02, Luke; board.js), each note's text as
+        // its rich text shows
+        data.board = await Promise.all(boardNotes(this.actor.system.board).map(async n => ({
+            ...n,
+            html: await TextEditor.enrichHTML(n.text, { async: true, secrets: this.actor.isOwner, relativeTo: this.actor }),
+        })));
         return data;
     }
 
@@ -353,23 +321,61 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
         return super._onDropItemCreate(list);
     }
 
+    // ------------------------------------------------------------ the note board
+
+    // "+" pins a new note, a card opens its note in a window (note-window.js),
+    // the trash takes it off after asking; a note too long for its card
+    // fades out at the bottom (is-long)
+    _activateBoard(html) {
+        html.find('[data-action=add-note]').on('click', ev => {
+            ev.preventDefault();
+            openPartyNote(this.actor);
+        });
+        html.find('.board-note[data-action=open-note]').on('click', ev => {
+            if (ev.target.closest('a[href], [data-action=delete-note]')) return;
+            ev.preventDefault();
+            openPartyNote(this.actor, ev.currentTarget.dataset.noteId);
+        });
+        html.find('[data-action=delete-note]').on('click', async ev => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const id = ev.currentTarget.dataset.noteId;
+            const note = boardNotes(this.actor.system.board).find(n => n.id === id);
+            if (!note || !this.isEditable) return;
+            const title = note.title || loc('heart.party-sheet.note-untitled');
+            const yes = await Dialog.confirm({
+                title: loc('heart.party-sheet.note-delete'),
+                content: `<p>${esc(loc('heart.party-sheet.note-delete-confirm', { title }))}</p>`,
+                yes: () => true,
+                no: () => false,
+                defaultYes: false,
+                options: heartDialogOptions(),
+            });
+            if (yes) await this.actor.update(noteRemoval(id));
+        });
+        requestAnimationFrame(() => {
+            for (const body of html[0]?.querySelectorAll?.('.board-note-body') ?? []) {
+                body.closest('.board-note').classList.toggle('is-long', body.scrollHeight > body.clientHeight + 1);
+            }
+        });
+    }
+
     // ------------------------------------------------------------ listeners
 
     activateListeners(html) {
         super.activateListeners(html);
         activatePanelSheet(this, html);
-        // the banner opens the whole piece; the decorations are placed once
-        // the sheet is laid out, and kept placed as it changes size
+        // the banner opens the gallery; the decorations are placed once the
+        // sheet is laid out, and kept placed as it changes size
         html.find('.character-head.has-art > .heart-art-canvas').off('click').on('click', ev => {
             ev.preventDefault();
-            const banner = this._art();
-            if (banner) new ImagePopout(banner.src, { title: this.actor.name, shareable: false, uuid: this.actor.uuid }).render(true);
+            this._showGallery();
         });
-        requestAnimationFrame(() => this._drawDecor(html));
-        this._watchDecor(html);
+        this._decor.attach(SheetDecor.formOf(html));
         // game terms in the Provisions actions' one-line descriptions, like
         // every other sheet's text
         highlightRendered(html[0], '.action-desc');
+        this._activateBoard(html);
         const api = this.actor.proxy;
 
         // Controls are not form fields: remember them, and keep their change
