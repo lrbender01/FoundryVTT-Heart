@@ -27,6 +27,18 @@
             z-index: 0
             border-radius: inherit
             opacity: 0.3
+            transition: opacity 0.25s ease-out
+
+        // hovered, the art lifts like every other (a set number of pixels,
+        // common/art.sass) and is half as opaque again, as decorations are;
+        // a click on it opens the gallery (common/row-art.js), shown by a
+        // magnifier where nothing clickable is in the way
+        &:hover > .row-art
+            --art-lift: #{util.$art-lift}
+            opacity: 0.45
+
+        &.art-pointer
+            cursor: zoom-in
 
         > :not(.row-art, .actionbar)
             position: relative

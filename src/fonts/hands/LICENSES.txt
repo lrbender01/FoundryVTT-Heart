@@ -1,0 +1,12 @@
+The map's handwriting faces (2026-10-02), latin subsets from Fontsource
+(fontsource.org), originally Google Fonts. Bundled so the Heart map writes
+in them offline; the map's look (fvtt-heart-content heart-board.json) picks
+which ones its scraps use.
+
+SIL Open Font License 1.1 (https://openfontlicense.org):
+  Reenie Beanie, Nothing You Could Do, Caveat, Covered By Your Grace, Zeyada,
+  Dawning of a New Day, La Belle Aurore, Cedarville Cursive, Kristi,
+  Waiting for the Sunrise, Just Me Again Down Here
+
+Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0):
+  Rock Salt, Homemade Apple

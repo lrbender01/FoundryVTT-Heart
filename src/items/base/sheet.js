@@ -8,7 +8,7 @@ import { heartDialogOptions } from '../../common/dialog';
 import { learnedTimes } from '../ability/repeat';
 import { activateBeatListeners } from '../beat/actions';
 import { activateTrinketListeners } from '../trinkets';
-import { artOf, piecesOf, gearPieces, showGallery, startAt } from '../../common/art';
+import { artOf, piecesOf, gearPieces, showGallery, startAt, startAtSrc } from '../../common/art';
 import { canHoldChild } from '../../common/drops';
 import { scaledWidth } from '../../common/window-sizes';
 import { artShown, toggleArt } from '../../common/art-toggle';
@@ -78,6 +78,14 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         await toggleArt();
     }
 
+    // The sheet's gallery: the item's pieces, then the art of the gear it
+    // holds (a class's starting equipment); at the picture `src` (a clicked
+    // row's art, common/row-art.js), else at the item's own piece
+    _showGalleryAt(src) {
+        const pieces = [...piecesOf(this.item), ...gearPieces(this.item.children ?? [])];
+        showGallery(pieces, { title: localizeHeart(this.item.name), start: src ? startAtSrc(pieces, src) : startAt(pieces, this.item) });
+    }
+
     _getHeaderButtons() {
         const buttons = super._getHeaderButtons();
         if (this._hasArt()) {
@@ -138,8 +146,7 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         // holds (a class's starting equipment)
         html.find('.item-head.has-art > .heart-art-canvas').click(ev => {
             ev.preventDefault();
-            const pieces = [...piecesOf(this.item), ...gearPieces(this.item.children ?? [])];
-            showGallery(pieces, { title: localizeHeart(this.item.name), start: startAt(pieces, this.item) });
+            this._showGalleryAt(null);
         });
 
         // The name field is as wide as its text, so the header chips sit

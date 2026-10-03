@@ -4,8 +4,8 @@
  * had switched the old character art setting off keeps it off.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { artShown, toggleArt, artToggleButton, carryOldArtSetting, ART_SETTING } from "../src/common/art-toggle.js";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { artShown, toggleArt, artToggleButton, carryOldArtSetting, redrawArtWindows, ART_SETTING } from "../src/common/art-toggle.js";
 import { resetWorld } from "./helpers.mjs";
 
 const key = `heart.${ART_SETTING}`;
@@ -35,6 +35,20 @@ describe("the art switch", () => {
     localStorage.setItem("heart.showCharacterArt", "false");
     carryOldArtSetting();
     expect(artShown()).toBe(false);
+  });
+
+  // the class sits on the form of most sheets, not on the window
+  it("every open Heart window redraws at once", () => {
+    const el = (own, inner) => ({ length: 1, hasClass: () => own, find: () => ({ length: inner ? 1 : 0 }) });
+    const win = (element, rendered = true) => ({ element, rendered, render: vi.fn() });
+    const sheet = win(el(false, true)), choose = win(el(true, false)), other = win(el(false, false)), closed = win(el(false, true), false);
+    globalThis.ui = { windows: { 1: sheet, 2: choose, 3: other, 4: closed } };
+    globalThis.document = { body: { classList: { toggle: vi.fn() } } };
+    redrawArtWindows();
+    expect(sheet.render).toHaveBeenCalledWith(false);
+    expect(choose.render).toHaveBeenCalledWith(false);
+    expect(other.render).not.toHaveBeenCalled();
+    expect(closed.render).not.toHaveBeenCalled();
   });
 
   it("leaves a choice already made alone", () => {

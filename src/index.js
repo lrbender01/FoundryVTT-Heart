@@ -4,6 +4,7 @@ import './common/sheet.sass';
 import { emphasizeTerms, registerJournalTerms } from './common/terms';
 import { registerIconHelpers, adoptPackIcons, DEFAULT_IMGS } from './common/icons';
 import { registerArtHelpers } from './common/art';
+import { registerRowArt } from './common/row-art';
 import { migrateFalloutSource } from './items/fallout/migrate';
 import { removeRetiredBondActors } from './bonds/migrate';
 import { migrateAdversaryLore } from './actors/adversary/migrate';
@@ -11,6 +12,7 @@ import { heartDialogOptions } from './common/dialog';
 import { registerHeartTooltips } from './common/tooltip';
 import { registerRelay } from './common/relay';
 import { ART_SETTING, applyArtClass, carryOldArtSetting, redrawArtWindows } from './common/art-toggle';
+import { GLASS_SETTING, SEE_THROUGH_SETTING, BLUR_SETTING, TINT_SETTING, applyGlassClass, applyGlassGround, applyGlassPass } from './common/glass';
 import { isRepeatable } from './items/ability/repeat';
 import { registerGrantCleanup } from './items/trinkets';
 import { clearedTraits, coreTraitsOf } from './actors/character/traits';
@@ -79,6 +81,60 @@ function registerSettings() {
     });
     carryOldArtSetting();
     applyArtClass();
+
+    // Glass sheets, one switch per user, off unless chosen (2026-10-02,
+    // Luke; common/glass.js): the Glass button in any sheet's title bar
+    // flips it for every window at once (a body class, no redraw)
+    game.settings.register('heart', GLASS_SETTING, {
+      name: 'Glass Sheets',
+      hint: 'Show every Heart sheet as smoked glass: see-through, blurred sections, rows, and buttons over a dark grunge ground (needs the dark colour scheme; the ground needs the Heart content module). The Glass button in any sheet\'s title bar flips it.',
+      scope: 'client',
+      config: true,
+      default: false,
+      type: Boolean,
+      onChange: applyGlassClass,
+    });
+    // see-through to the scene behind a glass sheet, and the blur over it
+    // (2026-10-02, Luke): live, per user
+    game.settings.register('heart', SEE_THROUGH_SETTING, {
+      name: 'Glass See-Through',
+      hint: 'How much of the scene shows through a glass sheet\'s background (0 is solid). Above 0 the window blurs the scene behind it, which costs some graphics work while the scene moves.',
+      scope: 'client',
+      config: true,
+      // 60: Luke's pick after tuning in Foundry (2026-10-02; 40 read as
+      // nearly solid, then 70 and 80 were tried)
+      default: 60,
+      type: Number,
+      range: { min: 0, max: 90, step: 5 },
+      onChange: applyGlassPass,
+    });
+    game.settings.register('heart', BLUR_SETTING, {
+      name: 'Glass Blur',
+      hint: 'How strongly a glass sheet blurs the scene that shows through it, in pixels.',
+      scope: 'client',
+      config: true,
+      // 6 to start (Luke, 2026-10-02: 3, 6, or 10 are the usual glass)
+      default: 6,
+      type: Number,
+      range: { min: 0, max: 30, step: 1 },
+      onChange: applyGlassPass,
+    });
+    // how strong each layer of glass is (2026-10-02, Luke: one glass, its
+    // darkness from depth; common/glass.js glassLayers)
+    game.settings.register('heart', TINT_SETTING, {
+      name: 'Glass Tint',
+      hint: 'How dark each layer of glass is. A section is one layer, a row in it two, a chip on the row three, so deeper things read darker by the same step everywhere.',
+      scope: 'client',
+      config: true,
+      // 25: Luke's pick after tuning in Foundry (2026-10-02; 20 first)
+      default: 25,
+      type: Number,
+      range: { min: 0, max: 60, step: 5 },
+      onChange: applyGlassPass,
+    });
+    applyGlassClass();
+    applyGlassGround();
+    applyGlassPass();
 
     // Set once the older adversaries' lore has been moved out of GM Notes
     // (actors/adversary/migrate.js, 2026-10-02): it never runs again
@@ -284,6 +340,9 @@ function initialise() {
     registerIconHelpers();
     // {{{heartArt doc place}}} (common/art.js)
     registerArtHelpers();
+    // gear row art lifts and opens the gallery on a click, in any window
+    // (common/row-art.js, 2026-10-02)
+    registerRowArt();
 
     Handlebars.registerHelper('ownsAnyActors', function (ids) {
         for (let id of ids) {

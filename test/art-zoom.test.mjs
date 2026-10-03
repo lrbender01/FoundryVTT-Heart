@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { clampPan, zoomAt, panBy, wheelFactor, FITTED, MAX_ZOOM } from "../src/common/art-zoom.js";
+import { clampPan, zoomAt, panBy, wheelFactor, wheelPixels, FITTED, MAX_ZOOM } from "../src/common/art-zoom.js";
 
 const size = { w: 800, h: 600 };
 // the stage point a spot of the image (in fitted px) sits at
@@ -61,5 +61,15 @@ describe("the wheel", () => {
     expect(wheelFactor(-100)).toBeCloseTo(1.1618, 3);
     expect(wheelFactor(100)).toBeLessThan(1);
     expect(wheelFactor(0)).toBe(1);
+  });
+
+  // Firefox reports lines (3 a notch), Chromium pixels (100 a notch): a
+  // notch zooms the same in both (2026-10-02, players in Firefox)
+  it("a notch is a notch in every browser", () => {
+    expect(wheelPixels(-100, 0)).toBe(-100);
+    expect(wheelPixels(-3, 1)).toBeCloseTo(-100, 6);
+    expect(wheelFactor(wheelPixels(-3, 1))).toBeCloseTo(wheelFactor(-100), 6);
+    expect(wheelPixels(1, 2, 600)).toBe(600);
+    expect(wheelPixels(undefined, 1)).toBe(0);
   });
 });

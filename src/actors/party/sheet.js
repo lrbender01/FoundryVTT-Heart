@@ -12,7 +12,7 @@ import { oneAtATime } from '../../common/busy';
 import { companionCards } from '../../bonds/view';
 import { bondTarget } from '../../bonds/bonds';
 import { BannerSheet } from '../../common/banner';
-import { plainPiece, showGallery, startAtSrc } from '../../common/art';
+import { gearPieces, plainPiece, showGallery, startAtSrc } from '../../common/art';
 import { SheetDecor } from '../../common/decor-dom';
 import { loadPartyArt, partyArt, partyBanner } from './art';
 import { partyArtUrl, ANCHORS, SECTION_ANCHORS } from './decor';
@@ -124,10 +124,10 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
     // The party's gallery (2026-10-02, Luke: every piece on the sheet; the
     // one gallery for every sheet, common/art.js): the banner, then each
     // decoration, named for the section it sits on; at decoration `index`
-    // when one was clicked
-    _showGallery(index = null) {
-        const art = partyArt();
-        if (!art) return;
+    // when one was clicked; then the party items' art (2026-10-02, Luke:
+    // gear rows open the gallery too), at `src` when a row was clicked
+    _showGallery(index = null, src = null) {
+        const art = partyArt() ?? { decor: [] };
         const sectionName = {
             members: loc('heart.party-sheet.members'),
             companions: loc('heart.bond.ui.companions'),
@@ -141,9 +141,17 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
         const pieces = [
             banner ? plainPiece(banner.src, this.actor.name, banner.ar) : null,
             ...art.decor.map(d => plainPiece(partyArtUrl(d.img), sectionName[d.anchor] ?? this.actor.name)),
+            ...gearPieces(PARTY_ITEM_TYPES.flatMap(type => this.actor.itemTypes[type] ?? [])),
         ].filter(Boolean);
+        if (!pieces.length) return;
         const clicked = art.decor[index];
-        showGallery(pieces, { title: this.actor.name, start: clicked ? startAtSrc(pieces, partyArtUrl(clicked.img)) : 0 });
+        const at = src ?? (clicked ? partyArtUrl(clicked.img) : null);
+        showGallery(pieces, { title: this.actor.name, start: at ? startAtSrc(pieces, at) : 0 });
+    }
+
+    // a clicked gear row's art (common/row-art.js): the gallery at it
+    _showGalleryAt(src) {
+        this._showGallery(null, src);
     }
 
     async close(...args) {

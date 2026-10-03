@@ -1,0 +1,193 @@
+@use '../util'
+
+// Glass sheets (2026-10-02, Luke; common/glass.js), tuned first in the
+// Heart Sheet Glass mock (monorepo docs/mocks/sheet-glass), then in Foundry:
+//   ground   the charcoal grunge texture at 30% over the window's charcoal
+//            (on every sheet, glass or not); with glass, see-through to the
+//            scene by the user's Glass See-Through and Glass Blur settings
+//   glass    one frost, layered tint (2026-10-02, Luke): only the window
+//            blurs the scene; everything on it is the same charcoal glass
+//            (12 12 14), one Glass Tint per layer, so a thing's darkness is
+//            its depth (section, row in it, chip on that). Header boxes, the
+//            red tab strip, and title pills count as 3, 6, and 7 layers
+//            (glass.js LAYERS). Red edge 70%, rim light, shadow, and the
+//            pointer reactions (brighten, lift, red outline and glow) stay.
+// The glass hangs on body.heart-glass (the per-user switch) and the dark
+// scheme (the light scheme keeps its own look), on every Heart window but
+// the map's ($windows below). Most of it is
+// the theme tokens made translucent inside the window, so every surface,
+// row, and chip follows without a rule of its own.
+//
+// Why only the window blurs: an inner blur (sections, rows) cut a hole in
+// the scene and filled it with its own tint, so in Foundry the sections read
+// as solid charcoal slabs (measured 2026-10-02 from Luke's screenshot:
+// section bodies at brightness 13, darker than the window around them and
+// than the rows inside them). One blur per window is also the cheap case.
+
+// Every Heart window (2026-10-02, Luke: "every single window and sheet in the
+// Heart UI besides any of the map stuff"): sheets, apps (Choose, Edit Skills
+// and Domains, Beat Tracker, roll prompts and requests, the note window, the
+// Fallout picker), every Heart dialog, and the art viewer (its black stage
+// turns to glass only with glass on). The map's windows carry
+// .heart-board-dialog and keep their own look.
+$windows: '.window-app:is(.heart-window, .heart-art-viewer):not(.heart-board-dialog)'
+$g: ':root:not([data-heart-scheme="light"]) body.heart-glass #{$windows}'
+
+// the window's charcoal under the ground (the mock's page under its 35% sheet colour)
+$base: rgb(21 18 18)
+
+// (colours as rgba: the charcoal tint 12 12 14, red-mid 154 20 20, red-deep
+// 92 10 10, red-bright 239 90 77)
+
+// what counts as a card or a row
+$cards: ':is(.item.preview, .skill-row, .domain-row, .member-open, .board-note, .party-chip, .bond-fallout, .core-trait)'
+// the header's boxes over the art (character sheet, panel sheets)
+$head-boxes: ':is(.header-col.identity-container, .header-col.class-calling-container, .header-col.roll-buttons-container, .header-box)'
+
+// one layer of glass, and n layers of it (set by glass.js applyGlassPass;
+// the fallbacks are the default 25%)
+$layer: var(--heart-glass-section, 0.25)
+
+// The ground on every Heart window, glass or not (2026-10-02, Luke): the
+// texture at 30% over the window's charcoal, solid. A 70% charcoal veil over
+// the texture does it in one background, which stays put while the sheet
+// scrolls over it. Without the content module, plain charcoal as before.
+:root:not([data-heart-scheme="light"]) .window-app.heart-window:not(.heart-board-dialog) .window-content
+    background: linear-gradient(rgb(26 24 24 / 0.7), rgb(26 24 24 / 0.7)), var(--heart-glass-ground, none) center / cover no-repeat, rgb(26 24 24)
+
+#{$g}
+    // every surface one layer of glass: sections, rows, chips, fields (a row
+    // in a section is two layers deep, a chip on it three, by stacking)
+    --heart-surface: rgba(12, 12, 14, #{$layer})
+    --heart-sunken: rgba(12, 12, 14, #{$layer})
+    --heart-bg: rgba(12, 12, 14, #{$layer})
+
+    // The window is the outer pane and the one frost (2026-10-02, Luke: the
+    // scene through the sheet). The ground is a layer of its own here, as
+    // see-through as the user's Glass See-Through setting
+    // (--heart-glass-clear, 0 = solid), and the window blurs whatever is
+    // behind it, the scene included, by their Glass Blur (--heart-glass-pass;
+    // 'none' when nothing shows through, so a solid window costs no blur).
+    // The title bar stays solid.
+    background: transparent
+    backdrop-filter: var(--heart-glass-pass, none)
+
+    &::before
+        content: ""
+        position: absolute
+        inset: 0
+        z-index: 0
+        border-radius: inherit
+        pointer-events: none
+        background: linear-gradient(rgb(21 18 18 / 0.7), rgb(21 18 18 / 0.7)), var(--heart-glass-ground, none) center / cover no-repeat, $base
+        opacity: calc(1 - var(--heart-glass-clear, 0))
+
+    > .window-header
+        position: relative
+        z-index: 1
+        background: rgb(14 13 13)
+
+    > .window-resizable-handle
+        z-index: 2
+
+    .window-content
+        position: relative
+        z-index: 1
+        background: none
+
+    // sections: one layer, with a light rim and a shadow; they brighten and
+    // glow a little under the pointer
+    .character-tab-container
+        border-color: rgba(154, 20, 20, 0.7)
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.225), inset 0 0 0 1px rgb(255 255 255 / 0.035), 0 10px 28px rgb(0 0 0 / 0.5)
+        transition: background-color 0.25s, border-color 0.25s, box-shadow 0.25s
+
+        &:hover
+            background-color: rgba(12, 12, 14, calc(#{$layer} + 0.07))
+            border-color: rgba(154, 20, 20, 0.88)
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.315), inset 0 0 0 1px rgb(255 255 255 / 0.065), 0 10px 28px rgb(0 0 0 / 0.5), 0 0 13px rgba(239, 90, 77, 0.1)
+
+        // the title on a pill of seven layers, solid enough that the
+        // section's edge never runs through the title
+        > .container-title
+            background: rgba(12, 12, 14, var(--heart-glass-pill, 0.867))
+            border: 1px solid rgba(154, 20, 20, 0.7)
+            border-radius: 999px
+            padding: 0 0.75rem
+            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2)
+
+    // cards and rows: one more layer, a faint rim; under the pointer
+    // brighter, a red outline, lifted a pixel
+    #{$cards}
+        border-color: rgb(255 255 255 / 0.11)
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.11)
+        transition: background-color 0.18s, border-color 0.18s, box-shadow 0.18s, transform 0.18s
+
+        &:hover
+            background-color: rgba(12, 12, 14, calc(#{$layer} + 0.1))
+            border-color: rgba(239, 90, 77, 0.57)
+            transform: translateY(-1px)
+
+    // buttons and chips glow red under the pointer
+    :is(button, .chip-toggle > span, .beat-chip, .lock-chip):hover
+        box-shadow: 0 0 7px rgba(239, 90, 77, 0.27)
+
+    // the header's boxes over the art: three layers, a light rim
+    #{$head-boxes}
+        background-color: rgba(12, 12, 14, var(--heart-glass-head, 0.578))
+        backdrop-filter: none
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.175)
+
+    // the tab strip: red glass, six layers
+    .character-nav-tabs
+        background-color: rgba(92, 10, 10, var(--heart-glass-strip, 0.822))
+
+// Chat cards (2026-10-02, Luke: "chat cards get the glass treatment too"):
+// every message, since every one wears Heart's colours
+// (chat-messages/chat-message.sass). A card is glass the way a window is:
+// the ground at the user's see-through (::before), one layer of tint over it
+// (::after; the card is a section on its own ground), and its parts (dice,
+// links, ledger rows) deeper by stacking, through the tokens. Whispers and
+// blind rolls are a layer deeper, as they were a shade darker. In the docked
+// log the card sits on the sidebar, so it has no blur of its own (one per
+// visible card would re-run as the scene moves); a card floating over the
+// scene (the notifications while the sidebar is collapsed) blurs it as a
+// window does.
+$chat: ':root:not([data-heart-scheme="light"]) body.heart-glass .chat-message'
+
+#{$chat}
+    --heart-surface: rgba(12, 12, 14, #{$layer})
+    --heart-sunken: rgba(12, 12, 14, #{$layer})
+    --heart-bg: rgba(12, 12, 14, #{$layer})
+    position: relative
+    isolation: isolate
+    background: none
+
+    &::before, &::after
+        content: ""
+        position: absolute
+        inset: 0
+        z-index: -1
+        border-radius: inherit
+        pointer-events: none
+
+    &::before
+        background: linear-gradient(rgb(21 18 18 / 0.7), rgb(21 18 18 / 0.7)), var(--heart-glass-ground, none) center / cover no-repeat, $base
+        opacity: calc(1 - var(--heart-glass-clear, 0))
+
+    &::after
+        background: linear-gradient(rgba(12, 12, 14, #{$layer}), rgba(12, 12, 14, #{$layer}))
+
+    &:is(.whisper, .blind)::after
+        background: linear-gradient(rgba(12, 12, 14, #{$layer}), rgba(12, 12, 14, #{$layer})), linear-gradient(rgba(12, 12, 14, #{$layer}), rgba(12, 12, 14, #{$layer}))
+
+:root:not([data-heart-scheme="light"]) body.heart-glass #chat-notifications .chat-message
+    backdrop-filter: var(--heart-glass-pass, none)
+
+// The title bar's Glass button: grey while glass is off, white while on (the
+// switch is a body class, so every open window's button follows at once)
+.window-header .heart-glass-toggle
+    color: #808080
+
+body.heart-glass .window-header .heart-glass-toggle
+    color: #fff

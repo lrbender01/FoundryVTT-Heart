@@ -24,6 +24,28 @@
     font-family: 'Mosherif'
     src: url(fonts/mosherif/Mosherif.ttf)
 
+// The map's handwriting faces (2026-10-02; fonts/hands/LICENSES.txt): the
+// look picks which ones its scraps write in
+@mixin hand($family, $file)
+    @font-face
+        font-family: $family
+        src: url('fonts/hands/#{$file}.woff2') format('woff2')
+        font-display: swap
+
+@include hand('Reenie Beanie', 'reenie-beanie')
+@include hand('Rock Salt', 'rock-salt')
+@include hand('Nothing You Could Do', 'nothing-you-could-do')
+@include hand('Homemade Apple', 'homemade-apple')
+@include hand('Caveat', 'caveat')
+@include hand('Covered By Your Grace', 'covered-by-your-grace')
+@include hand('Zeyada', 'zeyada')
+@include hand('Dawning of a New Day', 'dawning-of-a-new-day')
+@include hand('La Belle Aurore', 'la-belle-aurore')
+@include hand('Cedarville Cursive', 'cedarville-cursive')
+@include hand('Kristi', 'kristi')
+@include hand('Waiting for the Sunrise', 'waiting-for-the-sunrise')
+@include hand('Just Me Again Down Here', 'just-me-again-down-here')
+
 // Every rule in this file that names a generic class is scoped (2026-09-30,
 // Luke): util.$in-heart / $in-heart-or-chat keep it inside Heart's windows,
 // forms, previews, and chat, at its old specificity.

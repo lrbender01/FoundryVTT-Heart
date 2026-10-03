@@ -39,3 +39,18 @@ export function panBy(v, dx, dy, size) {
 export function wheelFactor(deltaY) {
     return Math.exp(-deltaY * 0.0015);
 }
+
+// A wheel event's scroll in pixels (2026-10-02, Luke: zoom did nothing for
+// players in Firefox). Chromium, and so the Foundry app, reports pixels
+// (deltaMode 0, about 100 a notch); Firefox reports lines (deltaMode 1, 3 a
+// notch), which made a notch zoom by 0.4%. A line counts as 100 / 3 px, so a
+// notch is a notch in every browser; a page (deltaMode 2) is the stage's
+// height.
+export const LINE_PX = 100 / 3;
+
+export function wheelPixels(deltaY, deltaMode = 0, pageHeight = 800) {
+    const d = Number(deltaY) || 0;
+    if (deltaMode === 1) return d * LINE_PX;
+    if (deltaMode === 2) return d * pageHeight;
+    return d;
+}

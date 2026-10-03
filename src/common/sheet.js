@@ -1,5 +1,6 @@
 import sheetHTML from './sheet.html';
 import { heartProseMirrorPlugins } from './editor';
+import { glassToggleButton } from './glass';
 
 export default function HeartSheetMixin(baseClass) {
     return class extends baseClass {
@@ -22,6 +23,15 @@ export default function HeartSheetMixin(baseClass) {
 
         _restoreScrollPositions(html) {
             super._restoreScrollPositions(this.element?.length ? this.element : html);
+        }
+
+        // The Glass button on every Heart sheet (2026-10-02, Luke;
+        // common/glass.js): this user's one glass switch. Sheets that show
+        // art put their Art button before it.
+        _getHeaderButtons() {
+            const buttons = super._getHeaderButtons();
+            buttons.unshift(glassToggleButton());
+            return buttons;
         }
 
         // The tamed rich-text editor (2026-09-30, Luke; common/editor.js):

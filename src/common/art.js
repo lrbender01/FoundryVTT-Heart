@@ -16,7 +16,7 @@
 // about its centre (sized before it turns). The layout is pure CSS (art.sass, container query units), so
 // it holds at any card or window size.
 import './art.sass';
-import { FITTED, zoomAt, panBy, wheelFactor } from './art-zoom';
+import { FITTED, zoomAt, panBy, wheelFactor, wheelPixels } from './art-zoom';
 
 const CONTENT = 'fvtt-heart-content';
 const ART_FLAG = `flags.${CONTENT}.art`;
@@ -256,10 +256,16 @@ class ArtViewer extends Application {
             stage.classList.toggle('zoomed', v.k > 1);
         };
         apply();
+        // Firefox drags the picture itself out on a press-and-move, which
+        // took the pan away (it ignores -webkit-user-drag)
+        img.draggable = false;
+        stage.addEventListener('dragstart', ev => ev.preventDefault());
         stage.addEventListener('wheel', ev => {
             ev.preventDefault();
             const r = stage.getBoundingClientRect();
-            this.view = zoomAt(this.view, { x: ev.clientX - r.left, y: ev.clientY - r.top }, wheelFactor(ev.deltaY), size());
+            // (in pixels whatever the browser reports: Firefox counts lines)
+            const dy = wheelPixels(ev.deltaY, ev.deltaMode, stage.clientHeight);
+            this.view = zoomAt(this.view, { x: ev.clientX - r.left, y: ev.clientY - r.top }, wheelFactor(dy), size());
             apply();
         }, { passive: false });
         let drag = null;

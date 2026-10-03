@@ -2,8 +2,20 @@
 // the art is sized from the canvas with container query units: --W is the
 // width that just covers the canvas, times the zoom, and the art's centre
 // sits at (x, y) of the canvas. Hard edges, no fade (Luke, 2026-10-01).
-// A hovered art place sets --lift (util.$art-lift) on its canvas: the art
-// grows by that many pixels of width about its centre, eased.
+// A hovered art place sets --art-lift (util.$art-lift) on its canvas: the
+// art grows by that many pixels of width about its centre, eased.
+//
+// Only the lift eases (2026-10-03, Luke: banners "animated" as class,
+// calling, and ancestry sheets opened). The art used to ease its width,
+// height, left, and top, so every layout change (a sheet opening, growing to
+// fit its content, being resized) slid the picture into place. --art-lift is
+// a registered length, so it can ease on its own while the geometry snaps.
+// (Its own name: the decorations' --lift is a unitless scale, decor.js.)
+@property --art-lift
+    syntax: '<length>'
+    inherits: true
+    initial-value: 0px
+
 .heart-art-canvas
     position: absolute
     inset: 0
@@ -12,8 +24,8 @@
     pointer-events: none
 
     img
-        --W: calc(max(100cqw, 100cqh * var(--ar)) * var(--z) + var(--lift, 0px))
-        transition: width 0.25s ease-out, height 0.25s ease-out, left 0.25s ease-out, top 0.25s ease-out
+        --W: calc(max(100cqw, 100cqh * var(--ar)) * var(--z) + var(--art-lift, 0px))
+        transition: --art-lift 0.25s ease-out
         position: absolute
         max-width: none
         max-height: none

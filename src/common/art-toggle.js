@@ -34,11 +34,20 @@ export function applyArtClass() {
     document.body?.classList.toggle('heart-art-off', !artShown());
 }
 
-// the switch flipped: every open Heart window redraws
+// a window that shows Heart content: the class sits on the window (the
+// Choose window, dialogs) or only on its form (most sheets)
+const isHeartWindow = (app) => {
+    const el = app.element;
+    return Boolean(el?.length && (el.hasClass('heart') || el.find('.heart').length));
+};
+
+// the switch flipped: every open Heart window redraws at once (2026-10-02:
+// checking only the window's own classes missed the sheets, which redrew
+// only when next opened)
 export function redrawArtWindows() {
     applyArtClass();
-    for (const app of Object.values(ui.windows ?? {})) {
-        if (app.rendered && app.options?.classes?.includes('heart')) app.render(false);
+    for (const app of Object.values(globalThis.ui?.windows ?? {})) {
+        if (app.rendered && isHeartWindow(app)) app.render(false);
     }
 }
 

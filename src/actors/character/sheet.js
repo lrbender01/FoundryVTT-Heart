@@ -143,6 +143,11 @@ export default class CharacterSheet extends HeartActorSheet {
         showGallery(pieces, { title: this.actor.name, start });
     }
 
+    // a clicked gear row's art (common/row-art.js): the gallery at it
+    _showGalleryAt(src) {
+        this._showGallery({ src });
+    }
+
     async close(...args) {
         this._decor.stop();
         return super.close(...args);

@@ -394,6 +394,14 @@ $art-lead: $header-height
       > *
         pointer-events: auto
 
+      // the boxes over the art (name and ancestry, class and calling, the
+      // rolls) sit on a very faint black and a slight blur, so they read
+      // over any picture (2026-10-02, Luke); black like the text halo, art
+      // rather than a theme role
+      > .header-col:is(.identity-container, .class-calling-container, .roll-buttons-container)
+        background-color: rgba(0, 0, 0, 0.3)
+        backdrop-filter: blur(2px)
+
     // hovering a pane lifts its art (.art-pane below); the header stays (the
     // fade that hid it went 2026-10-02, Luke)
 
@@ -414,7 +422,7 @@ $art-lead: $header-height
 
       // the lift: a set number of pixels (common/art.sass)
       &:hover .heart-art-canvas
-        --lift: #{util.$art-lift}
+        --art-lift: #{util.$art-lift}
 
   .art-pane-label
     position: absolute
@@ -773,8 +781,14 @@ $shield-col: 4.75rem
 // character sheet (Resistances and Party) both states are exactly the shield
 // size (util.$shield), no border, same margin. (.heart.sheet outranks
 // index.sass's mark rules.)
+// The shields stand exactly as tall as the stress squares beside them, top
+// and bottom on the same pixel (2026-10-02, Luke): a square is util.$mark-md
+// plus its 1px border on each side, 14px outside, so the shield is 14px too
+// (it was 13, measured 3px lower and 1px shorter than the squares).
+$row-shield: util.$mark-md + 2px
+
 .heart.sheet .protection .ordered-checkable-box
-  flex: util.$shield 0 0
+  flex: $row-shield 0 0
   margin: 0
 
   // block in both states: the generic mark rule made a marked shield an
@@ -785,9 +799,19 @@ $shield-col: 4.75rem
   &::after, &.checked::after
     display: block
     box-sizing: border-box
-    width: util.$shield
-    height: util.$shield
+    width: $row-shield
+    height: $row-shield
     border: none
+
+// The stress squares sit as the shields do (2026-10-02, Luke): blocks of
+// exactly their size centred in the row. As inline boxes they sat on the
+// text's baseline, 3px higher than the shields beside them.
+.heart.sheet .resistance-stress .ordered-checkable-box
+  display: block
+  line-height: 0
+
+  &::after
+    display: block
 
 // Skill / domain rows (2026-09-29 review): the name, then its knack on the
 // same line; no dice icons. The whole row is one click target that rolls.
