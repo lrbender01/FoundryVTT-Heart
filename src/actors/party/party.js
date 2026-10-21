@@ -104,9 +104,12 @@ function sourceLabel(source) {
 }
 
 // A stress card for the party: the ordinary StressRoll with resistance
-// 'provisions', applied at once (its takeStress marks the party a single time,
-// less the quartermaster's protection) and posted with the fallout button.
-async function stressCard({ formula, dieLabel, resistance, character, ignoreProtection = false, flavor }) {
+// 'provisions' (its takeStress marks the party a single time, less the
+// quartermaster's protection). A rolled die is posted not yet taken, with
+// the card's Take Stress (Luke, 2026-10-21: separate roll and mark steps);
+// a fixed amount has no roll, so it is marked at once with the fallout
+// button.
+async function stressCard({ formula, dieLabel, resistance, character, ignoreProtection = false, flavor, rolled = false }) {
     const StressRoll = game.heart.rolls.StressRoll;
     const roll = new StressRoll(formula, {}, {
         result: 'n_a',
@@ -117,6 +120,14 @@ async function stressCard({ formula, dieLabel, resistance, character, ignoreProt
         helpers: [],
     });
     await roll.evaluate();
+    if (rolled) {
+        await roll.toMessage({
+            speaker: speakerFor(character),
+            flavor: flavor || undefined,
+            flags: { heart: { 'show-take-stress-button': true, 'show-fallout-roll-button': false } },
+        });
+        return roll;
+    }
     // marked by the GM's client (common/relay.js, rolls/card-actions.js)
     const answer = await askGM('apply-stress', { roll: roll.toJSON() });
     if (!answer) return null;
@@ -139,7 +150,8 @@ async function stressCard({ formula, dieLabel, resistance, character, ignoreProt
 // Exposed on the party proxy: game.heart.party.proxy.<name>(...). Any owner
 // of the party actor (every player) may call them; each posts its own card.
 
-// Mark stress to Provisions: roll `die` (or take a fixed `amount`), less the
+// Mark stress to Provisions: roll `die` (the card waits for Take Stress,
+// 2026-10-21) or take a fixed `amount` (marked at once), less the
 // quartermaster's protection unless ignored; the card offers the fallout roll.
 export async function markProvisions({ die = UPKEEP_DIE, amount, ignoreProtection = false, source, byActorId } = {}) {
     const party = requireParty();
@@ -153,6 +165,7 @@ export async function markProvisions({ die = UPKEEP_DIE, amount, ignoreProtectio
         character: byActorId ?? game.user.character?.id ?? party.id,
         ignoreProtection,
         flavor: sourceLabel(source),
+        rolled: !fixed,
     });
 }
 

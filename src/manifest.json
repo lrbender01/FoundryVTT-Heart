@@ -1,23 +1,6 @@
 {
     "templateVersion": 2,
-    "packs": [
-        {
-            "name": "macros",
-            "label": "Useful Heart Macros",
-            "system": "heart",
-            "path": "./packs/macros.db",
-            "type": "Macro",
-            "entity": "Macro"
-        }
-    ],
-    "packFolders": [
-        {
-            "name": "Heart - System",
-            "sorting": "a",
-            "color": "#3d1f1f",
-            "packs": ["macros"]
-        }
-    ],
+    "packs": [],
     "relationships": {
         "recommends": [
             {
@@ -32,15 +15,18 @@
             "lang": "en",
             "name": "English",
             "path": "lang/en.json"
-        }, {
+        },
+        {
             "lang": "es",
             "name": "Español",
             "path": "lang/es.json"
-        }, {
+        },
+        {
             "lang": "it",
             "name": "Italiano",
             "path": "lang/it.json"
-        }, {
+        },
+        {
             "lang": "pt",
             "name": "Português",
             "path": "lang/pt.json"

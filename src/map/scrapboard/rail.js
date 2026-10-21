@@ -11,7 +11,8 @@ const loc = (key) => game.i18n.localize(key);
 const esc = (s) => Handlebars.escapeExpression(String(s ?? ''));
 
 // (the few under File)
-const FILE = ['snapshot', 'bin', 'history', 'export', 'import', 'restore', 'reload'];
+// (Luke, 2026-10-21: New place and Reshuffle first, Download beside Export)
+const FILE = ['place', 'reshuffle', 'snapshot', 'bin', 'history', 'download', 'export', 'import', 'restore', 'reload'];
 // Foundry's own icons (Luke, 2026-10-03: Foundry's icons and spacing, the
 // glass kept): a tool's or button's own, and the rail's few
 const FA = { file: 'fa-solid fa-folder-open', turn: 'fa-solid fa-arrows-rotate' };

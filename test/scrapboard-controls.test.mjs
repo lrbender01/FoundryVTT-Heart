@@ -626,6 +626,35 @@ describe("one kind of pin (Luke, 2026-10-02: tighten it up)", () => {
     c.grab.since -= 200;
     expect(c.marks().caption).toMatch(/ctrl\+drag: new string/);
   });
+
+  it("says the reticle's captions in the host's language when it has them (2026-10-21)", () => {
+    const raw = { scraps: RAW.scraps, links: { s: { aPin: "p", bPt: { x: 2300, y: 2000 } } }, pins: { p: { tex: "tx/fixtures__fixture_grey_tack_small", x: 2000, y: 2000 } } };
+    const asked = [];
+    const say = (id) => (asked.push(id), id === "end" ? "glisser" : null);
+    const c = new BoardControls({ view: () => boardView(look, normalizeBoard(raw), "gm", size, measure), painter: () => ({ tagOf: () => null, onTag: () => false }), size, user: () => GM, px: () => 1, raw: () => raw, say });
+    c.hover({ x: 2004, y: 2003 }, "move");
+    c.grab.since -= 200;
+    expect(c.marks().caption).toBe("glisser");
+    expect(asked).toContain("end");
+  });
+});
+
+describe("a player's own strings stay selected (2026-10-21)", () => {
+  it("keeps a player's own string and pin through a redraw, and drops another's", () => {
+    const raw = {
+      scraps: RAW.scraps,
+      links: { own: { aPt: { x: 100, y: 2000 }, bPt: { x: 600, y: 2000 }, author: "ana", kind: "path", state: "known" }, gms: { aPt: { x: 100, y: 2500 }, bPt: { x: 600, y: 2500 }, kind: "path", state: "known" } },
+      pins: { p: { tex: "tx/fixtures__fixture_grey_tack_small", x: 2000, y: 2000, author: "ana" } },
+    };
+    const c = new BoardControls(host(ANA, raw));
+    c.selectLink("own");
+    c.links.add("gms");
+    c.pins.add("p");
+    c.prune();
+    expect([...c.links]).toEqual(["own"]);
+    expect(c.link).toBe("own");
+    expect([...c.pins]).toEqual(["p"]);
+  });
 });
 
 describe("layers (Luke, 2026-10-02)", () => {

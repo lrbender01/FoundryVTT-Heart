@@ -54,13 +54,17 @@
         <div class="container-title">{{localizeHeart "trinket" "keepsake"}}</div>
         <div class="container-content">
           <div class="trinket-row in-sheet" data-trinket-of="{{item.uuid}}">
-            {{#if trinketItem}}
-            {{!-- the rolled item as a normal item row (icon, name, open) --}}
-            <div class="tab-item-list">{{> "heart:items/item/preview.html" item=trinketItem showDelete=false}}</div>
-            {{else if item.flags.heart.trinket}}
-            <a class="trinket-name" data-action="view-trinket" data-uuid="{{item.flags.heart.trinket.uuid}}">{{item.flags.heart.trinket.name}}</a>
-            {{else if item.isOwner}}
-            <button type="button" class="trinket-roll" data-action="roll-trinket"><span class="fas fa-dice-d20"></span> {{localizeHeart "trinket" "roll-keepsake"}}</button>
+            {{!-- each drawn item as a normal item row (icon, name, open);
+                 two keepsakes, one trinket, rolled or picked (2026-10-21) --}}
+            {{#each trinkets.entries}}
+            {{#if doc}}
+            <div class="tab-item-list">{{> "heart:items/item/preview.html" item=doc showDelete=false}}</div>
+            {{else}}
+            <a class="trinket-name" data-action="view-trinket" data-uuid="{{uuid}}">{{name}}</a>
+            {{/if}}
+            {{/each}}
+            {{#if trinkets.canDraw}}
+            <button type="button" class="trinket-roll" data-action="roll-trinket"><span class="fas fa-dice-d20"></span> {{trinkets.rollLabel}}</button><button type="button" class="trinket-roll" data-action="pick-trinket"><span class="fas fa-hand-pointer"></span> {{trinkets.pickLabel}}</button>
             {{/if}}
           </div>
         </div>

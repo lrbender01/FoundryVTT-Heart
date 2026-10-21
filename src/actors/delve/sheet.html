@@ -55,7 +55,7 @@
       <label class="header-label">{{localizeHeart "delve" "domain" "label-multiple"}}</label>
       <div class="header-chips {{#if editing}}editing{{/if}}">
         {{#if editing}}
-        <input class="header-input" name="system.domains" value="{{domainsText}}" placeholder="Technology, Warren" />
+        <input class="header-input" name="system.domains" value="{{domainsText}}" placeholder="{{localize 'heart.delve.domains-placeholder'}}" />
         {{else}}
         {{#each domainChips as |domain|}}<span>{{{heartGlyph "domain" domain}}}{{domain}}</span>{{/each}}
         {{/if}}

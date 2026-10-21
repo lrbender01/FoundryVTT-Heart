@@ -3,6 +3,7 @@
 // resistance }) opens it from anywhere; chat cards carry a GM-only "Pick
 // Fallout" button (button.js).
 import { openFalloutPicker } from './picker';
+import { askGM } from '../common/relay';
 import './picker.sass';
 
 // Chat cards: GM-only controls are removed for everyone else, and the Pick
@@ -21,7 +22,14 @@ Hooks.on('renderChatMessage', (message, html) => {
             ui.notifications.warn(game.i18n.localize('heart.bond.no-target'));
             return;
         }
-        await openFalloutPicker({ target: doc, severity, resistance: resistance || undefined });
+        // on a fallout card, the pick is recorded on the message so its Clear
+        // button clears the picked Fallout's resistance (Luke, 2026-10-21;
+        // the GM's own call runs through the relay queue like every card write)
+        const onCard = ev.currentTarget.closest('.fallout-roll');
+        const onPicked = onCard
+            ? (pick) => askGM('record-fallout-pick', { messageId: message.id, pick })
+            : undefined;
+        await openFalloutPicker({ target: doc, severity, resistance: resistance || undefined, onPicked });
     });
 });
 

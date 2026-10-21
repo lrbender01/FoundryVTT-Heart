@@ -74,7 +74,7 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
 
           const doc = new CONFIG.Item.documentClass({
               type,
-              name: `New ${type}`,
+              name: game.i18n.format('heart.new-item', { type }),
               system: itemData
           });
 
@@ -238,7 +238,7 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
             }
             if (opened > 0) return;
 
-            ui.notifications.warn(`No compendium provides "${type}" items. Enable a content module that ships them.`);
+            ui.notifications.warn(game.i18n.format('heart.compendium.none-for-type', { type }));
         });
     }
 

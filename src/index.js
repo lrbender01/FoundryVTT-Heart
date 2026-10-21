@@ -17,6 +17,8 @@ import { GLASS_SETTING, SEE_THROUGH_SETTING, BLUR_SETTING, TINT_SETTING, applyGl
 import { isRepeatable } from './items/ability/repeat';
 import { registerGrantCleanup } from './items/trinkets';
 import { clearedTraits, coreTraitsOf } from './actors/character/traits';
+import { registerTotalStressSync, correctTotalStress } from './actors/character/total-stress-sync';
+import { registerTokenDefaults } from './actors/token-defaults';
 
 import modules from './**/index.js';
 
@@ -28,10 +30,12 @@ function activateTemplates() {
     });
 }
 
+// Setting names, hints, and choices are lang keys (heart.settings.<key>.*,
+// 2026-10-21): Configure Settings localizes them when it draws
 function registerSettings() {
     game.settings.register('heart', 'showStartupMessage', {
-        name: 'Show Startup Message',
-        hint: 'Show the startup message, which provides a brief tutorial on how to use Heart.',
+        name: 'heart.settings.showStartupMessage.name',
+        hint: 'heart.settings.showStartupMessage.hint',
         scope: 'client',
         config: true,
         default: true,
@@ -42,8 +46,8 @@ function registerSettings() {
     // were removed 2026-09-30, Luke: nothing read them any more)
 
     game.settings.register('heart', 'showStressRoll3dDice', {
-      name: 'Show 3D Dice for Stress Rolls',
-      hint: 'Shows 3D Dice rolls for Stress Rolls using modules like Dice So Nice!',
+      name: 'heart.settings.showStressRoll3dDice.name',
+      hint: 'heart.settings.showStressRoll3dDice.hint',
       scope: 'client',
       config: true,
       default: true,
@@ -51,8 +55,8 @@ function registerSettings() {
     });
 
     game.settings.register('heart', 'showFalloutRoll3dDice', {
-      name: 'Show 3D Dice for Fallout Rolls',
-      hint: 'Shows 3D Dice rolls for Fallout Rolls using modules like Dice So Nice!',
+      name: 'heart.settings.showFalloutRoll3dDice.name',
+      hint: 'heart.settings.showFalloutRoll3dDice.hint',
       scope: 'client',
       config: true,
       default: true,
@@ -60,8 +64,8 @@ function registerSettings() {
     });
 
     game.settings.register('heart', 'showTotalStress', {
-      name: 'Show Total Stress on Character Sheet',
-      hint: 'Show Total Stress on Character Sheet',
+      name: 'heart.settings.showTotalStress.name',
+      hint: 'heart.settings.showTotalStress.hint',
       scope: 'client',
       config: true,
       default: true,
@@ -72,8 +76,8 @@ function registerSettings() {
     // art-toggle.js): the Art button in any window's title bar flips it for
     // every window. Replaced showCharacterArt and hiddenItemArt.
     game.settings.register('heart', ART_SETTING, {
-      name: 'Show Book Art',
-      hint: 'Show the books\' art across Heart: sheet banners and headers, decorations, the art behind gear rows, and the Choose cards (needs the Heart content module). The Art button in any window\'s title bar flips it.',
+      name: 'heart.settings.showArt.name',
+      hint: 'heart.settings.showArt.hint',
       scope: 'client',
       config: true,
       default: true,
@@ -87,8 +91,8 @@ function registerSettings() {
     // Luke; common/glass.js): the Glass button in any sheet's title bar
     // flips it for every window at once (a body class, no redraw)
     game.settings.register('heart', GLASS_SETTING, {
-      name: 'Glass Sheets',
-      hint: 'Show every Heart sheet as smoked glass: see-through, blurred sections, rows, and buttons over a dark grunge ground (needs the dark colour scheme; the ground needs the Heart content module). The Glass button in any sheet\'s title bar flips it.',
+      name: 'heart.settings.glassSheets.name',
+      hint: 'heart.settings.glassSheets.hint',
       scope: 'client',
       config: true,
       default: false,
@@ -98,8 +102,8 @@ function registerSettings() {
     // see-through to the scene behind a glass sheet, and the blur over it
     // (2026-10-02, Luke): live, per user
     game.settings.register('heart', SEE_THROUGH_SETTING, {
-      name: 'Glass See-Through',
-      hint: 'How much of the scene shows through a glass sheet\'s background (0 is solid). Above 0 the window blurs the scene behind it, which costs some graphics work while the scene moves.',
+      name: 'heart.settings.glassSeeThrough.name',
+      hint: 'heart.settings.glassSeeThrough.hint',
       scope: 'client',
       config: true,
       // 60: Luke's pick after tuning in Foundry (2026-10-02; 40 read as
@@ -110,8 +114,8 @@ function registerSettings() {
       onChange: applyGlassPass,
     });
     game.settings.register('heart', BLUR_SETTING, {
-      name: 'Glass Blur',
-      hint: 'How strongly a glass sheet blurs the scene that shows through it, in pixels.',
+      name: 'heart.settings.glassBlur.name',
+      hint: 'heart.settings.glassBlur.hint',
       scope: 'client',
       config: true,
       // 6 to start (Luke, 2026-10-02: 3, 6, or 10 are the usual glass)
@@ -123,8 +127,8 @@ function registerSettings() {
     // how strong each layer of glass is (2026-10-02, Luke: one glass, its
     // darkness from depth; common/glass.js glassLayers)
     game.settings.register('heart', TINT_SETTING, {
-      name: 'Glass Tint',
-      hint: 'How dark each layer of glass is. A section is one layer, a row in it two, a chip on the row three, so deeper things read darker by the same step everywhere.',
+      name: 'heart.settings.glassTint.name',
+      hint: 'heart.settings.glassTint.hint',
       scope: 'client',
       config: true,
       // 25: Luke's pick after tuning in Foundry (2026-10-02; 20 first)
@@ -159,14 +163,14 @@ function applyColourScheme(scheme) {
 
 function registerColourScheme() {
     game.settings.register('heart', 'colourScheme', {
-        name: 'Colour Scheme',
-        hint: 'Dark (default) or Light for Heart sheets, chat cards, and Foundry windows. Applies instantly, per user.',
+        name: 'heart.settings.colourScheme.name',
+        hint: 'heart.settings.colourScheme.hint',
         scope: 'client',
         config: true,
         type: String,
         choices: {
-            dark: 'Dark',
-            light: 'Light',
+            dark: 'heart.settings.colourScheme.dark',
+            light: 'heart.settings.colourScheme.light',
         },
         default: 'dark',
         onChange: applyColourScheme,
@@ -372,6 +376,8 @@ Hooks.once('ready', function () {
     removeRetiredBondActors();
     // older adversaries' lore out of GM Notes, once per world (GM)
     migrateAdversaryLore();
+    // characters' stored total Stress put right where it is out of step (GM)
+    correctTotalStress();
     new Promise(async function () {
         if (game.settings.get('heart', 'showStartupMessage')) {
             let d = new Dialog({
@@ -478,6 +484,11 @@ Hooks.on('createItem', async function(item, options, userId) {
 // Removing an ancestry, calling, or class deletes the keepsake or trinket it
 // granted (items/trinkets.js)
 registerGrantCleanup();
+
+// A character's stored total Stress follows its five tracks, for token bars
+// (actors/character/total-stress-sync.js, 2026-10-21)
+registerTotalStressSync();
+registerTokenDefaults();
 
 // Removing a class resets every skill, domain, and knack (2026-10-01, Luke;
 // actors/character/traits.js): the character is starting over, and the next

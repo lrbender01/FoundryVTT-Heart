@@ -1,8 +1,27 @@
 // The Heart map's dialogs (2026-10-02, map/scrapboard/notes.js): a note's
-// text, a string's kind and name, the board's export and import, and the
-// players' hand picker. The map itself is painted on the canvas
+// text, a string's kind and name, the pins, the bin, the earlier boards, the
+// board's export and import, the help, and the players' hand picker; then
+// the map's own glass over the board (the brush's palette, the doodles, the
+// toolbar, the reticle's caption). The map itself is painted on the canvas
 // (map/scrapboard/render.js) and needs no styles.
 @use '../util'
+
+// The map's one selected red (Luke, 2026-10-21): a picked paint, paper, or
+// doodle, the palette's and the toolbar's lit buttons, a focused note. The
+// map's glass and art keep the book's colours, not the theme's roles; its
+// dialogs' chrome follows the design language (util.sass controls).
+$picked: #e0574b
+
+// a choice's input, hidden inside its label (the chip or swatch shows it)
+@mixin hidden-input
+    position: absolute
+    top: 0
+    left: 0
+    margin: 0
+    opacity: 0
+    width: 1px
+    height: 1px
+    pointer-events: none
 
 .heart-board-dialog
     .dialog-content
@@ -15,6 +34,11 @@
         margin: 0
         line-height: 1.35
 
+    // (a line under a field: what Enter does)
+    .heart-board-hint
+        @include util.text-secondary
+        margin-top: -4px
+
     textarea
         width: 100%
         resize: vertical
@@ -24,106 +48,175 @@
         font-family: monospace
         font-size: 11px
 
-    // a note's text, written on ruled scrap paper in the writer's hand (the
-    // Heart Map Board editor's note popover looks the same)
-    textarea[name=text]
-        min-height: 112px
-        padding: 2px 8px
-        font-family: 'Reenie Beanie', cursive
-        font-size: 22px
-        line-height: 25px
-        color: #241a16
-        background: #ddd0b6
-        border: 0
-        border-bottom: 1.5px solid #8f7c62
-        border-radius: 2px
-        box-shadow: inset 0 0 18px rgba(90, 50, 25, 0.28)
+    // backing out (Close, Cancel, a question's No) is the outline, even as
+    // the default (common/dialog.js gives the action its fill)
+    &.heart-confirm .dialog-buttons button
+        &[data-button="close"], &[data-button="cancel"], &[data-button="no"]
+            @include util.button-secondary
 
-        &:focus
-            outline: 1px solid rgba(110, 18, 9, 0.6)
-            box-shadow: inset 0 0 18px rgba(90, 50, 25, 0.28)
-
-        // writing straight on the sheet: the dark ledger, chalk on it
-        &.sheet
-            color: #d8ccb4
-            background: #3a2a20
-            box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.6)
-
-    // the typewriter switch (the GM's, a Witness's)
-    .heart-board-typed
-        display: flex
+    // a labelled row: its label, then its choices (a paint, the brightness,
+    // a paper, a string's kind, name, and colour)
+    .heart-board-row
+        display: grid
+        grid-template-columns: 7em minmax(0, 1fr)
         align-items: center
-        gap: 6px
-        margin: 4px 0
+        gap: 8px
+
+        > .lab
+            @include util.text-label
+            color: util.$muted
+
+        input[type="text"]
+            width: 100%
+
+    // picks as chips: a string's kind, the brightness, how the writing is set
+    .heart-board-chips, .heart-board-seg, .heart-board-style
+        display: flex
+        flex-wrap: wrap
+        align-items: center
+        gap: 4px
+
+        label
+            position: relative
+            display: inline-flex
+            margin: 0
+            cursor: pointer
+
+        input
+            @include hidden-input
+
+        label > span
+            @include util.choice-chip
+            @include util.hover-outline
+
+        input:checked + span
+            @include util.choice-chip-on
+
+        input:focus-visible + span
+            outline: 2px solid util.$red-bright
+            outline-offset: 1px
+
+    // the brightness: one segmented control, as on the brush's palette
+    .heart-board-seg
+        flex-wrap: nowrap
+        gap: 0
+
+        label > span
+            border-radius: 0
+            border-right-width: 0
+
+        label:first-child > span
+            border-radius: util.$radius 0 0 util.$radius
+
+        label:last-child > span
+            border-radius: 0 util.$radius util.$radius 0
+            border-right-width: 1px
 
     // how the writing is set: align, and bold, italic, underline, strike
     .heart-board-style
-        display: flex
-        align-items: center
-        gap: 4px
-        margin: 6px 0
-
-        label
-            cursor: pointer
-            display: grid
-            place-items: center
-            width: 28px
-            height: 26px
-            border-radius: 4px
-            border: 1px solid rgba(255, 255, 255, 0.12)
-            opacity: 0.6
-
-        label:has(input:checked)
-            opacity: 1
-            border-color: #b33a2c
-            background: rgba(179, 58, 44, 0.25)
-
-        input
-            display: none
+        label > span
+            min-width: 32px
+            justify-content: center
 
         .sep
             width: 10px
 
-    // the presets a note is written in, and on
-    .heart-board-inks, .heart-board-papers, .heart-board-paints, .heart-board-brights
+    // the paints and papers a note (or a string) is written in, and on:
+    // Any first, then the swatches
+    .heart-board-paints, .heart-board-papers
         display: flex
         flex-wrap: wrap
         align-items: center
         gap: 6px
 
         label
-            cursor: pointer
+            position: relative
             display: grid
             place-items: center
+            margin: 0
+            cursor: pointer
 
         input
-            display: none
+            @include hidden-input
 
-        span
-            min-width: 26px
-            height: 26px
+        label:not(.any) > span
+            width: 24px
+            height: 24px
             border-radius: 50%
-            border: 2px solid rgba(0, 0, 0, 0.35)
+            border: 2px solid util.$line
             box-sizing: border-box
 
-        label.any span
-            border-radius: 4px
-            padding: 2px 8px
-            min-width: 0
-            height: auto
-            line-height: 20px
+        label.any > span
+            @include util.choice-chip
+            @include util.hover-outline
 
-        input:checked + span, input:checked + img
-            outline: 2px solid #b8452f
+        label.any input:checked + span
+            @include util.choice-chip-on
+
+        label:not(.any) input:checked + span, input:checked + img
+            outline: 2px solid $picked
             outline-offset: 2px
 
-    .heart-board-papers img
-        width: 56px
-        height: 56px
-        object-fit: contain
-        border: 0
-        background: rgba(0, 0, 0, 0.15)
-        border-radius: 3px
+        img
+            width: 56px
+            height: 56px
+            object-fit: contain
+            border: 0
+            background: util.$sunken
+            border-radius: util.$radius
+
+    // the hands (and the typewriter) as tiles, each writing the sample in
+    // its own face: the hand picker's and the note dialog's alike
+    .heart-board-faces
+        display: grid
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+        gap: 5px
+        max-height: 300px
+        overflow-y: auto
+        padding: 4px
+        border-radius: util.$radius
+        border: 1px solid util.$line
+        background: util.$sunken
+
+        .face
+            position: relative
+            display: flex
+            flex-direction: column
+            gap: 2px
+            padding: 6px 10px
+            border-radius: util.$radius
+            border: 1px solid util.$line
+            background: util.$surface
+            color: util.$text
+            cursor: pointer
+            overflow: hidden
+            @include util.hover-outline
+
+            &.on, &:has(input:checked)
+                @include util.choice-chip-on
+
+            input
+                @include hidden-input
+
+            .smp
+                white-space: nowrap
+                overflow: hidden
+                text-overflow: ellipsis
+                line-height: 1.2
+
+            small
+                opacity: 0.75
+                white-space: nowrap
+                overflow: hidden
+                text-overflow: ellipsis
+
+                b
+                    font-weight: 600
+                    margin-right: 4px
+
+            // (a player's own: their name on it)
+            &.claimed small
+                opacity: 1
 
     // the Pin tool's pins, as pictures
     .heart-board-pins
@@ -135,10 +228,15 @@
 
         button
             height: 64px
+            margin: 0
             padding: 4px
             display: grid
             place-items: center
-            background: rgba(0, 0, 0, 0.18)
+            background: util.$sunken
+            border: 1px solid util.$line
+            border-radius: util.$radius
+            cursor: pointer
+            @include util.hover-outline
 
         img, canvas
             max-width: 100%
@@ -149,6 +247,42 @@
         display: flex
         align-items: center
         gap: 6px
+
+    // a row's own action (the bin's and the earlier boards' Put back)
+    .heart-board-act
+        @include util.action-chip
+        gap: 4px
+
+    // a file to load or a picture to pick (Luke, 2026-10-21: Import's Load a
+    // file, New place's picture): the field or its name, then the action
+    .heart-board-file
+        display: flex
+        align-items: center
+        gap: 6px
+
+        input[type="text"]
+            flex: 1
+            min-width: 0
+
+        label.heart-board-act
+            cursor: pointer
+            flex: none
+
+        .name
+            @include util.text-secondary
+            overflow: hidden
+            text-overflow: ellipsis
+            white-space: nowrap
+
+    // New place's picture, as picked
+    .heart-board-place-img
+        align-self: center
+        max-width: 100%
+        max-height: 160px
+        object-fit: contain
+        border: 0
+        border-radius: util.$radius
+        background: util.$sunken
 
 // A few words by the reticle: what a press does on what it caught
 .heart-board-caption
@@ -163,7 +297,7 @@
     background: rgba(20, 10, 6, 0.72)
     border-radius: 3px
 
-// The marker's palette, over the board while the Marker is in hand
+// The brush's palette, over the board while the Brush is in hand
 .heart-board-palette
     position: fixed
     left: 50%
@@ -220,60 +354,6 @@
         flex-wrap: wrap
         gap: 5px
 
-    .seg
-        display: inline-flex
-        border: 1px solid rgba(255, 228, 205, 0.18)
-        border-radius: 7px
-        overflow: hidden
-
-        button
-            border: 0
-            border-radius: 0
-            padding: 3px 10px
-
-    .slide
-        display: flex
-        align-items: center
-        gap: 8px
-
-        input
-            width: 120px
-
-        output
-            min-width: 34px
-            font-variant-numeric: tabular-nums
-            opacity: 0.85
-
-    .layers
-        flex-direction: column
-        align-items: stretch
-
-        .layer
-            display: flex
-            align-items: center
-            gap: 6px
-
-            .who
-                margin-right: auto
-
-            &.off .who
-                opacity: 0.5
-
-        .head2
-            display: flex
-            align-items: center
-            justify-content: space-between
-            gap: 8px
-
-        .fold
-            border: 0
-            background: none
-            padding: 2px 0
-            font-size: 11px
-            text-transform: uppercase
-            letter-spacing: 0.08em
-            opacity: 0.8
-
     button
         width: auto
         line-height: normal
@@ -289,15 +369,34 @@
         &:hover
             background: rgba(255, 240, 225, 0.1)
 
+    // Draw or Select, and the brightness: segmented controls
+    .seg
+        display: inline-flex
+        border: 1px solid rgba(255, 228, 205, 0.18)
+        border-radius: 7px
+        overflow: hidden
+
+        button
+            border: 0
+            border-radius: 0
+            padding: 3px 10px
+
     .seg button.on, button.switch.on
-        background: rgba(224, 87, 75, 0.88)
+        background: rgba($picked, 0.88)
         color: #1a0d0b
 
-    button
-        width: auto
-        line-height: normal
-        margin: 0
-        flex: 0 0 auto
+    .slide
+        display: flex
+        align-items: center
+        gap: 8px
+
+        input
+            width: 120px
+
+        output
+            min-width: 34px
+            font-variant-numeric: tabular-nums
+            opacity: 0.85
 
     button.ink
         width: 22px
@@ -307,64 +406,12 @@
         background: var(--ink)
         border: 2px solid rgba(255, 255, 255, 0.25)
 
-    // the width: a slider, with the brush's own dot
-    .wid
-        display: flex
-        align-items: center
-        gap: 6px
-
-        i
-            display: block
-            border-radius: 50%
-
-        input
-            width: 120px
-
     button.ink.on
-        outline: 2px solid #e0574b
+        outline: 2px solid $picked
         outline-offset: 1px
-
-    .sep
-        width: 1px
-        height: 22px
-        background: rgba(255, 255, 255, 0.2)
 
     small
         opacity: 0.7
-
-    .layer
-        display: inline-flex
-        align-items: center
-        gap: 4px
-        padding: 1px 6px
-        border: 1px solid rgba(255, 255, 255, 0.2)
-        border-radius: 4px
-
-        &.off
-            opacity: 0.5
-
-    // the hand picker: each face writes its own sample
-    .heart-board-hands
-        display: grid
-        grid-template-columns: 1fr
-        gap: 4px
-        max-height: 420px
-        overflow-y: auto
-
-    .heart-board-hand
-        display: grid
-        grid-template-columns: auto 1fr auto
-        align-items: center
-        gap: 10px
-        padding: 4px 8px
-        border-radius: 4px
-        cursor: pointer
-
-        &:has(input:checked)
-            outline: 2px solid currentColor
-
-        small
-            @include util.text-secondary
 
 // The Heart Map's own toolbar (scrapboard/rail.js; Luke, 2026-10-03): the
 // map editor's rail on frosted glass, up the left or along the top. Foundry's
@@ -421,7 +468,7 @@ body.heart-board-rail-on #tools-panel-heartBoard
             border-color: rgba(255, 228, 205, 0.18)
 
         &.on
-            background: rgba(224, 87, 75, 0.88)
+            background: rgba($picked, 0.88)
             border-color: rgba(255, 190, 175, 0.5)
             color: #1a0d0b
 
@@ -429,20 +476,6 @@ body.heart-board-rail-on #tools-panel-heartBoard
     i
         font-size: var(--rail-icon, 24px)
         line-height: 1
-
-    .sep
-        flex: none
-        background: rgba(255, 228, 205, 0.16)
-
-    &.vertical .sep
-        width: calc(var(--rail-btn, 36px) * 0.72)
-        height: 1px
-        margin: 3px 0
-
-    &.horizontal .sep
-        width: 1px
-        height: calc(var(--rail-btn, 36px) * 0.72)
-        margin: 0 3px
 
     .file
         position: relative
@@ -483,13 +516,19 @@ body.heart-board-rail-on #tools-panel-heartBoard
         top: calc(var(--rail-btn, 36px) + 8px)
         left: 0
 
-// the Heart Map's help: each tool, what it does
+// the Heart Map's help: each tool, then everything else, what it does
 .heart-board-help
     display: flex
     flex-direction: column
     gap: 10px
     max-height: 70vh
     overflow-y: auto
+
+    h3
+        @include util.text-section
+        color: util.$text
+        border: none
+        margin: 4px 0 0
 
 .heart-board-help-row
     display: grid
@@ -520,8 +559,8 @@ body.heart-board-rail-on #tools-panel-heartBoard
     gap: 10px
     align-items: center
     padding: 4px 6px
-    border-radius: 5px
-    background: rgba(255, 255, 255, 0.04)
+    border-radius: util.$radius
+    background: util.$sunken
 
     b
         display: block
@@ -530,16 +569,11 @@ body.heart-board-rail-on #tools-panel-heartBoard
         white-space: nowrap
 
     small
+        @include util.text-secondary
         display: block
-        opacity: 0.75
-
-    button
-        width: auto
-        white-space: nowrap
 
 // the note dialog (Luke, 2026-10-06): the writing on its paper as the card
-// will show it, and the hands (and the typewriter) as dense glassy tiles,
-// each in its own face
+// will show it (writing on the sheet: the dark ledger)
 .heart-board-preview
     position: relative
     border-radius: 3px
@@ -568,7 +602,7 @@ body.heart-board-rail-on #tools-panel-heartBoard
         text-shadow: 0 0 1px rgba(255, 250, 240, 0.25)
 
         &:focus
-            outline: 1px solid rgba(224, 87, 75, 0.6)
+            outline: 1px solid rgba($picked, 0.6)
             box-shadow: none
 
 // the note on its paper (Luke, 2026-10-06: a bigger preview): the paper
@@ -579,7 +613,7 @@ body.heart-board-rail-on #tools-panel-heartBoard
     height: 300px
     margin-bottom: 6px
     overflow: hidden
-    border-radius: 6px
+    border-radius: util.$radius
     background: #3a2a20
     box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.55)
 
@@ -613,7 +647,7 @@ body.heart-board-rail-on #tools-panel-heartBoard
 
         &:focus
             outline: none
-            border-color: rgba(224, 87, 75, 0.6) !important
+            border-color: rgba($picked, 0.6) !important
 
     .grip
         position: absolute
@@ -628,6 +662,7 @@ body.heart-board-rail-on #tools-panel-heartBoard
         font-size: 11px
         cursor: move
 
+// the paper's quarter turns (row actions) and its tilt
 .heart-board-turns
     display: flex
     align-items: center
@@ -635,11 +670,9 @@ body.heart-board-rail-on #tools-panel-heartBoard
     margin-bottom: 6px
 
     button
+        @include util.action-chip
         flex: none
         width: 30px
-        height: 28px
-        padding: 0
-        line-height: 1
 
     label
         flex: 1
@@ -653,74 +686,6 @@ body.heart-board-rail-on #tools-panel-heartBoard
         output
             min-width: 3em
             text-align: right
-
-.heart-board-brights
-    margin-top: 4px
-
-    span
-        border-radius: 4px !important
-        padding: 2px 10px
-        min-width: 0 !important
-        height: auto !important
-        line-height: 20px
-
-.heart-board-faces
-    display: grid
-    grid-template-columns: repeat(2, minmax(0, 1fr))
-    gap: 5px
-    margin: 6px 0
-    max-height: 300px
-    overflow-y: auto
-    padding: 4px
-    border-radius: 8px
-    background: rgba(26, 16, 12, 0.55)
-    backdrop-filter: blur(6px)
-    -webkit-backdrop-filter: blur(6px)
-    border: 1px solid rgba(255, 228, 205, 0.12)
-
-    .face
-        display: flex
-        flex-direction: column
-        gap: 2px
-        padding: 6px 10px
-        border-radius: 6px
-        border: 1px solid rgba(255, 228, 205, 0.1)
-        background: rgba(255, 240, 225, 0.05)
-        color: #eadccb
-        cursor: pointer
-        overflow: hidden
-
-        &:hover
-            background: rgba(255, 240, 225, 0.1)
-
-        &.on
-            border-color: rgba(224, 87, 75, 0.9)
-            background: rgba(224, 87, 75, 0.18)
-
-        input
-            display: none
-
-        .smp
-            white-space: nowrap
-            overflow: hidden
-            text-overflow: ellipsis
-            line-height: 1.2
-
-        small
-            font-size: 11px
-            opacity: 0.75
-            white-space: nowrap
-            overflow: hidden
-            text-overflow: ellipsis
-
-            b
-                font-weight: 600
-                margin-right: 4px
-
-        // (a player's own: their name on it)
-        &.claimed small
-            opacity: 1
-            color: #f0c9a8
 
 // the brush's doodles (Luke, 2026-10-06): a column of the rail's glass by it
 .heart-board-doodles
@@ -754,8 +719,8 @@ body.heart-board-rail-on #tools-panel-heartBoard
             border-color: rgba(255, 228, 205, 0.25)
 
         &.on
-            border-color: rgba(224, 87, 75, 0.95)
-            background: rgba(224, 87, 75, 0.22)
+            border-color: rgba($picked, 0.95)
+            background: rgba($picked, 0.22)
 
         canvas
             display: block
@@ -767,4 +732,4 @@ body.heart-board-rail-on #tools-panel-heartBoard
 
         input
             width: 100%
-            accent-color: #e0574b
+            accent-color: $picked

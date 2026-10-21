@@ -12,7 +12,7 @@
     {{#if entry.hint}}<div class="requirement-hint">{{entry.hint}}</div>{{/if}}
     {{#if entry.isCheckbox}}
     <div class="chip-set">
-        <label class="chip-toggle" {{#if entry.tip}}data-tooltip="{{entry.tip}}"{{/if}}><input type="checkbox" name="{{name}}" /><span>{{entry.label}}</span></label>
+        <label class="chip-toggle" {{#if entry.tip}}data-tooltip="{{entry.tip}}"{{/if}}><input type="checkbox" name="{{name}}" {{#if entry.default}}checked{{/if}} /><span>{{entry.label}}</span></label>
     </div>
     {{else}}
     <div class="chip-set">

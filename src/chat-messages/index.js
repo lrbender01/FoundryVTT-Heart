@@ -1,5 +1,6 @@
 import './chat-message.sass';
 import './ledger.sass';
+import { stakesText } from '../rolls/stress-roll/rules';
 
 class HeartChatMessage extends ChatMessage {
     get isRollRequest() {
@@ -130,6 +131,8 @@ class HeartChatMessage extends ChatMessage {
                 showFalloutRollButton: this.showFalloutRollButton,
                 showClearStressButton: this.showClearStressButton,
                 falloutDone: this.falloutDone,
+                // the Fallout the GM picked from this card (2026-10-21)
+                falloutPick: this.getFlag('heart', 'fallout-pick'),
             });
             html.find('.message-content').find('.dice-roll').html(
                 $(content).children()
@@ -152,6 +155,7 @@ class HeartChatMessage extends ChatMessage {
                 const falloutContent = await this.falloutRoll.render({
                     isPrivate: false,
                     showClearStressButton: this.showClearStressButton,
+                    falloutPick: this.getFlag('heart', 'fallout-pick'),
                 });
                 html.append(
                     $('<div class="message-content"></div>').append(falloutContent)
@@ -161,7 +165,13 @@ class HeartChatMessage extends ChatMessage {
 
         if(this.isRollRequest) {
             const data = this.getFlag('heart', 'roll-request');
-            const content = await renderTemplate('heart:applications/prepare-roll-request/chat-message.html', data);
+            // the GM's stakes as one line (2026-10-21)
+            const loc = (k, d) => (d ? game.i18n.format(k, d) : game.i18n.localize(k));
+            const stakes = stakesText(data?.stakes, loc);
+            const content = await renderTemplate('heart:applications/prepare-roll-request/chat-message.html', {
+                ...data,
+                stakesLine: stakes ? loc('heart.card.stakes', { stakes }) : '',
+            });
             // inside the message body, like every ledger card (2026-09-30)
             const body = html.find('.message-content');
             (body.length ? body : html).append(content);
@@ -234,6 +244,10 @@ function activateListeners(html) {
 
         const form = button.closest('form.roll-request');
         const data = new FormData(form.get(0));
+        // the GM's stakes ride on the roll; its Roll Stress preselects them
+        // (2026-10-21)
+        const messageId = button.closest('[data-message-id]').data('messageId');
+        const stakes = game.messages.get(messageId)?.getFlag('heart', 'roll-request')?.stakes;
 
         // Everything is on the card, so no prompt; the pool rules (missing
         // skills, Tired / Clouded, helper checks) still apply
@@ -244,6 +258,7 @@ function activateListeners(html) {
             domain: data.get('domain') || null,
             mastery: data.get('mastery') === "on",
             helpers: data.getAll('helper'),
+            stakes,
         });
         if (!roll) return;
 

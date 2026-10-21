@@ -74,20 +74,27 @@ beforeEach(() => {
 });
 
 describe("markProvisions and upkeep", () => {
-  it("rolls the die, less the quartermaster's Protection, and posts the stress card", async () => {
+  // Luke, 2026-10-21: a rolled mark is posted not yet taken; the card's
+  // Take Stress marks it, less the quartermaster's Protection
+  it("rolls the die and posts the stress card, waiting for Take Stress", async () => {
     const qm = character("qm", { owners: ["p2"], resistances: { supplies: { protection: 1 } } });
     const vess = character("vess", { owners: ["p1"] });
     const p = party({ value: 5, quartermaster: qm.id });
     queueDice(4);
     const roll = await markProvisions({ die: "D6", byActorId: vess.id });
-    expect(p.system.provisions.value).toBe(8);
+    expect(p.system.provisions.value).toBe(5);
     expect(roll.options).toMatchObject({ resistance: "provisions", die_size: "d6", character: "vess", result: "n_a" });
-    expect(roll.options.applied).toEqual([{ id: "party", name: "The Party", amount: 3, protection: 1, marked: true, shared: true }]);
+    expect(roll.options.applied).toBeUndefined();
     const [msg] = posted();
-    expect(msg.flags.heart).toEqual({ "show-take-stress-button": false, "show-fallout-roll-button": true });
+    expect(msg.flags.heart).toEqual({ "show-take-stress-button": true, "show-fallout-roll-button": false });
     expect(msg.speaker).toEqual({ actor: "vess", alias: "Vess" });
     expect(msg.flavor).toBeUndefined();
     expect(msg.rolls[0]).toBe(roll);
+
+    // Take Stress (the GM's client): marked once
+    const applied = await roll.takeStress();
+    expect(p.system.provisions.value).toBe(8);
+    expect(applied).toEqual([{ id: "party", name: "The Party", amount: 3, protection: 1, marked: true, shared: true }]);
   });
 
   it("a fixed amount, ignoring Protection; fully stopped offers no fallout", async () => {
@@ -107,8 +114,11 @@ describe("markProvisions and upkeep", () => {
     queueDice(2);
     const roll = await upkeep();
     expect(roll.formula).toBe("d4");
-    expect(p.system.provisions.value).toBe(3);
+    // not marked until Take Stress (2026-10-21)
+    expect(p.system.provisions.value).toBe(1);
     expect(posted()[0].flavor).toBe("heart.party.source.upkeep");
+    await roll.takeStress();
+    expect(p.system.provisions.value).toBe(3);
   });
 
   it("the track stops at its max", async () => {

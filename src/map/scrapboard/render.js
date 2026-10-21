@@ -25,6 +25,30 @@ import { boardOf } from './api.js';
 
 // above the scene background (SCENE = 0), below tiles (500)
 const SORT_LAYER = 100;
+
+// A place's actor's own picture as its clipping's art (Luke, 2026-10-21: a
+// place made at the table, or a book place the library has no art for): an
+// art id of its own, never stored on the board, only in the view
+const ACTOR_ART = 'actor-img:';
+// (icons, the system's landmark default among them, are no clipping)
+const plainIcon = (src) => !src || src === CONST.DEFAULT_TOKEN || /\.svg(\?|$)/i.test(src);
+// a place's actor, as far as it can be had at once: its own (uuid), else a
+// world copy of the book's entry, else the entry itself (the pack's index)
+function placeActor(s, look) {
+    if (s.uuid) return fromUuidSync(s.uuid, { strict: false });
+    const entry = s.lib ? look.library?.[s.lib] : null;
+    if (!entry?.uuid) return null;
+    return game.actors?.find((x) => x.type === 'landmark' && (x._stats?.compendiumSource ?? x.flags?.core?.sourceId) === entry.uuid) ?? fromUuidSync(entry.uuid, { strict: false });
+}
+// an image from elsewhere asked for as one a canvas may still be read from
+// (the map's picture)
+const fromAfar = (im, url) => {
+    try {
+        if (new URL(url, window.location.href).origin !== window.location.origin) im.crossOrigin = 'anonymous';
+    } catch {
+        // (not a url: left as it is)
+    }
+};
 // How finely a client paints (the boardDetail setting): bitmap px per board
 // px, the longest side an image is kept at once loaded (the books' art is
 // far bigger than anything the map draws), and whether a drag repaints the
@@ -265,6 +289,11 @@ export class ScrapboardRenderer {
             return mctx.measureText(text).width;
         };
         this.size = (id) => {
+            // (an actor's picture: its size once it has loaded)
+            if (String(id).startsWith(ACTOR_ART)) {
+                const z = this.#actorSizes.get(String(id).slice(ACTOR_ART.length));
+                return z && !(z instanceof Promise) ? z : null;
+            }
             const t = this.#textures[id];
             return t ? { w: t.w, h: t.h, safe: t.safe, cover: t.cover } : null;
         };
@@ -301,10 +330,11 @@ export class ScrapboardRenderer {
         if (!id) return null;
         let e = this.#images.get(id);
         if (!e) {
-            const url = textureUrl(this.#textures, id);
+            const own = String(id).startsWith(ACTOR_ART);
+            const url = own ? String(id).slice(ACTOR_ART.length) : textureUrl(this.#textures, id);
             if (!url) return null;
             e = { full: this.#load(url, true), prev: null };
-            const pv = previewUrl(this.#textures, id);
+            const pv = own ? null : previewUrl(this.#textures, id);
             if (pv) e.prev = this.#load(pv, false);
             this.#images.set(id, e);
         }
@@ -332,8 +362,32 @@ export class ScrapboardRenderer {
                 resolve();
             };
         });
+        fromAfar(im, url);
         im.src = url;
         return e;
+    }
+
+    // An actor's picture's size, { w, h } once loaded (null if it can't be):
+    // a moment's wait at most, then the board goes on without it and has it
+    // the next time it is drawn
+    #actorSizes = new Map();
+    #actorSize(src) {
+        let z = this.#actorSizes.get(src);
+        if (z === undefined) {
+            z = new Promise((resolve) => {
+                const im = new Image();
+                im.onload = () => resolve(im.naturalWidth && im.naturalHeight ? { w: im.naturalWidth, h: im.naturalHeight } : null);
+                im.onerror = () => resolve(null);
+                fromAfar(im, src);
+                im.src = src;
+            }).then((size) => {
+                this.#actorSizes.set(src, size);
+                return size;
+            });
+            this.#actorSizes.set(src, z);
+        }
+        if (!(z instanceof Promise)) return z;
+        return Promise.race([z, new Promise((resolve) => setTimeout(() => resolve(null), 4000))]);
     }
 
     // an image came: the tiles painted without it, again (a little later, so
@@ -391,9 +445,14 @@ export class ScrapboardRenderer {
         this.look = look;
         const board = normalizeBoard(boardJ);
         // a landmark of the GM's own takes its actor's name (before its layout
-        // writes it)
+        // writes it); a place the library has no art for takes its actor's
+        // picture as its clipping (Luke, 2026-10-21: the library's art first)
         for (const s of Object.values(board.scraps)) {
-            if (s.uuid && !s.name) s.name = fromUuidSync(s.uuid, { strict: false })?.name ?? '';
+            if (s.type !== 'landmark') continue;
+            const doc = s.uuid || (s.lib && !s.art && !look.library?.[s.lib]?.art) ? placeActor(s, look) : null;
+            if (s.uuid && !s.name) s.name = doc?.name ?? '';
+            if (s.art || look.library?.[s.lib]?.art || plainIcon(doc?.img)) continue;
+            if (await this.#actorSize(doc.img)) s.art = ACTOR_ART + doc.img;
         }
         let view = boardView(look, board, viewer, this.size, this.measure);
         // (the players' strings alone, on this screen: Luke 2026-10-06)

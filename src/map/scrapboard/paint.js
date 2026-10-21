@@ -486,21 +486,25 @@ function sheetGrime(g, near = () => true) {
   const sr = rng("sheet:stitches");
   for (let i = 0, n = Math.round(14 * (look.grime.stitches ?? 0) / 100); i < n; i++) {
     const f = geo.folds[Math.floor(sr() * geo.folds.length)]; if (!f) break;
-    const r = sr;
-    const len = 220 + r() * 520, total = pathLength(f.pts), from = r() * Math.max(1, total - len);
-    const slant = 0.35 + r() * 0.3;
-    for (let d = from; d < from + len; d += 13 + r() * 9) {
-      const p = pointAlong(f.pts, d), q = pointAlong(f.pts, d + 1);
-      const ang = Math.atan2(q.y - p.y, q.x - p.x), nx = -Math.sin(ang), ny = Math.cos(ang), tx = Math.cos(ang), ty = Math.sin(ang);
-      const half = 6 + r() * 4, sl = half * slant;
-      const ax = p.x - nx * half - tx * sl, ay = p.y - ny * half - ty * sl, bx = p.x + nx * half + tx * sl, by = p.y + ny * half + ty * sl;
-      g.strokeStyle = "rgba(24,14,10,0.8)"; g.lineWidth = 2.4; g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke();
-      g.strokeStyle = "rgba(170,140,105,0.28)"; g.lineWidth = 0.9; g.beginPath(); g.moveTo(ax + nx * 0.6, ay + ny * 0.6); g.lineTo(bx - nx * 0.6, by - ny * 0.6); g.stroke();
-      g.fillStyle = "rgba(10,6,4,0.85)";
-      for (const [hx, hy] of [[ax, ay], [bx, by]]) { g.beginPath(); g.arc(hx, hy, 1.4, 0, 6.3); g.fill(); }
-    }
+    const len = 220 + sr() * 520, total = pathLength(f.pts), from = sr() * Math.max(1, total - len);
+    stitchRun(g, f.pts, from, len, sr);
   }
   g.restore();
+}
+// A stretch of seam along a line: thread whipped across it, each stitch its
+// own length and slant, the needle holes dark (the folds' and the pages')
+function stitchRun(g, pts, from, len, r) {
+  const slant = 0.35 + r() * 0.3;
+  for (let d = from; d < from + len; d += 13 + r() * 9) {
+    const p = pointAlong(pts, d), q = pointAlong(pts, d + 1);
+    const ang = Math.atan2(q.y - p.y, q.x - p.x), nx = -Math.sin(ang), ny = Math.cos(ang), tx = Math.cos(ang), ty = Math.sin(ang);
+    const half = 6 + r() * 4, sl = half * slant;
+    const ax = p.x - nx * half - tx * sl, ay = p.y - ny * half - ty * sl, bx = p.x + nx * half + tx * sl, by = p.y + ny * half + ty * sl;
+    g.strokeStyle = "rgba(24,14,10,0.8)"; g.lineWidth = 2.4; g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke();
+    g.strokeStyle = "rgba(170,140,105,0.28)"; g.lineWidth = 0.9; g.beginPath(); g.moveTo(ax + nx * 0.6, ay + ny * 0.6); g.lineTo(bx - nx * 0.6, by - ny * 0.6); g.stroke();
+    g.fillStyle = "rgba(10,6,4,0.85)";
+    for (const [hx, hy] of [[ax, ay], [bx, by]]) { g.beginPath(); g.arc(hx, hy, 1.4, 0, 6.3); g.fill(); }
+  }
 }
 
 function drawFolds(g) {
@@ -1350,8 +1354,10 @@ function brush(g, m, c0, r, { atop = false, over = false, layerOnly = false } = 
   g.restore();
 }
 
-// The pages pasted on the sheet: each drawn lifted a little (no seams or tape
-// of their own: Luke, 2026-10-03). Those out of the area are passed over.
+// The pages pasted on the sheet: each drawn lifted a little and sewn to the
+// sheet along an edge or two (Luke, 2026-10-21: the seams back; the "hatch
+// stitching" he meant was the tally strokes asset, never these). A page's
+// `seam: false` leaves it unsewn. Those out of the area are passed over.
 function drawPages(g, area = null) {
   const pages = (look.decor ?? []).filter((d) => d.layer === "page");
   const T = look.sheet.pages ?? { darken: 0, sepia: 0, contrast: 100, soak: 0 };
@@ -1371,6 +1377,23 @@ function drawPages(g, area = null) {
     g.translate(d.x, d.y); g.rotate(rot); g.scale(d.flip ? -1 : 1, 1);
     g.imageSmoothingQuality = "high";
     g.drawImage(page, -w / 2, -h / 2, w, h);
+    g.restore();
+    if (d.seam === false || !look.grime.stitches) continue;
+    // (its seams: one edge, or two, by its own seed; a stretch of each)
+    const sr = rng(`seam:${d.tex}:${Math.round(d.x)}:${Math.round(d.y)}`);
+    const cs = Math.cos(rot), sn = Math.sin(rot), fx = d.flip ? -1 : 1;
+    const at = (lx, ly) => ({ x: d.x + lx * fx * cs - ly * sn, y: d.y + lx * fx * sn + ly * cs });
+    const edges = [[-w / 2, -h / 2, w / 2, -h / 2], [w / 2, -h / 2, w / 2, h / 2], [w / 2, h / 2, -w / 2, h / 2], [-w / 2, h / 2, -w / 2, -h / 2]];
+    const first = Math.floor(sr() * 4);
+    g.save(); g.lineCap = "round"; g.globalAlpha = Math.min(1, (d.o / 100) * (0.5 + look.grime.stitches / 200));
+    for (const e of sr() < 0.45 ? [first, (first + 1) % 4] : [first]) {
+      const [x0, y0, x1, y1] = edges[e];
+      // (a little in from the edge, as a seam is)
+      const inset = 9, ex = x1 - x0, ey = y1 - y0, el = Math.hypot(ex, ey) || 1, ix = (-ey / el) * -inset, iy = (ex / el) * -inset;
+      const a = at(x0 + ix, y0 + iy), b = at(x1 + ix, y1 + iy);
+      const total = Math.hypot(b.x - a.x, b.y - a.y), len = total * (0.35 + sr() * 0.45);
+      stitchRun(g, [a.x, a.y, b.x, b.y], sr() * Math.max(1, total - len), len, sr);
+    }
     g.restore();
   }
 }

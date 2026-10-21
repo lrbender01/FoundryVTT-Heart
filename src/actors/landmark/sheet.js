@@ -5,6 +5,7 @@ import template from './template.json';
 import { activatePanelSheet, panelSheetDefaults, toChips } from '../../common/panel-sheet';
 import { iconFor } from '../../common/icons';
 import { BannerSheet } from '../../common/banner';
+import { rollHauntService } from '../../items/haunt/service';
 
 // Landmark sheet (redesigned 2026-09-29). Layout in sheet.html; shared
 // tabs / editor / edit-toggle / die-roll behaviour in common/panel-sheet.js.
@@ -99,15 +100,11 @@ export default class LandmarkSheet extends BannerSheet(HeartActorSheet) {
             const haunt = await this._haunt(ev);
             if (!haunt) return;
             const id = $(ev.currentTarget).closest('[data-id]').data('id');
-            const service = haunt.system.resistances[id];
-            // the haunt rides on the roll as its item (2026-09-30 review): the
-            // card's outcome is its icon and name, the hint its service
-            const roll = game.heart.rolls.ItemRoll.build({ item: {
-                name: haunt.name, img: haunt.img, type: 'haunt',
-                system: { die_size: service.die_size, service: service.resistance },
-            } });
-            await roll.evaluateSync();
-            roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this.actor }) });
+            // a resource pays, rolling its die capped at the haunt's (HCB
+            // pp. 81 and 140; Luke, 2026-10-21: it rolled the haunt's die)
+            await rollHauntService({
+                haunt, service: haunt.system.resistances[id], speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+            });
         });
     }
 }

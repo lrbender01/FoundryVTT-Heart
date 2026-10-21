@@ -73,9 +73,9 @@ export default class HeartIntroApplication extends FormApplication {
 // Configure Settings > Open the Intro, for every user
 export function initialise() {
     game.settings.registerMenu('heart', 'intro', {
-        name: 'Heart Intro',
-        label: 'Open the Intro',
-        hint: 'Where things are in Heart, and the rules in two pages.',
+        name: 'heart.settings.intro.name',
+        label: 'heart.settings.intro.label',
+        hint: 'heart.settings.intro.hint',
         icon: 'fas fa-book-open',
         type: HeartIntroApplication,
         restricted: false,

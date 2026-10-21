@@ -38,4 +38,32 @@
     <label class="chip-toggle"><input type="checkbox" name="helper" value="{{c.id}}" /><span>{{c.name}}</span></label>
     {{/each}}
 </div>
+
+{{!-- The stakes (Luke, 2026-10-21): optional, "Roller chooses" first and
+     preselected. The card shows them and the roll's Roll Stress preselects
+     them; whoever rolls the stress can still change them. --}}
+<div class="wide request-stakes-hint">{{localize "heart.applications.prepare-roll-request.stakes-hint"}}</div>
+
+<label>{{localize "heart.applications.prepare-roll-request.stakes-resistance"}}</label>
+<div class="chip-set">
+    <label class="chip-toggle"><input type="radio" name="stake-resistance" value="" checked /><span>{{localize "heart.applications.prepare-roll-request.roller-chooses"}}</span></label>
+    {{#each stakeResistances as |label id|}}
+    <label class="chip-toggle" data-tooltip="heart.tip.resistance.{{id}}"><input type="radio" name="stake-resistance" value="{{id}}" /><span>{{{heartGlyph "resistance" id}}}{{label}}</span></label>
+    {{/each}}
+</div>
+
+<label>{{localizeHeart "rolls" "stress-roll" "die"}}</label>
+<div class="chip-set">
+    <label class="chip-toggle"><input type="radio" name="stake-die" value="" checked /><span>{{localize "heart.applications.prepare-roll-request.roller-chooses"}}</span></label>
+    {{#each stakeDice as |label id|}}
+    <label class="chip-toggle"><input type="radio" name="stake-die" value="{{id}}" /><span>{{label}}</span></label>
+    {{/each}}
+</div>
+
+<label data-tooltip="heart.tip.stakes.passive">{{localize "heart.applications.prepare-roll-request.stakes-passive"}}</label>
+<div class="chip-set">
+    <label class="chip-toggle"><input type="radio" name="stake-passive" value="" checked /><span>{{localize "heart.applications.prepare-roll-request.roller-chooses"}}</span></label>
+    <label class="chip-toggle"><input type="radio" name="stake-passive" value="true" /><span>{{localize "heart.applications.prepare-roll-request.passive-yes"}}</span></label>
+    <label class="chip-toggle"><input type="radio" name="stake-passive" value="false" /><span>{{localize "heart.applications.prepare-roll-request.passive-no"}}</span></label>
+</div>
 {{/ "heart:applications/base/application.html"}}

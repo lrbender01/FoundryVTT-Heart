@@ -3,7 +3,7 @@ import './character.sass';
 import HeartActorSheet from '../base/sheet';
 import template from './template.json';
 import { activateBeatListeners, openCallingBeats, createCustomBeat } from '../../items/beat/actions';
-import { activateTrinketListeners, trinketItemOf } from '../../items/trinkets';
+import { activateTrinketListeners, trinketView } from '../../items/trinkets';
 import { activateQuestionListeners } from '../../items/ancestry/questions';
 import { needsEquipmentPick } from '../../items/class/equipment';
 import { enableReorder, orderByFlag, orderKeys } from './reorder';
@@ -271,10 +271,13 @@ export default class CharacterSheet extends HeartActorSheet {
         }
         // the Items section in the player's order (dragged on the sheet)
         data.orderedItems = orderByFlag(this.actor, this.actor.itemTypes.item ?? [], 'itemOrder');
-        // the Biography's keepsake / trinket: the item's current name (it
-        // may have been renamed), else the name recorded when it was rolled
-        const trinketName = (owner) => owner ? (trinketItemOf(owner)?.name ?? owner.flags?.heart?.trinket?.name ?? '') : '';
-        data.trinketNames = { calling: trinketName(callingItem), ancestry: trinketName(ancestryItem) };
+        // the Biography's keepsakes / trinket: each item's current name (it
+        // may have been renamed), else the name recorded when it was drawn,
+        // and Roll / Pick while draws are left (two keepsakes, 2026-10-21)
+        data.trinkets = {
+            calling: callingItem ? trinketView(callingItem) : null,
+            ancestry: ancestryItem ? trinketView(ancestryItem) : null,
+        };
         data.orderedFallouts = orderByFlag(this.actor, this.actor.itemTypes.fallout ?? [], 'falloutOrder');
         data.orderedEquipment = orderByFlag(this.actor, this.actor.proxy.equipment ?? [], 'equipmentOrder');
         data.orderedBeats = orderByFlag(this.actor, this.actor.proxy.beats ?? [], 'beatOrder');
@@ -290,13 +293,13 @@ export default class CharacterSheet extends HeartActorSheet {
         const join = (list) => list.filter(Boolean).join('\n');
         data.warnings = {
             ancestry: join([!ancestryItem && t('no-ancestry'),
-                ancestryItem && fromBook(ancestryItem) && !ancestryItem.flags?.heart?.trinket && t('keepsake')]),
+                ancestryItem && fromBook(ancestryItem) && data.trinkets.ancestry?.missing && t('keepsake')]),
             // beats warn on Pursued Beats; equipment on the Equipment section
             // and on the class slot too (2026-10-01, Luke), whose badge opens
             // the class's Overview, where it is picked
             class: join([!classItem && t('no-class'), data.classNeedsEquipment && t('equipment')]),
             calling: join([!callingItem && t('no-calling'),
-                callingItem && fromBook(callingItem) && !callingItem.flags?.heart?.trinket && t('trinket')]),
+                callingItem && fromBook(callingItem) && data.trinkets.calling?.missing && t('trinket')]),
             equipment: data.classNeedsEquipment ? t('equipment') : '',
             beats: callingItem && pursued < 2 ? t('beats', { count: pursued }) : '',
         };

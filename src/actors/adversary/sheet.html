@@ -58,9 +58,10 @@
       <label class="header-label" data-tooltip="heart.tip.adversary.resistance">{{localizeHeart "resistance" "label-single"}}</label>
       <div class="track">
         <span class="boxes" data-actor-track data-target="system.resistance">{{{ordered-checkable actor.system.resistance actor.system.resistanceMax}}}</span>
-        <span class="count">{{resistanceValue}} /
+        <span class="count">{{resistanceLeft}} /
           <input type="number" min="1" name="system.resistanceMax" value="{{actor.system.resistanceMax}}"
             aria-label="{{localizeHeart 'adversary' 'resistanceMax'}}" />
+          {{localize "heart.adversary.resistance-left"}}
         </span>
       </div>
       <label class="header-label" data-tooltip="heart.tip.adversary.protection">{{localizeHeart "protection" "label-single"}}</label>
@@ -116,7 +117,7 @@
             <div class="container-content">
               {{#if editing}}
               <label class="profile-label">{{localizeHeart "adversary" "domains"}}</label>
-              <input class="profile-input" name="system.domains" value="{{actor.system.domains}}" placeholder="Cursed, Occult" />
+              <input class="profile-input" name="system.domains" value="{{actor.system.domains}}" placeholder="{{localize 'heart.adversary.domains-placeholder'}}" />
               <label class="profile-label">{{localizeHeart "adversary" "domains-note"}}</label>
               <input class="profile-input" name="system.domainsNote" value="{{actor.system.domainsNote}}" />
               <label class="profile-label">{{localizeHeart "adversary" "names"}}</label>

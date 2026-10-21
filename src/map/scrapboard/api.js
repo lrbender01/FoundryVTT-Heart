@@ -11,10 +11,11 @@
 // a player's edits come back to them from the GM's client, and their undo goes
 // through it again (notes.js board.history). The GM's client also keeps
 // rolling copies of each board (backups.js).
-import { normalizeBoard, customKey, removalOf, labelPatch, tidyBoard, newStringPatch, diffBoard, recordUpdate, updateRoots, binPatch, unbinPatch, pxPerInch, seasonMarks } from './model.js';
+import { customKey, removalOf, labelPatch, tidyBoard, newStringPatch, diffBoard, recordUpdate, updateRoots, binPatch, unbinPatch, pxPerInch, seasonMarks } from './model.js';
 import { loadBoardLook } from './look.js';
 import { askGM } from '../../common/relay.js';
 import { keepBackup } from './backups.js';
+import { boardFromText, boardFileName, renamedCards } from './boardfile.js';
 
 export const BOARD_FLAG = 'board';
 const PATH = `flags.heart.${BOARD_FLAG}`;
@@ -269,6 +270,36 @@ export async function addScrap(scene, data) {
     return key;
 }
 
+// A place invented mid-campaign (Luke, 2026-10-21: File, New place): a
+// landmark actor of that name and picture in the Heart Map places actor
+// folder (made the first time; found again by its flag, renamed or not), its
+// card put on the board at `at` (board px), hidden or known. { actor, key }.
+const PLACES_FLAG = 'mapPlaces';
+async function placesFolder() {
+    const have = game.folders?.find((f) => f.type === 'Actor' && f.flags?.heart?.[PLACES_FLAG]);
+    if (have) return have;
+    return Folder.create({ name: game.i18n.localize('heart.board.places-folder'), type: 'Actor', flags: { heart: { [PLACES_FLAG]: true } } });
+}
+export async function newPlace(scene, { name, img = null, state = 'hidden', at } = {}) {
+    if (!gmOnly() || !scene || !at || !String(name ?? '').trim()) return null;
+    const folder = await placesFolder();
+    const actor = await Actor.create({ name: String(name).trim(), type: 'landmark', folder: folder?.id ?? null, ...(img ? { img } : {}) });
+    if (!actor) return null;
+    const key = await addScrap(scene, { type: 'landmark', uuid: actor.uuid, name: actor.name, x: at.x, y: at.y, state: state === 'known' ? 'known' : 'hidden' });
+    return { actor, key };
+}
+
+// A place's cards follow its actor's renames (Luke, 2026-10-21), on every
+// board: an edit of the GM's like any other, so Undo takes it back
+export async function followRename(actor) {
+    if (!game.user.isGM || actor?.type !== 'landmark') return;
+    for (const scene of game.scenes ?? []) {
+        if (!isBoardScene(scene)) continue;
+        const patches = renamedCards(boardOf(scene), actor.uuid, actor.name);
+        if (Object.keys(patches).length) await setScraps(scene, patches);
+    }
+}
+
 // (each end a scrap's key, or a loose point on the board: aPt, bPt)
 // (each end a scrap's key, a loose point, or a pin of the board's own: aPin, bPin)
 export async function addLink(scene, { a = null, b = null, aPt = null, bPt = null, aAt = null, bAt = null, aPin = null, bPin = null, kind = 'delve', label = '', state = 'known' }, opts = {}) {
@@ -390,20 +421,31 @@ export async function removeLink(scene, id, opts = {}) {
 /*  Import, export, backup                      */
 /* -------------------------------------------- */
 
+// What a board is, whole (Luke, 2026-10-21: the loose pieces and the pins'
+// tidy mark were being dropped by export and replace, so every load tidied
+// the pins again)
+const BOARD_PARTS = ['scraps', 'links', 'pins', 'marks', 'bits', 'decor'];
+function boardParts(b) {
+    return {
+        scraps: b.scraps ?? {}, links: b.links ?? {}, pins: b.pins ?? {}, marks: b.marks ?? {}, bits: b.bits ?? {}, decor: b.decor ?? [],
+        ...(b.bin ? { bin: b.bin } : {}), ...(b.pinsEd ? { pinsEd: b.pinsEd } : {}),
+    };
+}
+
 // The board as the mock's File tab takes it
 export function exportBoard(scene) {
     const b = boardOf(scene);
-    return JSON.stringify({ scraps: b.scraps ?? {}, links: b.links ?? {}, pins: b.pins ?? {}, marks: b.marks ?? {}, decor: b.decor ?? [], ...(b.bin ? { bin: b.bin } : {}) }, null, 1);
+    return JSON.stringify(boardParts(b), null, 1);
 }
 
 // Replace the whole board (an import, an earlier board, or the backup
 // restored): one edit of the GM's, undone like any other
 export async function replaceBoard(scene, board, { record = true, backup = false } = {}) {
-    const clean = { scraps: board.scraps ?? {}, links: board.links ?? {}, pins: board.pins ?? {}, marks: board.marks ?? {}, decor: board.decor ?? [], ...(board.bin ? { bin: board.bin } : {}) };
+    const clean = boardParts(board);
     const before = foundry.utils.deepClone(boardOf(scene));
     await keepBackup(scene, before, { force: true, why: 'replaced' });
     // (a nested object update merges; the board is cleared first so it is replaced)
-    const data = { [`${PATH}.-=scraps`]: null, [`${PATH}.-=links`]: null, [`${PATH}.-=pins`]: null, [`${PATH}.-=marks`]: null, [`${PATH}.-=decor`]: null, [`${PATH}.-=bin`]: null };
+    const data = Object.fromEntries([...BOARD_PARTS, 'bin', 'pinsEd'].map((k) => [`${PATH}.-=${k}`, null]));
     if (backup) data[BACKUP_PATH] = before;
     await scene.update(data, { heartBoard: true });
     const out = await scene.update({ [PATH]: clean }, { heartBoard: true });
@@ -411,33 +453,28 @@ export async function replaceBoard(scene, board, { record = true, backup = false
     return out;
 }
 
-// A board pasted from the mock (or another scene's export). Checked by the
-// model first: anything it can't place is dropped.
+// A board pasted from the mock, another scene's export, or a downloaded file
+// (boardfile.js boardFromText). Checked by the model first: anything it can't
+// place is dropped; the JSON is kept as written (the model fills defaults
+// when it reads it). (Luke, 2026-10-21: its loose pieces, bin, and pins' tidy
+// mark come too, so a downloaded board loads back whole.)
 export async function importBoard(scene, text) {
     if (!gmOnly() || !scene) return false;
-    let j;
-    try {
-        j = JSON.parse(text);
-    } catch {
+    const read = boardFromText(text);
+    if (!read) {
         ui.notifications.error(game.i18n.localize('heart.board.import-bad'));
         return false;
     }
-    // (the mock's whole-file export holds { look, board })
-    const raw = j?.board && !j.scraps ? j.board : j;
-    if (!raw || typeof raw !== 'object' || (!raw.scraps && !raw.links)) {
-        ui.notifications.error(game.i18n.localize('heart.board.import-bad'));
-        return false;
-    }
-    const checked = normalizeBoard(raw);
-    // keep the JSON as written (the model fills defaults when it reads it),
-    // minus what it dropped
-    const scraps = Object.fromEntries(Object.keys(checked.scraps).map((k) => [k, raw.scraps[k]]));
-    const links = Object.fromEntries(Object.keys(checked.links).map((k) => [k, raw.links[k]]));
-    const pins = Object.fromEntries(Object.keys(checked.pins).map((k) => [k, raw.pins[k]]));
-    const marks = Object.fromEntries(Object.entries(checked.marks).map(([layer, strokes]) => [layer, Object.fromEntries(Object.keys(strokes).map((id) => [id, raw.marks[layer][id]]))]));
-    await replaceBoard(scene, { scraps, links, pins, marks, decor: Array.isArray(raw.decor) ? raw.decor : [] }, { backup: true });
-    ui.notifications.info(game.i18n.format('heart.board.imported', { scraps: Object.keys(scraps).length, links: Object.keys(links).length }));
+    await replaceBoard(scene, read.board, { backup: true });
+    ui.notifications.info(game.i18n.format('heart.board.imported', { scraps: read.scraps, links: read.links }));
     return true;
+}
+
+// The board saved as a .json file, named from the scene and the day (Luke,
+// 2026-10-21: File, Download the board); Import loads it back
+export function downloadBoard(scene) {
+    if (!gmOnly() || !scene) return;
+    saveDataToFile(exportBoard(scene), 'application/json', boardFileName(scene.name, new Date(), game.i18n.localize('heart.board.snapshot-file')));
 }
 
 export const hasBackup = (scene) => Boolean(scene?.flags?.heart?.boardBackup);

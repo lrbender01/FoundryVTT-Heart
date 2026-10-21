@@ -960,10 +960,10 @@ const tilt = (v, max) => Math.sign(v) * max * Math.pow(Math.abs(2 * v), 1.5);
 // weight, for a place (landmark) and for a note; some cards get a second
 // touch from those that sit on the paper.
 const RECIPES = {
-    // (no stamps, the factions' own, nor tallies: Luke 2026-10-03; no tape of
-    // their own, at their corners or edges: Luke 2026-10-06, tape only holds
-    // the pictures on)
-    // (spiders rarely: Luke 2026-10-06)
+    // (no tape of their own, at their corners or edges: Luke 2026-10-06,
+    // tape only holds the pictures on; spiders rarely, Luke 2026-10-06; no
+    // stamps, Luke 2026-10-21: they are faction marks, placed by hand, never
+    // scattered as decoration)
     landmark: { plain: 42, stacked: 22, ringed: 14, boxed: 16, webbed: 1 },
     note: { plain: 57, stacked: 21, ringed: 19, webbed: 1 },
 };
@@ -974,7 +974,6 @@ const TX = {
     boxes: ['tx/frames__frame_ink_rough_box_landscape', 'tx/frames__frame_ink_rough_box_wide'],
     web: 'tx/decorations__deco_web_corner_many_spiders_1_crop',
     hazard: 'tx/fixtures__fixture_hazard_tape_strip',
-    tally: 'tx/ink__ink_rust_tally_strokes',
 };
 const weighted = (table, x) => {
     const all = Object.entries(table);
@@ -1022,10 +1021,6 @@ function cardExtras({ scrap, sk, W, H, PW, PH, pc, rot, depth, clip, look, size,
                 const p = toWorld(sx * PW * 0.46, sy * PH * 0.46, pc.x, pc.y, rot);
                 out.push({ tex: pickFrom(tapes, `${sk}:cornertape:${i}`), cx: p.x, cy: p.y, w: PW * (0.26 + r() * 0.1), rot: rot + sx * sy * (40 + r() * 14) * DEG, layer: 'over', grade: true, alpha: 0.92 });
             });
-        } else if (k === 'tallied' && has(TX.tally)) {
-            const [sx, sy] = corner();
-            const p = at(sx * W * 0.3, sy * H * 0.34);
-            out.push({ tex: TX.tally, cx: p.x, cy: p.y, w: W * (0.2 + r() * 0.08), rot: rot + (r() - 0.5) * 24 * DEG, layer: 'on', alpha: 0.75 });
         } else if (k === 'webbed' && has(TX.web)) {
             const [sx, sy] = corner();
             const p = toWorld(sx * PW * 0.38, sy * PH * 0.4, pc.x, pc.y, rot);

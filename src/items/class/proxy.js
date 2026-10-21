@@ -7,7 +7,7 @@ export default {
                     const skill = item.system.core_skill;
                     const skill_effect = new ActiveEffect({
                         _id: foundry.utils.randomID(),
-                        label: "Core Skill from Class",
+                        label: game.i18n.localize('heart.class.effect.core-skill'),
                         changes: [{
                             key: `system.skills.${skill}.value`,
                             value: true,
@@ -21,7 +21,7 @@ export default {
                     const domain = item.system.core_domain;
                     const domain_effect = new ActiveEffect({
                         _id: foundry.utils.randomID(),
-                        label: "Core Domain from Class",
+                        label: game.i18n.localize('heart.class.effect.core-domain'),
                         changes: [{
                             key: `system.domains.${domain}.value`,
                             value: true,

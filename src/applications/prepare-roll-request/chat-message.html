@@ -2,7 +2,8 @@
      card): a hint line with the difficulty, the roll asked for led by its
      glyph, chip choices where the GM offered more than one skill or domain,
      Mastery and helper chips, then a "Roll as" pill per character the
-     viewer owns. chat-messages/index.js reads the form (field names:
+     viewer owns. The GM's stakes, when set, show under the roll asked for
+     (2026-10-21). chat-messages/index.js reads the form (field names:
      difficulty, skill, domain, mastery, helper). --}}
 <form class="heart roll-request-card roll-request" autocomplete="off">
     <input type="hidden" name="difficulty" value="{{difficulty}}"/>
@@ -14,6 +15,9 @@
             +
             {{#if (eq domains.length 1)}}{{{heartGlyph "domain" (lookup domains 0)}}}{{localizeHeart "domain" (lookup domains 0)}}<input type="hidden" name="domain" value="{{lookup domains 0}}"/>{{else if (gt domains.length 1)}}{{localizeHeart "domain" "label-single"}}{{else}}{{localizeHeart "none"}}{{/if}}
         </div>
+
+        {{!-- the GM's stakes (2026-10-21), when set: Roll Stress preselects them --}}
+        {{#if stakesLine}}<div class="ledger-det request-stakes" data-tooltip="heart.tip.card.request-stakes">{{stakesLine}}</div>{{/if}}
 
         {{#if (gt skills.length 1)}}
         <div class="chip-set request-choice">

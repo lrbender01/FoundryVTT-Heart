@@ -1,7 +1,7 @@
 // Notes on the scrapboard map, and the dialogs its tools ask through
 // (2026-10-02, Luke). Players may pin notes and edit the text, paper, and
 // ink of their own (not their size, not their pins), and draw with the
-// marker on a layer of their own. Each player writes in a hand of their own:
+// brush on a layer of their own. Each player writes in a hand of their own:
 // they pick one of the map's handwriting faces with their first note, and it
 // is theirs from then on (no one else may take it, and they may not pick
 // again), their "visual voice" on the board. On a players' board its owners
@@ -9,7 +9,7 @@
 // control and, in the player view, can try the picker without claiming a
 // hand. Players' writes go through the GM's relay (one queue on the GM's
 // client; each request checked against who asked).
-import { HAND_SCALE, pinChoices, pickFrom, ALIGNS, TEXT_STYLES, textStyleOf, markMax, cleanStroke, customKey, TYPEWRITER, newStringPatch, mergeRecords, recordTarget, recordUpdate, binList, seasonMarks, brushColor, PAINT_NAMES, PAINT_ORDER, noteFields } from './model.js';
+import { HAND_SCALE, pinChoices, pickFrom, ALIGNS, TEXT_STYLES, textStyleOf, markMax, cleanStroke, customKey, TYPEWRITER, newStringPatch, mergeRecords, recordTarget, recordUpdate, binList, removalOf, seasonMarks, brushColor, PAINT_NAMES, PAINT_ORDER, noteFields } from './model.js';
 import { listBackups, readBackup } from './backups.js';
 import { askGM, registerRelayHandler } from '../../common/relay.js';
 import { heartDialogOptions } from '../../common/dialog.js';
@@ -28,6 +28,60 @@ const esc = (s) => Handlebars.escapeExpression(String(s ?? ''));
 const hex = (c) => `#${(Number(c) >>> 0).toString(16).padStart(6, '0').slice(-6)}`;
 export const HANDS = Object.keys(HAND_SCALE);
 const MAX_TEXT = 300;
+// the brightnesses, dim to bright (model.js BRIGHT_MIX)
+const BRIGHTS = ['dim', 'as-is', 'bright'];
+
+// The brush's paints in the palette's order (PAINT_ORDER, then any more the
+// look has): every paint row's, the brush's, a note's, and a string's
+export const paintOrder = (n) => [...PAINT_ORDER.filter((i) => i < n), ...Array.from({ length: n }, (_, i) => i).filter((i) => !PAINT_ORDER.includes(i))];
+
+// A paint's name in this language (model.js PAINT_NAMES is the English, the
+// editor's); one past the names is "Paint 15"
+export function paintName(i) {
+    const en = PAINT_NAMES[i];
+    if (!en) return loc('heart.board.paint-n', { n: Number(i) + 1 });
+    const key = `heart.board.paint.${en.toLowerCase()}`;
+    return game.i18n.has?.(key) ? loc(key) : en;
+}
+
+// A pin's name (the pin picker's tooltips): its own key, else its file's
+export function pinName(id) {
+    const stem = String(id ?? '').split('__').pop().replace(/^fixture_/, '');
+    const key = `heart.board.pin.${stem}`;
+    return game.i18n.has?.(key) ? loc(key) : stem.replace(/_/g, ' ');
+}
+
+// A labelled row of a map dialog: a label, then its choices
+const row = (label, body, cls = '') => `<div class="heart-board-row ${cls}"><span class="lab">${esc(label)}</span>${body}</div>`;
+
+// The brightness, as the brush's palette has it: Dim, Medium, Bright, a
+// segmented control (Luke, 2026-10-21: one control style in both)
+const brightRow = (lit) => row(loc('heart.board.brush-light'), `<span class="heart-board-seg">${BRIGHTS.map((k, i) => `<label data-tooltip="${esc(loc(`heart.board.brush-${k}-hint`))}"><input type="radio" name="bright" value="${i}" ${i === lit ? 'checked' : ''}><span>${esc(loc(`heart.board.brush-${k}`))}</span></label>`).join('')}</span>`);
+
+// One hand as a tile, writing the sample in its own face: the hand picker's
+// and the note dialog's alike (Luke, 2026-10-21: one look for hands)
+const faceSize = (f) => Math.round(25 * (f === TYPEWRITER ? 0.82 : HAND_SCALE[f] ?? 1));
+function faceTile(f, { name, on = false, label = f, whose = '', claimed = false }) {
+    return `<label class="face ${on ? 'on' : ''} ${claimed ? 'claimed' : ''}"><input type="radio" name="${name}" value="${esc(f)}" ${on ? 'checked' : ''}><span class="smp" style="font-family: '${esc(f)}'; font-size: ${faceSize(f)}px">${esc(loc('heart.board.face-sample'))}</span><small><b>${esc(label)}</b> ${esc(whose)}</small></label>`;
+}
+
+// A question before an edit (Luke, 2026-10-21: confirms say what they do):
+// its two buttons named for the action and for leaving things be. Resolves
+// true or false.
+export function askBoard({ title, content, yes, no, width = 400 }) {
+    return new Promise((resolve) => {
+        new Dialog({
+            title,
+            content: `<p>${esc(content)}</p>`,
+            buttons: {
+                yes: { label: yes, callback: () => resolve(true) },
+                no: { label: no, callback: () => resolve(false) },
+            },
+            default: 'yes',
+            close: () => resolve(false),
+        }, heartDialogOptions({ classes: ['heart-board-dialog'], width })).render(true);
+    });
+}
 
 /* -------------------------------------------- */
 /*  Hands                                       */
@@ -69,12 +123,9 @@ const takenBy = (face) => Object.entries(hands()).find(([, f]) => f === face)?.[
 export function pickHand({ preview = false } = {}) {
     const mine = game.user.id;
     const free = HANDS.filter((f) => !takenBy(f) || takenBy(f) === mine);
-    const sample = loc('heart.board.hand-sample');
-    const cards = free.map((f, i) => `<label class="heart-board-hand">
-        <input type="radio" name="hand" value="${esc(f)}" ${i ? '' : 'checked'}>
-        <span style="font-family: '${esc(f)}'; font-size: ${Math.round(26 * (HAND_SCALE[f] ?? 1))}px">${esc(sample)}</span>
-        <small>${esc(f)}</small></label>`).join('');
-    const content = `<p>${esc(loc(preview ? 'heart.board.hand-preview' : 'heart.board.hand-pick'))}</p><div class="heart-board-hands">${cards}</div>`;
+    // (the note dialog's tiles and sample: Luke, 2026-10-21)
+    const tiles = free.map((f, i) => faceTile(f, { name: 'hand', on: !i })).join('');
+    const content = `<p>${esc(loc(preview ? 'heart.board.hand-preview' : 'heart.board.hand-pick'))}</p><div class="heart-board-faces">${tiles}</div>`;
     return new Promise((resolve) => {
         new Dialog({
             title: loc('heart.board.hand-title'),
@@ -84,8 +135,12 @@ export function pickHand({ preview = false } = {}) {
                 cancel: { label: loc('Cancel'), callback: () => resolve(null) },
             },
             default: 'ok',
+            render: (html) => html.find('[name=hand]').on('change', (ev) => {
+                html.find('.heart-board-faces .face').removeClass('on');
+                $(ev.currentTarget).closest('.face').addClass('on');
+            }),
             close: () => resolve(null),
-        }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 460 })).render(true);
+        }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 520 })).render(true);
     });
 }
 
@@ -117,7 +172,7 @@ export async function noteDialog({ text = '', hand = null, paper = null, ink = n
     // (Luke, 2026-10-03: how the writing is set: align, bold, italic,
     // underline, strike through)
     const ICON = { left: 'fa-align-left', center: 'fa-align-center', right: 'fa-align-right', bold: 'fa-bold', italic: 'fa-italic', underline: 'fa-underline', strike: 'fa-strikethrough' };
-    const styleRow = `<div class="heart-board-style">${ALIGNS.map((a) => `<label title="${esc(loc(`heart.board.align-${a}`))}"><input type="radio" name="align" value="${a}" ${(st.align ?? 'center') === a ? 'checked' : ''}><i class="fa-solid ${ICON[a]}"></i></label>`).join('')}<span class="sep"></span>${TEXT_STYLES.map((k) => `<label title="${esc(loc(`heart.board.style-${k}`))}"><input type="checkbox" name="${k}" ${st[k] ? 'checked' : ''}><i class="fa-solid ${ICON[k]}"></i></label>`).join('')}</div>`;
+    const styleRow = `<div class="heart-board-style">${ALIGNS.map((a) => `<label data-tooltip="${esc(loc(`heart.board.align-${a}`))}"><input type="radio" name="align" value="${a}" ${(st.align ?? 'center') === a ? 'checked' : ''}><span><i class="fa-solid ${ICON[a]}"></i></span></label>`).join('')}<span class="sep"></span>${TEXT_STYLES.map((k) => `<label data-tooltip="${esc(loc(`heart.board.style-${k}`))}"><input type="checkbox" name="${k}" ${st[k] ? 'checked' : ''}><span><i class="fa-solid ${ICON[k]}"></i></span></label>`).join('')}</div>`;
     const { look, textures } = await loadBoardLook();
     const papers = type === 'note' ? look.pools.notes.filter((id) => textureUrl(textures, id)) : [];
     const face = hand ?? look.fonts.hands[0];
@@ -125,7 +180,6 @@ export async function noteDialog({ text = '', hand = null, paper = null, ink = n
     // writing in its own face: the GM's every hand; a player's own (and the
     // typewriter, a Witness's)
     const faces = [...(chooseHand ? HANDS : [face]), ...(canType ? [TYPEWRITER] : [])];
-    const sample = loc('heart.board.face-sample');
     const now = typed && canType ? TYPEWRITER : face;
     // (Luke, 2026-10-06: fewer at a time, each sample large enough to read,
     // and whose each hand is: a player's claimed one, with their character;
@@ -141,7 +195,7 @@ export async function noteDialog({ text = '', hand = null, paper = null, ink = n
         return look.fonts.hands.includes(f) ? loc('heart.board.hand-gms') : loc('heart.board.hand-free');
     };
     const faceRow = faces.length > 1
-        ? `<div class="heart-board-faces" title="${esc(loc('heart.board.hand'))}">${faces.map((f) => `<label class="face ${f === now ? 'on' : ''} ${claimed.some(([, h]) => h === f) ? 'claimed' : ''}"><input type="radio" name="face" value="${esc(f)}" ${f === now ? 'checked' : ''}><span class="smp" style="font-family: '${esc(f)}'; font-size: ${Math.round(25 * (f === TYPEWRITER ? 0.82 : HAND_SCALE[f] ?? 1))}px">${esc(sample)}</span><small><b>${esc(f === TYPEWRITER ? '' : f)}</b> ${esc(whose(f))}</small></label>`).join('')}</div>`
+        ? `<div class="heart-board-faces">${faces.map((f) => faceTile(f, { name: 'face', on: f === now, label: f === TYPEWRITER ? '' : f, whose: whose(f), claimed: claimed.some(([, h]) => h === f) })).join('')}</div>`
         : '';
     const paperUrl = (id) => (id ? textureUrl(textures, id) : null);
     const paperId = (id) => (paperUrl(id) ? id : paperUrl(shownPaper) ? shownPaper : papers[0] ?? null);
@@ -150,14 +204,13 @@ export async function noteDialog({ text = '', hand = null, paper = null, ink = n
     // 2026-10-06: the same choices as the brush); an ink the paper had before
     // stays until a paint is picked
     const marker = look.ink.marker ?? [];
-    const order = [...PAINT_ORDER.filter((i) => i < marker.length), ...marker.map((_, i) => i).filter((i) => !PAINT_ORDER.includes(i))];
     let lit = bright ?? 1;
     const colourOf = (p) => (p === null || p === undefined || p === '' ? (ink !== null && ink !== undefined ? hex((type === 'scrawl' ? look.ink.sheet : look.ink.paper)[ink] ?? look.ink.text) : '') : hex(brushColor(marker[Number(p)], lit)));
-    const paintRow = `<div class="heart-board-paints" title="${esc(loc('heart.board.ink'))}">${order.map((i) => `<label data-tooltip="${esc(PAINT_NAMES[i] ?? '')}"><input type="radio" name="paint" value="${i}" ${i === paint ? 'checked' : ''}><span style="background:${hex(brushColor(marker[i], lit))}"></span></label>`).join('')}
-        <label class="any"><input type="radio" name="paint" value="" ${paint === null || paint === undefined ? 'checked' : ''}><span>${esc(loc('heart.board.any'))}</span></label></div>
-        <div class="heart-board-brights">${['dim', 'as-is', 'bright'].map((k, i) => `<label><input type="radio" name="bright" value="${i}" ${i === lit ? 'checked' : ''}><span>${esc(loc(`heart.board.brush-${k}`))}</span></label>`).join('')}</div>`;
+    // (Any first, as in every row that has one: Luke 2026-10-21)
+    const paintRow = row(loc('heart.board.paint-label'), `<div class="heart-board-paints"><label class="any"><input type="radio" name="paint" value="" ${paint === null || paint === undefined ? 'checked' : ''}><span>${esc(loc('heart.board.any'))}</span></label>${paintOrder(marker.length).map((i) => `<label data-tooltip="${esc(paintName(i))}"><input type="radio" name="paint" value="${i}" ${i === paint ? 'checked' : ''}><span style="background:${hex(brushColor(marker[i], lit))}"></span></label>`).join('')}</div>`)
+        + brightRow(lit);
     const paperRow = papers.length
-        ? `<div class="heart-board-papers" title="${esc(loc('heart.board.paper'))}"><label class="any"><input type="radio" name="paper" value="" ${paper ? '' : 'checked'}><span>${esc(loc('heart.board.any'))}</span></label>${papers.map((id) => `<label><input type="radio" name="paper" value="${esc(id)}" ${paper === id ? 'checked' : ''}><img src="${textureUrl(textures, id)}" alt=""></label>`).join('')}</div>`
+        ? row(loc('heart.board.paper'), `<div class="heart-board-papers"><label class="any"><input type="radio" name="paper" value="" ${paper ? '' : 'checked'}><span>${esc(loc('heart.board.any'))}</span></label>${papers.map((id) => `<label><input type="radio" name="paper" value="${esc(id)}" ${paper === id ? 'checked' : ''}><img src="${textureUrl(textures, id)}" alt=""></label>`).join('')}</div>`)
         : '';
     // the note as it will lie (Luke, 2026-10-06: a bigger preview): its paper
     // turned a quarter at a time and freely, its writing where it sits on it,
@@ -174,10 +227,13 @@ export async function noteDialog({ text = '', hand = null, paper = null, ink = n
             <div class="heart-board-turns"><button type="button" data-q="-1" data-tooltip="${esc(loc('heart.board.note-turn-left'))}"><i class="fa-solid fa-rotate-left"></i></button><button type="button" data-q="1" data-tooltip="${esc(loc('heart.board.note-turn-right'))}"><i class="fa-solid fa-rotate-right"></i></button>
             <label><span>${esc(loc('heart.board.note-tilt'))}</span><input type="range" name="tilt" min="-45" max="45" step="1" value="${Math.max(-45, Math.min(45, deg))}"><output>${deg}°</output></label></div>`
         : `<div class="heart-board-preview sheet">${area}</div>`;
+    // (Luke, 2026-10-21: Enter writes it, Shift+Enter starts a new line, as
+    // in the editor)
+    const hint = `<p class="heart-board-hint">${esc(loc('heart.board.note-enter'))}</p>`;
     return new Promise((resolve) => {
-        new Dialog({
+        const d = new Dialog({
             title: loc(title),
-            content: `${stage}${styleRow}${faceRow}${paintRow}${paperRow}`,
+            content: `${stage}${hint}${styleRow}${faceRow}${paintRow}${paperRow}`,
             buttons: {
                 ok: {
                     label: loc('heart.board.write'),
@@ -209,6 +265,12 @@ export async function noteDialog({ text = '', hand = null, paper = null, ink = n
             render: (html) => {
                 const ta = html.find('textarea');
                 ta.trigger('focus');
+                ta.on('keydown', (ev) => {
+                    if (ev.key !== 'Enter' || ev.shiftKey || ev.originalEvent?.isComposing) return;
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    d.submit(d.data.buttons.ok, ev.originalEvent ?? ev);
+                });
                 const sheet = html.find('.heart-board-sheet')[0];
                 // the paper as it lies: its picture turned and mirrored inside
                 // a sheet its shape, the sheet turned freely
@@ -431,6 +493,22 @@ async function ownStrings(scene, board, req, userId, sink) {
     return { status: 'not-allowed' };
 }
 
+// The cards a player may take off (Luke, 2026-10-21: their own notes and
+// writing, into the bin like the GM's): each one theirs to move (mayMove),
+// and nothing that would go with it anyone else's (a string tied to it, a pin
+// in it, a joint it holds). Null refuses the lot; an owner of a players'
+// board, or the GM, may take any note or writing.
+export function ownCardsOf(board, keys, who) {
+    const list = [...new Set([].concat(keys ?? []).map(String))];
+    if (!list.length || !who || list.some((k) => !mayMove(board?.scraps?.[k], who))) return null;
+    if (who.isGM || who.owner) return list;
+    const r = removalOf(board, { scraps: list });
+    const theirs = (id) => board.links?.[id]?.author === who.id;
+    if (![...r.links, ...Object.keys(r.edits ?? {})].every(theirs)) return null;
+    if (!r.pins.every((id) => ownedPin(board, id, who.id))) return null;
+    return list;
+}
+
 // Whether a player may have a record of theirs undone or done again (Luke,
 // 2026-10-06: each player undoes their own edits): every thing it touches,
 // before and after, theirs to edit (their notes and writing, their strings and
@@ -453,6 +531,12 @@ export function mayHistory(board, rec, side, who) {
         } else if (coll === 'pins') {
             // (theirs, or held only by their strings, as it is now)
             if (!versions((x) => x?.pins?.[id]).every((p) => !p || who.owner || mine(p) || ownedPin(board, id, who.id))) return false;
+        } else if (coll === 'bin') {
+            // (their own note or writing in the bin, Luke 2026-10-21: taken
+            // off by them, so put back by their undo)
+            const theirs = (e) => (e.scrap?.type === 'note' || e.scrap?.type === 'scrawl') && (who.owner || mine(e.scrap));
+            const whole = op.path.length === 2 ? [op.a, op.b].filter((e) => e !== undefined) : [];
+            if (!whole.every((e) => e && theirs(e)) || !versions((x) => x?.bin?.[id]).every((e) => !e || theirs(e))) return false;
         } else return false;
     }
     return true;
@@ -618,6 +702,14 @@ async function boardEditFor(scene, board, req, userId, who, sink) {
         await removeMarks(scene, (Array.isArray(req.unmark) ? req.unmark : []).filter((e) => Array.isArray(e) && mayGo(e)), { sink });
         return { status: 'done' };
     }
+    // a player's own notes and writing taken off, into the bin (Luke,
+    // 2026-10-21): refused whole if any of it, or what goes with it, isn't theirs
+    if (req.ownCards) {
+        const keys = ownCardsOf(board, req.ownCards, who);
+        if (!keys) return { status: 'not-allowed' };
+        await binCards(scene, keys, { sink, by: userId });
+        return { status: 'done' };
+    }
     // a player's own strings (Luke, 2026-10-03): made, edited, named, taken off
     if (req.ownString || req.ownPatch || req.ownRemove || req.ownLabel) return ownStrings(scene, board, req, userId, sink);
     if (!who.isGM && !who.owner) return { status: 'not-allowed' };
@@ -654,35 +746,39 @@ async function boardEditFor(scene, board, req, userId, who, sink) {
 /*  The tools' dialogs                          */
 /* -------------------------------------------- */
 
-// A new string's kind and name (or an existing one's)
+// An existing string's kind, name, and colour (a new one never asks: Luke,
+// 2026-10-06; double-click it to come here)
 // `player`: a player's own string (Luke, 2026-10-03): one of the sheet's
 // paints, never a delve, the Vermissian, or a path (their kinds and default
 // colours are the GM's)
 export async function stringDialog({ kind = 'delve', label = '', color = null, player = false } = {}) {
-    const opt = (k) => `<option value="${k}" ${k === kind ? 'selected' : ''}>${esc(loc(`heart.board.kind-${k}`))}</option>`;
-    // (any string in any colour: the sheet's paints, the marker's)
+    // (any string in any of the brush's paints, in the brush's order and
+    // names: Luke 2026-10-21)
     const { look } = await loadBoardLook();
+    const marker = look.ink.marker ?? [];
     const pick = player ? color ?? 0 : color;
-    const colors = `<div class="heart-board-inks" title="${esc(loc('heart.board.string-color'))}">${player ? '' : `<label class="any"><input type="radio" name="color" value="" ${pick === null || pick === undefined ? 'checked' : ''}><span>${esc(loc('heart.board.string-color-own'))}</span></label>`}${look.ink.marker.map((c, i) => `<label><input type="radio" name="color" value="${i}" ${i === pick ? 'checked' : ''}><span style="background:${hex(c)}"></span></label>`).join('')}</div>`;
-    const kinds = player ? '' : `<div class="form-group"><label>${esc(loc('heart.board.kind'))}</label><select name="kind">${['delve', 'rail', 'path'].map(opt).join('')}</select></div>`;
+    const own = player ? '' : `<label class="any"><input type="radio" name="color" value="" ${pick === null || pick === undefined ? 'checked' : ''}><span>${esc(loc('heart.board.string-color-own'))}</span></label>`;
+    const colors = row(loc('heart.board.string-color'), `<div class="heart-board-paints">${own}${paintOrder(marker.length).map((i) => `<label data-tooltip="${esc(paintName(i))}"><input type="radio" name="color" value="${i}" ${i === pick ? 'checked' : ''}><span style="background:${hex(marker[i])}"></span></label>`).join('')}</div>`);
+    // (its kind as chips, not a dropdown)
+    const kinds = player ? '' : row(loc('heart.board.kind'), `<span class="heart-board-chips">${['delve', 'rail', 'path'].map((k) => `<label><input type="radio" name="kind" value="${k}" ${k === kind ? 'checked' : ''}><span>${esc(loc(`heart.board.kind-${k}`))}</span></label>`).join('')}</span>`);
+    const name = row(loc('heart.board.string-name'), `<input type="text" name="label" value="${esc(label)}" placeholder="${esc(loc('heart.board.string-name-hint'))}">`);
     return new Promise((resolve) => {
         new Dialog({
-            title: loc('heart.board.string-title'),
-            content: `${kinds}
-                <div class="form-group"><label>${esc(loc('heart.board.string-name'))}</label><input type="text" name="label" value="${esc(label)}" placeholder="${esc(loc('heart.board.string-name-hint'))}"></div>${colors}`,
+            title: loc('heart.board.string-this'),
+            content: `${kinds}${name}${colors}`,
             buttons: {
                 ok: {
-                    label: loc('heart.board.tie'),
+                    label: loc('heart.board.keep-it'),
                     callback: (html) => {
                         const c = html.find('[name=color]:checked').val();
-                        resolve({ kind: player ? 'path' : html.find('[name=kind]').val(), label: String(html.find('[name=label]').val() ?? '').trim(), color: c === '' || c === undefined ? (player ? 0 : null) : Number(c) });
+                        resolve({ kind: player ? 'path' : html.find('[name=kind]:checked').val() ?? kind, label: String(html.find('[name=label]').val() ?? '').trim(), color: c === '' || c === undefined ? (player ? 0 : null) : Number(c) });
                     },
                 },
                 cancel: { label: loc('Cancel'), callback: () => resolve(null) },
             },
             default: 'ok',
             close: () => resolve(null),
-        }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 380 })).render(true);
+        }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 460 })).render(true);
     });
 }
 
@@ -691,12 +787,11 @@ export async function stringDialog({ kind = 'delve', label = '', color = null, p
 export async function pinDialog({ thumb = null } = {}) {
     const { look, textures } = await loadBoardLook();
     const ids = pinChoices(look, Object.keys(textures)).filter((id) => textureUrl(textures, id));
-    const name = (id) => id.split('__').pop().replace(/^fixture_/, '').replace(/_/g, ' ');
     let picked = null;
     return new Promise((resolve) => {
         const d = new Dialog({
             title: loc('heart.board.pin-title'),
-            content: `<p>${esc(loc('heart.board.pin-hint'))}</p><div class="heart-board-pins">${ids.map((id) => `<button type="button" data-pin="${esc(id)}" title="${esc(name(id))}"><img src="${textureUrl(textures, id)}" alt=""></button>`).join('')}</div>`,
+            content: `<p>${esc(loc('heart.board.pin-hint'))}</p><div class="heart-board-pins">${ids.map((id) => `<button type="button" data-pin="${esc(id)}" data-tooltip="${esc(pinName(id))}" aria-label="${esc(pinName(id))}"><img src="${textureUrl(textures, id)}" alt=""></button>`).join('')}</div>`,
             buttons: { cancel: { label: loc('Cancel') } },
             default: 'cancel',
             render: (html) => {
@@ -762,7 +857,7 @@ export async function binDialog(scene) {
     const list = binList(boardOf(scene), look);
     const kind = (t) => loc(t === 'note' ? 'heart.board.bin-note' : t === 'scrawl' ? 'heart.board.bin-writing' : 'heart.board.bin-place');
     const rows = list.length
-        ? list.map((e) => `<div class="heart-board-bin-row"><div><b>${esc(String(e.name).slice(0, 60))}</b><small>${esc(kind(e.type))}, ${esc(ago(e.at))}${e.by && game.users.get(e.by) ? `, ${esc(game.users.get(e.by).name)}` : ''}</small></div><button type="button" data-unbin="${esc(e.key)}"><i class="fa-solid fa-rotate-left"></i> ${esc(loc('heart.board.bin-restore'))}</button></div>`).join('')
+        ? list.map((e) => `<div class="heart-board-bin-row"><div><b>${esc(String(e.name).slice(0, 60))}</b><small>${esc(kind(e.type))}, ${esc(ago(e.at))}${e.by && game.users.get(e.by) ? `, ${esc(game.users.get(e.by).name)}` : ''}</small></div><button type="button" class="heart-board-act" data-unbin="${esc(e.key)}"><i class="fa-solid fa-rotate-left"></i> ${esc(loc('heart.board.bin-restore'))}</button></div>`).join('')
         : `<p>${esc(loc('heart.board.bin-none'))}</p>`;
     const d = new Dialog({
         title: loc('heart.board.bin-title'),
@@ -773,7 +868,7 @@ export async function binDialog(scene) {
                 label: loc('heart.board.bin-empty'),
                 callback: async () => {
                     if (!list.length) return;
-                    const ok = await Dialog.confirm({ title: loc('heart.board.bin-empty'), content: `<p>${esc(loc('heart.board.bin-empty-confirm', { n: list.length }))}</p>`, options: heartDialogOptions({ classes: ['heart-board-dialog'] }) });
+                    const ok = await askBoard({ title: loc('heart.board.bin-empty'), content: loc('heart.board.bin-empty-confirm', { n: list.length }), yes: loc('heart.board.ask.let-go'), no: loc('heart.board.ask.keep-them') });
                     if (ok) await emptyBin(scene);
                 },
             },
@@ -797,7 +892,7 @@ export async function backupsDialog(scene) {
     const list = await listBackups(scene.id);
     const why = (w) => loc(`heart.board.history-why-${['start', 'removed', 'replaced'].includes(w) ? w : 'edits'}`);
     const rows = list.length
-        ? list.map((e) => `<div class="heart-board-bin-row"><div><b>${esc(ago(e.at))}</b><small>${esc(why(e.why))}: ${esc(loc('heart.board.history-counts', { cards: e.counts?.cards ?? 0, strings: e.counts?.strings ?? 0, strokes: e.counts?.strokes ?? 0 }))}</small></div><button type="button" data-backup="${e.id}"><i class="fa-solid fa-clock-rotate-left"></i> ${esc(loc('heart.board.history-restore'))}</button></div>`).join('')
+        ? list.map((e) => `<div class="heart-board-bin-row"><div><b>${esc(ago(e.at))}</b><small>${esc(why(e.why))}: ${esc(loc('heart.board.history-counts', { cards: e.counts?.cards ?? 0, strings: e.counts?.strings ?? 0, strokes: e.counts?.strokes ?? 0 }))}</small></div><button type="button" class="heart-board-act" data-backup="${e.id}"><i class="fa-solid fa-clock-rotate-left"></i> ${esc(loc('heart.board.history-restore'))}</button></div>`).join('')
         : `<p>${esc(loc('heart.board.history-none'))}</p>`;
     const d = new Dialog({
         title: loc('heart.board.history-title'),
@@ -806,7 +901,7 @@ export async function backupsDialog(scene) {
         default: 'close',
         render: (html) => html.find('[data-backup]').on('click', async (ev) => {
             const id = Number(ev.currentTarget.dataset.backup);
-            const ok = await Dialog.confirm({ title: loc('heart.board.history-title'), content: `<p>${esc(loc('heart.board.history-confirm'))}</p>`, options: heartDialogOptions({ classes: ['heart-board-dialog'] }) });
+            const ok = await askBoard({ title: loc('heart.board.history-title'), content: loc('heart.board.history-confirm'), yes: loc('heart.board.ask.put-back'), no: loc('heart.board.ask.keep-this') });
             if (!ok) return;
             const board = await readBackup(id);
             if (!board) return ui.notifications.warn(loc('heart.board.history-gone'));
@@ -838,18 +933,80 @@ export function exportDialog(json) {
     }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 560 })).render(true);
 }
 
-// A board pasted from the editor
+// A board pasted from the editor, or (Luke, 2026-10-21) loaded from a file
+// this computer has (a downloaded board): its text lands in the box, then
+// Import takes it the same way
 export function importDialog() {
     return new Promise((resolve) => {
         new Dialog({
             title: loc('heart.board.import-title'),
-            content: `<p>${esc(loc('heart.board.import-hint'))}</p><textarea name="json" rows="14" placeholder="{ &quot;scraps&quot;: ... }"></textarea>`,
+            content: `<p>${esc(loc('heart.board.import-hint'))}</p>
+                <div class="heart-board-file"><label class="heart-board-act"><input type="file" accept=".json,application/json" hidden><i class="fa-solid fa-file-arrow-up"></i> ${esc(loc('heart.board.import-file'))}</label><span class="name"></span></div>
+                <textarea name="json" rows="14" placeholder="{ &quot;scraps&quot;: ... }"></textarea>`,
             buttons: {
                 ok: { label: loc('heart.board.import'), callback: (html) => resolve(String(html.find('[name=json]').val() ?? '')) },
                 cancel: { label: loc('Cancel'), callback: () => resolve(null) },
             },
             default: 'ok',
+            render: (html) => html.find('input[type=file]').on('change', async (ev) => {
+                const file = ev.currentTarget.files?.[0];
+                if (!file) return;
+                try {
+                    html.find('[name=json]').val(await file.text());
+                    html.find('.heart-board-file .name').text(file.name);
+                } catch {
+                    ui.notifications.error(loc('heart.board.import-bad'));
+                }
+            }),
             close: () => resolve(null),
         }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 560 })).render(true);
+    });
+}
+
+// A new place (Luke, 2026-10-21: File, New place, for places invented at the
+// table): its name, a picture (Foundry's file picker; none is fine), hidden or
+// known, and where its card goes. Resolves { name, img, state, where } or null.
+export function placeDialog() {
+    const chips = (name, list, on) => `<span class="heart-board-chips">${list.map(([v, key]) => `<label><input type="radio" name="${name}" value="${v}" ${v === on ? 'checked' : ''}><span>${esc(loc(key))}</span></label>`).join('')}</span>`;
+    const content = `<p>${esc(loc('heart.board.place-hint'))}</p>
+        ${row(loc('heart.board.place-name'), `<input type="text" name="name" placeholder="${esc(loc('heart.board.place-name-hint'))}">`)}
+        ${row(loc('heart.board.place-img'), `<div class="heart-board-file"><input type="text" name="img" placeholder="${esc(loc('heart.board.place-img-hint'))}"><button type="button" class="heart-board-act" data-browse><i class="fa-solid fa-file-image"></i> ${esc(loc('heart.board.place-browse'))}</button></div>`)}
+        <img class="heart-board-place-img" alt="" hidden>
+        ${row(loc('heart.board.place-state'), chips('state', [['hidden', 'heart.board.place-hidden'], ['known', 'heart.board.place-known']], 'hidden'))}
+        ${row(loc('heart.board.place-where'), chips('where', [['centre', 'heart.board.place-centre'], ['click', 'heart.board.place-click']], 'centre'))}`;
+    return new Promise((resolve) => {
+        const d = new Dialog({
+            title: loc('heart.board.place-title'),
+            content,
+            buttons: {
+                ok: {
+                    label: loc('heart.board.place-make'),
+                    callback: (html) => {
+                        const name = String(html.find('[name=name]').val() ?? '').trim();
+                        if (!name) {
+                            ui.notifications.warn(loc('heart.board.place-no-name'));
+                            return resolve(null);
+                        }
+                        resolve({ name, img: String(html.find('[name=img]').val() ?? '').trim() || null, state: html.find('[name=state]:checked').val() === 'known' ? 'known' : 'hidden', where: html.find('[name=where]:checked').val() === 'click' ? 'click' : 'centre' });
+                    },
+                },
+                cancel: { label: loc('Cancel'), callback: () => resolve(null) },
+            },
+            default: 'ok',
+            render: (html) => {
+                const field = html.find('[name=img]');
+                const shot = html.find('.heart-board-place-img');
+                const show = () => {
+                    const src = String(field.val() ?? '').trim();
+                    shot.attr('src', src || null).prop('hidden', !src);
+                    d.setPosition({ height: 'auto' });
+                };
+                field.on('change', show);
+                html.find('[data-browse]').on('click', () => new FilePicker({ type: 'image', current: String(field.val() ?? ''), callback: (path) => { field.val(path); show(); } }).render(true));
+                html.find('[name=name]').trigger('focus');
+            },
+            close: () => resolve(null),
+        }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 460 }));
+        d.render(true);
     });
 }

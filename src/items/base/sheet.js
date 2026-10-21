@@ -256,7 +256,7 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
             const type = target.data('type');
             let itemData = target.data('data') || {};
 
-            const data = { documentName, type: type, name: `New ${type}`, system: itemData };
+            const data = { documentName, type: type, name: game.i18n.format('heart.new-item', { type }), system: itemData };
             // open the new child's sheet to name and fill it (addChildren
             // gives the data its id); it is already listed in its section
             this.item.addChildren([data]).then(() => this.item.children?.get(data._id)?.sheet.render(true));

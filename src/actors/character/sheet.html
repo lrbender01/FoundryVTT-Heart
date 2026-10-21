@@ -452,11 +452,12 @@
                     {{{heartTerms (localizeHeart item.system.description) refs=true}}}
                   </div>
                 <div class="trinket-row">
-                  {{#if item.flags.heart.trinket}}
+                  {{#if @root.trinkets.calling.entries.length}}
                   <span class="trinket-label">{{localizeHeart "trinket" "trinket"}}:</span>
-                  <a class="trinket-name" data-action="view-trinket" data-uuid="{{item.flags.heart.trinket.uuid}}">{{@root.trinketNames.calling}}</a>
-                  {{else if item.isOwner}}
-                  <button type="button" class="trinket-roll" data-action="roll-trinket"><span class="fas fa-dice-d20"></span> {{localizeHeart "trinket" "roll-trinket"}}</button>
+                  {{#each @root.trinkets.calling.entries}}<a class="trinket-name" data-action="view-trinket" data-uuid="{{uuid}}">{{name}}</a>{{/each}}
+                  {{/if}}
+                  {{#if @root.trinkets.calling.canDraw}}
+                  <button type="button" class="trinket-roll" data-action="roll-trinket"><span class="fas fa-dice-d20"></span> {{@root.trinkets.calling.rollLabel}}</button><button type="button" class="trinket-roll" data-action="pick-trinket"><span class="fas fa-hand-pointer"></span> {{@root.trinkets.calling.pickLabel}}</button>
                   {{/if}}
                 </div>
                   {{#each item.system.questions as |question id|}}
@@ -503,11 +504,12 @@
                     {{{heartTerms (localizeHeart ancestryItem.system.description)}}}
                   </div>
                 <div class="trinket-row">
-                  {{#if ancestryItem.flags.heart.trinket}}
+                  {{#if @root.trinkets.ancestry.entries.length}}
                   <span class="trinket-label">{{localizeHeart "trinket" "keepsake"}}:</span>
-                  <a class="trinket-name" data-action="view-trinket" data-uuid="{{ancestryItem.flags.heart.trinket.uuid}}">{{@root.trinketNames.ancestry}}</a>
-                  {{else if ancestryItem.isOwner}}
-                  <button type="button" class="trinket-roll" data-action="roll-trinket"><span class="fas fa-dice-d20"></span> {{localizeHeart "trinket" "roll-keepsake"}}</button>
+                  {{#each @root.trinkets.ancestry.entries}}<a class="trinket-name" data-action="view-trinket" data-uuid="{{uuid}}">{{name}}</a>{{/each}}
+                  {{/if}}
+                  {{#if @root.trinkets.ancestry.canDraw}}
+                  <button type="button" class="trinket-roll" data-action="roll-trinket"><span class="fas fa-dice-d20"></span> {{@root.trinkets.ancestry.rollLabel}}</button><button type="button" class="trinket-roll" data-action="pick-trinket"><span class="fas fa-hand-pointer"></span> {{@root.trinkets.ancestry.pickLabel}}</button>
                   {{/if}}
                 </div>
                   {{!-- answer one question (2026-09-30, Luke): the pencil

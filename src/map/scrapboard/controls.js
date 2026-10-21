@@ -15,6 +15,8 @@
 //   user()     { id, isGM, owner } (owner: one of a players' board's owners)
 //   px()       board px per screen px (the pointer's reach, the handles' size)
 //   raw()      the board JSON (a scrap's added pins, a string's joints)
+//   say(id)    optional: a reticle caption in the host's language (null or
+//              missing: the English here)
 // }
 //
 // Move: a press selects (Ctrl adds or takes away; a press on anything
@@ -24,9 +26,9 @@
 // inside it, and every string whose pins all are. A drag takes hold of, in
 // order: the turn handle (the circle at the selection's top-right corner) or
 // size handle (the square at its bottom-right), a piece of the one selected
-// card (its clipping, tape, pins, writing), a string with Shift (reshape it:
-// its taut or slack, and where it pulls) or Ctrl (pin a new joint into it), a
-// pin with Ctrl (a new string from it), the selection, a pin, string end,
+// card (its clipping, tape, pins, writing), a string with Ctrl (pin a new
+// joint into it), Shift (break it there), or Alt (reshape it: where it
+// pulls), a pin with Ctrl (a new string from it), the selection, a pin, string end,
 // joint, junction, or tag, a string (its loose ends and joints), a card this
 // user may move, else the empty board (a box). Near a pin or a string, a
 // white dot shows what a press would take, and a ring when it has caught it
@@ -354,9 +356,11 @@ export class BoardControls {
         if (this.bit && (!this.gm || !view?.bits?.some((b) => b.id === this.bit))) this.bit = null;
         const keys = new Set(view?.scraps.filter((s) => this.may(s)).map((s) => s.key));
         for (const k of [...this.selection]) if (!keys.has(k)) this.selection.delete(k);
-        const pins = new Set(this.editor ? view?.pins?.map((p) => p.id) : []);
+        // (a player keeps their own pins and strings selected: Luke,
+        // 2026-10-21, a new string of theirs is selected as it is made)
+        const pins = new Set(view?.pins?.filter((p) => this.minePin(p.id)).map((p) => p.id));
         for (const id of [...this.pins]) if (!pins.has(id)) this.pins.delete(id);
-        const links = new Set(this.editor ? view?.links.map((l) => l.id) : []);
+        const links = new Set(view?.links.filter((l) => this.mine(l)).map((l) => l.id));
         for (const id of [...this.links]) if (!links.has(id)) this.links.delete(id);
         if (this.link && !links.has(this.link)) this.link = null;
     }
@@ -477,20 +481,22 @@ export class BoardControls {
 
     // What a press does on what the reticle caught (Luke, 2026-10-02: clear
     // directions for the pins)
+    // (each by an id, so a host may say it in its own language: host.say)
     #caption(key) {
+        const say = (cid, en) => this.host.say?.(cid) || en;
         const [kind, id] = String(key).split(':');
-        if (kind === 'part') return 'click: this alone (then turn, size) · drag: move it on the card';
-        if (kind === 'link') return 'drag: move · ctrl+drag: pin a joint in · shift+drag: break it · alt+drag: reshape';
-        if (kind === 'scrapPin') return 'drag: move on the card, or off it · ctrl+drag: a new string';
+        if (kind === 'part') return say('part', 'click: this alone (then turn, size) · drag: move it on the card');
+        if (kind === 'link') return say('link', 'drag: move · ctrl+drag: pin a joint in · shift+drag: break it · alt+drag: reshape');
+        if (kind === 'scrapPin') return say('card-pin', 'drag: move on the card, or off it · ctrl+drag: a new string');
         if (kind === 'pin') {
             const p = this.host.view()?.pins?.find((q) => q.id === id);
             const n = p ? this.#refsOf(p.id).length : 0;
-            if (n > 1) return 'drag: move · onto a string pin: join · shift+drag: pull a string off · ctrl+drag: new string · click: turn, size';
-            if (n === 1 && this.#refsOf(p.id)[0] && 'idx' in this.#refsOf(p.id)[0]) return 'drag: move · shift+drag: break the string here · onto a string pin: join · ctrl+drag: new string · click: turn, size';
-            if (n === 1) return 'drag: move, on a card or off · onto a string pin: join · ctrl+drag: new string · click: turn, size';
-            return 'drag: move, on a card or off · ctrl+drag: new string · click: turn, size';
+            if (n > 1) return say('pin-meeting', 'drag: move · onto a string pin: join · shift+drag: pull a string off · ctrl+drag: new string · click: turn, size');
+            if (n === 1 && this.#refsOf(p.id)[0] && 'idx' in this.#refsOf(p.id)[0]) return say('pin-joint', 'drag: move · shift+drag: break the string here · onto a string pin: join · ctrl+drag: new string · click: turn, size');
+            if (n === 1) return say('pin-end', 'drag: move, on a card or off · onto a string pin: join · ctrl+drag: new string · click: turn, size');
+            return say('pin', 'drag: move, on a card or off · ctrl+drag: new string · click: turn, size');
         }
-        return 'drag: move · onto a string pin: join · ctrl+drag: new string';
+        return say('end', 'drag: move · onto a string pin: join · ctrl+drag: new string');
     }
 
     // a press within reach of the reticle, once its ring shows, takes what it
@@ -1908,19 +1914,39 @@ export class BoardControls {
         return Object.keys(out).length ? { scraps: out } : null;
     }
 
-    // What Delete takes off the board: its pins and its strings. Cards never
-    // (Luke, 2026-10-06: text and pictures can't be made again): they come
-    // off by their right-click menu, into the bin; `cards` says which were
-    // left on.
+    // What Delete takes off the board at once: its pins and its strings.
+    // Cards never at once (Luke, 2026-10-06: text and pictures can't be made
+    // again): the host asks first, then puts them in the bin; `cards` says
+    // which were selected.
     removal() {
         if (!this.editor) {
             const links = this.host.view()?.links ?? [];
-            return { scraps: [], pins: [...this.pins].filter((id) => this.minePin(id)), links: [...this.links].filter((id) => this.mine(links.find((l) => l.id === id))), cards: [] };
+            // (and their own notes and writing, asked first, into the bin:
+            // Luke 2026-10-21)
+            const raw = this.host.raw() ?? {};
+            return { scraps: [], pins: [...this.pins].filter((id) => this.minePin(id)), links: [...this.links].filter((id) => this.mine(links.find((l) => l.id === id))), cards: [...this.selection].filter((k) => this.may(raw.scraps?.[k])) };
         }
         // (a card's picture or writing picked: the card itself, asked first,
         // as they never come off alone; Luke 2026-10-06)
         const whole = this.part && (this.part.id === 'clip' || this.part.id === 'text') ? [this.part.key] : [];
         return { scraps: [], pins: [...this.pins], links: [...this.links], cards: [...new Set([...this.selection, ...whole])] };
+    }
+
+    // The selected cards put together afresh (Luke, 2026-10-21: the editor's
+    // Reshuffle, in Foundry too; Shift+R): each a new seed (its paper, its
+    // clipping's place and tilt, its tape and pins, its grime), its pieces
+    // moved or taken off by hand back with it. Writing on the sheet has no
+    // assembly. The GM's; returns a patch, or null.
+    reshuffle() {
+        if (!this.gm) return null;
+        const raw = this.host.raw() ?? {};
+        const out = {};
+        for (const k of this.selection) {
+            const s = raw.scraps?.[k];
+            if (!s || s.type === 'scrawl') continue;
+            out[k] = { seed: Math.max(0, Math.round(Number(s.seed) || 0)) + 1, parts: null, drop: null };
+        }
+        return Object.keys(out).length ? { scraps: out } : null;
     }
 
     /* -------------------------------------------- */

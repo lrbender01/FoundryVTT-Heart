@@ -9,6 +9,7 @@ import { emphasizeTerms } from '../../common/terms';
 import { askGM } from '../../common/relay';
 import { oneAtATime } from '../../common/busy';
 import { mayRunStress, messageOf } from '../card-actions';
+import { normalizeStakes, hasStakes, stakesText } from '../stress-roll/rules';
 // The result tables and lookups live in results.js, free of webpack-only
 // imports, so the rules tests can load them (2026-09-30, Luke)
 import { normal_results, difficult_results, stress_results, heartResult, markPool } from './results';
@@ -45,7 +46,7 @@ export default class HeartRoll extends Roll {
         return this._build(state, data, options);
     }
 
-    static _build({ character, difficulty = "standard", skill = null, domain = null, mastery = false, helpers = [] } = {}, data = {}, options = {}) {
+    static _build({ character, difficulty = "standard", skill = null, domain = null, mastery = false, helpers = [], stakes } = {}, data = {}, options = {}) {
         const actor = game.actors.get(character);
         const pool = buildPool(actor, { skill, domain, mastery: Boolean(mastery), helpers: helpers ?? [], difficulty });
 
@@ -59,6 +60,10 @@ export default class HeartRoll extends Roll {
         options.pool = pool.dice.map(d => d.label);
         options.notes = pool.notes;
         options.result_set = pool.impossible ? "impossible" : pool.fresh ? "difficult" : "normal";
+        // the GM's stakes from a roll request (2026-10-21): Roll Stress
+        // preselects them; only kept when they name something
+        const set = normalizeStakes(stakes, game.heart.stress_targets ?? []);
+        if (hasStakes(set)) options.stakes = set;
 
         return new this(poolFormula(pool), data, options);
     }
@@ -112,6 +117,9 @@ export default class HeartRoll extends Roll {
             det.push(game.i18n.format(helpers.length === 1 ? "heart.card.helped-one" : "heart.card.helped-many", { names }));
         }
         if (this.result === "critical_success") det.push(esc(loc("heart.rolls.roll.crit-step-up")));
+        // the GM's stakes from the roll request (2026-10-21)
+        const stakes = stakesText(opts.stakes, loc);
+        if (stakes) det.push(esc(loc("heart.card.stakes", { stakes })));
 
         // a result that costs stress reads red; a critical success underlined
         const outcomeClass = ["failure", "critical_failure", "success_at_a_cost"].includes(this.result) ? "bad"
@@ -188,20 +196,22 @@ export default class HeartRoll extends Roll {
                 }
                 if (!roll._evaluated) await roll.evaluate();
                 // Stakes are named after the roll (Luke, 2026-09-30): one short,
-                // prefilled picker, then the stress is rolled and marked on the
-                // roller and every helper
+                // prefilled picker (a GM's roll request presets it, 2026-10-21),
+                // then the stress is rolled. Nothing is marked yet: the card's
+                // Take Stress does that (Luke, 2026-10-21: separate steps).
                 const stressRoll = await game.heart.rolls.StressRoll.build({
                     character: roll.options.character,
                     result: roll.result,
                     helpers: roll.options.helpers ?? [],
+                    stakes: roll.options.stakes,
                 }, msg);
                 if (!stressRoll) return;
 
                 await stressRoll.evaluate();
                 await showDice(stressRoll, { setting: 'showStressRoll3dDice' });
-                // marked and attached by the GM's client, once (2026-10-02,
+                // attached by the GM's client, once (2026-10-02,
                 // rolls/card-actions.js): a second click or a second player
-                // is told it was already taken
+                // is told it was already rolled
                 if (await askGM('attach-stress', { messageId: msg.id, roll: stressRoll.toJSON() })) ui.chat.scrollBottom();
             });
         });

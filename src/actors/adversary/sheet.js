@@ -4,6 +4,7 @@ import HeartActorSheet from '../base/sheet';
 import template from './template.json';
 import { activatePanelSheet, panelSheetDefaults, toChips } from '../../common/panel-sheet';
 import { BannerSheet } from '../../common/banner';
+import { resistanceOf } from './resistance';
 
 // Difficulty levels for the header chip. The book's full difficulty text
 // (often a condition, e.g. Ghost) stays in system.difficulty and shows as a
@@ -51,8 +52,12 @@ export default class AdversarySheet extends BannerSheet(HeartActorSheet) {
         data.editable = this.isEditable;
         data.owner = this.actor.isOwner;
         data.editing = this._editing;
-        data.levels = Object.fromEntries(LEVELS.map(l => [l, l]));
-        data.resistanceValue = Number(system.resistance) || 0;
+        // the stored value stays the English level; only the label is a
+        // lang key (heart.adversary.level.*, 2026-10-21)
+        data.levels = Object.fromEntries(LEVELS.map(l => [l, game.i18n.localize(`heart.adversary.level.${l.toLowerCase()}`)]));
+        // what is left, counting down (Luke, 2026-10-21): "3 / 5 left"; the
+        // boxes stay the Stress marked (actors/adversary/resistance.js)
+        data.resistanceLeft = resistanceOf(system).left;
 
         const difficulty = String(system.difficulty ?? '').trim();
         const level = String(system.level ?? '').trim();

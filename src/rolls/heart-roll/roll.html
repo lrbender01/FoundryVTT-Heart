@@ -2,7 +2,9 @@
      badge): a hint line with what was rolled ("Kill + Occult, Risky"), the
      outcome led by its glyph, every die in one row (the kept one red, the
      ones the difficulty removed crossed out), one small line on difficulty /
-     helpers / notes, and Take stress on a result that costs stress. --}}
+     helpers / notes / the GM's stakes, and Roll Stress on a result that
+     costs stress (it only rolls; the stress card under it has Take Stress,
+     Luke 2026-10-21). --}}
 <form class="dice-roll heart heart-roll">
     <input type="hidden" name="character" value="{{character}}"/>
     <div class="ledger">
@@ -12,7 +14,7 @@
         {{#if det}}<div class="ledger-det">{{{det}}}</div>{{/if}}
         {{#if (and showStressRollButton (lookup (getActor character) "isOwner"))}}
         <div class="ledger-acts">
-            <button type="button" data-action="roll-stress" data-tooltip="heart.tip.card.roll-stress">{{localizeHeart 'rolls' 'roll' 'take-stress'}}</button>
+            <button type="button" data-action="roll-stress" data-tooltip="heart.tip.card.roll-stress">{{localizeHeart 'rolls' 'stress-roll' 'action'}}</button>
         </div>
         {{/if}}
     </div>

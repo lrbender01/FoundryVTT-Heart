@@ -67,3 +67,14 @@ describe("falloutData", () => {
     expect(SEVERITIES).toEqual(["minor", "major", "critical"]);
   });
 });
+
+describe("class and calling Fallouts stay with their owners (Luke, 2026-10-21)", () => {
+  it("offers a restricted Fallout only to a character with that class or calling", async () => {
+    const { restrictionAllows } = await import("../src/fallout-picker/candidates.js");
+    const r = { type: "class", name: "Witness" };
+    expect(restrictionAllows(undefined, [])).toBe(true);
+    expect(restrictionAllows(r, [])).toBe(false);
+    expect(restrictionAllows(r, [{ type: "calling", name: "Witness" }])).toBe(false);
+    expect(restrictionAllows(r, [{ type: "class", name: "witness" }])).toBe(true);
+  });
+});

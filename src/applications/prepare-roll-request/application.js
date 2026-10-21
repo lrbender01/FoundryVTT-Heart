@@ -1,6 +1,7 @@
 import applicationHTML from './application.html';
 import HeartApplication from '../base/application';
 import { partyMembers } from '../../actors/party/view';
+import { normalizeStakes, hasStakes } from '../../rolls/stress-roll/rules';
 
 // Prepare Roll Request (GM): pick a difficulty, who rolls, the skills and
 // domains on offer, and who may help; posts a roll request card
@@ -39,6 +40,9 @@ export default class PrepareRollRequestApplication extends HeartApplication {
             skills: labels(game.heart.skills, 'skill'),
             domains: labels(game.heart.domains, 'domain'),
             difficulties: labels(game.heart.difficulties, 'difficulty'),
+            // the stakes (2026-10-21): the five tracks and Provisions, D4 to D12
+            stakeResistances: labels(game.heart.stress_targets ?? [], 'resistance'),
+            stakeDice: Object.fromEntries((game.heart.stress_dice ?? []).map(d => [d, d.toUpperCase()])),
         });
     }
 
@@ -55,6 +59,14 @@ export default class PrepareRollRequestApplication extends HeartApplication {
                 return;
             }
 
+            // the stakes, each optional: blank means the roller chooses
+            // (Luke, 2026-10-21)
+            const stakes = normalizeStakes({
+                resistance: data.get('stake-resistance'),
+                die_size: data.get('stake-die'),
+                passive: data.get('stake-passive'),
+            }, game.heart.stress_targets ?? []);
+
             CONFIG.ChatMessage.documentClass.create({
                 speaker: { alias: game.user.name },
                 flags: {
@@ -65,6 +77,7 @@ export default class PrepareRollRequestApplication extends HeartApplication {
                             skills: data.getAll('skill'),
                             domains: data.getAll('domain'),
                             validHelpers: data.getAll('helper'),
+                            ...(hasStakes(stakes) ? { stakes } : {}),
                         }
                     }
                 }

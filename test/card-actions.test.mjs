@@ -128,8 +128,9 @@ describe("who may run a card's stress", () => {
 describe("Roll Stress on a Heart roll (attach-stress)", () => {
   const roll = { options: { character: "vess" } };
 
-  it("marks and attaches once, however many clicks", async () => {
-    makeCharacter("vess", { owners: ["p1"] });
+  // Luke, 2026-10-21: "there must be separate roll and mark steps"
+  it("attaches once, however many clicks, and marks nothing", async () => {
+    const vess = makeCharacter("vess", { owners: ["p1"] });
     const msg = makeMessage({ rolls: [roll] });
     const json = { class: "StressRoll", options: { character: "vess", resistance: "blood" } };
     const [a, b] = await Promise.all([
@@ -139,7 +140,40 @@ describe("Roll Stress on a Heart roll (attach-stress)", () => {
     expect([a.status, b.status].sort()).toEqual(["already", "done"]);
     expect(msg.update).toHaveBeenCalledTimes(1);
     expect(msg.flags.heart["show-stress-roll-button"]).toBe(false);
+    // Take Stress waits on the card; no fallout before anything is marked
+    expect(msg.flags.heart["show-take-stress-button"]).toBe(true);
+    expect(msg.flags.heart["show-fallout-roll-button"]).toBe(false);
+    expect(msg.flags.heart["stress-roll"].options.applied).toBeUndefined();
+    expect(vess.update).not.toHaveBeenCalled();
+  });
+
+  it("a roll that arrives already marked is attached unmarked", async () => {
+    makeCharacter("vess", { owners: ["p1"] });
+    const msg = makeMessage({ rolls: [roll] });
+    const json = { class: "StressRoll", options: { character: "vess", resistance: "blood", applied: [{ id: "vess", amount: 9 }] } };
+    await CARD_ACTIONS.attachStress({ messageId: "m1", roll: json }, "p1");
+    expect(msg.flags.heart["stress-roll"].options.applied).toBeUndefined();
+  });
+
+  it("then its Take Stress marks it once, on the chained roll", async () => {
+    makeCharacter("vess", { owners: ["p1"] });
+    const msg = makeMessage({ rolls: [roll] });
+    const json = { class: "StressRoll", options: { character: "vess", resistance: "blood" } };
+    await CARD_ACTIONS.attachStress({ messageId: "m1", roll: json }, "p1");
+    const [a, b] = await Promise.all([
+      relay("take-stress", { messageId: "m1" }),
+      relay("take-stress", { messageId: "m1" }),
+    ]);
+    expect([a.status, b.status].sort()).toEqual(["already", "done"]);
+    expect(msg.flags.heart["stress-roll"].options.applied).toEqual([{ id: "vess", amount: 3 }]);
+    expect(msg.flags.heart["show-take-stress-button"]).toBe(false);
     expect(msg.flags.heart["show-fallout-roll-button"]).toBe(true);
+    // the Heart roll itself is left alone
+    expect(msg.rolls).toEqual([roll]);
+    // another player can't take it
+    makeMessage({ id: "m2", rolls: [roll] });
+    await CARD_ACTIONS.attachStress({ messageId: "m2", roll: json }, "p1");
+    expect((await CARD_ACTIONS.takeStressOnCard({ messageId: "m2" }, "p2")).status).toBe("not-allowed");
   });
 
   it("refuses another player", async () => {
@@ -246,6 +280,32 @@ describe("Clear on a fallout card (clear-stress)", () => {
     makeMessage();
     expect((await CARD_ACTIONS.clearStressOnCard({ messageId: "m1", actorId: "vess", scope: "mind" }, "p2")).status).toBe("not-allowed");
     expect(vess.update).not.toHaveBeenCalled();
+  });
+
+  // Luke, 2026-10-21: a Minor clears the picked Fallout's resistance (HCB
+  // p. 81), not the one that triggered the check
+  it("the GM's pick is recorded on the card, GM only", async () => {
+    const msg = makeMessage();
+    const pick = { name: "Limping", severity: "minor", resistance: "blood" };
+    expect((await CARD_ACTIONS.recordFalloutPick({ messageId: "m1", pick }, "p1")).status).toBe("not-allowed");
+    expect((await CARD_ACTIONS.recordFalloutPick({ messageId: "m1", pick }, "gm")).status).toBe("done");
+    expect(msg.flags.heart["fallout-pick"]).toEqual(pick);
+  });
+
+  it("a Minor clears the picked Fallout's resistance, whatever the click asked", async () => {
+    const vess = makeCharacter("vess", { owners: ["p1"] });
+    const msg = makeMessage({ flags: { "fallout-pick": { name: "Limping", severity: "minor", resistance: "blood" } } });
+    msg.falloutRoll = { result: "minor-fallout" };
+    await CARD_ACTIONS.clearStressOnCard({ messageId: "m1", actorId: "vess", scope: "mind" }, "p1");
+    expect(vess.update).toHaveBeenCalledWith({ "system.resistances.blood.value": 0 });
+  });
+
+  it("a Minor combined into a picked Major clears every resistance", async () => {
+    const vess = makeCharacter("vess", { owners: ["p1"] });
+    const msg = makeMessage({ flags: { "fallout-pick": { name: "Broken Arm", severity: "major", resistance: "blood" } } });
+    msg.falloutRoll = { result: "minor-fallout" };
+    await CARD_ACTIONS.clearStressOnCard({ messageId: "m1", actorId: "vess", scope: "mind" }, "p1");
+    expect(Object.keys(vess.update.mock.calls[0][0])).toHaveLength(5);
   });
 
   it("a Provisions fallout clears the party's track", async () => {

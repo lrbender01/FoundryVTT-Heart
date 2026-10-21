@@ -1,6 +1,7 @@
 import sheetHTML from './sheet.html';
 import templateJSON from './template.json';
 import HeartItemSheet from '../base/sheet';
+import { rollHauntService } from './service';
 
 import './sheet.sass';
 
@@ -61,17 +62,11 @@ export default class extends HeartItemSheet {
         html.find('[data-action=service-roll]').click(async ev => {
             const target = $(ev.currentTarget);
             const id = target.closest ('[data-id]').data('id');
-            const service = this.item.system.resistances[id];
-            // the haunt rides on the roll as its item (2026-09-30 review)
-            const item = {
-                name: this.item.name, img: this.item.img, type: 'haunt',
-                system: { die_size: service.die_size, service: service.resistance },
-            };
-
-            const roll = game.heart.rolls.ItemRoll.build({item});
-            await roll.evaluateSync();
-
-            roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this.item.actor }) });
+            // a resource pays, rolling its die capped at the haunt's (HCB
+            // pp. 81 and 140; Luke, 2026-10-21: it rolled the haunt's die)
+            await rollHauntService({
+                haunt: this.item, service: this.item.system.resistances[id], speaker: ChatMessage.getSpeaker({ actor: this.item.actor }),
+            });
         });
 
         html.find('[data-action=upgrade]').click(async ev => {

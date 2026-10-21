@@ -6,6 +6,7 @@
             "calling": "",
             "ancestry": "",
             "pronouns": "",
+            "totalStress": {"value": 0, "max": 50},
             "active_beats": [],
             "equipment": [],
             "resources": [],

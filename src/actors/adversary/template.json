@@ -10,6 +10,7 @@
             "domainsNote": "",
             "resistance": "",
             "resistanceMax": "5",
+            "resistanceBar": { "value": 5, "max": 5 },
             "protection": "",
             "resources": [],
             "equipment": [],

@@ -225,6 +225,21 @@
     p
         margin: 0
 
+// a stress roll's step (Luke, 2026-10-21: rolling and marking are separate):
+// "Rolled, not taken yet" in red until Take Stress, then a muted "Taken"
+.chat-message .ledger-status
+    font-family: util.$font-label
+    font-size: 13px
+    line-height: 1.2
+    letter-spacing: 0.02em
+    text-transform: lowercase
+    font-variant: small-caps
+    color: util.$muted
+
+    &.pending
+        color: util.$red-bright
+        font-weight: bold
+
 .chat-message .ledger-lines
     display: flex
     flex-direction: column
@@ -250,6 +265,13 @@
             text-align: right
 
         &.blocked .v
+            font-style: italic
+
+    // what each would take, not marked yet: dashed rule, secondary text
+    &.pending
+        border-top-style: dashed
+
+        .v
             font-style: italic
 
 // the card's buttons: small primary, a ghost one small secondary (util.sass

@@ -12,7 +12,7 @@
 
 import { heartDialogOptions } from '../common/dialog';
 import { glyphFor } from '../common/icons';
-import { candidate, dedupe, matches, sortCandidates, falloutData, SEVERITIES } from './candidates';
+import { candidate, dedupe, matches, sortCandidates, falloutData, SEVERITIES, restrictionAllows } from './candidates';
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const esc = (text) => Handlebars.escapeExpression(String(text ?? ''));
@@ -25,6 +25,10 @@ const isCompanion = (target) => target?.documentName === 'Actor' && target.type 
 // Every Fallout the picker can offer this target
 async function gather(target) {
     const list = [];
+    // (the character whose class and calling decide which restricted Fallouts
+    // show: the target, or a bond's holder; none for the party or a companion)
+    const holder = isBondItem(target) ? target.parent : target?.documentName === 'Actor' && target.type === 'character' ? target : null;
+    const owned = holder ? holder.items.map((i) => ({ type: i.type, name: i.name })) : [];
     // a companion's own book Fallouts not yet taken
     if (isCompanion(target)) {
         for (const item of target.items) {
@@ -42,13 +46,16 @@ async function gather(target) {
         }
     }
     for (const pack of game.packs.filter(p => p.documentName === 'Item' && p.visible)) {
-        const index = await pack.getIndex({ fields: ['img', 'system.type', 'system.resistance', 'system.description', 'system.source'] });
+        const index = await pack.getIndex({ fields: ['img', 'system.type', 'system.resistance', 'system.description', 'system.source', 'flags.fvtt-heart-content.restrictedTo'] });
         for (const entry of index) {
             if (entry.type !== 'fallout') continue;
+            if (!restrictionAllows(entry.flags?.['fvtt-heart-content']?.restrictedTo, owned)) continue;
             list.push(candidate({ ...entry, uuid: entry.uuid ?? `Compendium.${pack.collection}.Item.${entry._id}` }, 'book'));
         }
     }
-    for (const item of game.items.filter(i => i.type === 'fallout')) list.push(candidate(item, 'world'));
+    for (const item of game.items.filter(i => i.type === 'fallout')) {
+        if (restrictionAllows(item.flags?.['fvtt-heart-content']?.restrictedTo, owned)) list.push(candidate(item, 'world'));
+    }
     return sortCandidates(dedupe(list));
 }
 
@@ -93,9 +100,11 @@ async function apply(target, pick) {
 
 // Open the picker. target: an Actor (character, party, companion) or a
 // `bond` Item; severity / resistance: the filters it opens with (a check's
-// result; '' is every resistance). Resolves the added Fallout's name, or
-// null when closed.
-export async function openFalloutPicker({ target, severity = 'minor', resistance } = {}) {
+// result; '' is every resistance). onPicked({ name, severity, resistance })
+// is told what was added (a fallout card records it, so its Clear button
+// clears the picked Fallout's resistance; 2026-10-21). Resolves the added
+// Fallout's name, or null when closed.
+export async function openFalloutPicker({ target, severity = 'minor', resistance, onPicked } = {}) {
     if (!target) return null;
     if (!target.isOwner) {
         ui.notifications.warn(loc('heart.bond.not-owner', { name: target.name }));
@@ -163,6 +172,7 @@ export async function openFalloutPicker({ target, severity = 'minor', resistance
                         try {
                             const added = await apply(target, pick);
                             ui.notifications.info(loc('heart.fallout-picker.added', { fallout: added, name: target.name }));
+                            await onPicked?.({ name: added, severity: pick.severity ?? '', resistance: pick.resistance ?? '' });
                             finish(added);
                         } catch (err) {
                             console.error('heart | adding the picked Fallout failed', err);

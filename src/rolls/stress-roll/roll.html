@@ -2,7 +2,9 @@
      ("D6 to Blood"), "+4 Blood Stress" led by the resistance glyph, the die,
      then one line per character (or the party, for Provisions) with what got
      through Protection and where the track now stands, then a fallout button
-     per character who took any. --}}
+     per character who took any. Rolling and marking are separate steps
+     (Luke, 2026-10-21): until Take Stress is pressed the card says "not taken
+     yet" and its lines show what each would take; once taken, "Taken". --}}
 <form class="dice-roll heart stress-roll">
     <input type="hidden" name="character" value="{{character}}"/>
     <div class="ledger">
@@ -10,6 +12,12 @@
         <div class="ledger-out">{{{heartGlyph "resistance" resistance}}}{{out}}</div>
         {{{dice}}}
         {{#if det}}<div class="ledger-det">{{det}}</div>{{/if}}
+        {{#if status}}<div class="ledger-status {{status}}" data-tooltip="{{statusTip}}">{{statusText}}</div>{{/if}}
+        {{#if pending.length}}
+        <div class="ledger-lines pending">
+            {{#each pending as |a|}}<div class="ledger-line pending {{#unless a.amount}}blocked{{/unless}}"><span>{{a.name}}</span><span class="v">{{a.value}}</span></div>{{/each}}
+        </div>
+        {{/if}}
         {{#if applied.length}}
         <div class="ledger-lines">
             {{#each applied as |a|}}<div class="ledger-line {{#unless a.amount}}blocked{{/unless}}"><span>{{a.name}}</span><span class="v">{{a.value}}</span></div>{{/each}}

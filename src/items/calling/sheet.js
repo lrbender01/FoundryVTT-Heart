@@ -2,7 +2,7 @@ import sheetHTML from './sheet.html';
 import templateJSON from './template.json';
 import HeartItemSheet from '../base/sheet';
 import { activeBeatsOf, allBeatsOf, beatLevel, createCustomBeat } from '../beat/actions';
-import { trinketItemOf } from '../trinkets';
+import { trinketView } from '../trinkets';
 import { shareOfCharacter } from '../../common/window-sizes';
 
 import './sheet.sass';
@@ -44,7 +44,7 @@ export default class extends HeartItemSheet {
         data.zenithDone = done(data.zenithBeats);
         data.completedBeats = done(beats);
         // the rolled trinket, shown as an item row in the Trinket section
-        data.trinketItem = trinketItemOf(this.item);
+        data.trinkets = trinketView(this.item);
         data.activeBeats = this._activeBeats();
         data.beatSlots = game.i18n.format('heart.beat.slots', { count: data.activeBeats.length });
         // same warning as the character sheet's Pursued Beats

@@ -28,6 +28,17 @@ export function candidate(entry, origin) {
     };
 }
 
+// A class's or calling's own Fallout (Luke, 2026-10-21: never mixed in
+// with the rest) is offered only to a character who has that class or
+// calling: the content module marks them flags['fvtt-heart-content'].restrictedTo
+// = { type: 'class' | 'calling', name }. owned is the target's items
+// as { type, name } (none for the party or a companion).
+export function restrictionAllows(restrictedTo, owned = []) {
+    if (!restrictedTo?.type || !restrictedTo?.name) return true;
+    const want = String(restrictedTo.name).toLowerCase();
+    return owned.some((i) => i?.type === restrictedTo.type && String(i.name ?? '').toLowerCase() === want);
+}
+
 // The same Fallout from two places (a pack and a world copy) shows once;
 // the target's own entries win, then the packs
 export function dedupe(list) {

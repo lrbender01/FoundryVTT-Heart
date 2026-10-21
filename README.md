@@ -1,137 +1,36 @@
-# Heart - The City Beneath
+# Heart - The City Beneath (personal v12 fork)
 
-This is a simplistic implementation of [Heart - The City Beneath](https://rowanrookanddecard.com/product/heart-the-city-beneath-rpg/) for [FoundryVTT](https://foundryvtt.com/) . It provides a character sheet based on the one provided inside Heart. Includes a number of useful dynamic tools for rolling and assessing results.
-## Features
+A personal Foundry VTT v12 fork of [hitcherland/FoundryVTT-Heart](https://github.com/hitcherland/FoundryVTT-Heart), the system for [Heart: The City Beneath](https://rowanrookanddecard.com/product/heart-the-city-beneath-rpg/) by Rowan, Rook and Decard. It is not an official or blessed continuation: upstream froze its v12 branch at `0.10.4` and moved to v13, and this fork keeps a v12 copy going for one table.
 
-* Character sheets to track all the stuff you want to track
-    * Resistances, Protections
-    * Name, Class, Calling
-    * Beats, Equipment, Resources, Abilities, Fallout, Skills, Domains
-    * Notes
-* Multiline inputs use FoundryVTT's inbuilt rich text editor
-* Skills can be checked, as expected
-* Resistances and Protections can be increased and decreased by clicking on the boxes.
-* Rollable buttons (and macros for the GM) in character sheets for rolling, stress and fallout.
-* Clickable chat messages to perform rolls.
+## Credits
 
-## Usage
+- The original system: [@hitcherland](https://github.com/hitcherland).
+- The character sheet redesign (upstream PR #94) and its fixes: [@Lavaeolous](https://github.com/Lavaeolous).
+- Heart: The City Beneath is the work and property of Rowan, Rook and Decard.
 
-Buttons are available in the character sheet for players, or from the hotbar via macros for the GM.
+## What the fork adds
 
+- The PR #94 character sheet, then a full interface pass: one design language across every sheet, dialog, and chat card, a dark and a light scheme, and an optional smoked-glass look.
+- Rolls with the rules worked out: the dice pool, difficulty, helpers, stress after the roll, Protection, and fallout checks, with racing writes handled by one GM-side relay.
+- A party actor with a shared Provisions track (a house rule), a note board, and companions; bonds, hirelings, and animals; a Fallout picker.
+- The Heart map: a scrapboard scene the party builds at the table, with strings, pins, notes, a brush, and per-user undo.
+- `system.totalStress` stored as `{ value, max }`, so it can be a token bar.
 
-![An example character sheet](readme-imgs/heartcharactersheet.png)
+## What it does not include
 
-![Macros](https://i.imgur.com/wlnKvE4.png)
+No game text. Classes, callings, ancestries, fallouts, tags, equipment, adversaries, and landmarks come from a separate content module (the manifest recommends `fvtt-heart-content`, which is not public). Without one, the sheets work and the compendiums are empty.
 
-### Roll Requests
+## Building
 
-A roll request is a clickable chat message that allows the players to roll with specific parameters. Rolls can be made via: 
-* "Request Roll" button in a Character Sheet
-* "Prepare Roll Request" Macro
+Requires Node. Inside this folder:
 
-Clicking on either of these will open a window like below:
-
-![Blank Roll Request window](readme-imgs/heartblankrollrequest.png)
- 
-For example, preparing a roll request like this:
-
-![Preparing a Roll Request](readme-imgs/heartrollrequest.png)
-
-will create a chat message like this:
-
-![Roll Request in Chat](readme-imgs/heartrollrequestchatmsg.png)
-
-### Rolls
-
-This is a typical "Heart" `1d10` roll. Rolls can be made with the following: 
-* "Roll" button in a Character sheet
-* "Roll" button in chat message
-* "Prepare Roll" Macro
-
-As before, this will open a new window. 
-
-![Prepare roll](readme-imgs/heartblankroll.png)
-
-Again, this might result in chat messages like:
-
-![Success roll](readme-imgs/heartrollsuccess.png)
-![Failure roll](readme-imgs/heartrollfailure.png)
-
-### Stress
-
-We also can manage stress rolls.
-
-Stress rolls can be made with the following: 
-* "Roll Stress" button in a Character sheet
-* "Roll Stress" button in chat message
-* "Prepare Stress Roll" Macro
-
-From the macro:
-
-![Prepare stress roll](readme-imgs/heartstressroll.png)
-
-From chat:
-![Stress Roll button](readme-imgs/heartfailurestressrollbutton.png)
-
-which might result in:
-
-![Stress chat message](readme-imgs/heartstressresult.png)
-
-You can then "Take Stress" by clicking the new button. This applies the stress to the character's appropriate resistance.
-
-![Take Stress button](readme-imgs/hearttakestressbutton.png)
-
-### Fallout
-
-We also can manage fallout rolls. Stress rolls can be made with the following: 
-* "Roll Fallout" button in a Character sheet
-* "Prepare Fallout Roll" Macro
-
-An example chat message as a result:
-
-![Fallout Chat Message](readme-imgs/heartrollfallout.png)
-
-You will get a result and an accompanying button to clear the appropriate stress:
-
-![Fallout Result Message](readme-imgs/heartfalloutresult.png)
-
-## Translations
-
-If you're considering writing a translation, firstly: thank you! You can provide translation by submitting a pull request.
-
-You can find the English translation at `lang/en.json`, and I encourage you to use this as a base for your translation efforts.
-Don't feel the pressure to translate version info though!
-
-## Contributing
-It is not recommended to develop on the instance on Foundry you run games from. If you need help installing another version of Foundry or a dev environment this isn't the guide for that.
-
-To test your changes:
-
-Add your Foundry installation's Data location to `foundryvtt.config.js` it should look something like:
-`foundryvttPath: "/home/yourusername/foundryuserdata/Data"` 
-
-Inside this directory run:
 ```shell
 npm ci
-npm run build-local .
+npm run build-all
 ```
 
-If everything is setup correctly this will create a symlink from this directory's `dist` folder to your Foundry systems folder. It will then build this project and the built version will appear in `dist`. With the symlink in place you can then open Foundry and interact with the system as normal. 
+The built system is in `dist/`; link or copy `dist/` to Foundry's `Data/systems/heart`. Architecture, build details, and tests: [CLAUDE.md](CLAUDE.md). What changed: [CHANGELOG.md](CHANGELOG.md).
 
+## Licence
 
-## TODO
-
-- [x] Make a basic fillable character sheet.
-- [x] Get a hold of the fonts, or something like them (main one is "The Bartender Condensed Serif Press" by Vintage Voyage Design Supply)
-- [x] Convert Equipment, Resources, Abilities and Fallout from a textfield to a list of textfields
-- [x] Make Equipment & Resources Rollable
-- [x] Add a roller that lets you pick skill, domain, knacks & mastery, difficulty etc
-- [x] Add a stress roller
-- [x] Add a fallout roller
-- [x] Cleanup translation file
-- [x] Cleanup CSS file
-- [x] Add ChatMessage buttons to clear stress when receiving fallout
-- [x] Make "class" and "calling" items
-- [x] Look into making class and calling packs
-- [x] Add editable tags to taggables (resources, equipment etc)
-- [x] Add ability to include and control the minor abilities defined inside Major Abilities.
+ISC, as upstream ([LICENSE](LICENSE)).

@@ -1,5 +1,6 @@
 import { orderByFlag } from './reorder';
 import { bondsOf } from '../../bonds/bonds';
+import { sumStress } from './total-stress';
 
 export default {
     'character': function Character(actor) {
@@ -7,10 +8,11 @@ export default {
             get(actor, name, proxy) {
                 if (name === 'totalStress') {
                     // numbers, so a value stored as text adds instead of
-                    // concatenating (2026-09-30, found by the rules tests)
-                    return Object.values(actor.system.resistances).reduce((sum, resistance) => {
-                        return sum + (Number(resistance?.value) || 0);
-                    }, 0);
+                    // concatenating (2026-09-30, found by the rules tests).
+                    // Read live from the five tracks, the same sum the stored
+                    // system.totalStress copies for token bars (2026-10-21,
+                    // total-stress.js)
+                    return sumStress(actor.system.resistances);
                 }
 
                 // The party's shared Provisions track (2026-09-30): the same

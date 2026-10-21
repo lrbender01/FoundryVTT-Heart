@@ -10,7 +10,7 @@ import { messageOf } from '../card-actions';
 import { partyFalloutResult, isPastRolling, PARTY_FALLOUT_RESULTS } from '../../actors/party/rules';
 // The character thresholds live in results.js, free of webpack-only imports,
 // so the rules tests can load them (2026-09-30, Luke)
-import { characterFalloutResult } from './results';
+import { characterFalloutResult, clearScope } from './results';
 
 export function initialise() {
     // critical-fallout is rolled only for the party's Provisions (house rule,
@@ -119,15 +119,20 @@ export default class FalloutRoll extends Roll {
         else what = loc('heart.card.fallout-what', { total: opts.totalStress });
         if (chatOptions.flavor) what = `${esc(chatOptions.flavor)}: ${what}`;
 
-        // the clear button says what it clears
+        // the clear button says what it clears: the picked Fallout's
+        // resistance once the GM has picked one (chatOptions.falloutPick,
+        // the card's flag; Luke, 2026-10-21), else the triggering one
+        const scope = opts.party ? '' : clearScope({
+            result, pick: chatOptions.falloutPick, triggering: resistance, resistances: game.heart?.resistances ?? [],
+        });
         const clearLabel = opts.party ? loc('heart.party.clear')
-            : result === 'major-fallout' ? loc('heart.rolls.fallout-roll.confirm-clear-all')
-            : resistanceLabel ? loc('heart.rolls.fallout-roll.confirm-clear-one', { resistance: resistanceLabel })
+            : scope === 'all' ? loc('heart.rolls.fallout-roll.confirm-clear-all')
+            : scope ? loc('heart.rolls.fallout-roll.confirm-clear-one', { resistance: loc(`heart.resistance.${scope}`) })
             : loc('heart.rolls.fallout-roll.clear-stress-short');
         // and its tooltip names the rule (2026-09-30, Luke): Minor clears its
         // resistance, Major every resistance, a Provisions Fallout the track
         const clearTip = opts.party ? 'heart.tip.card.clear-provisions'
-            : result === 'major-fallout' ? 'heart.term.major-fallout'
+            : scope === 'all' ? 'heart.term.major-fallout'
             : result === 'minor-fallout' ? 'heart.term.minor-fallout'
             : '';
 
@@ -166,12 +171,14 @@ export default class FalloutRoll extends Roll {
 
     // The card's Clear button (stress is only ever cleared by this hand
     // click): a Provisions fallout clears the party's track, a Major every
-    // resistance, a Minor the one that triggered it (asked when unknown).
-    // Confirmed first, then written by the GM's client as single keys, once
-    // (2026-10-02, rolls/card-actions.js). Resolves when done or declined.
+    // resistance, a Minor the resistance of the Fallout the GM picked from
+    // this card (Luke, 2026-10-21, HCB p. 81; `clearScope`), or before a
+    // pick the one that triggered it (asked when unknown). Confirmed first,
+    // then written by the GM's client as single keys, once (2026-10-02,
+    // rolls/card-actions.js). Resolves when done or declined.
     async clearStress(msg) {
         const character = this.options.character || msg.rolls[0]?.options?.character || msg.speaker.actor;
-        let stressType = this.options.resistance || msg.stressRoll?.options?.resistance || msg.rolls[0]?.options?.resistance || '';
+        const triggering = this.options.resistance || msg.stressRoll?.options?.resistance || msg.rolls[0]?.options?.resistance || '';
         const esc = (text) => Handlebars.escapeExpression(String(text ?? ''));
         const ask = (data) => askGM('clear-stress', { messageId: msg.id, ...data });
 
@@ -195,8 +202,12 @@ export default class FalloutRoll extends Roll {
             return;
         }
         const resistances = actor.system.resistances ?? {};
+        const scope = clearScope({
+            result: this.result, pick: msg.getFlag('heart', 'fallout-pick'), triggering, resistances: Object.keys(resistances),
+        });
 
-        if (this.result === 'major-fallout') {
+        // a Major, or a Minor the GM combined into a picked Major
+        if (scope === 'all') {
             const count = Object.values(resistances).reduce((sum, r) => sum + (Number(r.value) || 0), 0);
             const ok = await confirmClear({
                 content: game.i18n.format('heart.rolls.fallout-roll.confirm-major', { name: esc(actor.name), count }),
@@ -207,7 +218,7 @@ export default class FalloutRoll extends Roll {
         }
 
         if (this.result !== 'minor-fallout') return;
-        if (!stressType) stressType = await pickResistance();
+        const stressType = scope || await pickResistance();
         if (!stressType || !resistances[stressType]) return;
         const label = game.i18n.localize(`heart.resistance.${stressType}`);
         const ok = await confirmClear({

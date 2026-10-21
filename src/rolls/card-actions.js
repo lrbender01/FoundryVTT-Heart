@@ -8,6 +8,7 @@
 
 import { registerRelayHandler } from '../common/relay';
 import { applyProvisions } from '../actors/party/party';
+import { clearScope } from './fallout-roll/results';
 
 // Who may run a card's stress (Roll Stress, Take Stress; Luke, 2026-10-02):
 // the GM, or a player who owns the rolling character
@@ -33,7 +34,10 @@ async function applyStress({ roll }) {
     return { status: 'done', applied };
 }
 
-// A Heart roll's Roll Stress: the stress roll joins the card once
+// A Heart roll's Roll Stress: the stress roll joins the card once, and
+// nothing is marked (Luke, 2026-10-21: "there must be separate roll and mark
+// steps"). The card's Take Stress marks it (take-stress below), so the table
+// can apply anything that changes it in between, by hand.
 async function attachStress({ messageId, roll }, userId) {
     const msg = game.messages.get(messageId);
     const heartRoll = msg?.rolls?.[0];
@@ -42,18 +46,19 @@ async function attachStress({ messageId, roll }, userId) {
     if (msg.getFlag('heart', 'stress-roll')) return { status: 'already' };
     if (!msg.isOwner) return { status: 'needs-gm' };
     const stressRoll = Roll.fromData(roll);
-    const applied = await stressRoll.takeStress();
-    // fallout offered only if some got through Protection (HCB p.78)
+    // a roll that arrives already marked is refused: only take-stress marks
+    delete stressRoll.options.applied;
     await msg.update({
         'flags.heart.stress-roll': stressRoll.toJSON(),
         'flags.heart.show-stress-roll-button': false,
-        'flags.heart.show-take-stress-button': false,
-        'flags.heart.show-fallout-roll-button': applied.some(a => a.amount > 0),
+        'flags.heart.show-take-stress-button': true,
+        'flags.heart.show-fallout-roll-button': false,
     });
-    return { status: 'done', applied };
+    return { status: 'done' };
 }
 
-// A standalone stress card's Take Stress
+// Take Stress, on a standalone stress card or one chained under its Heart
+// roll; fallout is offered only if some got through Protection (HCB p.78)
 async function takeStressOnCard({ messageId }, userId) {
     const msg = game.messages.get(messageId);
     const stressRoll = msg?.stressRoll;
@@ -106,9 +111,26 @@ async function attachFallout({ messageId, roll }) {
     return { status: 'done' };
 }
 
-// A fallout card's Clear button: the triggering resistance (Minor), every
-// resistance (Major), or the party's Provisions; written as single keys,
-// then the button is gone. Stress is only ever cleared by this hand click.
+// A fallout card's Pick Fallout (GM only): what was picked, so the Clear
+// button clears that Fallout's resistance (Luke, 2026-10-21, HCB p. 81).
+// The latest pick wins.
+async function recordFalloutPick({ messageId, pick }, userId) {
+    const msg = game.messages.get(messageId);
+    if (!msg || !pick) return { status: 'missing' };
+    if (!userOf(userId)?.isGM) return { status: 'not-allowed' };
+    if (!msg.isOwner) return { status: 'needs-gm' };
+    await msg.update({
+        'flags.heart.fallout-pick': {
+            name: String(pick.name ?? ''), severity: String(pick.severity ?? ''), resistance: String(pick.resistance ?? ''),
+        },
+    });
+    return { status: 'done' };
+}
+
+// A fallout card's Clear button: the picked Fallout's resistance, else the
+// triggering one (Minor), every resistance (Major), or the party's
+// Provisions; written as single keys, then the button is gone. Stress is
+// only ever cleared by this hand click.
 async function clearStressOnCard({ messageId, actorId, party, scope }, userId) {
     const msg = game.messages.get(messageId);
     if (!msg) return { status: 'missing' };
@@ -123,6 +145,13 @@ async function clearStressOnCard({ messageId, actorId, party, scope }, userId) {
         const user = userOf(userId);
         if (!(user?.isGM || actor.testUserPermission(user, 'OWNER'))) return { status: 'not-allowed' };
         const resistances = actor.system.resistances ?? {};
+        // the card's recorded pick wins (2026-10-21): the GM may have picked
+        // after the click was confirmed
+        const pick = msg.getFlag('heart', 'fallout-pick');
+        const result = msg.falloutRoll?.result;
+        if (pick && result && scope !== 'all') {
+            scope = clearScope({ result, pick, triggering: scope, resistances: Object.keys(resistances) }) || scope;
+        }
         const keys = scope === 'all' ? Object.keys(resistances) : [scope];
         const update = {};
         for (const key of keys) {
@@ -155,6 +184,7 @@ export function registerCardActions() {
     registerRelayHandler('claim-fallout', claimFallout);
     registerRelayHandler('release-fallout', releaseFallout);
     registerRelayHandler('attach-fallout', attachFallout);
+    registerRelayHandler('record-fallout-pick', recordFalloutPick);
     registerRelayHandler('clear-stress', clearStressOnCard);
     registerRelayHandler('claim-card-button', claimCardButton);
 }
@@ -166,6 +196,7 @@ export const CARD_ACTIONS = {
     claimFallout,
     releaseFallout,
     attachFallout,
+    recordFalloutPick,
     clearStressOnCard,
     claimCardButton,
 };

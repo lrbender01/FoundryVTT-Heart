@@ -17,27 +17,30 @@
 //            on a place it ties on, anywhere else it hangs loose
 //   Pin      click to pick a pin and put it in (in a scrap, or loose);
 //            Ctrl+click puts in the last one again
-//   Marker   draw on the sheet, under everything pinned to it, on your own
-//            layer (Shift+drag rubs out); its palette has the inks, the widths,
-//            and (the GM's) every layer, to show, hide, or clear
+//   Brush    paint on the sheet, under everything pinned to it, or on a card
+//            (Shift+drag rubs out); its palette has the paints, the
+//            brightness, the width, the opacity, and the doodles
 //   Reveal, Note, Write, Erase; Player view (the players' own tools, as they
-//   see the board), Undo, Export, Import, Restore, Reload the look (GM)
-// Players have Look, Move, Note, Write, and the Marker, all on their own
-// notes, writing, and layer, in the hand they claimed (notes.js). On a
-// players' board its owners have the GM's tools but Reveal. The map is drawn
-// by render.js in the primary group; this layer (in the interface group)
-// takes the pointer and draws the tools' marks.
+//   see the board), Undo, Redo, and File (Removed cards, Earlier boards,
+//   Export, Import, the backup, a picture, Reload the look: the GM's)
+// Players have Look, Move, Note, Write, String, and the Brush, all on their
+// own notes, writing, strings, and strokes, in the hand they claimed
+// (notes.js). On a players' board its owners have the GM's tools but Reveal.
+// The map is drawn by render.js in the primary group; this layer (in the
+// interface group) takes the pointer and draws the tools' marks.
 import { ScrapboardRenderer } from './render.js';
 import { pinThumb } from './paint.js';
 import { reloadBoardLook } from './look.js';
-import { markMax, doodleBoard, strokeToCard, customKey, brushColor, PAINT_NAMES, PAINT_ORDER, DOODLE_KINDS, DOODLE_SIZE, noteFields } from './model.js';
+import { markMax, doodleBoard, strokeToCard, customKey, brushColor, DOODLE_KINDS, DOODLE_SIZE, noteFields } from './model.js';
 import { BoardControls, toolsFor, applyPatch, LOCK_MS } from './controls.js';
 import {
     isBoardScene, boardOf, ownsBoard, setScrap, setLink, unsetLink, addLink, addPin, addScrap, addMark, removeMarks, clearAllBrushes,
     removeScrap, removeLink, removeMany, applyBoardPatch, labelString, addString, undo, redo, exportBoard, importBoard, restoreBackup, hasBackup,
+    newPlace, downloadBoard,
 } from './api.js';
 import {
     playerAddNote, playerMove, editNote, noteDialog, pickHand, stringDialog, pinDialog, exportDialog, importDialog, boardEdit, binDialog, backupsDialog,
+    askBoard, paintName, paintOrder, placeDialog, ownCardsOf,
 } from './notes.js';
 import { heartDialogOptions } from '../../common/dialog.js';
 import { showArt, showImage } from '../../common/art.js';
@@ -47,13 +50,10 @@ const esc = (s) => Handlebars.escapeExpression(String(s ?? ''));
 const SELECTED = 0xef5a4d;
 // a selected pin or piece: a small orange dot where the grab dot would be
 const PICKED = 0xf08a24;
-const WIDTHS = [4, 8, 12];
-void WIDTHS;
 const LAST_PIN = 'heart.board.lastPin';
 // where this client left the brush's palette (Luke, 2026-10-06: dragged
 // anywhere, never closed)
 const PALETTE_AT = 'heart.board.paletteAt';
-// the brush's paints as the palette shows them: the plain ones, then the colours
 // The palette kept in the window, at x, y (px)
 function placePalette(el, x, y) {
     const r = el.getBoundingClientRect();
@@ -104,9 +104,9 @@ export class ScrapboardLayer extends InteractionLayer {
     renderer = new ScrapboardRenderer();
     // the GM sees the map as players do, with their tools (Player view)
     preview = false;
-    // the marker's ink (an index into the look's sheet inks) and width
+    // the brush's paint (an index into the look's marker paints) and width
     markInk = 0;
-    markWidth = WIDTHS[1];
+    markWidth = 8;
     // (Luke, 2026-10-03: its opacity, 5 to 100%)
     markOpacity = 0.85;
     // (Luke, 2026-10-06: its brightness, 0 dim, 1 as it is, 2 bright)
@@ -118,6 +118,8 @@ export class ScrapboardLayer extends InteractionLayer {
         size: (id) => this.renderer.size(id),
         user: () => this.user,
         px: () => 1 / Math.max(0.02, this.renderer.scale * (canvas.stage?.scale.x ?? 1)),
+        // (the reticle's captions in this language: heart.board.caption.*)
+        say: (id) => (game.i18n.has(`heart.board.caption.${id}`) ? loc(`heart.board.caption.${id}`) : null),
         // (board px per screen px at the closest zoom)
         finest: () => 1 / Math.max(0.02, this.renderer.scale * (CONFIG.Canvas.maxZoom ?? 3)),
         raw: () => this.#working ?? boardOf(canvas.scene),
@@ -231,6 +233,11 @@ export class ScrapboardLayer extends InteractionLayer {
     // Delete (or Backspace) takes the selection off the board (Foundry only
     // sends the key to layers of its own placeables)
     #onKey = (event) => {
+        // (Escape: a new place waiting for its click isn't put on the board)
+        if (event.key === 'Escape' && this.#placing && this.active) {
+            this.#placing = null;
+            return ui.notifications.info(loc('heart.board.place-cancelled'));
+        }
         // (Escape puts the doodle in hand down)
         if (event.key === 'Escape' && this.controls.doodle && this.active) {
             this.controls.doodle = null;
@@ -248,14 +255,22 @@ export class ScrapboardLayer extends InteractionLayer {
         }
         if (!this.active || !this.isBoard || !['Delete', 'Backspace', 'PageUp', 'PageDown'].includes(event.key)) return;
         if (!this.controls.editor) {
-            // (a player: their own strings and pins, Luke 2026-10-03)
+            // (a player: their own strings and pins, Luke 2026-10-03; their
+            // own notes and writing too, once asked, into the bin, 2026-10-21)
             if (!['Delete', 'Backspace'].includes(event.key) || event.target?.closest?.('input, textarea, select, [contenteditable]')) return;
             const what = this.controls.removal();
-            if (!what.links.length && !what.pins.length) return;
+            if (!what.links.length && !what.pins.length && !what.cards.length) return;
             event.preventDefault();
-            this.controls.clear();
-            this.drawMarks();
-            return boardEdit(canvas.scene, { ownRemove: { links: what.links, pins: what.pins } });
+            if (what.links.length || what.pins.length) {
+                for (const id of what.pins) this.controls.pins.delete(id);
+                for (const id of what.links) this.controls.links.delete(id);
+                this.controls.link = null;
+                this.drawMarks();
+                boardEdit(canvas.scene, { ownRemove: { links: what.links, pins: what.pins } });
+            }
+            const cards = (this.renderer.view?.scraps ?? []).filter((x) => what.cards.includes(x.key));
+            if (cards.length) return this.#takeOff(cards);
+            return;
         }
         if (event.target?.closest?.('input, textarea, select, [contenteditable]') || !this.controls.count) return;
         // (a card's own piece selected alone: that piece comes off)
@@ -300,20 +315,67 @@ export class ScrapboardLayer extends InteractionLayer {
     }
 
     // Cards off the board, into the bin, once asked
+    // (a player's own notes and writing too, Luke 2026-10-21: through the
+    // relay, refused if anything going with them is someone else's)
     async #takeOff(list) {
         const cards = [].concat(list);
         if (!cards.length) return;
-        const ok = await Dialog.confirm({
+        const keys = cards.map((c) => c.key);
+        const own = !this.controls.editor;
+        if (own && !ownCardsOf(boardOf(canvas.scene), keys, this.user)) return ui.notifications.warn(loc('heart.board.not-yours-tied'));
+        const one = cards.length === 1;
+        const ok = await askBoard({
             title: loc('heart.board.erase-title'),
-            content: `<p>${esc(cards.length === 1 ? loc('heart.board.erase-scrap', { name: this.#nameOf(cards[0]) }) : loc('heart.board.erase-cards', { n: cards.length }))}</p>`,
-            options: heartDialogOptions({ classes: ['heart-board-dialog'] }),
+            content: one ? loc(own ? 'heart.board.erase-scrap-player' : 'heart.board.erase-scrap', { name: this.#nameOf(cards[0]) }) : loc(own ? 'heart.board.erase-cards-player' : 'heart.board.erase-cards', { n: cards.length }),
+            yes: loc(one ? 'heart.board.ask.take-off' : 'heart.board.ask.take-them-off'),
+            no: loc(one ? 'heart.board.ask.leave-it' : 'heart.board.ask.leave-them'),
         });
         if (!ok) return;
         this.controls.clear();
         this.drawMarks();
-        const keys = cards.map((c) => c.key);
+        if (own) return boardEdit(canvas.scene, { ownCards: keys });
         if (game.user.isGM) return removeMany(canvas.scene, { scraps: keys, pins: [], links: [] });
         return boardEdit(canvas.scene, { remove: { scraps: keys, pins: [], links: [] } });
+    }
+
+    /* -------------------------------------------- */
+    /*  A new place, a reshuffle                    */
+    /* -------------------------------------------- */
+
+    // File, New place (Luke, 2026-10-21: places invented at the table): its
+    // card at the middle of the view, or where the GM clicks next (Escape
+    // lets it go)
+    async newPlace() {
+        if (!game.user.isGM || !this.isBoard) return;
+        const answer = await placeDialog();
+        if (!answer) return;
+        if (answer.where === 'click') {
+            this.#placing = answer;
+            return ui.notifications.info(loc('heart.board.place-click-now', { name: answer.name }));
+        }
+        return this.#putPlace(answer, this.renderer.toMap({ x: canvas.stage.pivot.x, y: canvas.stage.pivot.y }));
+    }
+
+    #placing = null;
+
+    async #putPlace(answer, at) {
+        const made = await newPlace(canvas.scene, { name: answer.name, img: answer.img, state: answer.state, at });
+        if (!made) return;
+        ui.notifications.info(loc(answer.state === 'known' ? 'heart.board.place-made' : 'heart.board.placed', { name: made.actor.name }));
+    }
+
+    // Shift+R, or File, Reshuffle (Luke, 2026-10-21): the selected cards put
+    // together afresh, one edit Undo takes back. False when the board isn't
+    // in hand (the key is then Foundry's).
+    reshuffle() {
+        if (!this.active || !this.isBoard || !game.user.isGM || this.preview) return false;
+        const patch = this.controls.reshuffle();
+        if (!patch) {
+            ui.notifications.info(loc('heart.board.reshuffle-none'));
+            return true;
+        }
+        this.#write(patch);
+        return true;
     }
 
     // A doodle laid down where the brush's doodle palette's one in hand was
@@ -484,15 +546,17 @@ export class ScrapboardLayer extends InteractionLayer {
             g.lineStyle({ width: (s.w + 6) * r.scale, color: SELECTED, alpha: 0.35, ...round });
             path(s.pts);
         }
-        // (strokes being moved, sized, or turned: in their own ink, where they are going)
         // (a padlock: a card locked to the sheet)
         for (const p of m.locks ?? []) {
             const c = r.toCanvas(p);
             g.lineStyle({ width: 1.5 * k, color: 0x1a0d0b, alpha: 0.9 }).beginFill(SELECTED, 1).drawRoundedRect(c.x - 6 * k, c.y - 3 * k, 12 * k, 9 * k, 1.5 * k).endFill();
             g.lineStyle({ width: 2 * k, color: SELECTED, alpha: 1 }).arc(c.x, c.y - 3 * k, 4 * k, Math.PI, 0);
         }
+        // (strokes being moved, sized, or turned: in their own paint at their
+        // brightness, where they are going)
         for (const s of m.moving ?? []) {
-            g.lineStyle({ width: Math.min(s.w, markMax(r.look)) * r.scale, color: r.look?.ink.marker[s.c] ?? 0xd8ccb4, alpha: s.o ?? 0.85, ...round });
+            const paint = r.look?.ink.marker[s.c];
+            g.lineStyle({ width: Math.min(s.w, markMax(r.look)) * r.scale, color: paint === undefined ? 0xd8ccb4 : brushColor(paint, s.b ?? 1), alpha: s.o ?? 0.85, ...round });
             path(s.pts);
         }
         if (m.eraser) {
@@ -591,6 +655,13 @@ export class ScrapboardLayer extends InteractionLayer {
     // (Foundry calls a left click on the press, before any drag)
     async _onClickLeft(event) {
         if (!this.isBoard || !this.renderer.view) return;
+        // (a new place waiting for where it goes: here)
+        if (this.#placing && game.user.isGM) {
+            const answer = this.#placing;
+            const at = this.#pointOf(event);
+            this.#placing = null;
+            if (at) return this.#putPlace(answer, at);
+        }
         const action = this.controls.press(game.activeTool, this.#pointOf(event), { ctrl: this.#ctrl(event) });
         return this.#do(action);
     }
@@ -740,9 +811,11 @@ export class ScrapboardLayer extends InteractionLayer {
     // (a player's last paint for their strings)
     #lastColor = 0;
 
-    // a chained string made: on from its end pin while Ctrl is still held
-    // (Luke, 2026-10-03), else the chain is over
+    // a new string made: selected, as the editor does (Luke, 2026-10-21);
+    // chained, on from its end pin while Ctrl is still held (Luke,
+    // 2026-10-03), else the chain is over
     #carryOn(a, id) {
+        if (id) this.controls.selectLink(id);
         const held = game.keyboard?.isModifierActive?.(KeyboardManager.MODIFIER_KEYS.CONTROL);
         const pin = id ? boardOf(canvas.scene).links?.[id]?.bPin : null;
         if (a.chain && held && pin) this.controls.chainFrom(pin, a.endPt);
@@ -803,7 +876,15 @@ export class ScrapboardLayer extends InteractionLayer {
     }
 
     async #open(s) {
-        (await this.#docOf(s))?.sheet?.render(true);
+        const doc = await this.#docOf(s);
+        if (doc) return doc.sheet?.render(true);
+        this.#gone(s);
+    }
+
+    // A card whose place is gone (its actor deleted, or the book's entry
+    // missing) says so when opened (Luke, 2026-10-21: it did nothing)
+    #gone(s) {
+        if (s.uuid || this.renderer.look?.library?.[s.lib]?.uuid) ui.notifications.warn(loc('heart.board.place-gone', { name: this.#nameOf(s) }));
     }
 
     // A player opens a known landmark they may see (else its art)
@@ -812,6 +893,7 @@ export class ScrapboardLayer extends InteractionLayer {
         const doc = await this.#docOf(s);
         if (doc?.testUserPermission?.(game.user, 'OBSERVER')) return doc.sheet.render(true);
         if (doc) return showArt(doc);
+        this.#gone(s);
     }
 
     /* -------------------------------------------- */
@@ -924,7 +1006,7 @@ export class ScrapboardLayer extends InteractionLayer {
         }
         await this.refresh();
         if (!blob) return ui.notifications.warn(loc('heart.board.snapshot-failed'));
-        const name = `${canvas.scene.name.replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'heart-map'} (${this.viewer === 'gm' ? 'GM' : loc('heart.board.snapshot-players')}).png`;
+        const name = `${canvas.scene.name.replace(/[\\/:*?"<>|]+/g, ' ').trim() || loc('heart.board.snapshot-file')} (${loc(this.viewer === 'gm' ? 'heart.board.snapshot-gm' : 'heart.board.snapshot-players')}).png`;
         // (Foundry's own save, which its desktop client allows; failing that,
         // the picture in Foundry's image viewer, to save from there)
         try {
@@ -940,9 +1022,9 @@ export class ScrapboardLayer extends InteractionLayer {
     /*  The marker's palette                        */
     /* -------------------------------------------- */
 
-    // Shown while the Marker is in hand: the sheet's inks and three widths;
-    // for the GM, every layer on the board (each to show or hide on this
-    // screen, or clear), and Clear every layer
+    // Shown while the Brush is in hand: Draw or Select, the paints, the
+    // brightness, the width and opacity, the doodles, Show only the drawing,
+    // and (the GM's) Reset all brushes
     syncPalette() {
         const on = Boolean(this.active && this.isBoard && game.activeTool === 'mark');
         this.#doodles(on && this.doodlesOpen);
@@ -983,12 +1065,10 @@ export class ScrapboardLayer extends InteractionLayer {
             });
         }
         const hex = (c) => `#${(c >>> 0).toString(16).padStart(6, '0').slice(-6)}`;
-        const order = [...PAINT_ORDER.filter((i) => i < look.ink.marker.length), ...look.ink.marker.map((_, i) => i).filter((i) => !PAINT_ORDER.includes(i))];
         // (Luke, 2026-10-03: the toolbar's glass, in plain sections)
         // (Luke, 2026-10-06: named, and as the chosen brightness shows them)
-        const nameOf = (i) => PAINT_NAMES[i] ?? `${loc('heart.board.ink')} ${i + 1}`;
-        const inks = order.map((i) => `<button type="button" data-ink="${i}" class="ink ${i === this.markInk ? 'on' : ''}" style="--ink:${hex(brushColor(look.ink.marker[i], this.markBright))}" data-tooltip="${esc(nameOf(i))}"></button>`).join('');
-        const bright = ['dim', 'as-is', 'bright'].map((k, i) => `<button type="button" data-bright="${i}" class="${this.markBright === i ? 'on' : ''}">${esc(loc(`heart.board.brush-${k}`))}</button>`).join('');
+        const inks = paintOrder(look.ink.marker.length).map((i) => `<button type="button" data-ink="${i}" class="ink ${i === this.markInk ? 'on' : ''}" style="--ink:${hex(brushColor(look.ink.marker[i], this.markBright))}" data-tooltip="${esc(paintName(i))}" aria-label="${esc(paintName(i))}"></button>`).join('');
+        const bright = ['dim', 'as-is', 'bright'].map((k, i) => `<button type="button" data-bright="${i}" class="${this.markBright === i ? 'on' : ''}" data-tooltip="${esc(loc(`heart.board.brush-${k}-hint`))}">${esc(loc(`heart.board.brush-${k}`))}</button>`).join('');
         const w = Math.min(this.markWidth, markMax(look));
         const sliders = `<label class="slide"><span class="lab">${esc(loc('heart.board.mark-width'))}</span><input type="range" min="2" max="${markMax(look)}" step="1" value="${w}" data-width-range><output data-width-out>${w}</output></label>
             <label class="slide"><span class="lab">${esc(loc('heart.board.mark-opacity'))}</span><input type="range" min="5" max="100" step="5" value="${Math.round(this.markOpacity * 100)}" data-opacity-range><output data-opacity-out>${Math.round(this.markOpacity * 100)}%</output></label>`;
@@ -997,7 +1077,7 @@ export class ScrapboardLayer extends InteractionLayer {
         const alone = `<button type="button" data-alone class="switch ${this.renderer.marksOnly ? 'on' : ''}" data-tooltip="${esc(loc('heart.board.mark-alone-hint'))}"><i class="fa-solid ${this.renderer.marksOnly ? 'fa-toggle-on' : 'fa-toggle-off'}"></i> ${esc(loc('heart.board.mark-alone'))}</button>`;
         const reset = game.user.isGM && !this.preview ? `<button type="button" data-reset-all class="all"><i class="fa-solid fa-eraser"></i> ${esc(loc('heart.board.brush-reset'))}</button>` : '';
         el.innerHTML = `<div class="sec head" data-grip data-tooltip="${esc(loc('heart.board.brush-drag'))}"><i class="fa-solid fa-grip-vertical grip"></i><b>${esc(loc('heart.board.mark-palette'))}</b>${mode}</div>
-            <div class="sec"><span class="lab">${esc(nameOf(this.markInk))}</span><span class="inks">${inks}</span></div>
+            <div class="sec"><span class="lab">${esc(paintName(this.markInk))}</span><span class="inks">${inks}</span></div>
             <div class="sec"><span class="lab">${esc(loc('heart.board.brush-light'))}</span><span class="seg">${bright}</span></div>
             <div class="sec">${sliders}</div>
             <div class="sec">${doodles}${alone}${reset}<small>${esc(loc('heart.board.mark-rub'))}</small></div>`;
@@ -1082,7 +1162,6 @@ export class ScrapboardLayer extends InteractionLayer {
         if (b.dataset.ink) this.markInk = Number(b.dataset.ink);
         if (b.dataset.bright !== undefined) this.markBright = Number(b.dataset.bright);
         if (b.dataset.mode === 'select') this.controls.doodle = null;
-        if (b.dataset.width) this.markWidth = Number(b.dataset.width);
         if (b.dataset.mode) {
             this.controls.markMode = b.dataset.mode;
             this.controls.markSel.clear();
@@ -1098,7 +1177,7 @@ export class ScrapboardLayer extends InteractionLayer {
             await this.refresh();
         }
         if (b.dataset.resetAll !== undefined) {
-            const ok = await Dialog.confirm({ title: loc('heart.board.brush-reset'), content: `<p>${esc(loc('heart.board.brush-reset-confirm'))}</p>`, options: heartDialogOptions({ classes: ['heart-board-dialog'] }) });
+            const ok = await askBoard({ title: loc('heart.board.brush-reset'), content: loc('heart.board.brush-reset-confirm'), yes: loc('heart.board.ask.rub-out-all'), no: loc('heart.board.ask.keep-them') });
             if (ok) await clearAllBrushes(canvas.scene);
         }
         this.syncPalette();
@@ -1111,23 +1190,43 @@ export class ScrapboardLayer extends InteractionLayer {
 
 const ICONS = {
     move: 'fa-solid fa-up-down-left-right', reveal: 'fa-solid fa-eye', string: 'fa-solid fa-route', pin: 'fa-solid fa-thumbtack',
-    note: 'fa-solid fa-note-sticky', write: 'fa-solid fa-pencil', mark: 'fa-solid fa-highlighter', erase: 'fa-solid fa-eraser',
+    // (the brush is a paintbrush everywhere, as on its palette's Draw)
+    note: 'fa-solid fa-note-sticky', write: 'fa-solid fa-pencil', mark: 'fa-solid fa-paintbrush', erase: 'fa-solid fa-eraser',
     inspect: 'fa-solid fa-magnifying-glass',
 };
+
+// The Heart Map's help (Luke, 2026-10-21): each tool, then everything the
+// tooltips leave out (undo, Delete, File, the views, the palette's extras,
+// the keyboard). A player's own text where theirs differs.
+function helpDialog(user, tools, buttons) {
+    const editor = user.isGM || user.owner;
+    const has = new Set(buttons.map((b) => b.name));
+    const text = (name) => {
+        const mine = `heart.board.help.${name}-player`;
+        // (File: the GM's whole menu, else only the picture)
+        const theirs = name === 'file' ? !has.has('bin') : !editor;
+        return loc(theirs && game.i18n.has(mine) ? mine : `heart.board.help.${name}`);
+    };
+    const row = (icon, title, body) => `<div class="heart-board-help-row"><i class="${icon}"></i><div><b>${esc(title)}</b><p>${esc(body)}</p></div></div>`;
+    const brush = tools.some((t) => t.name === 'mark');
+    const topics = [
+        ['undo', 'fa-solid fa-rotate-left', 'heart.board.help.undo-title', has.has('undo')],
+        ['delete', 'fa-solid fa-delete-left', 'heart.board.help.delete-title', true],
+        ['preview', 'fa-solid fa-user-secret', 'heart.board.tool.preview', has.has('preview')],
+        ['theirs', 'fa-solid fa-user-pen', 'heart.board.tool.theirs', has.has('theirs')],
+        ['file', 'fa-solid fa-folder-open', 'heart.board.tool.file', true],
+        ['alone', 'fa-solid fa-toggle-on', 'heart.board.mark-alone', brush],
+        ['doodles', 'fa-solid fa-shapes', 'heart.board.doodles', brush],
+        ['keys', 'fa-solid fa-keyboard', 'heart.board.help.keys-title', true],
+    ].filter((t) => t[3]);
+    const content = `<div class="heart-board-help"><h3>${esc(loc('heart.board.help.tools-head'))}</h3>${tools.map((t) => row(t.icon, t.title, text(t.name))).join('')}
+        <h3>${esc(loc('heart.board.help.more-head'))}</h3>${topics.map(([name, icon, title]) => row(icon, loc(title), text(name))).join('')}</div>`;
+    new Dialog({ title: loc('heart.board.help.title'), content, buttons: { close: { label: loc('Close') } }, default: 'close' }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 600 })).render(true);
+}
 
 // The Heart Map's tools and buttons for this user (Foundry's scene controls
 // and the Heart Map's own toolbar, rail.js, both show these): { tools,
 // buttons, list }
-// The Heart Map's tools and what each does (the help the tooltips leave out)
-function helpDialog(user, tools) {
-    const key = (t) => `heart.board.help.${user.isGM || user.owner ? t : `${t}-player`}`;
-    const rows = tools.map((t) => {
-        const k = game.i18n.has(key(t.name)) ? key(t.name) : `heart.board.help.${t.name}`;
-        return `<div class="heart-board-help-row"><i class="${t.icon}"></i><div><b>${esc(t.title)}</b><p>${esc(loc(k))}</p></div></div>`;
-    }).join('');
-    new Dialog({ title: loc('heart.board.help.title'), content: `<div class="heart-board-help">${rows}</div>`, buttons: { ok: { label: loc('Close') } }, default: 'ok' }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 560 })).render(true);
-}
-
 export function boardTools() {
     const gm = game.user.isGM;
     const layer = canvas.heartBoard;
@@ -1143,7 +1242,7 @@ export function boardTools() {
     // a picture of the map as this user sees it (everyone's)
     const snapshot = { name: 'snapshot', icon: 'fa-solid fa-camera', title: loc('heart.board.tool.snapshot'), button: true, onClick: () => layer?.saveSnapshot() };
     // the tools' long help, in a window of its own (the tooltips are short)
-    const help = { name: 'help', icon: 'fa-solid fa-circle-question', title: loc('heart.board.tool.help'), button: true, onClick: () => helpDialog(user, tools) };
+    const help = { name: 'help', icon: 'fa-solid fa-circle-question', title: loc('heart.board.tool.help'), button: true, onClick: () => helpDialog(user, tools, buttons) };
     // (each user's own edits; Luke 2026-10-06)
     const undoB = button('undo', 'fa-solid fa-rotate-left', () => layer?.history('undo'));
     const redoB = button('redo', 'fa-solid fa-rotate-right', () => layer?.history('redo'));
@@ -1157,8 +1256,14 @@ export function boardTools() {
             undoB,
             redoB,
             theirs,
+            // (Luke, 2026-10-21: a place invented at the table; the selected
+            // cards put together afresh, Shift+R)
+            button('place', 'fa-solid fa-map-pin', () => layer?.newPlace()),
+            button('reshuffle', 'fa-solid fa-shuffle', () => layer?.reshuffle()),
             button('bin', 'fa-solid fa-box-archive', () => binDialog(scene)),
             button('history', 'fa-solid fa-clock-rotate-left', () => backupsDialog(scene)),
+            // (Luke, 2026-10-21: the board saved as a file, Import loads it back)
+            button('download', 'fa-solid fa-file-arrow-down', () => downloadBoard(scene)),
             button('export', 'fa-solid fa-file-export', () => exportDialog(exportBoard(scene))),
             button('import', 'fa-solid fa-file-import', async () => {
                 const text = await importDialog();
@@ -1166,7 +1271,7 @@ export function boardTools() {
             }),
             button('restore', 'fa-solid fa-right-left', async () => {
                 if (!hasBackup(scene)) return ui.notifications.info(loc('heart.board.no-backup'));
-                const ok = await Dialog.confirm({ title: loc('heart.board.tool.restore'), content: `<p>${esc(loc('heart.board.restore-confirm'))}</p>`, options: heartDialogOptions({ classes: ['heart-board-dialog'] }) });
+                const ok = await askBoard({ title: loc('heart.board.tool.restore'), content: loc('heart.board.restore-confirm'), yes: loc('heart.board.ask.swap-in'), no: loc('heart.board.ask.keep-this') });
                 if (ok) await restoreBackup(scene);
             }),
             button('reload', 'fa-solid fa-rotate', async () => {

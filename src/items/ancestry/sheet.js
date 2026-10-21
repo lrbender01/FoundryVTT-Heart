@@ -5,7 +5,7 @@
 import sheetHTML from './sheet.html';
 import templateJSON from './template.json';
 import HeartItemSheet from '../base/sheet';
-import { trinketItemOf } from '../trinkets';
+import { trinketView } from '../trinkets';
 import { activateQuestionListeners } from './questions';
 import { shareOfCharacter } from '../../common/window-sizes';
 
@@ -44,7 +44,7 @@ export default class extends HeartItemSheet {
     getData() {
         const data = super.getData();
         // the rolled keepsake, shown as an item row in the Keepsake section
-        data.trinketItem = trinketItemOf(this.item);
+        data.trinkets = trinketView(this.item);
         return data;
     }
 

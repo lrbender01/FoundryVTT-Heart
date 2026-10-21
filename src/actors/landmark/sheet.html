@@ -56,7 +56,7 @@
       <label class="header-label">{{localizeHeart "landmark" "domain" "label-multiple"}}</label>
       <div class="header-chips {{#if editing}}editing{{/if}}">
         {{#if editing}}
-        <input class="header-input" name="system.domains" value="{{actor.system.domains}}" placeholder="Haven, Technology" />
+        <input class="header-input" name="system.domains" value="{{actor.system.domains}}" placeholder="{{localize 'heart.landmark.domains-placeholder'}}" />
         {{else}}
         {{#each domainChips as |domain|}}<span>{{{heartGlyph "domain" domain}}}{{domain}}</span>{{/each}}
         {{/if}}

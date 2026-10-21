@@ -15,7 +15,7 @@ import { ScrapboardLayer, boardControls } from './scrapboard/layer.js';
 import { loadBoardLook, reloadBoardLook } from './scrapboard/look.js';
 import {
     isBoardScene, boardOf, createBoardScene, setBoardScene, setScrap, setLink, addScrap, addLink, removeScrap,
-    removeLink, exportBoard, importBoard, restoreBackup, undo, redo, isPlayersBoard, ownersOf, tidyBoardScene,
+    removeLink, exportBoard, importBoard, restoreBackup, undo, redo, isPlayersBoard, ownersOf, tidyBoardScene, followRename, downloadBoard, newPlace,
 } from './scrapboard/api.js';
 import { registerBoardSettings, registerBoardRelay, handOf, playersBoardDialog } from './scrapboard/notes.js';
 import { registerRailSettings, syncRail } from './scrapboard/rail.js';
@@ -112,6 +112,15 @@ function registerHooks() {
     });
 
     Hooks.on('dropCanvasData', onDrop);
+
+    // a place's cards follow its actor (Luke, 2026-10-21): a rename is
+    // written to every board's cards by the one active GM (an edit Undo takes
+    // back); a new picture is drawn again on everyone's screen
+    Hooks.on('updateActor', (actor, changes) => {
+        if (actor.type !== 'landmark') return;
+        if ('img' in changes && onBoard()) layer()?.queueRefresh();
+        if ('name' in changes && game.user.isGM && game.users.activeGM?.id === game.user.id) followRename(actor);
+    });
 
     // every board scene made whole once the world is up (the GM's client)
     Hooks.once('ready', async () => {
@@ -211,6 +220,15 @@ export function initialise() {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY,
         onDown: () => { const l = layer(); if (!l?.active || !l.isBoard) return false; l.history('redo'); return true; },
     });
+    // the selected cards put together afresh (Luke, 2026-10-21: Shift+R, as
+    // in the editor), the GM's, only while the board's tools are in hand
+    game.keybindings.register('heart', 'boardReshuffle', {
+        name: 'heart.board.key-reshuffle',
+        editable: [{ key: 'KeyR', modifiers: [SHIFT] }],
+        restricted: true,
+        precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY,
+        onDown: () => Boolean(layer()?.reshuffle()),
+    });
     registerBoardSettings();
     registerRailSettings();
     registerBoardRelay();
@@ -233,7 +251,9 @@ export function initialise() {
         removeScrap,
         removeLink,
         export: exportBoard,
+        download: downloadBoard,
         import: importBoard,
+        newPlace,
         restoreBackup,
         undo,
         redo,

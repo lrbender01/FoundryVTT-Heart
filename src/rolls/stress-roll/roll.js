@@ -15,7 +15,7 @@ import { glyphFor } from '../../common/icons';
 // the resistance is prefilled with this user's last choice, the die is D4.
 // The arithmetic (die steps, doubling, Protection) lives in rules.js, free of
 // webpack-only imports, so the rules tests can load it (2026-09-30, Luke).
-import { stressDie, stressFormula, afterProtection } from './rules';
+import { stressDie, stressFormula, afterProtection, stressStatus, stressPreview, normalizeStakes } from './rules';
 import { applyProvisions } from '../../actors/party/party';
 import { askGM } from '../../common/relay';
 import { oneAtATime } from '../../common/busy';
@@ -68,8 +68,11 @@ export default class StressRoll extends Roll {
         };
     }
 
-    // Resolves with a StressRoll, or null if the picker is closed
-    static build({ result, die_size, character, resistance, ignoreProtection, helpers = [], passive } = {}, data = {}, options = {}) {
+    // Resolves with a StressRoll, or null if the picker is closed. `stakes`
+    // (a GM's roll request, Luke 2026-10-21: { resistance, die_size, passive },
+    // each optional) only preselect the picker's chips: whoever rolls the
+    // stress can still change them, since the GM may change their mind.
+    static build({ result, die_size, character, resistance, ignoreProtection, helpers = [], passive, stakes } = {}, data = {}, options = {}) {
         return new Promise(resolve => {
             const requirements = this.requirements;
             if (result !== undefined) delete requirements.result;
@@ -79,6 +82,10 @@ export default class StressRoll extends Roll {
             if (ignoreProtection !== undefined) delete requirements.ignoreProtection;
             // passive only changes a success at a cost
             if (passive !== undefined || (result !== undefined && result !== 'success_at_a_cost')) delete requirements.passive;
+            const set = normalizeStakes(stakes, game.heart.stress_targets ?? []);
+            if (set.resistance && requirements.resistance) requirements.resistance.default = set.resistance;
+            if (set.die_size && requirements.die_size) requirements.die_size.default = set.die_size;
+            if (set.passive !== undefined && requirements.passive) requirements.passive.default = set.passive;
 
             const buildData = { result, die_size, character, resistance, ignoreProtection, helpers, passive };
             const finish = (more = {}) => {
@@ -160,6 +167,26 @@ export default class StressRoll extends Roll {
         return applied;
     }
 
+    // Who Take Stress would mark, with their Protection as it stands now
+    // (the same people takeStress walks; Luke, 2026-10-21, for the card's
+    // not-taken-yet lines). Reads only, never writes.
+    stressTargets() {
+        const resistance = this.options.resistance;
+        if (!resistance) return [];
+        if (resistance === 'provisions') {
+            const party = game.heart.party;
+            if (!party) return [];
+            return [{ id: party.id, name: party.name, protection: party.proxy?.provisions?.protection ?? 0, shared: true }];
+        }
+        const targets = [];
+        for (const id of [this.options.character, ...(this.options.helpers ?? [])]) {
+            const actor = game.actors.get(id);
+            const res = actor?.system?.resistances?.[resistance];
+            if (res) targets.push({ id, name: actor.name, protection: res.protection });
+        }
+        return targets;
+    }
+
     async render(chatOptions = {}) {
         chatOptions = foundry.utils.mergeObject({
             user: game.user.id,
@@ -207,6 +234,20 @@ export default class StressRoll extends Roll {
             return { ...a, value };
         });
 
+        // Rolled, not taken yet (2026-10-21): what each would take now, so
+        // anything that changes it can be applied by hand before Take Stress
+        const status = isPrivate ? '' : stressStatus(opts);
+        const pending = status !== 'pending' ? []
+            : stressPreview(this.total, this.stressTargets(), opts.ignoreProtection).map(a => {
+                const protection = a.protection
+                    ? loc(a.shared ? 'heart.card.qm-protection' : 'heart.card.protection', { protection: a.protection })
+                    : '';
+                const value = a.amount > 0
+                    ? `${loc('heart.card.pending-amount', { amount: a.amount })}${protection ? ` (${protection})` : ''}`
+                    : loc('heart.card.stopped', { protection: a.protection });
+                return { ...a, value };
+            });
+
         // fallout per character who took stress (none if Protection stopped it)
         const falloutFor = isPrivate || !showFalloutRollButton ? []
             : applied.filter(a => a.amount > 0 && !(chatOptions.falloutDone ?? []).includes(a.id));
@@ -234,6 +275,11 @@ export default class StressRoll extends Roll {
             user: chatOptions.user,
             dice: isPrivate ? '' : diceRow(rollParts(this).map(p => ({ ...p, kept: true }))),
             applied: isPrivate ? [] : applied,
+            pending,
+            // 'pending' (rolled, not taken yet) or 'taken'
+            status,
+            statusText: status ? loc(`heart.card.stress-${status}`) : '',
+            statusTip: status ? `heart.tip.card.stress-${status}` : '',
             // drawn per client: only the roller's player and the GM see it
             showTakeStressButton: isPrivate ? false : showTakeStressButton && !opts.applied
                 && mayRunStress(game.user, game.actors.get(opts.character)),

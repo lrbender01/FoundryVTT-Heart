@@ -39,7 +39,9 @@ export default class ItemRoll extends Roll {
             : sys.type && game.heart.skills?.includes(sys.type) ? ['skill', sys.type] : [];
         const use = kind ? loc(`heart.${kind}.${id}`) : '';
         const stepped = this.options.stepIncrease ? loc('heart.card.stepped-up')
-            : this.options.stepDecrease ? loc('heart.card.stepped-down') : '';
+            : this.options.stepDecrease ? loc('heart.card.stepped-down')
+            // a haunt service: what paid for it (2026-10-21)
+            : this.options.paidWith ? String(this.options.paidWith) : '';
         const what = [use ? `${glyphFor(kind, id)}<b>${esc(use)}</b>` : esc(loc('heart.card.item-roll')), esc(die)].join(', ');
 
         // a haunt service (no item name) is named by the caller's flavour
