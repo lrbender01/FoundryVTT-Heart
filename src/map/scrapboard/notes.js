@@ -9,7 +9,8 @@
 // control and, in the player view, can try the picker without claiming a
 // hand. Players' writes go through the GM's relay (one queue on the GM's
 // client; each request checked against who asked).
-import { HAND_SCALE, pinChoices, pickFrom, ALIGNS, TEXT_STYLES, textStyleOf, markMax, cleanStroke, customKey } from './model.js';
+import { HAND_SCALE, pinChoices, pickFrom, ALIGNS, TEXT_STYLES, textStyleOf, markMax, cleanStroke, customKey, TYPEWRITER, newStringPatch, mergeRecords, recordTarget, recordUpdate, binList, seasonMarks, brushColor, PAINT_NAMES, PAINT_ORDER, noteFields } from './model.js';
+import { listBackups, readBackup } from './backups.js';
 import { askGM, registerRelayHandler } from '../../common/relay.js';
 import { heartDialogOptions } from '../../common/dialog.js';
 import { mayMove, mayRubOut } from './controls.js';
@@ -18,6 +19,7 @@ import { mayMove, mayRubOut } from './controls.js';
 export { mayMove };
 import {
     boardOf, isBoardScene, ownsBoard, setScrap, applyBoardPatch, addLink, addPin, addMark, removeMarks, removeScrap, removeLink, removeMany, labelString, addString,
+    writeBoard, pushEdit, binCards, unbinCard, emptyBin, replaceBoard,
 } from './api.js';
 import { loadBoardLook, textureUrl } from './look.js';
 
@@ -49,6 +51,16 @@ export function registerBoardSettings() {
 }
 
 const hands = () => game.settings.get('heart', 'boardHands') ?? {};
+
+// Who may type on the board (Luke, 2026-10-03): the GM, and a player who
+// owns a Witness
+export function mayType(userId = game.user.id) {
+    const user = game.users.get(userId);
+    if (!user) return false;
+    if (user.isGM) return true;
+    return game.actors.some((a) => a.type === 'character' && a.testUserPermission(user, 'OWNER')
+        && a.items.some((i) => i.type === 'class' && /witness/i.test(i.name ?? '')));
+}
 export const handOf = (userId = game.user.id) => hands()[userId] ?? null;
 const takenBy = (face) => Object.entries(hands()).find(([, f]) => f === face)?.[0] ?? null;
 
@@ -99,7 +111,8 @@ export async function ensureHand() {
 // and its ink, anyone's to choose from the look's few presets; its hand, the
 // GM's (`chooseHand`), shown as the card writes now. Resolves { text, hand,
 // paper, ink } (hand, paper, ink null: the board's choice), or null.
-export async function noteDialog({ text = '', hand = null, paper = null, ink = null, type = 'note', chooseHand = false, title = 'heart.board.note-title', style = {} } = {}) {
+export async function noteDialog({ text = '', hand = null, paper = null, ink = null, type = 'note', chooseHand = false, title = 'heart.board.note-title', style = {}, typed = false, shownPaper = null, paint = null, bright = null, pturn = 0, flip = false, turn = 0, textAt = null } = {}) {
+    const canType = mayType();
     const st = textStyleOf(style);
     // (Luke, 2026-10-03: how the writing is set: align, bold, italic,
     // underline, strike through)
@@ -107,35 +120,86 @@ export async function noteDialog({ text = '', hand = null, paper = null, ink = n
     const styleRow = `<div class="heart-board-style">${ALIGNS.map((a) => `<label title="${esc(loc(`heart.board.align-${a}`))}"><input type="radio" name="align" value="${a}" ${(st.align ?? 'center') === a ? 'checked' : ''}><i class="fa-solid ${ICON[a]}"></i></label>`).join('')}<span class="sep"></span>${TEXT_STYLES.map((k) => `<label title="${esc(loc(`heart.board.style-${k}`))}"><input type="checkbox" name="${k}" ${st[k] ? 'checked' : ''}><i class="fa-solid ${ICON[k]}"></i></label>`).join('')}</div>`;
     const { look, textures } = await loadBoardLook();
     const papers = type === 'note' ? look.pools.notes.filter((id) => textureUrl(textures, id)) : [];
-    const inks = type === 'scrawl' ? look.ink.sheet : look.ink.paper;
     const face = hand ?? look.fonts.hands[0];
-    const handRow = chooseHand
-        ? `<div class="form-group"><label>${esc(loc('heart.board.hand'))}</label><select name="hand">${HANDS.map((f) => `<option value="${esc(f)}" ${f === face ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select></div>`
+    // (Luke, 2026-10-06) the hands, and the typewriter, as tiles each
+    // writing in its own face: the GM's every hand; a player's own (and the
+    // typewriter, a Witness's)
+    const faces = [...(chooseHand ? HANDS : [face]), ...(canType ? [TYPEWRITER] : [])];
+    const sample = loc('heart.board.face-sample');
+    const now = typed && canType ? TYPEWRITER : face;
+    // (Luke, 2026-10-06: fewer at a time, each sample large enough to read,
+    // and whose each hand is: a player's claimed one, with their character;
+    // the GM's own)
+    const claimed = Object.entries(hands());
+    const whose = (f) => {
+        if (f === TYPEWRITER) return loc('heart.board.typed');
+        const by = claimed.filter(([, h]) => h === f).map(([uid]) => {
+            const u = game.users.get(uid);
+            return u ? `${u.name}${u.character ? ` (${u.character.name})` : ''}` : null;
+        }).filter(Boolean);
+        if (by.length) return by.join(', ');
+        return look.fonts.hands.includes(f) ? loc('heart.board.hand-gms') : loc('heart.board.hand-free');
+    };
+    const faceRow = faces.length > 1
+        ? `<div class="heart-board-faces" title="${esc(loc('heart.board.hand'))}">${faces.map((f) => `<label class="face ${f === now ? 'on' : ''} ${claimed.some(([, h]) => h === f) ? 'claimed' : ''}"><input type="radio" name="face" value="${esc(f)}" ${f === now ? 'checked' : ''}><span class="smp" style="font-family: '${esc(f)}'; font-size: ${Math.round(25 * (f === TYPEWRITER ? 0.82 : HAND_SCALE[f] ?? 1))}px">${esc(sample)}</span><small><b>${esc(f === TYPEWRITER ? '' : f)}</b> ${esc(whose(f))}</small></label>`).join('')}</div>`
         : '';
-    const inkRow = `<div class="heart-board-inks" title="${esc(loc('heart.board.ink'))}">${inks.map((c, i) => `<label><input type="radio" name="ink" value="${i}" ${i === ink ? 'checked' : ''}><span style="background:${hex(c)}"></span></label>`).join('')}
-        <label class="any"><input type="radio" name="ink" value="" ${ink === null || ink === undefined ? 'checked' : ''}><span>${esc(loc('heart.board.any'))}</span></label></div>`;
+    const paperUrl = (id) => (id ? textureUrl(textures, id) : null);
+    const paperId = (id) => (paperUrl(id) ? id : paperUrl(shownPaper) ? shownPaper : papers[0] ?? null);
+    const sizeOf = (f) => Math.round(26 * (f === TYPEWRITER ? 0.82 : HAND_SCALE[f] ?? 1));
+    // its writing in the brush's paints, at the brush's brightnesses (Luke,
+    // 2026-10-06: the same choices as the brush); an ink the paper had before
+    // stays until a paint is picked
+    const marker = look.ink.marker ?? [];
+    const order = [...PAINT_ORDER.filter((i) => i < marker.length), ...marker.map((_, i) => i).filter((i) => !PAINT_ORDER.includes(i))];
+    let lit = bright ?? 1;
+    const colourOf = (p) => (p === null || p === undefined || p === '' ? (ink !== null && ink !== undefined ? hex((type === 'scrawl' ? look.ink.sheet : look.ink.paper)[ink] ?? look.ink.text) : '') : hex(brushColor(marker[Number(p)], lit)));
+    const paintRow = `<div class="heart-board-paints" title="${esc(loc('heart.board.ink'))}">${order.map((i) => `<label data-tooltip="${esc(PAINT_NAMES[i] ?? '')}"><input type="radio" name="paint" value="${i}" ${i === paint ? 'checked' : ''}><span style="background:${hex(brushColor(marker[i], lit))}"></span></label>`).join('')}
+        <label class="any"><input type="radio" name="paint" value="" ${paint === null || paint === undefined ? 'checked' : ''}><span>${esc(loc('heart.board.any'))}</span></label></div>
+        <div class="heart-board-brights">${['dim', 'as-is', 'bright'].map((k, i) => `<label><input type="radio" name="bright" value="${i}" ${i === lit ? 'checked' : ''}><span>${esc(loc(`heart.board.brush-${k}`))}</span></label>`).join('')}</div>`;
     const paperRow = papers.length
         ? `<div class="heart-board-papers" title="${esc(loc('heart.board.paper'))}"><label class="any"><input type="radio" name="paper" value="" ${paper ? '' : 'checked'}><span>${esc(loc('heart.board.any'))}</span></label>${papers.map((id) => `<label><input type="radio" name="paper" value="${esc(id)}" ${paper === id ? 'checked' : ''}><img src="${textureUrl(textures, id)}" alt=""></label>`).join('')}</div>`
         : '';
-    const shown = ink !== null && inks[ink] !== undefined ? hex(inks[ink]) : '';
+    // the note as it will lie (Luke, 2026-10-06: a bigger preview): its paper
+    // turned a quarter at a time and freely, its writing where it sits on it,
+    // dragged by its handle; writing on the sheet is the sheet's
+    const note = type === 'note';
+    let q = ((Number(pturn) || 0) % 4 + 4) % 4;
+    let deg = Math.round(Number(turn) || 0);
+    let at = textAt && Number.isFinite(textAt.u) ? { ...textAt } : { u: 0, v: -0.05 };
+    const touched = { q: false, r: false, at: false };
+    const shown = colourOf(paint);
+    const area = `<textarea name="text" rows="4" maxlength="${MAX_TEXT}" style="font-family: '${esc(now)}'; font-size: ${sizeOf(now)}px; ${shown ? `color: ${shown};` : ''}">${esc(text)}</textarea>`;
+    const stage = note
+        ? `<div class="heart-board-stage"><div class="heart-board-sheet"><div class="paper"></div>${area}<span class="grip" data-tooltip="${esc(loc('heart.board.note-move-text'))}"><i class="fa-solid fa-up-down-left-right"></i></span></div></div>
+            <div class="heart-board-turns"><button type="button" data-q="-1" data-tooltip="${esc(loc('heart.board.note-turn-left'))}"><i class="fa-solid fa-rotate-left"></i></button><button type="button" data-q="1" data-tooltip="${esc(loc('heart.board.note-turn-right'))}"><i class="fa-solid fa-rotate-right"></i></button>
+            <label><span>${esc(loc('heart.board.note-tilt'))}</span><input type="range" name="tilt" min="-45" max="45" step="1" value="${Math.max(-45, Math.min(45, deg))}"><output>${deg}°</output></label></div>`
+        : `<div class="heart-board-preview sheet">${area}</div>`;
     return new Promise((resolve) => {
         new Dialog({
             title: loc(title),
-            content: `<textarea name="text" class="${type === 'scrawl' ? 'sheet' : ''}" rows="4" maxlength="${MAX_TEXT}" style="font-family: '${esc(face)}'; ${shown ? `color: ${shown};` : ''}">${esc(text)}</textarea>${styleRow}${handRow}${inkRow}${paperRow}`,
+            content: `${stage}${styleRow}${faceRow}${paintRow}${paperRow}`,
             buttons: {
                 ok: {
                     label: loc('heart.board.write'),
                     callback: (html) => {
-                        const n = html.find('[name=ink]:checked').val();
+                        const picked = html.find('[name=face]:checked').val() ?? now;
+                        const pv = html.find('[name=paint]:checked').val();
                         resolve({
                             text: String(html.find('[name=text]').val() ?? '').trim(),
-                            hand: chooseHand ? html.find('[name=hand]').val() || null : hand,
+                            hand: chooseHand ? (picked === TYPEWRITER ? face : picked) || null : hand,
                             paper: html.find('[name=paper]:checked').val() || null,
-                            ink: n === '' || n === undefined ? null : Number(n),
+                            // (an ink of before kept, unless a paint was picked)
+                            ink: pv === '' || pv === undefined ? ink : null,
+                            paint: pv === '' || pv === undefined ? null : Number(pv),
+                            bright: lit,
+                            typed: canType && picked === TYPEWRITER,
                             style: textStyleOf({
                                 align: html.find('[name=align]:checked').val(),
                                 ...Object.fromEntries(TEXT_STYLES.map((k) => [k, html.find(`[name=${k}]`).is(':checked')])),
                             }),
+                            ...(note && touched.q ? { pturn: q } : {}),
+                            ...(note && touched.r ? { r: deg } : {}),
+                            ...(note && touched.at ? { textAt: at } : {}),
                         });
                     },
                 },
@@ -145,21 +209,91 @@ export async function noteDialog({ text = '', hand = null, paper = null, ink = n
             render: (html) => {
                 const ta = html.find('textarea');
                 ta.trigger('focus');
-                // the text shows the hand and ink as they are picked
-                html.find('[name=hand]').on('change', (ev) => ta.css('font-family', `'${ev.currentTarget.value}'`));
-                html.find('[name=ink]').on('change', (ev) => ta.css('color', ev.currentTarget.value === '' ? '' : hex(inks[Number(ev.currentTarget.value)])));
+                const sheet = html.find('.heart-board-sheet')[0];
+                // the paper as it lies: its picture turned and mirrored inside
+                // a sheet its shape, the sheet turned freely
+                const lay = () => {
+                    if (!sheet) return;
+                    const id = paperId(html.find('[name=paper]:checked').val());
+                    const z = id ? textures[id] : null;
+                    const w0 = z?.w || 300;
+                    const h0 = z?.h || 400;
+                    const [w, h] = q % 2 ? [h0, w0] : [w0, h0];
+                    const k = Math.min(330 / w, 230 / h);
+                    Object.assign(sheet.style, { width: `${Math.round(w * k)}px`, height: `${Math.round(h * k)}px`, transform: `translate(-50%, -50%) rotate(${deg}deg)` });
+                    const pic = sheet.querySelector('.paper');
+                    Object.assign(pic.style, { width: `${Math.round(w0 * k)}px`, height: `${Math.round(h0 * k)}px`, backgroundImage: id ? `url('${paperUrl(id)}')` : 'none', transform: `translate(-50%, -50%) rotate(${q * 90}deg) scaleX(${flip ? -1 : 1})` });
+                    const t = ta[0];
+                    Object.assign(t.style, { left: `${50 + at.u * 90}%`, top: `${50 + at.v * 90}%` });
+                    html.find('.heart-board-sheet .grip').css({ left: `${50 + at.u * 90}%`, top: `calc(${50 + at.v * 90}% - 44px)` });
+                };
+                lay();
+                html.find('[data-q]').on('click', (ev) => {
+                    q = (q + Number(ev.currentTarget.dataset.q) + 4) % 4;
+                    touched.q = true;
+                    lay();
+                });
+                html.find('[name=tilt]').on('input', (ev) => {
+                    deg = Number(ev.currentTarget.value);
+                    touched.r = true;
+                    html.find('.heart-board-turns output').text(`${deg}°`);
+                    lay();
+                });
+                // the writing dragged by its handle, in the paper's own frame
+                html.find('.heart-board-sheet .grip').on('pointerdown', (ev) => {
+                    ev.preventDefault();
+                    const r = sheet.getBoundingClientRect();
+                    const cx = r.left + r.width / 2;
+                    const cy = r.top + r.height / 2;
+                    const a = (-deg * Math.PI) / 180;
+                    const W = sheet.offsetWidth * 0.9;
+                    const H = sheet.offsetHeight * 0.9;
+                    const move = (e) => {
+                        const dx = e.clientX - cx;
+                        const dy = e.clientY - cy;
+                        at = { u: Math.max(-0.5, Math.min(0.5, (dx * Math.cos(a) - dy * Math.sin(a)) / W)), v: Math.max(-0.5, Math.min(0.5, (dx * Math.sin(a) + dy * Math.cos(a)) / H)) };
+                        touched.at = true;
+                        lay();
+                    };
+                    const up = () => {
+                        window.removeEventListener('pointermove', move);
+                        window.removeEventListener('pointerup', up);
+                    };
+                    window.addEventListener('pointermove', move);
+                    window.addEventListener('pointerup', up);
+                });
+                // the text shows the hand, paint, and paper as they are picked
+                html.find('[name=face]').on('change', (ev) => {
+                    const f = ev.currentTarget.value;
+                    ta.css({ 'font-family': `'${f}'`, 'font-size': `${sizeOf(f)}px` });
+                    html.find('.heart-board-faces .face').removeClass('on');
+                    $(ev.currentTarget).closest('.face').addClass('on');
+                });
+                const tint = () => ta.css('color', colourOf(html.find('[name=paint]:checked').val()));
+                html.find('[name=paint]').on('change', tint);
+                html.find('[name=bright]').on('change', (ev) => {
+                    lit = Number(ev.currentTarget.value);
+                    html.find('.heart-board-paints [name=paint]').each((_, el) => {
+                        if (el.value !== '') $(el).next('span').css('background', hex(brushColor(marker[Number(el.value)], lit)));
+                    });
+                    tint();
+                });
+                html.find('[name=paper]').on('change', lay);
                 // (and as it is set)
-                const look = () => {
+                const setLook = () => {
                     const on = (k) => html.find(`[name=${k}]`).is(':checked');
                     ta.css({ 'text-align': html.find('[name=align]:checked').val() ?? 'center', 'font-weight': on('bold') ? 'bold' : '', 'font-style': on('italic') ? 'italic' : '', 'text-decoration': [on('underline') ? 'underline' : '', on('strike') ? 'line-through' : ''].filter(Boolean).join(' ') || 'none' });
                 };
-                html.find('.heart-board-style input').on('change', look);
-                look();
+                html.find('.heart-board-style input').on('change', setLook);
+                setLook();
             },
             close: () => resolve(null),
-        }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 440 })).render(true);
+        }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 520 })).render(true);
     });
 }
+
+// (what of a dialog's answer the relay takes for a note's look)
+const noteLookOf = (a) => ({ paint: a.paint, bright: a.bright, ...('pturn' in a ? { pturn: a.pturn } : {}), ...('r' in a ? { r: a.r } : {}), ...(a.textAt ? { textAt: a.textAt } : {}) });
 
 // A player pins a note (type 'note') or writes straight on the sheet
 // ('scrawl') at a board point, in their hand
@@ -168,13 +302,21 @@ export async function playerAddNote(scene, at, type = 'note') {
     if (!hand) return;
     const answer = await noteDialog({ hand, type, title: type === 'scrawl' ? 'heart.board.write-title' : 'heart.board.note-title' });
     if (!answer?.text) return;
-    return askGM('board.addNote', { sceneId: scene.id, type, x: Math.round(at.x), y: Math.round(at.y), text: answer.text, paper: answer.paper, ink: answer.ink, style: answer.style });
+    return asked(scene, 'board.addNote', { sceneId: scene.id, type, x: Math.round(at.x), y: Math.round(at.y), text: answer.text, paper: answer.paper, ink: answer.ink, style: answer.style, typed: answer.typed, look: noteLookOf(answer) });
+}
+
+// A player's request to the GM: what it changed comes back, kept as their
+// own edit to undo (Luke, 2026-10-06)
+async function asked(scene, op, data) {
+    const res = await askGM(op, data);
+    if (res?.undo) pushEdit(scene, res.undo);
+    return res;
 }
 
 // A player moves their own notes and writing ({ key: { x, y } })
 export async function playerMove(scene, moves) {
     if (!Object.keys(moves ?? {}).length) return;
-    return askGM('board.moveOwn', { sceneId: scene.id, moves });
+    return asked(scene, 'board.moveOwn', { sceneId: scene.id, moves });
 }
 
 // A note's text, paper, and ink edited; the GM may change its hand too (the
@@ -186,20 +328,135 @@ export async function editNote(scene, key) {
     if (!gm && s.author !== game.user.id && !ownsBoard(scene, game.user.id)) return ui.notifications.warn(loc('heart.board.not-yours'));
     const { look } = await loadBoardLook();
     const face = s.hand ?? pickFrom(look.fonts.hands, `hand:${key}`) ?? look.fonts.hands[0];
-    const answer = await noteDialog({ text: s.text ?? '', hand: face, paper: s.paper ?? null, ink: s.ink ?? null, type: s.type, chooseHand: gm, title: 'heart.board.note-edit', style: s });
+    // (the paper it lies on now, for the preview)
+    const vs = canvas.heartBoard?.renderer?.view?.scraps?.find((x) => x.key === key)?.layout;
+    const shownPaper = vs?.paper?.tex ?? null;
+    // (its paper's turn, its own turn, and its writing's place, as it lies)
+    const textAt = s.parts?.text && Number.isFinite(s.parts.text.u) ? { u: s.parts.text.u, v: s.parts.text.v } : null;
+    const answer = await noteDialog({ text: s.text ?? '', hand: face, paper: s.paper ?? null, ink: s.ink ?? null, type: s.type, chooseHand: gm, title: 'heart.board.note-edit', style: s, typed: Boolean(s.typed), shownPaper, paint: s.paint ?? null, bright: s.bright ?? null, pturn: vs?.paper?.turn ?? 0, flip: Boolean(vs?.paper?.flip), turn: vs ? Math.round(((vs.paper?.rot ?? 0) * 180) / Math.PI) : 0, textAt });
     if (!answer?.text) return;
-    if (gm) return setScrap(scene, key, { text: answer.text, hand: answer.hand === face && !s.hand ? null : answer.hand, paper: answer.paper, ink: answer.ink, ...answer.style });
-    return askGM('board.editNote', { sceneId: scene.id, key, text: answer.text, paper: answer.paper, ink: answer.ink, style: answer.style });
+    if (gm) return setScrap(scene, key, { text: answer.text, hand: answer.hand === face && !s.hand ? null : answer.hand, paper: answer.paper, ink: answer.ink, typed: Boolean(answer.typed), ...answer.style, ...noteFields(answer, look, s) });
+    return asked(scene, 'board.editNote', { sceneId: scene.id, key, text: answer.text, paper: answer.paper, ink: answer.ink, style: answer.style, typed: answer.typed, look: noteLookOf(answer) });
 }
 // (the earlier name)
 export const editNoteText = editNote;
 
 // A players' board owner's edit, or anyone's marker stroke, through the GM
 export function boardEdit(scene, request) {
-    return askGM('board.edit', { sceneId: scene.id, ...request });
+    return asked(scene, 'board.edit', { sceneId: scene.id, ...request });
 }
 
 const cleanInk = (v) => (v === null || v === undefined || v === '' || !Number.isFinite(Number(v)) ? null : Math.max(0, Math.min(15, Math.round(Number(v)))));
+
+// A player's strings (Luke, 2026-10-03): theirs to make in the sheet's
+// paints (never a delve, the Vermissian, or a path), and to edit; pins theirs
+// when they made them or only their strings run through them. Everything else
+// is refused whole.
+function ownedPin(board, id, userId, pending = {}) {
+    const p = board.pins?.[id];
+    if (!p) return id in pending;
+    const refs = Object.values(board.links ?? {}).filter((l) => l.aPin === id || l.bPin === id || (l.joints ?? []).some((j) => j?.pin === id));
+    if (refs.length) return refs.every((l) => l.author === userId);
+    return p.author === userId;
+}
+const paintOk = (c, look) => Number.isInteger(Number(c)) && Number(c) >= 0 && Number(c) < look.ink.marker.length;
+function ownPatchOf(board, patch, userId, look) {
+    const out = { pins: {}, links: {}, newLinks: {} };
+    if (Object.keys(patch?.scraps ?? {}).length || Object.keys(patch?.newScraps ?? {}).length || Object.keys(patch?.marks ?? {}).length) return null;
+    const newPins = patch?.pins ?? {};
+    for (const [id, p] of Object.entries(newPins)) {
+        if (board.pins?.[id]) {
+            if (!ownedPin(board, id, userId)) return null;
+            out.pins[id] = p === null ? null : { ...p, author: board.pins[id].author ?? userId };
+        } else {
+            if (p === null || !p?.tex) return null;
+            out.pins[id] = { ...p, author: userId };
+        }
+    }
+    const pinsOf = (l) => [l.aPin, l.bPin, ...(l.joints ?? []).map((j) => j?.pin)].filter(Boolean);
+    const edits = { ...(patch?.links ?? {}) };
+    if (patch?.link) edits[patch.link[0]] = patch.link[1];
+    for (const [id, p] of Object.entries(edits)) {
+        const l = board.links?.[id];
+        if (!l || l.author !== userId) return null;
+        if (p === null) { out.links[id] = null; continue; }
+        const { kind, state, author, ...rest } = p;
+        void kind; void state; void author;
+        if ('color' in rest && !paintOk(rest.color, look)) return null;
+        if (pinsOf(rest).some((pid) => !ownedPin(board, pid, userId, out.pins))) return null;
+        out.links[id] = rest;
+    }
+    for (const [id, p] of Object.entries(patch?.newLinks ?? {})) {
+        if (board.links?.[id] || !paintOk(p?.color, look)) return null;
+        if (pinsOf(p).some((pid) => !ownedPin(board, pid, userId, out.pins))) return null;
+        out.newLinks[id] = { ...p, kind: 'path', state: 'known', author: userId, color: Number(p.color) };
+    }
+    return out;
+}
+async function ownStrings(scene, board, req, userId, sink) {
+    const { look } = await loadBoardLook();
+    if (req.ownPatch) {
+        const patch = ownPatchOf(board, req.ownPatch, userId, look);
+        if (!patch) return { status: 'not-allowed' };
+        await applyBoardPatch(scene, patch, { sink });
+        return { status: 'done' };
+    }
+    if (req.ownString) {
+        const { act = {}, color } = req.ownString;
+        if (!paintOk(color, look)) return { status: 'not-allowed' };
+        // (ends on pins: theirs; any shared pin made first must be theirs too)
+        for (const pid of [act.aPin, act.bPin].filter(Boolean)) if (!ownedPin(board, pid, userId, act.prep?.pins ?? {})) return { status: 'not-allowed' };
+        if (act.prep && !ownPatchOf(board, act.prep, userId, look)) return { status: 'not-allowed' };
+        const { id, patch } = newStringPatch(board, { ...act }, 'path', look, { color: Number(color), author: userId });
+        const clean = ownPatchOf(board, patch, userId, look);
+        if (!clean) return { status: 'not-allowed' };
+        await applyBoardPatch(scene, clean, { sink });
+        if (req.ownString.label) await labelString(scene, id, String(req.ownString.label).slice(0, MAX_TEXT), { sink });
+        return { status: 'done', id };
+    }
+    if (req.ownLabel) {
+        const l = board.links?.[req.ownLabel.id];
+        if (!l || l.author !== userId) return { status: 'not-allowed' };
+        const text = String(req.ownLabel.text ?? '').slice(0, MAX_TEXT).trim();
+        if (text) await labelString(scene, req.ownLabel.id, text, { sink });
+        return { status: 'done' };
+    }
+    if (req.ownRemove) {
+        const links = (req.ownRemove.links ?? []).filter((id) => board.links?.[id]?.author === userId);
+        const pins = (req.ownRemove.pins ?? []).filter((id) => ownedPin(board, id, userId));
+        if (links.length + pins.length !== (req.ownRemove.links ?? []).length + (req.ownRemove.pins ?? []).length) return { status: 'not-allowed' };
+        await removeMany(scene, { scraps: [], pins, links }, { sink });
+        return { status: 'done' };
+    }
+    return { status: 'not-allowed' };
+}
+
+// Whether a player may have a record of theirs undone or done again (Luke,
+// 2026-10-06: each player undoes their own edits): every thing it touches,
+// before and after, theirs to edit (their notes and writing, their strings and
+// pins, their strokes; on a players' board, an owner's any but the GM's places)
+export function mayHistory(board, rec, side, who) {
+    if (who.isGM) return true;
+    const target = recordTarget(board, rec, side);
+    const mine = (v) => v?.author === who.id;
+    for (const op of rec?.ops ?? []) {
+        const [coll, id, field, sub] = op.path;
+        const versions = (b) => [board, target].map((x) => (b(x)));
+        if (coll === 'marks') {
+            if (!(who.owner || id === who.id)) return false;
+        } else if (coll === 'scraps' && field === 'marks' && sub) {
+            if (!versions((x) => x?.scraps?.[id]?.marks?.[sub]).every((st) => !st || who.owner || st.by === who.id)) return false;
+        } else if (coll === 'scraps') {
+            if (!versions((x) => x?.scraps?.[id]).every((sc) => !sc || ((sc.type === 'note' || sc.type === 'scrawl') && (who.owner || mine(sc))))) return false;
+        } else if (coll === 'links') {
+            if (!versions((x) => x?.links?.[id]).every((l) => !l || who.owner || mine(l))) return false;
+        } else if (coll === 'pins') {
+            // (theirs, or held only by their strings, as it is now)
+            if (!versions((x) => x?.pins?.[id]).every((p) => !p || who.owner || mine(p) || ownedPin(board, id, who.id))) return false;
+        } else return false;
+    }
+    return true;
+}
 
 // The relay's handlers (run on the GM's client, inside its queue)
 export function registerBoardRelay() {
@@ -213,7 +470,7 @@ export function registerBoardRelay() {
         await game.settings.set('heart', 'boardHands', all);
         return { status: 'done', face };
     });
-    registerRelayHandler('board.addNote', async ({ sceneId, type = 'note', x, y, text, paper = null, ink = null, style = {} }, userId) => {
+    registerRelayHandler('board.addNote', async ({ sceneId, type = 'note', x, y, text, paper = null, ink = null, style = {}, typed = false, look: noteLook = null }, userId) => {
         if (!game.user.isGM) return { status: 'needs-gm' };
         const scene = game.scenes.get(sceneId);
         const hand = hands()[userId];
@@ -224,11 +481,17 @@ export function registerBoardRelay() {
         const scraps = boardOf(scene).scraps ?? {};
         let i = 1;
         while (scraps[`p${i}`]) i++;
-        const data = { type, text: clean, x, y, hand, author: userId, state: 'known', ...textStyleOf(style) };
+        const data = { type, text: clean, x, y, hand, author: userId, state: 'known', ...textStyleOf(style), ...(typed && mayType(userId) ? { typed: true } : {}) };
         if (type === 'note' && paper && look.pools.notes.includes(paper)) data.paper = paper;
         if (cleanInk(ink) !== null) data.ink = cleanInk(ink);
-        await scene.update({ [`flags.heart.board.scraps.p${i}`]: data }, { heartBoard: true });
-        return { status: 'done', key: `p${i}` };
+        // (its paint, its paper's turn, its own turn, its writing's place)
+        for (const [k, v] of Object.entries(noteFields(noteLook ?? {}, look))) if (v !== null && (type === 'note' || k === 'paint' || k === 'bright')) data[k] = v;
+        // (it may come with a doodle, theirs to move or rub out: Luke 2026-10-06)
+        const doodle = type === 'note' ? seasonMarks(`${scene.id}:p${i}`, { by: userId, type }) : {};
+        if (Object.keys(doodle).length) data.marks = doodle;
+        const sink = [];
+        await writeBoard(scene, { [`flags.heart.board.scraps.p${i}`]: data }, { sink });
+        return { status: 'done', key: `p${i}`, undo: mergeRecords(sink) };
     });
     // a player moves their own notes and writing (an owner any), nothing else
     registerRelayHandler('board.moveOwn', async ({ sceneId, moves }, userId) => {
@@ -246,10 +509,11 @@ export function registerBoardRelay() {
             data[`flags.heart.board.scraps.${key}.x`] = Math.round(at.x);
             data[`flags.heart.board.scraps.${key}.y`] = Math.round(at.y);
         }
-        if (Object.keys(data).length) await scene.update(data, { heartBoard: true });
-        return { status: 'done' };
+        const sink = [];
+        if (Object.keys(data).length) await writeBoard(scene, data, { sink });
+        return { status: 'done', undo: mergeRecords(sink) };
     });
-    registerRelayHandler('board.editNote', async ({ sceneId, key, text, paper, ink, style = {} }, userId) => {
+    registerRelayHandler('board.editNote', async ({ sceneId, key, text, paper, ink, style = {}, typed = false, look: noteLook = null }, userId) => {
         if (!game.user.isGM) return { status: 'needs-gm' };
         const scene = game.scenes.get(sceneId);
         const s = boardOf(scene).scraps?.[key];
@@ -261,8 +525,27 @@ export function registerBoardRelay() {
         const { look } = await loadBoardLook();
         const data = { [`flags.heart.board.scraps.${key}.text`]: clean, [`flags.heart.board.scraps.${key}.ink`]: cleanInk(ink) };
         for (const [k, v] of Object.entries(textStyleOf(style))) data[`flags.heart.board.scraps.${key}.${k}`] = v;
+        // (typed only by those who may type)
+        data[`flags.heart.board.scraps.${key}.typed`] = Boolean(typed) && mayType(userId);
         if (paper === null || look.pools.notes.includes(paper)) data[`flags.heart.board.scraps.${key}.paper`] = paper ?? null;
-        await scene.update(data, { heartBoard: true });
+        for (const [k, v] of Object.entries(noteFields(noteLook ?? {}, look, s))) if (s.type === 'note' || k === 'paint' || k === 'bright' || k === 'ink') data[`flags.heart.board.scraps.${key}.${k}`] = v;
+        const sink = [];
+        await writeBoard(scene, data, { sink });
+        return { status: 'done', undo: mergeRecords(sink) };
+    });
+    // a player's own edit undone or done again (api.js step): checked, then
+    // applied to the board as it is now
+    registerRelayHandler('board.history', async ({ sceneId, record, side }, userId) => {
+        if (!game.user.isGM) return { status: 'needs-gm' };
+        const scene = game.scenes.get(sceneId);
+        if (!isBoardScene(scene) || !Array.isArray(record?.ops) || !['before', 'after'].includes(side)) return { status: 'missing' };
+        const user = game.users.get(userId);
+        if (!user) return { status: 'not-allowed' };
+        const who = { id: userId, isGM: user.isGM, owner: ownsBoard(scene, userId) };
+        const board = boardOf(scene);
+        if (!mayHistory(board, record, side, who)) return { status: 'not-allowed' };
+        const data = recordUpdate(board, record, side);
+        if (Object.keys(data).length) await writeBoard(scene, data, { record: false });
         return { status: 'done' };
     });
     // the marker (anyone, on their own layer; an owner or the GM rubs out
@@ -276,83 +559,95 @@ export function registerBoardRelay() {
         if (!user) return { status: 'not-allowed' };
         const who = { id: userId, isGM: user.isGM, owner: ownsBoard(scene, userId) };
         const board = boardOf(scene);
-        // a stroke on a card (Luke, 2026-10-03): the card's, in its own frame,
-        // its author the one who drew it
-        if (req.mark?.on) {
-            const s = board.scraps?.[req.mark.on];
-            const st = cleanStroke({ ...req.mark, by: userId }, { card: true });
-            if (!s || !st) return { status: 'not-allowed' };
-            const { look } = await loadBoardLook();
-            st.w = Math.min(st.w, markMax(look));
-            await applyBoardPatch(scene, { scraps: { [req.mark.on]: { marks: { [customKey('m', s.marks ?? {})]: st } } } });
-            return { status: 'done' };
-        }
-        // strokes moved, sized, or turned (the marker's select mode): each the
-        // asker's to move (an owner or the GM, any), a new one theirs
-        if (req.remark) {
-            const marks = {};
-            const scraps = {};
-            for (const [layer, strokes] of Object.entries(req.remark.marks ?? {})) {
-                for (const [id, st] of Object.entries(strokes ?? {})) {
-                    const had = board.marks?.[layer]?.[id];
-                    if (had ? !mayRubOut(layer, who) : layer !== userId && !who.isGM && !who.owner) return { status: 'not-allowed' };
-                    const clean = st === null ? null : cleanStroke(st);
-                    if (st !== null && !clean) return { status: 'not-allowed' };
-                    (marks[layer] ??= {})[id] = clean;
-                }
-            }
-            for (const [key, sp] of Object.entries(req.remark.scraps ?? {})) {
-                if (!board.scraps?.[key] || Object.keys(sp ?? {}).some((k) => k !== 'marks')) return { status: 'not-allowed' };
-                for (const [id, st] of Object.entries(sp.marks ?? {})) {
-                    const had = board.scraps[key].marks?.[id];
-                    if (had ? !mayRubOut(had.by, who) : (st?.by ?? userId) !== userId && !who.isGM && !who.owner) return { status: 'not-allowed' };
-                    const clean = st === null ? null : cleanStroke({ ...st, by: had?.by ?? st.by ?? userId }, { card: true });
-                    if (st !== null && !clean) return { status: 'not-allowed' };
-                    ((scraps[key] ??= { marks: {} }).marks)[id] = clean;
-                }
-            }
-            await applyBoardPatch(scene, { marks, scraps });
-            return { status: 'done' };
-        }
-        if (req.mark) {
-            const pts = (Array.isArray(req.mark.pts) ? req.mark.pts : []).map((v) => Math.round(Number(v))).filter(Number.isFinite).slice(0, 6000);
-            if (pts.length < 4 || pts.length % 2) return { status: 'not-allowed' };
-            const { look } = await loadBoardLook();
-            const o = Number(req.mark.o);
-            await addMark(scene, userId, { c: cleanInk(req.mark.c) ?? 0, w: Math.max(1, Math.min(markMax(look), Number(req.mark.w) || 6)), ...(Number.isFinite(o) ? { o: Math.max(0.05, Math.min(1, o)) } : {}), pts });
-            return { status: 'done' };
-        }
-        if (req.unmark) {
-            const mayGo = (e) => (String(e[0]).startsWith('@') ? mayRubOut(board.scraps?.[String(e[0]).slice(1)]?.marks?.[e[1]]?.by, who) : mayRubOut(e[0], who));
-            await removeMarks(scene, (Array.isArray(req.unmark) ? req.unmark : []).filter((e) => Array.isArray(e) && mayGo(e)));
-            return { status: 'done' };
-        }
-        if (!who.isGM && !who.owner) return { status: 'not-allowed' };
-        const ownable = (key) => board.scraps?.[key] && mayMove(board.scraps[key], who);
-        if (req.patch) {
-            if (Object.keys(req.patch.scraps ?? {}).some((k) => !ownable(k))) return { status: 'not-allowed' };
-            // (new pieces of a players' board are notes and writing only)
-            if (Object.values(req.patch.newScraps ?? {}).some((s) => !['note', 'scrawl'].includes(s?.type))) return { status: 'not-allowed' };
-            await applyBoardPatch(scene, req.patch);
-        }
-        let id = null;
-        if (req.addLink) id = await addLink(scene, req.addLink);
-        // (a new string from the shared controls' ends, pins made as needed)
-        if (req.addString) id = await addString(scene, req.addString.act, req.addString.kind, { color: cleanInk(req.addString.color) });
-        // a name for the new string (or one named by req.label.id)
-        if (req.label?.text && (id || req.label.id)) await labelString(scene, id ?? req.label.id, String(req.label.text).slice(0, MAX_TEXT));
-        if (req.addPin?.tex) await addPin(scene, req.addPin);
-        if (req.removeScrap) {
-            if (!ownable(req.removeScrap)) return { status: 'not-allowed' };
-            await removeScrap(scene, req.removeScrap);
-        }
-        if (req.removeLink) await removeLink(scene, req.removeLink);
-        if (req.remove) {
-            const scraps = (req.remove.scraps ?? []).filter(ownable);
-            await removeMany(scene, { scraps, pins: req.remove.pins ?? [], links: req.remove.links ?? [] });
-        }
-        return { status: 'done' };
+        // (what it changes, handed back: the asker's own edit to undo)
+        const sink = [];
+        const res = await boardEditFor(scene, board, req, userId, who, sink);
+        return res?.status === 'done' ? { ...res, undo: mergeRecords(sink) } : res;
     });
+}
+
+async function boardEditFor(scene, board, req, userId, who, sink) {
+    // a stroke on a card (Luke, 2026-10-03): the card's, in its own frame,
+    // its author the one who drew it
+    if (req.mark?.on) {
+        const s = board.scraps?.[req.mark.on];
+        const st = cleanStroke({ ...req.mark, by: userId }, { card: true });
+        if (!s || !st) return { status: 'not-allowed' };
+        const { look } = await loadBoardLook();
+        st.w = Math.min(st.w, markMax(look));
+        await applyBoardPatch(scene, { scraps: { [req.mark.on]: { marks: { [customKey('m', s.marks ?? {})]: st } } } }, { sink });
+        return { status: 'done' };
+    }
+    // strokes moved, sized, or turned (the marker's select mode): each the
+    // asker's to move (an owner or the GM, any), a new one theirs
+    if (req.remark) {
+        const marks = {};
+        const scraps = {};
+        for (const [layer, strokes] of Object.entries(req.remark.marks ?? {})) {
+            for (const [id, st] of Object.entries(strokes ?? {})) {
+                const had = board.marks?.[layer]?.[id];
+                if (had ? !mayRubOut(layer, who) : layer !== userId && !who.isGM && !who.owner) return { status: 'not-allowed' };
+                const clean = st === null ? null : cleanStroke(st);
+                if (st !== null && !clean) return { status: 'not-allowed' };
+                (marks[layer] ??= {})[id] = clean;
+            }
+        }
+        for (const [key, sp] of Object.entries(req.remark.scraps ?? {})) {
+            if (!board.scraps?.[key] || Object.keys(sp ?? {}).some((k) => k !== 'marks')) return { status: 'not-allowed' };
+            for (const [id, st] of Object.entries(sp.marks ?? {})) {
+                const had = board.scraps[key].marks?.[id];
+                if (had ? !mayRubOut(had.by, who) : (st?.by ?? userId) !== userId && !who.isGM && !who.owner) return { status: 'not-allowed' };
+                const clean = st === null ? null : cleanStroke({ ...st, by: had?.by ?? st.by ?? userId }, { card: true });
+                if (st !== null && !clean) return { status: 'not-allowed' };
+                ((scraps[key] ??= { marks: {} }).marks)[id] = clean;
+            }
+        }
+        await applyBoardPatch(scene, { marks, scraps }, { sink });
+        return { status: 'done' };
+    }
+    if (req.mark) {
+        const pts = (Array.isArray(req.mark.pts) ? req.mark.pts : []).map((v) => Math.round(Number(v))).filter(Number.isFinite).slice(0, 6000);
+        if (pts.length < 4 || pts.length % 2) return { status: 'not-allowed' };
+        const { look } = await loadBoardLook();
+        const o = Number(req.mark.o);
+        await addMark(scene, userId, { c: cleanInk(req.mark.c) ?? 0, w: Math.max(1, Math.min(markMax(look), Number(req.mark.w) || 6)), ...(Number.isFinite(o) ? { o: Math.max(0.05, Math.min(1, o)) } : {}), ...(Number.isFinite(Number(req.mark.b)) ? { b: Math.max(0, Math.min(2, Math.round(Number(req.mark.b)))) } : {}), pts }, { sink });
+        return { status: 'done' };
+    }
+    if (req.unmark) {
+        const mayGo = (e) => (String(e[0]).startsWith('@') ? mayRubOut(board.scraps?.[String(e[0]).slice(1)]?.marks?.[e[1]]?.by, who) : mayRubOut(e[0], who));
+        await removeMarks(scene, (Array.isArray(req.unmark) ? req.unmark : []).filter((e) => Array.isArray(e) && mayGo(e)), { sink });
+        return { status: 'done' };
+    }
+    // a player's own strings (Luke, 2026-10-03): made, edited, named, taken off
+    if (req.ownString || req.ownPatch || req.ownRemove || req.ownLabel) return ownStrings(scene, board, req, userId, sink);
+    if (!who.isGM && !who.owner) return { status: 'not-allowed' };
+    const ownable = (key) => board.scraps?.[key] && mayMove(board.scraps[key], who);
+    if (req.patch) {
+        if (Object.keys(req.patch.scraps ?? {}).some((k) => !ownable(k))) return { status: 'not-allowed' };
+        // (new pieces of a players' board are notes and writing only)
+        if (Object.values(req.patch.newScraps ?? {}).some((s) => !['note', 'scrawl'].includes(s?.type))) return { status: 'not-allowed' };
+        await applyBoardPatch(scene, req.patch, { sink });
+    }
+    let id = null;
+    if (req.addLink) id = await addLink(scene, req.addLink, { sink });
+    // (a new string from the shared controls' ends, pins made as needed)
+    if (req.addString) id = await addString(scene, req.addString.act, req.addString.kind, { color: cleanInk(req.addString.color), state: req.addString.state === 'hidden' ? 'hidden' : 'known' }, { sink });
+    // a name for the new string (or one named by req.label.id)
+    if (req.label?.text && (id || req.label.id)) await labelString(scene, id ?? req.label.id, String(req.label.text).slice(0, MAX_TEXT), { sink });
+    if (req.addPin?.tex) await addPin(scene, req.addPin, { sink });
+    if (id && !req.removeScrap && !req.removeLink && !req.remove) return { status: 'done', id };
+    // (a card comes off into the bin, never gone)
+    if (req.removeScrap) {
+        if (!ownable(req.removeScrap)) return { status: 'not-allowed' };
+        await removeScrap(scene, req.removeScrap, { sink, by: userId });
+    }
+    if (req.removeLink) await removeLink(scene, req.removeLink, { sink });
+    if (req.remove) {
+        const scraps = (req.remove.scraps ?? []).filter(ownable);
+        if (scraps.length) await binCards(scene, scraps, { sink, by: userId });
+        await removeMany(scene, { scraps: [], pins: req.remove.pins ?? [], links: req.remove.links ?? [] }, { sink });
+    }
+    return { status: 'done' };
 }
 
 /* -------------------------------------------- */
@@ -360,22 +655,27 @@ export function registerBoardRelay() {
 /* -------------------------------------------- */
 
 // A new string's kind and name (or an existing one's)
-export async function stringDialog({ kind = 'delve', label = '', color = null } = {}) {
+// `player`: a player's own string (Luke, 2026-10-03): one of the sheet's
+// paints, never a delve, the Vermissian, or a path (their kinds and default
+// colours are the GM's)
+export async function stringDialog({ kind = 'delve', label = '', color = null, player = false } = {}) {
     const opt = (k) => `<option value="${k}" ${k === kind ? 'selected' : ''}>${esc(loc(`heart.board.kind-${k}`))}</option>`;
     // (any string in any colour: the sheet's paints, the marker's)
     const { look } = await loadBoardLook();
-    const colors = `<div class="heart-board-inks" title="${esc(loc('heart.board.string-color'))}"><label class="any"><input type="radio" name="color" value="" ${color === null || color === undefined ? 'checked' : ''}><span>${esc(loc('heart.board.string-color-own'))}</span></label>${look.ink.sheet.map((c, i) => `<label><input type="radio" name="color" value="${i}" ${i === color ? 'checked' : ''}><span style="background:${hex(c)}"></span></label>`).join('')}</div>`;
+    const pick = player ? color ?? 0 : color;
+    const colors = `<div class="heart-board-inks" title="${esc(loc('heart.board.string-color'))}">${player ? '' : `<label class="any"><input type="radio" name="color" value="" ${pick === null || pick === undefined ? 'checked' : ''}><span>${esc(loc('heart.board.string-color-own'))}</span></label>`}${look.ink.marker.map((c, i) => `<label><input type="radio" name="color" value="${i}" ${i === pick ? 'checked' : ''}><span style="background:${hex(c)}"></span></label>`).join('')}</div>`;
+    const kinds = player ? '' : `<div class="form-group"><label>${esc(loc('heart.board.kind'))}</label><select name="kind">${['delve', 'rail', 'path'].map(opt).join('')}</select></div>`;
     return new Promise((resolve) => {
         new Dialog({
             title: loc('heart.board.string-title'),
-            content: `<div class="form-group"><label>${esc(loc('heart.board.kind'))}</label><select name="kind">${['delve', 'rail', 'path'].map(opt).join('')}</select></div>
+            content: `${kinds}
                 <div class="form-group"><label>${esc(loc('heart.board.string-name'))}</label><input type="text" name="label" value="${esc(label)}" placeholder="${esc(loc('heart.board.string-name-hint'))}"></div>${colors}`,
             buttons: {
                 ok: {
                     label: loc('heart.board.tie'),
                     callback: (html) => {
                         const c = html.find('[name=color]:checked').val();
-                        resolve({ kind: html.find('[name=kind]').val(), label: String(html.find('[name=label]').val() ?? '').trim(), color: c === '' || c === undefined ? null : Number(c) });
+                        resolve({ kind: player ? 'path' : html.find('[name=kind]').val(), label: String(html.find('[name=label]').val() ?? '').trim(), color: c === '' || c === undefined ? (player ? 0 : null) : Number(c) });
                     },
                 },
                 cancel: { label: loc('Cancel'), callback: () => resolve(null) },
@@ -387,7 +687,8 @@ export async function stringDialog({ kind = 'delve', label = '', color = null } 
 }
 
 // Which pin to put in (the Pin tool): every pin the look offers, as pictures
-export async function pinDialog() {
+// (thumb: paint.js pinThumb, each pin stood upright and cut to itself)
+export async function pinDialog({ thumb = null } = {}) {
     const { look, textures } = await loadBoardLook();
     const ids = pinChoices(look, Object.keys(textures)).filter((id) => textureUrl(textures, id));
     const name = (id) => id.split('__').pop().replace(/^fixture_/, '').replace(/_/g, ' ');
@@ -398,10 +699,19 @@ export async function pinDialog() {
             content: `<p>${esc(loc('heart.board.pin-hint'))}</p><div class="heart-board-pins">${ids.map((id) => `<button type="button" data-pin="${esc(id)}" title="${esc(name(id))}"><img src="${textureUrl(textures, id)}" alt=""></button>`).join('')}</div>`,
             buttons: { cancel: { label: loc('Cancel') } },
             default: 'cancel',
-            render: (html) => html.find('[data-pin]').on('click', (ev) => {
-                picked = ev.currentTarget.dataset.pin;
-                d.close();
-            }),
+            render: (html) => {
+                html.find('[data-pin]').on('click', (ev) => {
+                    picked = ev.currentTarget.dataset.pin;
+                    d.close();
+                });
+                if (thumb) {
+                    html.find('[data-pin] img').each((_, im) => {
+                        const swap = () => { const c = thumb(im, im.closest('[data-pin]').dataset.pin, 96); im.replaceWith(c); };
+                        if (im.complete && im.naturalWidth) swap();
+                        else im.addEventListener('load', swap, { once: true });
+                    });
+                }
+            },
             close: () => resolve(picked),
         }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 420 }));
         d.render(true);
@@ -433,6 +743,79 @@ export function playersBoardDialog() {
             close: () => resolve(null),
         }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 400 })).render(true);
     });
+}
+
+// When, in words (a minute ago, 3 hours ago, on 6 Oct)
+function ago(t) {
+    const m = Math.round((Date.now() - t) / 60000);
+    if (m < 1) return loc('heart.board.ago-now');
+    if (m < 60) return loc('heart.board.ago-min', { n: m });
+    if (m < 60 * 24) return loc('heart.board.ago-hour', { n: Math.round(m / 60) });
+    return new Date(t).toLocaleString();
+}
+
+// The bin (Luke, 2026-10-06): the cards taken off this board, newest first,
+// each to put back where it was (the GM's)
+export async function binDialog(scene) {
+    if (!game.user.isGM || !scene) return;
+    const { look } = await loadBoardLook();
+    const list = binList(boardOf(scene), look);
+    const kind = (t) => loc(t === 'note' ? 'heart.board.bin-note' : t === 'scrawl' ? 'heart.board.bin-writing' : 'heart.board.bin-place');
+    const rows = list.length
+        ? list.map((e) => `<div class="heart-board-bin-row"><div><b>${esc(String(e.name).slice(0, 60))}</b><small>${esc(kind(e.type))}, ${esc(ago(e.at))}${e.by && game.users.get(e.by) ? `, ${esc(game.users.get(e.by).name)}` : ''}</small></div><button type="button" data-unbin="${esc(e.key)}"><i class="fa-solid fa-rotate-left"></i> ${esc(loc('heart.board.bin-restore'))}</button></div>`).join('')
+        : `<p>${esc(loc('heart.board.bin-none'))}</p>`;
+    const d = new Dialog({
+        title: loc('heart.board.bin-title'),
+        content: `<p>${esc(loc('heart.board.bin-hint'))}</p><div class="heart-board-bin">${rows}</div>`,
+        buttons: {
+            empty: {
+                icon: '<i class="fa-solid fa-trash"></i>',
+                label: loc('heart.board.bin-empty'),
+                callback: async () => {
+                    if (!list.length) return;
+                    const ok = await Dialog.confirm({ title: loc('heart.board.bin-empty'), content: `<p>${esc(loc('heart.board.bin-empty-confirm', { n: list.length }))}</p>`, options: heartDialogOptions({ classes: ['heart-board-dialog'] }) });
+                    if (ok) await emptyBin(scene);
+                },
+            },
+            close: { label: loc('Close') },
+        },
+        default: 'close',
+        render: (html) => html.find('[data-unbin]').on('click', async (ev) => {
+            const key = ev.currentTarget.dataset.unbin;
+            await unbinCard(scene, key);
+            d.close();
+            binDialog(scene);
+        }),
+    }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 460 }));
+    d.render(true);
+}
+
+// Earlier boards (Luke, 2026-10-06): the copies this browser kept, newest
+// first; one put back replaces the board (an edit, so Undo takes it back)
+export async function backupsDialog(scene) {
+    if (!game.user.isGM || !scene) return;
+    const list = await listBackups(scene.id);
+    const why = (w) => loc(`heart.board.history-why-${['start', 'removed', 'replaced'].includes(w) ? w : 'edits'}`);
+    const rows = list.length
+        ? list.map((e) => `<div class="heart-board-bin-row"><div><b>${esc(ago(e.at))}</b><small>${esc(why(e.why))}: ${esc(loc('heart.board.history-counts', { cards: e.counts?.cards ?? 0, strings: e.counts?.strings ?? 0, strokes: e.counts?.strokes ?? 0 }))}</small></div><button type="button" data-backup="${e.id}"><i class="fa-solid fa-clock-rotate-left"></i> ${esc(loc('heart.board.history-restore'))}</button></div>`).join('')
+        : `<p>${esc(loc('heart.board.history-none'))}</p>`;
+    const d = new Dialog({
+        title: loc('heart.board.history-title'),
+        content: `<p>${esc(loc('heart.board.history-hint'))}</p><div class="heart-board-bin">${rows}</div>`,
+        buttons: { close: { label: loc('Close') } },
+        default: 'close',
+        render: (html) => html.find('[data-backup]').on('click', async (ev) => {
+            const id = Number(ev.currentTarget.dataset.backup);
+            const ok = await Dialog.confirm({ title: loc('heart.board.history-title'), content: `<p>${esc(loc('heart.board.history-confirm'))}</p>`, options: heartDialogOptions({ classes: ['heart-board-dialog'] }) });
+            if (!ok) return;
+            const board = await readBackup(id);
+            if (!board) return ui.notifications.warn(loc('heart.board.history-gone'));
+            d.close();
+            await replaceBoard(scene, board);
+            ui.notifications.info(loc('heart.board.history-done'));
+        }),
+    }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 460 }));
+    d.render(true);
 }
 
 // The board as JSON, to copy into the editor (File: Paste a board)

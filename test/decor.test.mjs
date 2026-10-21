@@ -9,7 +9,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { decorUV, decorLayout, normalizeDecorArt, DEFAULT_HOVER } from "../src/common/decor.js";
+import { decorUV, decorLayout, normalizeDecorArt, DEFAULT_HOVER, hoverAnchor } from "../src/common/decor.js";
 import {
   CHARACTER_ANCHORS,
   CHARACTER_SECTIONS,
@@ -161,5 +161,25 @@ describe("the party sheet", () => {
     for (const key of PARTY_ANCHORS) {
       expect(html.split(`data-anchor="${key}"`).length - 1, key).toBe(1);
     }
+  });
+});
+
+// Only the innermost art place under the pointer reacts (2026-10-03, Luke):
+// the path runs from the element under the pointer outwards
+describe("which decoration hovers", () => {
+  const decorated = new Set(["equipment", "sheet"]);
+
+  it("plays the nearest decorated anchor, not the ones around it", () => {
+    expect(hoverAnchor([{}, { anchor: "equipment" }, { anchor: "tab-character" }, { anchor: "sheet" }], decorated)).toBe("equipment");
+    expect(hoverAnchor([{ anchor: "skills" }, { anchor: "sheet" }], decorated)).toBe("sheet");
+  });
+
+  it("plays nothing while the pointer is over something with art of its own", () => {
+    expect(hoverAnchor([{}, { art: true }, { anchor: "equipment" }, { anchor: "sheet" }], decorated)).toBe(null);
+  });
+
+  it("plays nothing outside any decorated anchor", () => {
+    expect(hoverAnchor([{ anchor: "skills" }], decorated)).toBe(null);
+    expect(hoverAnchor([], decorated)).toBe(null);
   });
 });

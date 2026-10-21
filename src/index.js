@@ -3,7 +3,7 @@ import './index.sass';
 import './common/sheet.sass';
 import { emphasizeTerms, registerJournalTerms } from './common/terms';
 import { registerIconHelpers, adoptPackIcons, DEFAULT_IMGS } from './common/icons';
-import { registerArtHelpers } from './common/art';
+import { registerArtHelpers, registerArtViewer } from './common/art';
 import { registerRowArt } from './common/row-art';
 import { migrateFalloutSource } from './items/fallout/migrate';
 import { removeRetiredBondActors } from './bonds/migrate';
@@ -12,6 +12,7 @@ import { heartDialogOptions } from './common/dialog';
 import { registerHeartTooltips } from './common/tooltip';
 import { registerRelay } from './common/relay';
 import { ART_SETTING, applyArtClass, carryOldArtSetting, redrawArtWindows } from './common/art-toggle';
+import { compareVersions } from './common/versions';
 import { GLASS_SETTING, SEE_THROUGH_SETTING, BLUR_SETTING, TINT_SETTING, applyGlassClass, applyGlassGround, applyGlassPass } from './common/glass';
 import { isRepeatable } from './items/ability/repeat';
 import { registerGrantCleanup } from './items/trinkets';
@@ -340,6 +341,8 @@ function initialise() {
     registerIconHelpers();
     // {{{heartArt doc place}}} (common/art.js)
     registerArtHelpers();
+    // a shared picture opens in Heart's art viewer (common/art.js, 2026-10-03)
+    registerArtViewer();
     // gear row art lifts and opens the gallery on a click, in any window
     // (common/row-art.js, 2026-10-02)
     registerRowArt();
@@ -373,7 +376,9 @@ Hooks.once('ready', function () {
         if (game.settings.get('heart', 'showStartupMessage')) {
             let d = new Dialog({
                 title: game.i18n.format("heart.dialog.title(VERSION)", { VERSION: game.system.version }),
-                content: await renderTemplate('heart:templates/startup.html', { versions: Object.values(game.i18n.translations.heart.versions).sort((a, b) => a.version > b.version ? -1 : 1), version: game.system.version }),
+                // newest first, by number (as text "v0.10" sorted below
+                // "v0.8", so the current version was never first, 2026-10-03)
+                content: await renderTemplate('heart:templates/startup.html', { versions: Object.values(game.i18n.translations.heart.versions).sort((a, b) => compareVersions(b.version, a.version)), version: game.system.version }),
                 buttons: {
                     close: {
                         icon: '<i class="fas fa-times"></i>',
@@ -387,14 +392,21 @@ Hooks.once('ready', function () {
                     }
                 },
                 // "close" (Skip): the default named a "skip" button that does
-                // not exist, so no button was the default (2026-09-30)
+                // not exist, so no button was the default (2026-09-30). Enter
+                // still closes; Don't Show This Again is the red one
+                // (application.sass .heart-startup, 2026-10-03, Luke)
                 default: "close",
                 render: html => {
                     const tabs = new Tabs({ navSelector: ".tabs", contentSelector: ".content", initial: `v${game.system.version}` });
                     tabs.bind(html[0]);
+                    // the intro opens in its own window (2026-10-03, Luke)
+                    html.find('[data-action=open-intro]').click(ev => {
+                        ev.preventDefault();
+                        game.heart.applications.HeartIntroApplication?.open();
+                    });
                 },
                 close: html => { }
-            }, heartDialogOptions()); // a Heart window: themed, chip buttons (common/dialog.js)
+            }, heartDialogOptions({ classes: ['heart-startup'] })); // a Heart window: themed, chip buttons (common/dialog.js)
             d.render(true);
         }
     });

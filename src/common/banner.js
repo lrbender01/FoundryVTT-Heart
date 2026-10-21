@@ -14,7 +14,7 @@
 //
 // The sheet's own getData / activateListeners call super, so the mixin's
 // run first.
-import { artOf, showArt } from './art';
+import { artOf, showArt, showImage } from './art';
 import { artShown, toggleArt } from './art-toggle';
 
 export const BannerSheet = (Base) => class extends Base {
@@ -34,9 +34,8 @@ export const BannerSheet = (Base) => class extends Base {
     _showPlayers() {
         const art = this._art();
         if (!art || !game.user.isGM) return;
-        const popout = new ImagePopout(art.src, { title: this.actor.name, shareable: true, uuid: this.actor.uuid });
-        popout.render(true);
-        popout.shareImage();
+        // (in Heart's own viewer, here and on every player's screen)
+        showImage(art.src, { title: this.actor.name, share: true, uuid: this.actor.uuid });
     }
 
     _getHeaderButtons() {

@@ -5,10 +5,16 @@
 // is the GM's: players' writes come through the relay (notes.js), which runs
 // these on the GM's client. A players' board (flags.heart.boardOwners: 'all'
 // or user ids) is one its owners edit freely. Import replaces the board wholesale and keeps
-// the one before it (flags.heart.boardBackup). Undo is the GM client's own
-// stack of the scene's boards before each edit.
-import { normalizeBoard, customKey, removalOf, labelPatch, tidyBoard, newStringPatch } from './model.js';
+// the one before it (flags.heart.boardBackup). Undo and redo (Luke,
+// 2026-10-06) are each user's own: every write is kept as what it changed
+// (model.js diffBoard), so undoing one never puts back what others did since;
+// a player's edits come back to them from the GM's client, and their undo goes
+// through it again (notes.js board.history). The GM's client also keeps
+// rolling copies of each board (backups.js).
+import { normalizeBoard, customKey, removalOf, labelPatch, tidyBoard, newStringPatch, diffBoard, recordUpdate, updateRoots, binPatch, unbinPatch, pxPerInch, seasonMarks } from './model.js';
 import { loadBoardLook } from './look.js';
+import { askGM } from '../../common/relay.js';
+import { keepBackup } from './backups.js';
 
 export const BOARD_FLAG = 'board';
 const PATH = `flags.heart.${BOARD_FLAG}`;
@@ -40,45 +46,84 @@ const gmOnly = () => {
 /*  Undo                                        */
 /* -------------------------------------------- */
 
-const history = new Map();
-function remember(scene) {
-    const stack = history.get(scene.id) ?? [];
-    stack.push(foundry.utils.deepClone(boardOf(scene)));
-    if (stack.length > 50) stack.shift();
-    history.set(scene.id, stack);
-}
-export const canUndo = (scene) => Boolean(history.get(scene?.id)?.length);
-
-export async function undo(scene) {
-    if (!gmOnly() || !scene) return;
-    const prev = history.get(scene.id)?.pop();
-    if (!prev) return ui.notifications.info(game.i18n.localize('heart.board.nothing-to-undo'));
-    return replaceBoard(scene, prev, { remember: false });
-}
-
-const update = (scene, data) => {
-    remember(scene);
-    return scene.update(data, { heartBoard: true });
+// this client's own edits, by scene: { undo: [record], redo: [record] }
+const UNDO_MAX = 100;
+const stacks = new Map();
+const stackOf = (scene) => {
+    let st = stacks.get(scene.id);
+    if (!st) stacks.set(scene.id, (st = { undo: [], redo: [] }));
+    return st;
 };
+// An edit of this user's kept (a new one: what could be redone is gone)
+export function pushEdit(scene, rec) {
+    if (!scene || !rec?.ops?.length) return;
+    const st = stackOf(scene);
+    st.undo.push(rec);
+    if (st.undo.length > UNDO_MAX) st.undo.shift();
+    st.redo = [];
+}
+export const canUndo = (scene) => Boolean(scene && stacks.get(scene.id)?.undo.length);
+export const canRedo = (scene) => Boolean(scene && stacks.get(scene.id)?.redo.length);
+
+export const undo = (scene) => step(scene, 'undo');
+export const redo = (scene) => step(scene, 'redo');
+async function step(scene, dir) {
+    if (!scene) return false;
+    const st = stackOf(scene);
+    const rec = st[dir].pop();
+    if (!rec) {
+        ui.notifications.info(game.i18n.localize(dir === 'undo' ? 'heart.board.nothing-to-undo' : 'heart.board.nothing-to-redo'));
+        return false;
+    }
+    const side = dir === 'undo' ? 'before' : 'after';
+    let ok = false;
+    if (game.user.isGM) {
+        const data = recordUpdate(boardOf(scene), rec, side, PATH);
+        if (Object.keys(data).length) await scene.update(data, { heartBoard: true });
+        ok = true;
+        keepBackup(scene, boardOf(scene));
+    } else ok = Boolean(await askGM('board.history', { sceneId: scene.id, record: rec, side }));
+    // (refused, it is let go: it can't be done)
+    if (ok) st[dir === 'undo' ? 'redo' : 'undo'].push(rec);
+    return ok;
+}
+
+// A board write. It is kept as this user's edit, or (`sink`, the relay's)
+// handed back to the player who asked for it; the GM's client keeps a copy of
+// the board now and then (`force`: now, as before cards come off)
+async function update(scene, data, { sink = null, record = true, force = false } = {}) {
+    const roots = updateRoots(data, PATH);
+    const before = foundry.utils.deepClone(boardOf(scene));
+    if (force) await keepBackup(scene, before, { force: true, why: 'removed' });
+    const out = await scene.update(data, { heartBoard: true });
+    if (record) {
+        const rec = diffBoard(before, boardOf(scene), roots);
+        if (sink) sink.push(rec);
+        else pushEdit(scene, rec);
+    }
+    keepBackup(scene, boardOf(scene));
+    return out;
+}
+export { update as writeBoard };
 
 /* -------------------------------------------- */
 /*  Edits                                       */
 /* -------------------------------------------- */
 
-export async function setScrap(scene, key, patch) {
+export async function setScrap(scene, key, patch, opts = {}) {
     if (!gmOnly() || !scene || !key) return;
-    return update(scene, { [`${PATH}.scraps.${key}`]: patch });
+    return update(scene, { [`${PATH}.scraps.${key}`]: patch }, opts);
 }
 
 // Several scraps at once ({ key: patch }: a selection moved or resized)
-export async function setScraps(scene, patches) {
+export async function setScraps(scene, patches, opts = {}) {
     if (!gmOnly() || !scene) return;
     const data = {};
     for (const [key, patch] of Object.entries(patches ?? {})) {
         if (!boardOf(scene).scraps?.[key]) continue;
         for (const [k, v] of Object.entries(patch)) data[`${PATH}.scraps.${key}.${k}`] = v;
     }
-    if (Object.keys(data).length) return update(scene, data);
+    if (Object.keys(data).length) return update(scene, data, opts);
 }
 
 // An edit from the shared controls (controls.js patch: scraps' fields, one
@@ -91,6 +136,11 @@ export function patchData(scene, patch) {
     for (const [k, p] of Object.entries(patch?.newLinks ?? {})) if (!board.links?.[k]) data[`${PATH}.links.${k}`] = p;
     for (const [key, p] of Object.entries(patch?.scraps ?? {})) {
         if (!board.scraps?.[key]) continue;
+        // (a card taken off: binPatch)
+        if (p === null) {
+            data[`${PATH}.scraps.-=${key}`] = null;
+            continue;
+        }
         for (const [k, v] of Object.entries(p)) {
             // (its marker strokes one by one: a null takes one off)
             if (k === 'marks' && v && typeof v === 'object') {
@@ -120,36 +170,46 @@ export function patchData(scene, patch) {
         }
         for (const [k, v] of Object.entries(p)) data[PATH + '.links.' + id + '.' + k] = v;
     }
+    for (const [id, p] of Object.entries(patch?.bits ?? {})) {
+        if (p === null) { if (board.bits?.[id]) data[`${PATH}.bits.-=${id}`] = null; }
+        else if (board.bits?.[id]) for (const [k, v] of Object.entries(p)) data[`${PATH}.bits.${id}.${k}`] = v;
+        else data[`${PATH}.bits.${id}`] = p;
+    }
     for (const [id, p] of Object.entries(patch?.pins ?? {})) {
         if (p === null) { if (board.pins?.[id]) data[`${PATH}.pins.-=${id}`] = null; }
         else if (board.pins?.[id]) for (const [k, v] of Object.entries(p)) data[`${PATH}.pins.${id}.${k}`] = v;
         else data[`${PATH}.pins.${id}`] = p;
     }
+    // (the bin: a card taken off, or put back)
+    for (const [k, e] of Object.entries(patch?.bin ?? {})) {
+        if (e === null) { if (board.bin?.[k]) data[`${PATH}.bin.-=${k}`] = null; }
+        else data[`${PATH}.bin.${k}`] = e;
+    }
     return data;
 }
-export async function applyBoardPatch(scene, patch) {
+export async function applyBoardPatch(scene, patch, opts = {}) {
     if (!gmOnly() || !scene) return;
     const data = patchData(scene, patch);
-    if (Object.keys(data).length) return update(scene, data);
+    if (Object.keys(data).length) return update(scene, data, opts);
 }
 
 // A pin of the board's own: { tex, on, at } in a scrap, or { tex, x, y } loose
-export async function addPin(scene, data) {
+export async function addPin(scene, data, opts = {}) {
     if (!gmOnly() || !scene || !data?.tex) return null;
     const id = customKey('pin', boardOf(scene).pins ?? {});
-    await update(scene, { [`${PATH}.pins.${id}`]: data });
+    await update(scene, { [`${PATH}.pins.${id}`]: data }, opts);
     return id;
 }
 
 // The marker: a stroke on a user's own layer; strokes rubbed out ([[layer,
 // id]]); a whole layer (or every one) cleared
-export async function addMark(scene, layer, stroke) {
+export async function addMark(scene, layer, stroke, opts = {}) {
     if (!gmOnly() || !scene || !layer) return null;
     const id = customKey('m', boardOf(scene).marks?.[layer] ?? {});
-    await update(scene, { [`${PATH}.marks.${layer}.${id}`]: stroke });
+    await update(scene, { [`${PATH}.marks.${layer}.${id}`]: stroke }, opts);
     return id;
 }
-export async function removeMarks(scene, list) {
+export async function removeMarks(scene, list, opts = {}) {
     if (!gmOnly() || !scene) return;
     const marks = boardOf(scene).marks ?? {};
     const data = {};
@@ -160,8 +220,19 @@ export async function removeMarks(scene, list) {
             if (scraps[key]?.marks?.[id]) data[`${PATH}.scraps.${key}.marks.-=${id}`] = null;
         } else if (marks[layer]?.[id]) data[`${PATH}.marks.${layer}.-=${id}`] = null;
     }
-    if (Object.keys(data).length) return update(scene, data);
+    if (Object.keys(data).length) return update(scene, data, opts);
 }
+// Every brush stroke on the board, the sheet's and the cards' (Luke,
+// 2026-10-06: Reset all brushes, the GM's), as one edit Undo takes back
+export async function clearAllBrushes(scene) {
+    if (!gmOnly() || !scene) return;
+    const b = boardOf(scene);
+    const data = {};
+    if (b.marks) data[`${PATH}.-=marks`] = null;
+    for (const [k, s] of Object.entries(b.scraps ?? {})) if (s?.marks && Object.keys(s.marks).length) data[`${PATH}.scraps.${k}.-=marks`] = null;
+    if (Object.keys(data).length) return update(scene, data, { force: true });
+}
+
 export async function clearMarks(scene, layer = null) {
     if (!gmOnly() || !scene) return;
     if (layer) return update(scene, { [`${PATH}.marks.-=${layer}`]: null });
@@ -192,13 +263,15 @@ export async function addScrap(scene, data) {
     if (!gmOnly() || !scene) return null;
     const scraps = boardOf(scene).scraps ?? {};
     const key = data.lib && !scraps[data.lib] ? data.lib : customKey(data.type === 'note' ? 'n' : data.type === 'scrawl' ? 'w' : 'c', scraps);
-    await update(scene, { [`${PATH}.scraps.${key}`]: { state: 'known', ...data, x: Math.round(data.x), y: Math.round(data.y) } });
+    // (a card may come with a doodle of its owner's: Luke 2026-10-06)
+    const doodle = data.type === 'scrawl' || data.tag || data.marks ? {} : seasonMarks(`${scene.id}:${key}`, { by: data.author ?? game.user.id, type: data.type ?? 'landmark' });
+    await update(scene, { [`${PATH}.scraps.${key}`]: { state: 'known', ...data, ...(Object.keys(doodle).length ? { marks: doodle } : {}), x: Math.round(data.x), y: Math.round(data.y) } });
     return key;
 }
 
 // (each end a scrap's key, or a loose point on the board: aPt, bPt)
 // (each end a scrap's key, a loose point, or a pin of the board's own: aPin, bPin)
-export async function addLink(scene, { a = null, b = null, aPt = null, bPt = null, aAt = null, bAt = null, aPin = null, bPin = null, kind = 'delve', label = '', state = 'known' }) {
+export async function addLink(scene, { a = null, b = null, aPt = null, bPt = null, aAt = null, bAt = null, aPin = null, bPin = null, kind = 'delve', label = '', state = 'known' }, opts = {}) {
     if (!gmOnly() || !scene || !(a || aPt || aPin) || !(b || bPt || bPin) || (a && a === b)) return null;
     const id = customKey('l', boardOf(scene).links ?? {});
     const data = { kind, state };
@@ -208,27 +281,55 @@ export async function addLink(scene, { a = null, b = null, aPt = null, bPt = nul
     if (a && aAt) data.aAt = aAt;
     if (b && bAt) data.bAt = bAt;
     if (label) data.label = label;
-    await update(scene, { [`${PATH}.links.${id}`]: data });
+    await update(scene, { [`${PATH}.links.${id}`]: data }, opts);
     return id;
 }
 
-// Take a scrap off the board, with every string tied to it
-export async function removeScrap(scene, key) {
-    return removeMany(scene, { scraps: [key] });
+// Take a card off the board, into the bin (Luke, 2026-10-06: never deleted
+// outright), with its pins and every string tied to it
+export async function removeScrap(scene, key, opts = {}) {
+    return binCards(scene, [key], opts);
+}
+
+// Cards into the board's bin (model.js binPatch), a copy of the board kept first
+export async function binCards(scene, keys, opts = {}) {
+    if (!gmOnly() || !scene || !keys?.length) return;
+    const patch = binPatch(boardOf(scene), keys, { at: Date.now(), by: opts.by ?? game.user.id });
+    if (!patch) return;
+    const data = patchData(scene, patch);
+    if (Object.keys(data).length) return update(scene, data, { ...opts, force: true });
+}
+
+// A card out of the bin, back where it was (model.js unbinPatch)
+export async function unbinCard(scene, key, opts = {}) {
+    if (!gmOnly() || !scene) return;
+    const patch = unbinPatch(boardOf(scene), key);
+    if (patch) return applyBoardPatch(scene, patch, opts);
+}
+
+// The bin emptied (the GM's)
+export async function emptyBin(scene) {
+    if (!gmOnly() || !scene || !boardOf(scene).bin) return;
+    return update(scene, { [`${PATH}.-=bin`]: null }, { force: true });
 }
 
 // Things taken off the board at once, with what depends on them (model.js
 // removalOf): cards (their pins, and every string tied to them), the board's
 // pins (every string they hold; joints they hold let go), and strings
-export async function removeMany(scene, what = {}) {
+export async function removeMany(scene, what = {}, opts = {}) {
     if (!gmOnly() || !scene) return;
+    // (cards go to the bin, never gone; Luke 2026-10-06)
+    if (what.scraps?.length) {
+        await binCards(scene, what.scraps, opts);
+        what = { ...what, scraps: [] };
+    }
     const r = removalOf(boardOf(scene), what);
     const data = {};
     for (const k of r.scraps) data[`${PATH}.scraps.-=${k}`] = null;
     for (const id of r.links) data[`${PATH}.links.-=${id}`] = null;
     for (const id of r.pins) data[`${PATH}.pins.-=${id}`] = null;
     for (const [id, p] of Object.entries(r.edits)) for (const [k, v] of Object.entries(p)) data[`${PATH}.links.${id}.${k}`] = v;
-    if (Object.keys(data).length) return update(scene, data);
+    if (Object.keys(data).length) return update(scene, data, opts);
 }
 
 // What the model needs to lay a board out here: the look, a texture's size,
@@ -247,11 +348,11 @@ async function layoutTools() {
 
 // A name for a string: a pin in it, a name tag (a note), and a thread
 // between them, ordinary pieces from then on (model.js labelPatch)
-export async function labelString(scene, id, text) {
+export async function labelString(scene, id, text, opts = {}) {
     if (!gmOnly() || !scene || !text) return;
     const { look, size, measure } = await layoutTools();
     const patch = labelPatch(boardOf(scene), id, text, look, size, measure);
-    if (patch) return applyBoardPatch(scene, patch);
+    if (patch) return applyBoardPatch(scene, patch, opts);
 }
 
 // An older board made whole, once (model.js tidyBoard: name tags made notes,
@@ -261,26 +362,28 @@ export async function tidyBoardScene(scene) {
     if (!game.user.isGM || !isBoardScene(scene)) return;
     const { look, size, measure } = await layoutTools();
     const { board, changed } = tidyBoard(boardOf(scene), look, size, measure);
-    if (changed) await replaceBoard(scene, board, { remember: false });
+    if (changed) await replaceBoard(scene, board, { record: false });
     // (once: an older board scene's tokens brought down to the board's size)
+    // (the scene the look's size: a new sheet, 4 papers by 5 since 2026-10-03)
+    if (scene.width !== look.w || scene.height !== look.h) await scene.update({ width: look.w, height: look.h });
     if ((scene.flags?.heart?.boardGrid ?? 0) < BOARD_GRID_EDITION) {
-        await scene.update({ 'grid.size': BOARD_GRID, 'flags.heart.boardGrid': BOARD_GRID_EDITION });
+        await scene.update({ ...gridOf(look), 'flags.heart.boardGrid': BOARD_GRID_EDITION });
     }
 }
 
 // A new string between two ends (a pin each: one there, or one made where it
 // was asked for), returning its id
-export async function addString(scene, act, kind, { color = null } = {}) {
+export async function addString(scene, act, kind, { color = null, state = 'known' } = {}, opts = {}) {
     if (!gmOnly() || !scene) return null;
     const { look } = await layoutTools();
-    const { id, patch } = newStringPatch(boardOf(scene), act, kind, look, { color });
-    await applyBoardPatch(scene, patch);
+    const { id, patch } = newStringPatch(boardOf(scene), act, kind, look, { color, state });
+    await applyBoardPatch(scene, patch, opts);
     return id;
 }
 
-export async function removeLink(scene, id) {
+export async function removeLink(scene, id, opts = {}) {
     if (!gmOnly() || !scene || !boardOf(scene).links?.[id]) return;
-    return update(scene, { [`${PATH}.links.-=${id}`]: null });
+    return update(scene, { [`${PATH}.links.-=${id}`]: null }, opts);
 }
 
 /* -------------------------------------------- */
@@ -290,18 +393,22 @@ export async function removeLink(scene, id) {
 // The board as the mock's File tab takes it
 export function exportBoard(scene) {
     const b = boardOf(scene);
-    return JSON.stringify({ scraps: b.scraps ?? {}, links: b.links ?? {}, pins: b.pins ?? {}, marks: b.marks ?? {}, decor: b.decor ?? [] }, null, 1);
+    return JSON.stringify({ scraps: b.scraps ?? {}, links: b.links ?? {}, pins: b.pins ?? {}, marks: b.marks ?? {}, decor: b.decor ?? [], ...(b.bin ? { bin: b.bin } : {}) }, null, 1);
 }
 
-// Replace the whole board (an import, an undo, or the backup restored)
-async function replaceBoard(scene, board, { remember: keep = true, backup = false } = {}) {
-    const clean = { scraps: board.scraps ?? {}, links: board.links ?? {}, pins: board.pins ?? {}, marks: board.marks ?? {}, decor: board.decor ?? [] };
-    if (keep) remember(scene);
+// Replace the whole board (an import, an earlier board, or the backup
+// restored): one edit of the GM's, undone like any other
+export async function replaceBoard(scene, board, { record = true, backup = false } = {}) {
+    const clean = { scraps: board.scraps ?? {}, links: board.links ?? {}, pins: board.pins ?? {}, marks: board.marks ?? {}, decor: board.decor ?? [], ...(board.bin ? { bin: board.bin } : {}) };
+    const before = foundry.utils.deepClone(boardOf(scene));
+    await keepBackup(scene, before, { force: true, why: 'replaced' });
     // (a nested object update merges; the board is cleared first so it is replaced)
-    const data = { [`${PATH}.-=scraps`]: null, [`${PATH}.-=links`]: null, [`${PATH}.-=pins`]: null, [`${PATH}.-=marks`]: null, [`${PATH}.-=decor`]: null };
-    if (backup) data[BACKUP_PATH] = foundry.utils.deepClone(boardOf(scene));
+    const data = { [`${PATH}.-=scraps`]: null, [`${PATH}.-=links`]: null, [`${PATH}.-=pins`]: null, [`${PATH}.-=marks`]: null, [`${PATH}.-=decor`]: null, [`${PATH}.-=bin`]: null };
+    if (backup) data[BACKUP_PATH] = before;
     await scene.update(data, { heartBoard: true });
-    return scene.update({ [PATH]: clean }, { heartBoard: true });
+    const out = await scene.update({ [PATH]: clean }, { heartBoard: true });
+    if (record) pushEdit(scene, diffBoard(before, boardOf(scene)));
+    return out;
 }
 
 // A board pasted from the mock (or another scene's export). Checked by the
@@ -347,10 +454,13 @@ export async function restoreBackup(scene) {
 
 // A token's size on the board (canvas px, one board px each; a card is 200
 // across): its grid. (Luke, 2026-10-03: the tokens at 150 were enormous and
-// would muddy the board; 0.2x of that to start.) The edition makes an older
-// board scene's grid this size once, on the GM's client.
-export const BOARD_GRID = 30;
-const BOARD_GRID_EDITION = 1;
+// would muddy the board; 0.2x of that to start, then 0.25x.) The edition
+// makes an older board scene's grid this size once, on the GM's client.
+export const BOARD_GRID = 38;
+// (3, 2026-10-06: measured in inches, the board's own: each fold panel is a
+// printer's page, 11 inches tall)
+const BOARD_GRID_EDITION = 3;
+const gridOf = (look) => ({ 'grid.size': BOARD_GRID, 'grid.distance': Math.round((BOARD_GRID / pxPerInch(look)) * 1000) / 1000, 'grid.units': 'in' });
 
 // Make a scrapboard scene, sized to the look, and view it. Gridless; tokens
 // see everything (the map is a picture, not a dungeon).
@@ -365,7 +475,7 @@ export async function createBoardScene({ name, owners = null } = {}) {
         height: look.h,
         padding: 0.05,
         backgroundColor: '#0b0705',
-        grid: { type: CONST.GRID_TYPES.GRIDLESS, size: BOARD_GRID },
+        grid: { type: CONST.GRID_TYPES.GRIDLESS, size: BOARD_GRID, distance: gridOf(look)['grid.distance'], units: 'in' },
         tokenVision: false,
         fog: { exploration: false },
         navigation: true,
@@ -381,5 +491,5 @@ export async function setBoardScene(scene, on = true) {
     if (!gmOnly() || !scene) return;
     if (!on) return scene.update({ 'flags.heart.-=board': null });
     const { look } = await loadBoardLook();
-    return scene.update({ width: look.w, height: look.h, 'grid.size': BOARD_GRID, 'flags.heart.boardGrid': BOARD_GRID_EDITION, [PATH]: isBoardScene(scene) ? boardOf(scene) : { scraps: {}, links: {}, decor: [] } });
+    return scene.update({ width: look.w, height: look.h, ...gridOf(look), 'flags.heart.boardGrid': BOARD_GRID_EDITION, [PATH]: isBoardScene(scene) ? boardOf(scene) : { scraps: {}, links: {}, decor: [] } });
 }

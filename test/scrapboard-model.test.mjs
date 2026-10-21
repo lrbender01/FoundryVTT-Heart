@@ -242,14 +242,17 @@ describe("a landmark's assembly (2026-10-02)", () => {
     expect(shapes.size).toBeGreaterThan(6);
   });
 
-  it("keeps the clipping mostly upright, on the paper, held by tape or pins", () => {
+  it("keeps the clipping mostly upright, on the paper, glued, taped, or now and then pinned (Luke, 2026-10-06)", () => {
+    let pinned = 0;
     for (let seed = 0; seed < 40; seed++) {
       const o = lay("grip", { seed });
       expect(Math.abs(turnOf(o))).toBeLessThanOrEqual((6 * Math.PI) / 180 + 1e-9);
       expect(Math.abs(o.clip.box.cx - 500)).toBeLessThan(o.box.w / 2);
-      expect(o.tapes.length + o.clipPins.length).toBeGreaterThan(0);
-      if (o.fix === "pin") expect(o.clipPins.length).toBeGreaterThan(0);
+      if (o.fix === "glue") expect(o.tapes.length + o.clipPins.length).toBe(0);
+      if (o.fix === "tape") expect(o.tapes.length).toBeGreaterThan(0);
+      if (o.fix === "pin") { expect(o.clipPins).toHaveLength(1); pinned++; }
     }
+    expect(pinned).toBeLessThan(10);
   });
 
   it("follows a fixed choice of tape or pin", () => {
@@ -299,14 +302,12 @@ describe("round three's data (2026-10-02)", () => {
 });
 
 describe("a string's pins (2026-10-02)", () => {
-  it("come in three sizes, bigger the further the string runs", () => {
+  it("are one size however far the string runs, and one kind (Luke, 2026-10-06)", () => {
     const L = look();
-    const w = (bx) => boardView(L, normalizeBoard({ scraps: {}, links: { l: { aPt: { x: 0, y: 0 }, bPt: { x: bx, y: 0 } } } }), "gm", size, measure).links[0].ends[0].w;
-    const sizes = [w(300), w(500), w(1200), w(1400), w(2500), w(2900)];
-    expect(sizes[0]).toBe(sizes[1]);
-    expect(sizes[2]).toBe(sizes[3]);
-    expect(sizes[4]).toBe(sizes[5]);
-    expect(sizes[0]).toBeLessThan(sizes[2]);
-    expect(sizes[2]).toBeLessThan(sizes[4]);
+    const v = (bx) => boardView(L, normalizeBoard({ scraps: {}, links: { l: { aPt: { x: 0, y: 0 }, bPt: { x: bx, y: 0 }, joints: [{ x: bx / 2, y: 40 }] } } }), "gm", size, measure).links[0];
+    const sizes = [300, 1400, 2900].map((bx) => v(bx).ends[0].w);
+    expect(new Set(sizes).size).toBe(1);
+    const l = v(1400);
+    expect(new Set([...l.ends, ...l.joints].map((p) => p.tex)).size).toBe(1);
   });
 });

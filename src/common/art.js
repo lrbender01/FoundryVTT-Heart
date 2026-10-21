@@ -137,16 +137,38 @@ export function canPickKeyArt(doc) {
         && !doc.isChild && doc.isOwner && baseArt(doc)?.alts?.length);
 }
 
-// Open a gallery: one piece in Foundry's image viewer; several (or one that
-// can be picked) in the art viewer, starting at `start`
+// Open a gallery in the art viewer (zoom to the pointer, drag to pan),
+// starting at `start`; one piece too (Luke, 2026-10-03: Heart's viewer is
+// the image viewer everywhere, not Foundry's)
 export function showGallery(pieces, { title = '', start = 0 } = {}) {
     const list = uniquePieces(pieces);
     if (!list.length) return;
-    if (list.length === 1 && !canPickKeyArt(list[0].doc)) {
-        new ImagePopout(list[0].src, { title, shareable: false }).render(true);
-        return;
-    }
     new ArtViewer(list, { title, start }).render(true);
+}
+
+// One picture in the art viewer; `share` (the GM's): on every player's
+// screen too, through Foundry's own sharing (they open it in this viewer)
+export function showImage(src, { title = '', share = false, uuid = null } = {}) {
+    if (!src) return;
+    showGallery([plainPiece(src, title)], { title });
+    if (!share || !game.user.isGM) return;
+    game.socket.emit('shareImage', { image: src, title, uuid: uuid ?? undefined });
+    ui.notifications.info(game.i18n.format('JOURNAL.ActionShowSuccess', { mode: 'image', title, which: 'all' }));
+}
+
+// init: a picture shared to this screen (by Foundry or by Heart) opens in the
+// art viewer
+export function registerArtViewer() {
+    const foundryOwn = ImagePopout._handleShareImage;
+    ImagePopout._handleShareImage = function (data = {}) {
+        try {
+            showGallery([plainPiece(data.image, data.title ?? '')], { title: data.title ?? '' });
+            return null;
+        } catch (err) {
+            console.warn('heart | a shared picture fell back to Foundry\'s viewer', err);
+            return foundryOwn.call(this, data);
+        }
+    };
 }
 
 // The index of a document's current piece in a gallery (where to open it)

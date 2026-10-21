@@ -33,7 +33,9 @@
         // common/art.sass) and is half as opaque again, as decorations are;
         // a click on it opens the gallery (common/row-art.js), shown by a
         // magnifier where nothing clickable is in the way
-        &:hover > .row-art
+        // (only the innermost: a row holding a hovered row with art stays
+        // still, 2026-10-03)
+        &:hover:not(:has(.item.preview.has-art:hover)) > .row-art
             --art-lift: #{util.$art-lift}
             opacity: 0.45
 

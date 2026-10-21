@@ -247,7 +247,10 @@ describe("round three (Luke, 2026-10-02): strings pulled and jointed, pins, the 
   it("Reveal draws a string or hides it, but not one to a hidden place", () => {
     const { c } = live(GM, W);
     expect(c.press("reveal", mid(c, "l1"))).toMatchObject({ do: "reveal", to: "hidden" });
-    expect(c.press("reveal", mid(c, "l2"))).toEqual({ do: "refuse", why: "hidden-place" });
+    // (hidden, it may stay so; drawn, it may not be, while its place is hidden: 2026-10-06)
+    expect(c.press("reveal", mid(c, "l2"))).toMatchObject({ do: "reveal", to: "hidden" });
+    const { c: c2 } = live(GM, { ...W, links: { ...W.links, l2: { ...W.links.l2, state: "hidden" } } });
+    expect(c2.press("reveal", mid(c2, "l2"))).toEqual({ do: "refuse", why: "hidden-place" });
   });
 
   it("Pin: a click asks for one (Ctrl: the last), in the scrap under it or loose; a drag carries it off or on", () => {
@@ -362,7 +365,7 @@ describe("round three (Luke, 2026-10-02): strings pulled and jointed, pins, the 
     applyPatch(box.raw, c.dragMove({ x: 2100, y: 2050 }));
     expect(box.raw.pins.p1).toMatchObject({ x: 2100, y: 2050 });
     expect(box.raw.links.l3).toMatchObject({ aPt: { x: 2000, y: 1950 }, bPt: { x: 2400, y: 2150 }, joints: [{ x: 2200, y: 2250 }] });
-    expect(c.removal()).toEqual({ scraps: [], pins: ["p1"], links: ["l3"] });
+    expect(c.removal()).toEqual({ scraps: [], pins: ["p1"], links: ["l3"], cards: [] });
   });
 
   it("a selected card's writing has a handle of its own", () => {
@@ -473,14 +476,15 @@ describe("round six (Luke, 2026-10-02): shared pins, name tags as notes, pieces 
 });
 
 describe("a card's pieces stand on the card by themselves (2026-10-02)", () => {
-  it("moving the clipping leaves its tape and pins where they were", () => {
+  it("moving the clipping takes its tape and pins with it (Luke, 2026-10-06)", () => {
     const L = normalizeLook({ ...look, pools: { ...look.pools, tapes: ["tx/fixtures__tape"] } });
     const base = { lib: "grip", x: 500, y: 500, r: 0 };
     for (let seed = 0; seed < 12; seed++) {
       const a = scrapLayout(normalizeBoard({ scraps: { grip: { ...base, seed } } }).scraps.grip, L, size, measure, L.library.grip);
       const b = scrapLayout(normalizeBoard({ scraps: { grip: { ...base, seed, parts: { clip: { u: 0.3, v: -0.2 } } } } }).scraps.grip, L, size, measure, L.library.grip);
-      expect(b.tapes).toEqual(a.tapes);
-      expect(b.clipPins).toEqual(a.clipPins);
+      const rel = (o, list, kx, ky) => list.map((t) => [Math.round(t[kx] - o.clip.box.cx), Math.round(t[ky] - o.clip.box.cy)]);
+      expect(rel(b, b.tapes, "cx", "cy")).toEqual(rel(a, a.tapes, "cx", "cy"));
+      expect(rel(b, b.clipPins, "x", "y")).toEqual(rel(a, a.clipPins, "x", "y"));
     }
   });
 
@@ -604,13 +608,13 @@ describe("one kind of pin (Luke, 2026-10-02: tighten it up)", () => {
     expect(v3.links.find((x) => x.id === l.threads[0]).collapsed).toBeUndefined();
   });
 
-  it("a pin's size comes from its strings' length or the hand, never from joining", () => {
+  it("a pin's size comes from the hand alone, never its strings' length or joining (Luke, 2026-10-06)", () => {
     const raw = { scraps: {}, links: { s: { aPin: "p", bPt: { x: 2300, y: 2000 } }, t: { aPin: "p", bPt: { x: 1800, y: 2000 } } }, pins: { p: { tex: "tx/fixtures__fixture_grey_tack_small", x: 2000, y: 2000 } } };
     const one = boardView(look, normalizeBoard({ ...raw, links: { s: raw.links.s } }), "gm", size, measure).pins[0].w;
     const two = boardView(look, normalizeBoard(raw), "gm", size, measure).pins[0].w;
     expect(two).toBe(one);
     const far = boardView(look, normalizeBoard({ ...raw, links: { s: { aPin: "p", bPt: { x: 4000, y: 2000 } } } }), "gm", size, measure).pins[0].w;
-    expect(far).toBeGreaterThan(one);
+    expect(far).toBe(one);
     const hand = boardView(look, normalizeBoard({ ...raw, pins: { p: { ...raw.pins.p, s: 2 } } }), "gm", size, measure).pins[0];
     expect(hand.sEff).toBeCloseTo(2, 5);
   });
@@ -730,6 +734,70 @@ describe("the marker on cards, and its own Select (Luke, 2026-10-03)", () => {
     g.markMode = "select";
     g.press("mark", { x: 2450, y: 2400 });
     expect(g.markSel.size).toBe(1);
+  });
+});
+
+describe("strings in a chain while Ctrl is held (Luke, 2026-10-03)", () => {
+  it("the String tool: Ctrl at the second press ties it at once and carries on from its end", () => {
+    const c = new BoardControls(host(GM));
+    expect(c.press("string", { x: 2400, y: 2400 })).toEqual({ do: "select" });
+    const a = c.press("string", { x: 2600, y: 2500 }, { ctrl: true });
+    expect(a).toMatchObject({ do: "string", quick: true, chain: true });
+    expect(a.endPt).toEqual({ x: 2600, y: 2500 });
+    c.chainFrom("pin9", a.endPt);
+    expect(c.from).toEqual({ pin: "pin9", pt: { x: 2600, y: 2500 } });
+    // Ctrl let go: the chain ends
+    expect(c.endChain()).toBe(true);
+    expect(c.from).toBeNull();
+  });
+
+  it("without Ctrl, the second press asks as before", () => {
+    const c = new BoardControls(host(GM));
+    c.press("string", { x: 2400, y: 2400 });
+    expect(c.press("string", { x: 2600, y: 2500 })).toMatchObject({ do: "string", quick: false });
+    expect(c.endChain()).toBe(false);
+  });
+});
+
+describe("players' own strings, and cards locked (Luke, 2026-10-03)", () => {
+  const pin = (x, y, extra = {}) => ({ tex: "tx/fixtures__fixture_grey_tack_small", x, y, ...extra });
+  const RAW2 = { scraps: { grip: { lib: "grip", x: 300, y: 300, r: 0 } }, pins: { a: pin(1000, 2000), b: pin(2000, 2000), c: pin(1000, 2600), d: pin(2000, 2600) },
+    links: { gm: { kind: "delve", aPin: "a", bPin: "b" }, ana: { kind: "path", color: 3, author: "ana", aPin: "c", bPin: "d" } } };
+  const live12 = (user) => {
+    const box = { raw: structuredClone(RAW2) };
+    const c = new BoardControls({ view: () => boardView(look, normalizeBoard(box.raw), user.isGM ? "gm" : "player", size, measure), painter: () => ({ tagOf: () => null, onTag: () => false }), size, user: () => user, px: () => 1, raw: () => box.raw });
+    return { c, box };
+  };
+  const midOf = (c, id) => { const l = c.host.view().links.find((x) => x.id === id); const i = 2 * Math.floor(l.points.length / 4); return { x: l.points[i], y: l.points[i + 1] }; };
+
+  it("a player has the String tool, and selects and breaks only their own strings", () => {
+    expect(toolsFor(ANA)).toContain("string");
+    const { c } = live12(ANA);
+    c.press("move", midOf(c, "gm"));
+    expect(c.links.size).toBe(0);
+    c.press("move", midOf(c, "ana"));
+    expect([...c.links]).toEqual(["ana"]);
+    expect(c.dragStart(midOf(c, "gm"), { shift: true })).not.toBe("break");
+    c.dragEnd();
+    expect(c.dragStart(midOf(c, "ana"), { shift: true })).toBe("break");
+  });
+
+  it("a player takes off only their own", () => {
+    const { c } = live12(ANA);
+    c.links.add("gm"); c.links.add("ana"); c.pins.add("a"); c.pins.add("c");
+    expect(c.removal()).toEqual({ scraps: [], pins: ["c"], links: ["ana"], cards: [] });
+  });
+
+  it("right-click locks a card (no menu: Luke 2026-10-06); locked, it neither moves nor shows its handles", () => {
+    const { c, box } = live12(GM);
+    const a = c.press("move", { x: 300, y: 300 }, { right: true });
+    expect(a).toEqual({ do: "patch", patch: { scraps: { grip: { locked: true } } } });
+    applyPatch(box.raw, a.patch);
+    c.press("move", { x: 300, y: 300 });
+    expect(c.bounds()).toBeNull();
+    expect(c.dragStart({ x: 300, y: 300 })).toBe("box");
+    expect(c.marks().locks).toHaveLength(1);
+    expect(c.lockPatch("grip").scraps.grip.locked).toBe(false);
   });
 });
 

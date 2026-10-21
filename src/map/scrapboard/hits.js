@@ -31,6 +31,7 @@ export function hitAt(view, painter, size, pt, tol = 10) {
         if (T && !T.over && near(pt, T.pin, tol)) return { kind: 'tagPin', link: l };
     }
     for (const p of [...(view.pins ?? [])].reverse()) if (!p.hidden && near(pt, p, tol)) return { kind: 'pin', pin: p };
+    for (const b of [...(view.bits ?? [])].reverse()) if (onBit(b, pt)) return { kind: 'bit', item: b };
     for (const s of [...view.scraps].reverse()) {
         if (s.layout.bare) continue;
         const added = (s.layout.pins ?? []).findIndex((p) => near(pt, p, tol));
@@ -43,6 +44,15 @@ export function hitAt(view, painter, size, pt, tol = 10) {
     }
     const h = hitTest(view, pt, size, { tol });
     return h ? { kind: h.kind, item: h.item } : null;
+}
+
+// (a point on a loose piece: within its turned box)
+function onBit(b, pt) {
+    const c = Math.cos(-b.rot);
+    const s = Math.sin(-b.rot);
+    const dx = pt.x - b.x;
+    const dy = pt.y - b.y;
+    return Math.abs(dx * c - dy * s) <= b.w / 2 && Math.abs(dx * s + dy * c) <= b.h / 2;
 }
 
 // A point as a place on a scrap: { u, v } against its text box, kept on the

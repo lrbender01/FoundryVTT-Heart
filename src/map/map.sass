@@ -49,6 +49,13 @@
             background: #3a2a20
             box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.6)
 
+    // the typewriter switch (the GM's, a Witness's)
+    .heart-board-typed
+        display: flex
+        align-items: center
+        gap: 6px
+        margin: 4px 0
+
     // how the writing is set: align, and bold, italic, underline, strike
     .heart-board-style
         display: flex
@@ -78,7 +85,7 @@
             width: 10px
 
     // the presets a note is written in, and on
-    .heart-board-inks, .heart-board-papers
+    .heart-board-inks, .heart-board-papers, .heart-board-paints, .heart-board-brights
         display: flex
         flex-wrap: wrap
         align-items: center
@@ -133,7 +140,7 @@
             place-items: center
             background: rgba(0, 0, 0, 0.18)
 
-        img
+        img, canvas
             max-width: 100%
             max-height: 100%
             border: 0
@@ -165,19 +172,126 @@
     z-index: 70
     display: flex
     flex-direction: column
-    gap: 6px
-    padding: 8px 12px
-    color: #eee3d6
-    background: rgba(26, 14, 10, 0.92)
-    border: 1px solid rgba(224, 87, 75, 0.55)
-    border-radius: 6px
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6)
+    gap: 0
+    padding: 4px 12px
+    min-width: 420px
+    color: #eadccb
+    background: rgba(26, 16, 12, 0.55)
+    backdrop-filter: blur(10px) saturate(1.15)
+    -webkit-backdrop-filter: blur(10px) saturate(1.15)
+    border: 1px solid rgba(255, 228, 205, 0.14)
+    border-radius: 10px
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 240, 225, 0.06)
 
-    .row, .layers
+    // its sections, each a line, ruled off from the next
+    .sec
         display: flex
         flex-wrap: wrap
         align-items: center
-        gap: 6px
+        gap: 8px
+        padding: 7px 0
+
+        & + .sec
+            border-top: 1px solid rgba(255, 228, 205, 0.12)
+
+    .head b
+        font-size: 14px
+        letter-spacing: 0.04em
+        margin-right: auto
+
+    // (its head drags it: Luke, 2026-10-06)
+    .head
+        cursor: grab
+        user-select: none
+
+        .grip
+            opacity: 0.55
+            font-size: 13px
+
+    .lab
+        font-size: 11px
+        text-transform: uppercase
+        letter-spacing: 0.08em
+        opacity: 0.7
+        min-width: 52px
+
+    .inks
+        display: flex
+        flex-wrap: wrap
+        gap: 5px
+
+    .seg
+        display: inline-flex
+        border: 1px solid rgba(255, 228, 205, 0.18)
+        border-radius: 7px
+        overflow: hidden
+
+        button
+            border: 0
+            border-radius: 0
+            padding: 3px 10px
+
+    .slide
+        display: flex
+        align-items: center
+        gap: 8px
+
+        input
+            width: 120px
+
+        output
+            min-width: 34px
+            font-variant-numeric: tabular-nums
+            opacity: 0.85
+
+    .layers
+        flex-direction: column
+        align-items: stretch
+
+        .layer
+            display: flex
+            align-items: center
+            gap: 6px
+
+            .who
+                margin-right: auto
+
+            &.off .who
+                opacity: 0.5
+
+        .head2
+            display: flex
+            align-items: center
+            justify-content: space-between
+            gap: 8px
+
+        .fold
+            border: 0
+            background: none
+            padding: 2px 0
+            font-size: 11px
+            text-transform: uppercase
+            letter-spacing: 0.08em
+            opacity: 0.8
+
+    button
+        width: auto
+        line-height: normal
+        margin: 0
+        flex: 0 0 auto
+        padding: 3px 8px
+        color: inherit
+        background: rgba(255, 240, 225, 0.05)
+        border: 1px solid rgba(255, 228, 205, 0.16)
+        border-radius: 7px
+        box-shadow: none
+
+        &:hover
+            background: rgba(255, 240, 225, 0.1)
+
+    .seg button.on, button.switch.on
+        background: rgba(224, 87, 75, 0.88)
+        color: #1a0d0b
 
     button
         width: auto
@@ -186,8 +300,9 @@
         flex: 0 0 auto
 
     button.ink
-        width: 24px
-        height: 24px
+        width: 22px
+        height: 22px
+        padding: 0
         border-radius: 50%
         background: var(--ink)
         border: 2px solid rgba(255, 255, 255, 0.25)
@@ -205,7 +320,7 @@
         input
             width: 120px
 
-    button.on
+    button.ink.on
         outline: 2px solid #e0574b
         outline-offset: 1px
 
@@ -250,3 +365,406 @@
 
         small
             @include util.text-secondary
+
+// The Heart Map's own toolbar (scrapboard/rail.js; Luke, 2026-10-03): the
+// map editor's rail on frosted glass, up the left or along the top. Foundry's
+// own column of the Heart Map's buttons is hidden while it is in use.
+body.heart-board-rail-on #tools-panel-heartBoard
+    display: none !important
+
+.heart-board-rail
+    position: fixed
+    z-index: 60
+    display: flex
+    align-items: center
+    gap: var(--rail-gap, 10px)
+    padding: 6px
+    background: rgba(26, 16, 12, 0.55)
+    backdrop-filter: blur(10px) saturate(1.15)
+    -webkit-backdrop-filter: blur(10px) saturate(1.15)
+    border: 1px solid rgba(255, 228, 205, 0.14)
+    border-radius: 10px
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 240, 225, 0.06)
+    color: #eadccb
+
+    // (its top icon level with Foundry's top icon, not its glass: the glass's
+    // padding and border above it. Luke 2026-10-06)
+    &.vertical
+        flex-direction: column
+        left: var(--rail-left, 64px)
+        top: calc(var(--rail-top, 72px) - 7px)
+
+    // (under the scene navigation)
+    &.horizontal
+        flex-direction: row
+        left: var(--rail-left, 64px)
+        top: var(--rail-top, 64px)
+
+    // (Foundry's own buttons' size: Luke 2026-10-06)
+    button
+        width: var(--rail-btn, 36px)
+        height: var(--rail-btn, 36px)
+        padding: 0
+        margin: 0
+        display: grid
+        place-items: center
+        line-height: 1
+        background: none
+        border: 1px solid transparent
+        border-radius: 7px
+        color: inherit
+        cursor: pointer
+        box-shadow: none
+
+        &:hover
+            background: rgba(255, 240, 225, 0.08)
+            border-color: rgba(255, 228, 205, 0.18)
+
+        &.on
+            background: rgba(224, 87, 75, 0.88)
+            border-color: rgba(255, 190, 175, 0.5)
+            color: #1a0d0b
+
+    // (Foundry's icons, at its own size)
+    i
+        font-size: var(--rail-icon, 24px)
+        line-height: 1
+
+    .sep
+        flex: none
+        background: rgba(255, 228, 205, 0.16)
+
+    &.vertical .sep
+        width: calc(var(--rail-btn, 36px) * 0.72)
+        height: 1px
+        margin: 3px 0
+
+    &.horizontal .sep
+        width: 1px
+        height: calc(var(--rail-btn, 36px) * 0.72)
+        margin: 0 3px
+
+    .file
+        position: relative
+
+    // the File button's few, by it
+    .menu
+        position: absolute
+        display: flex
+        flex-direction: column
+        gap: 2px
+        padding: 6px
+        min-width: 260px
+        background: rgba(26, 16, 12, 0.8)
+        backdrop-filter: blur(10px)
+        -webkit-backdrop-filter: blur(10px)
+        border: 1px solid rgba(255, 228, 205, 0.16)
+        border-radius: 9px
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5)
+
+        button
+            width: 100%
+            height: 32px
+            display: flex
+            gap: 8px
+            padding: 0 8px
+            justify-content: flex-start
+            text-align: left
+            font-size: 13px
+
+            span
+                white-space: nowrap
+
+    &.vertical .menu
+        left: calc(var(--rail-btn, 36px) + 8px)
+        top: 0
+
+    &.horizontal .menu
+        top: calc(var(--rail-btn, 36px) + 8px)
+        left: 0
+
+// the Heart Map's help: each tool, what it does
+.heart-board-help
+    display: flex
+    flex-direction: column
+    gap: 10px
+    max-height: 70vh
+    overflow-y: auto
+
+.heart-board-help-row
+    display: grid
+    grid-template-columns: 28px 1fr
+    gap: 10px
+    align-items: start
+
+    i
+        font-size: 18px
+        margin-top: 3px
+        text-align: center
+
+    p
+        margin: 2px 0 0
+
+// the bin and the earlier boards: a list, each with its button
+.heart-board-bin
+    display: flex
+    flex-direction: column
+    gap: 4px
+    max-height: 55vh
+    overflow-y: auto
+    margin-bottom: 8px
+
+.heart-board-bin-row
+    display: grid
+    grid-template-columns: minmax(0, 1fr) auto
+    gap: 10px
+    align-items: center
+    padding: 4px 6px
+    border-radius: 5px
+    background: rgba(255, 255, 255, 0.04)
+
+    b
+        display: block
+        overflow: hidden
+        text-overflow: ellipsis
+        white-space: nowrap
+
+    small
+        display: block
+        opacity: 0.75
+
+    button
+        width: auto
+        white-space: nowrap
+
+// the note dialog (Luke, 2026-10-06): the writing on its paper as the card
+// will show it, and the hands (and the typewriter) as dense glassy tiles,
+// each in its own face
+.heart-board-preview
+    position: relative
+    border-radius: 3px
+    margin-bottom: 8px
+    background: #d8ccb0 center / cover no-repeat
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45)
+
+    &.sheet
+        background: #3a2a20
+        textarea
+            color: #d8ccb4
+
+    textarea
+        display: block
+        width: 100%
+        min-height: 150px
+        padding: 18px 22px
+        border: 0 !important
+        border-radius: 3px
+        background: rgba(255, 248, 232, 0.1) !important
+        background-image: none !important
+        color: #241a16
+        line-height: 1.15
+        resize: vertical
+        box-shadow: none
+        text-shadow: 0 0 1px rgba(255, 250, 240, 0.25)
+
+        &:focus
+            outline: 1px solid rgba(224, 87, 75, 0.6)
+            box-shadow: none
+
+// the note on its paper (Luke, 2026-10-06: a bigger preview): the paper
+// turned a quarter at a time and freely, the writing on it where it sits,
+// moved by its handle
+.heart-board-stage
+    position: relative
+    height: 300px
+    margin-bottom: 6px
+    overflow: hidden
+    border-radius: 6px
+    background: #3a2a20
+    box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.55)
+
+    .heart-board-sheet
+        position: absolute
+        left: 50%
+        top: 50%
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.55)
+
+    .paper
+        position: absolute
+        left: 50%
+        top: 50%
+        background: #d8ccb0 center / 100% 100% no-repeat
+
+    textarea
+        position: absolute
+        width: 80%
+        min-height: 60px
+        transform: translate(-50%, -50%)
+        padding: 4px 6px
+        border: 1px dashed rgba(36, 26, 22, 0.25) !important
+        border-radius: 3px
+        background: transparent !important
+        background-image: none !important
+        color: #241a16
+        line-height: 1.1
+        resize: none
+        box-shadow: none
+        overflow: hidden
+
+        &:focus
+            outline: none
+            border-color: rgba(224, 87, 75, 0.6) !important
+
+    .grip
+        position: absolute
+        transform: translate(-50%, -50%)
+        width: 22px
+        height: 22px
+        display: grid
+        place-items: center
+        border-radius: 50%
+        background: rgba(26, 16, 12, 0.75)
+        color: #fff
+        font-size: 11px
+        cursor: move
+
+.heart-board-turns
+    display: flex
+    align-items: center
+    gap: 6px
+    margin-bottom: 6px
+
+    button
+        flex: none
+        width: 30px
+        height: 28px
+        padding: 0
+        line-height: 1
+
+    label
+        flex: 1
+        display: flex
+        align-items: center
+        gap: 8px
+
+        input
+            flex: 1
+
+        output
+            min-width: 3em
+            text-align: right
+
+.heart-board-brights
+    margin-top: 4px
+
+    span
+        border-radius: 4px !important
+        padding: 2px 10px
+        min-width: 0 !important
+        height: auto !important
+        line-height: 20px
+
+.heart-board-faces
+    display: grid
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+    gap: 5px
+    margin: 6px 0
+    max-height: 300px
+    overflow-y: auto
+    padding: 4px
+    border-radius: 8px
+    background: rgba(26, 16, 12, 0.55)
+    backdrop-filter: blur(6px)
+    -webkit-backdrop-filter: blur(6px)
+    border: 1px solid rgba(255, 228, 205, 0.12)
+
+    .face
+        display: flex
+        flex-direction: column
+        gap: 2px
+        padding: 6px 10px
+        border-radius: 6px
+        border: 1px solid rgba(255, 228, 205, 0.1)
+        background: rgba(255, 240, 225, 0.05)
+        color: #eadccb
+        cursor: pointer
+        overflow: hidden
+
+        &:hover
+            background: rgba(255, 240, 225, 0.1)
+
+        &.on
+            border-color: rgba(224, 87, 75, 0.9)
+            background: rgba(224, 87, 75, 0.18)
+
+        input
+            display: none
+
+        .smp
+            white-space: nowrap
+            overflow: hidden
+            text-overflow: ellipsis
+            line-height: 1.2
+
+        small
+            font-size: 11px
+            opacity: 0.75
+            white-space: nowrap
+            overflow: hidden
+            text-overflow: ellipsis
+
+            b
+                font-weight: 600
+                margin-right: 4px
+
+        // (a player's own: their name on it)
+        &.claimed small
+            opacity: 1
+            color: #f0c9a8
+
+// the brush's doodles (Luke, 2026-10-06): a column of the rail's glass by it
+.heart-board-doodles
+    position: fixed
+    z-index: 70
+    display: grid
+    grid-template-columns: repeat(3, 48px)
+    align-content: start
+    gap: 4px
+    padding: 6px
+    max-height: calc(100vh - 120px)
+    overflow-y: auto
+    background: rgba(26, 16, 12, 0.55)
+    backdrop-filter: blur(10px) saturate(1.15)
+    -webkit-backdrop-filter: blur(10px) saturate(1.15)
+    border: 1px solid rgba(255, 228, 205, 0.14)
+    border-radius: 10px
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45)
+
+    button
+        width: 48px
+        height: 48px
+        padding: 0
+        margin: 0
+        background: rgba(230, 214, 188, 0.12)
+        border: 1px solid transparent
+        border-radius: 7px
+        cursor: pointer
+
+        &:hover
+            border-color: rgba(255, 228, 205, 0.25)
+
+        &.on
+            border-color: rgba(224, 87, 75, 0.95)
+            background: rgba(224, 87, 75, 0.22)
+
+        canvas
+            display: block
+            width: 48px
+            height: 48px
+
+    .size
+        grid-column: 1 / -1
+
+        input
+            width: 100%
+            accent-color: #e0574b

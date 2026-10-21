@@ -40,7 +40,9 @@ import { viaFrom, pointInPoly, nearestOnPath, customKey, revealOf, applyPatch, s
 export { applyPatch };
 
 export const GM_TOOLS = ['move', 'reveal', 'string', 'pin', 'note', 'write', 'mark', 'erase'];
-export const PLAYER_TOOLS = ['inspect', 'move', 'note', 'write', 'mark'];
+// (Luke, 2026-10-03: players make strings too, in the sheet's paints, and
+// edit their own)
+export const PLAYER_TOOLS = ['inspect', 'move', 'note', 'write', 'mark', 'string'];
 // a players' board (Luke, 2026-10-02): its owners do anything but reveal
 // (nothing on it is hidden from them) or bring in landmarks
 export const OWNER_TOOLS = ['move', 'string', 'pin', 'note', 'write', 'mark', 'erase'];
@@ -127,6 +129,41 @@ function strokeBox(pts, w) {
     const p = w / 2;
     return { x0: x0 - p, y0: y0 - p, x1: x1 + p, y1: y1 + p };
 }
+// Whether a stroke (its points, its width) touches a box anywhere: a point
+// in it, or a stretch crossing it
+export function strokeMeets(pts, w, B) {
+    const p = w / 2;
+    const X0 = B.x0 - p;
+    const Y0 = B.y0 - p;
+    const X1 = B.x1 + p;
+    const Y1 = B.y1 + p;
+    const inside = (x, y) => x >= X0 && x <= X1 && y >= Y0 && y <= Y1;
+    for (let i = 0; i < pts.length; i += 2) {
+        if (inside(pts[i], pts[i + 1])) return true;
+        if (i + 3 >= pts.length) continue;
+        // (Liang-Barsky: the stretch to the next point, clipped to the box)
+        const x = pts[i];
+        const y = pts[i + 1];
+        const dx = pts[i + 2] - x;
+        const dy = pts[i + 3] - y;
+        let t0 = 0;
+        let t1 = 1;
+        let hit = true;
+        for (const [q, d] of [[x - X0, -dx], [X1 - x, dx], [y - Y0, -dy], [Y1 - y, dy]]) {
+            if (d === 0) {
+                if (q < 0) { hit = false; break; }
+                continue;
+            }
+            const t = q / d;
+            if (d < 0) t0 = Math.max(t0, t);
+            else t1 = Math.min(t1, t);
+            if (t0 > t1) { hit = false; break; }
+        }
+        if (hit) return true;
+    }
+    return false;
+}
+
 // a sheet's stroke keeps no author (its layer is who drew it)
 const stripBy = ({ by, ...st }) => (void by, st);
 
@@ -172,6 +209,11 @@ export class BoardControls {
         // layer on the sheet, or '@' and a card's key)
         this.markMode = 'draw';
         this.markSel = new Set();
+        // the brush's doodle in hand (a kind of model.js DOODLES), or null
+        this.doodle = null;
+        // (its wobble: the ghost under the pointer is the very doodle a click
+        // lays, then the next is drawn afresh)
+        this.doodleN = Math.floor(Math.random() * 1e6);
         this.pins = new Set();
         this.links = new Set();
         this.link = null;
@@ -200,6 +242,38 @@ export class BoardControls {
         return mayMove(s, this.host.user());
     }
 
+    // A string this user may edit: an editor any, a player their own
+    mine(l) {
+        if (this.editor) return true;
+        const me = this.host.user()?.id;
+        return Boolean(me && l?.author && l.author === me);
+    }
+
+    // A pin this user may move: an editor any; a player one of theirs (theirs,
+    // or held only by strings of theirs)
+    minePin(id) {
+        if (this.editor) return true;
+        const me = this.host.user()?.id;
+        const p = this.host.raw()?.pins?.[id];
+        const refs = this.#refsOf(id);
+        if (refs.length) return refs.every((r) => this.mine(r.link));
+        return Boolean(me && p?.author === me);
+    }
+
+    // a hit this user may take hold of (a string's, or a pin)
+    #mineHit(h) {
+        if (!h) return false;
+        if (this.editor) return true;
+        if (h.kind === 'link') return this.mine(h.item);
+        if (h.kind === 'pin') return this.minePin(h.pin.id);
+        if (h.kind === 'end' || h.kind === 'joint') {
+            if (!this.mine(h.link)) return false;
+            const pinId = h.kind === 'end' ? (h.side ? h.link.bPin : h.link.aPin) : h.link.joints?.find((j) => j.idx === h.idx)?.pin;
+            return !pinId || this.minePin(pinId);
+        }
+        return false;
+    }
+
     hit(pt) {
         const view = this.host.view();
         if (!view || !pt) return null;
@@ -212,7 +286,7 @@ export class BoardControls {
 
     // how many things are selected (cards, pins, strings)
     get count() {
-        return this.selection.size + this.pins.size + this.links.size + (this.part ? 1 : 0);
+        return this.selection.size + this.pins.size + this.links.size + (this.part ? 1 : 0) + (this.bit ? 1 : 0);
     }
 
     clear() {
@@ -222,10 +296,22 @@ export class BoardControls {
         this.links.clear();
         this.link = null;
         this.part = null;
+        this.bit = null;
     }
 
     // the card whose pieces show their handles: the one selected, or the one
     // a selected piece belongs to
+    // The pins stuck in a card, for its white dots: its own (when shown) and
+    // the board's pins in it
+    #pinsIn(s) {
+        if (!s || s.layout.bare) return [];
+        const out = [];
+        if (s.layout.pin && !s.layout.pinOff && (!s.tied || s.pinShow)) out.push(s.layout.pin);
+        out.push(...(s.layout.pins ?? []));
+        for (const p of this.host.view()?.pins ?? []) if (p.on === s.key && !p.hidden) out.push(p);
+        return out.map((p) => ({ x: p.x, y: p.y, on: false }));
+    }
+
     #partsCard() {
         if (!this.editor) return null;
         const view = this.host.view();
@@ -237,6 +323,10 @@ export class BoardControls {
     // card, one pin of the board's own, or the selected cards
     #target() {
         const view = this.host.view();
+        if (this.bit) {
+            const b = view?.bits?.find((q) => q.id === this.bit);
+            return b ? { type: 'bit', bit: b } : null;
+        }
         if (this.part) {
             const s = view?.scraps.find((x) => x.key === this.part.key);
             const p = s?.layout.parts?.find((q) => q.id === this.part.id);
@@ -261,6 +351,7 @@ export class BoardControls {
     prune() {
         const view = this.host.view();
         if (this.part && !view?.scraps.some((s) => s.key === this.part.key)) this.part = null;
+        if (this.bit && (!this.gm || !view?.bits?.some((b) => b.id === this.bit))) this.bit = null;
         const keys = new Set(view?.scraps.filter((s) => this.may(s)).map((s) => s.key));
         for (const k of [...this.selection]) if (!keys.has(k)) this.selection.delete(k);
         const pins = new Set(this.editor ? view?.pins?.map((p) => p.id) : []);
@@ -289,8 +380,13 @@ export class BoardControls {
             }
         };
         if (t.type === 'part') take(frameOf(t.part));
+        else if (t.type === 'bit') take(frameOf({ x: t.bit.x, y: t.bit.y, w: t.bit.w, h: t.bit.h, rot: t.bit.rot }));
         else if (t.type === 'pin') take(frameOf({ x: t.pin.x, y: t.pin.y, w: t.pin.w, h: t.pin.w, rot: 0 }));
-        else for (const s of this.selected()) take(s.layout.hull);
+        else {
+            const free = this.selected().filter((s) => !s.locked);
+            if (!free.length) return null;
+            for (const s of free) take(s.layout.hull);
+        }
         // (a small thing's handles stand further off, clear of the thing itself)
         // (Luke, 2026-10-02: compact, 3x the reticle dot's radius out)
         const o = HANDLE_OFF * this.host.px();
@@ -322,14 +418,19 @@ export class BoardControls {
     // the pointer has stayed on it LOCK_MS. Returns whether it moved (redraw;
     // the host redraws again after LOCK_MS for the ring).
     hover(pt, tool) {
-        const g = pt && tool === 'move' && this.editor && !this.onHandle(pt) && !this.onRotor(pt) ? this.#grabAt(pt) : null;
+        // (Move: the editors'; String: anyone's, on the pins a string may tie
+        // to, Luke 2026-10-06)
+        const g = !pt ? null
+            : tool === 'move' && this.editor && !this.onHandle(pt) && !this.onRotor(pt) ? this.#grabAt(pt)
+                : tool === 'string' ? this.#grabAt(pt, { pinsOnly: true }) : null;
         const moved = JSON.stringify(g && [g.x, g.y]) !== JSON.stringify(this.grab && [this.grab.x, this.grab.y]);
         if (g) g.since = this.grab?.key === g.key ? this.grab.since : Date.now();
+        this.grabTool = tool;
         this.grab = g;
         return moved;
     }
 
-    #grabAt(pt) {
+    #grabAt(pt, { pinsOnly = false } = {}) {
         const view = this.host.view();
         if (!view) return null;
         const reach = SNAP * this.host.px();
@@ -339,8 +440,16 @@ export class BoardControls {
             const d = Math.hypot(pt.x - p.x, pt.y - p.y);
             if (d <= reach && (!best || d < best.d)) best = { d, x: p.x, y: p.y, key };
         };
-        // the one selected card's pieces, then every pin
+        // (a string's end: the board's own pins this user may tie to)
+        if (pinsOnly) {
+            for (const p of view.pins ?? []) if (!p.hidden && this.minePin(p.id)) take(p, `pin:${p.id}`);
+            if (this.editor) for (const l of view.links) (l.ends ?? []).forEach((p, i) => { if (!p.shared) take(p, `end:${l.id}:${i}`); });
+            return best ? { x: best.x, y: best.y, key: best.key } : null;
+        }
+        // the one selected card's pieces, then every pin (a landmark's pins
+        // through its clipping too: Luke 2026-10-06, they showed no reticle)
         for (const p of this.#partsCard()?.layout.parts ?? []) take(p, `part:${p.id}`);
+        for (const s of view.scraps) for (const p of s.layout.clipPins ?? []) take(p, `part:${p.id}`);
         const painter = this.host.painter();
         for (const l of view.links) {
             (l.ends ?? []).forEach((p, i) => take(p, `end:${l.id}:${i}`));
@@ -400,8 +509,25 @@ export class BoardControls {
         const s = this.#partsCard();
         if (!s) return null;
         const r = 9 * this.host.px();
-        const p = s?.layout.parts?.find((q) => Math.abs(pt.x - q.x) < r && Math.abs(pt.y - q.y) < r);
+        // (the nearest, where two handles overlap)
+        let p = null;
+        for (const q of s?.layout.parts ?? []) if (Math.abs(pt.x - q.x) < r && Math.abs(pt.y - q.y) < r && (!p || Math.hypot(pt.x - q.x, pt.y - q.y) < Math.hypot(pt.x - p.x, pt.y - p.y))) p = q;
         return p ? { scrap: s, id: p.id, x: p.x, y: p.y } : null;
+    }
+
+    // a pin through a landmark's clipping, on any card (an editor's): a piece
+    // of its card, taken by itself
+    #clipPinAt(pt) {
+        if (!this.editor || !pt) return null;
+        const scraps = this.host.view()?.scraps ?? [];
+        // (on its head only: a press near it takes the card; the reticle, once
+        // it has caught the pin, puts a press right on it)
+        for (let i = scraps.length - 1; i >= 0; i--) {
+            const s = scraps[i];
+            const p = (s.layout.clipPins ?? []).find((q) => Math.hypot(pt.x - q.x, pt.y - q.y) < Math.max(1.5, q.w * 0.3));
+            if (p) return { scrap: s, id: p.id, x: p.x, y: p.y };
+        }
+        return null;
     }
 
     /* -------------------------------------------- */
@@ -424,6 +550,8 @@ export class BoardControls {
         const strings = new Set([...this.links, ...(this.link ? [this.link] : [])]);
         return {
             hulls: this.selected().map((s) => s.layout.hull),
+            // a padlock by each selected card locked to the sheet
+            locks: this.selected().filter((s) => s.locked).map((s) => ({ x: s.layout.hull[0], y: s.layout.hull[1] })),
             link: this.link ? view?.links.find((l) => l.id === this.link)?.points ?? null : null,
             strings: [...strings].filter((id) => id !== this.link).map((id) => view?.links.find((l) => l.id === id)?.points).filter(Boolean),
             // (each a small orange dot where the grab dot would be)
@@ -435,18 +563,26 @@ export class BoardControls {
             fromPt,
             line: to && fromPt ? [fromPt, to] : null,
             stroke: d?.kind === 'mark' ? d.pts : null,
+            // (begun on a card, it stays on the card: its outline, to keep the
+            // stroke being drawn to it; Luke 2026-10-06)
+            strokeHull: d?.kind === 'mark' && d.on ? view?.scraps.find((s) => s.key === d.on)?.layout.hull ?? null : null,
             // the marker's selected strokes (select mode), each { pts, w }
-            strokes: this.markMode === 'select' ? this.#strokes().filter((st) => this.markSel.has(st.key)).map((st) => ({ pts: st.pts, w: st.w })) : [],
+            strokes: this.markMode === 'select' && !d?.lifted ? this.#strokes().filter((st) => this.markSel.has(st.key)).map((st) => ({ pts: st.pts, w: st.w })) : [],
+            // the strokes being moved, where they are going (drawn as they are)
+            moving: d?.lifted ? d.preview ?? [] : [],
             eraser: d?.kind === 'unmark' && d.to ? { ...d.to, r: d.r } : null,
             rubbed: d?.kind === 'unmark' ? [...d.hits].map((k) => JSON.parse(k)) : [],
-            parts: (this.#partsCard()?.layout.parts ?? []).map((p) => ({ ...p, on: this.part?.id === p.id })),
+            // (and the pins in it, a note's as a landmark's: Luke 2026-10-06)
+            parts: [...(this.#partsCard()?.layout.parts ?? []).map((p) => ({ ...p, on: this.part?.id === p.id })), ...this.#pinsIn(this.#partsCard())],
             // a selected piece's box
-            partBox: (() => { const t = this.#target(); return t?.type === 'part' ? frameOf(t.part) : null; })(),
-            grab: d || !this.grab ? null : { x: this.grab.x, y: this.grab.y, locked: Date.now() - this.grab.since >= LOCK_MS },
+            partBox: (() => { const t = this.#target(); return t?.type === 'part' ? frameOf(t.part) : t?.type === 'bit' ? frameOf({ x: t.bit.x, y: t.bit.y, w: t.bit.w, h: t.bit.h, rot: t.bit.rot }) : null; })(),
+            grab: d?.kind === 'string' && d.snap ? { x: d.snap.x, y: d.snap.y, locked: true } : d || !this.grab ? null : { x: this.grab.x, y: this.grab.y, locked: Date.now() - this.grab.since >= LOCK_MS },
             // a few words by the reticle, once it has caught something
-            caption: d || !this.grab || Date.now() - this.grab.since < LOCK_MS ? null : this.#caption(this.grab.key),
+            caption: d || !this.grab || Date.now() - this.grab.since < LOCK_MS || this.from || this.grabTool !== 'move' ? null : this.#caption(this.grab.key),
             // a string's pin dragged over another's: where they would join
             join: d?.joinTo ? { x: d.joinTo.x, y: d.joinTo.y } : null,
+            // the doodle in hand, where a click would lay it (Luke 2026-10-06)
+            doodle: pointer && this.doodle && this.markMode !== 'select' && !d ? { kind: this.doodle, seed: this.doodle + ':' + this.doodleN, at: pt0(pointer) } : null,
         };
     }
 
@@ -472,13 +608,35 @@ export class BoardControls {
     //   { do: 'decor', item }                a decoration was pressed (the mock's)
     press(tool, pt, { ctrl = false, right = false } = {}) {
         // (the corner handles are taken where the pointer is, never snapped away)
+        if (tool === 'move' && this.from && this.chaining && ctrl) {
+            const end = this.#endAt(pt, this.hit(pt));
+            const f = this.from;
+            this.from = null;
+            if ((f.key && f.key === end.key) || (f.pin && f.pin === end.pin)) return { do: 'select' };
+            return this.#stringAction(f, end, { quick: true, chain: true, kind: this.chainKind ?? null, color: this.chainColor ?? null, state: this.chainState ?? null });
+        }
+        // (Luke, 2026-10-06: right-click locks a card, or lets it go; no menu)
+        if (tool === 'move' && right) return this.#lockAt(pt);
         if (tool === 'move') return this.#pressMove(this.onHandle(pt) || this.onRotor(pt) ? pt : this.#snap(pt), ctrl);
+        // (a doodle in hand: a click lays it down there, on the card under it
+        // or the sheet; Luke 2026-10-06)
+        // (never on a right-click: Luke 2026-10-06)
+        if (tool === 'mark' && this.doodle && this.markMode !== 'select') {
+            if (right) return null;
+            const seed = this.doodle + ':' + this.doodleN++;
+            return { do: 'doodle', kind: this.doodle, seed, at: pt0(pt), on: this.#cardUnder(pt)?.key ?? null };
+        }
         if (tool === 'mark') return this.markMode === 'select' ? this.#pressStroke(pt, ctrl) : null;
+        // (String: on the pin the reticle has caught)
+        if (tool === 'string') pt = this.#snap(pt);
         const h = this.hit(pt);
         const scrap = h?.kind === 'scrap' ? h.item : null;
         const link = h?.kind === 'link' ? h.item : h?.link ?? null;
         const texty = scrap && (scrap.type === 'note' || scrap.type === 'scrawl');
         if (!this.editor) {
+            // (a player's string: ends on their own pins, or anywhere else as
+            // new ones; never on another's)
+            if (tool === 'string') return this.#pressString(pt, this.#mineHit(h) || h?.kind === 'scrap' ? h : null, { ctrl, right });
             if (tool === 'note' || tool === 'write') {
                 if (texty && this.may(scrap)) return { do: 'edit', key: scrap.key };
                 return h ? null : { do: 'add', type: tool === 'write' ? 'scrawl' : 'note', at: pt0(pt) };
@@ -492,31 +650,45 @@ export class BoardControls {
             // a string is drawn or not (two states), and only between places
             // the players may see
             if (link) {
-                if (this.#hiddenEnd(link)) return { do: 'refuse', why: 'hidden-place' };
-                // (its name tag and the thread it hangs by come with it)
-                return { do: 'reveal', link, dir: 1, to: link.state === 'hidden' ? 'known' : 'hidden', also: { links: link.threads ?? [], scraps: link.nameNote ? [link.nameNote] : [] } };
+                // (Luke, 2026-10-06: the whole run of strings joined end to end
+                // with it, up to where it branches or ends; name tags' threads
+                // aren't breaks, and come with their strings)
+                const run = this.sectionOf(link);
+                const to = link.state === 'hidden' ? 'known' : 'hidden';
+                if (to === 'known' && run.some((l) => this.#hiddenEnd(l))) return { do: 'refuse', why: 'hidden-place' };
+                const others = run.filter((l) => l.id !== link.id);
+                return {
+                    do: 'reveal', link, dir: 1, to,
+                    also: { links: [...new Set([...others.map((l) => l.id), ...run.flatMap((l) => l.threads ?? [])])], scraps: run.map((l) => l.nameNote).filter(Boolean) },
+                };
             }
             return null;
         }
-        if (tool === 'string') {
-            // from where the first press was to the second (or to where a
-            // drag lets go): on a scrap the end ties on just there, anywhere
-            // else it hangs loose; the same scrap twice, or a right-click,
-            // lets go
-            if (right) {
-                this.from = null;
-                return { do: 'select' };
-            }
-            const end = this.#endAt(pt, h);
-            if (!this.from) {
-                this.from = end;
-                return { do: 'select' };
-            }
-            const f = this.from;
+        if (tool === 'string') return this.#pressString(pt, h, { ctrl, right });
+        return this.#pressRest(tool, pt, h, { ctrl, right, scrap, link, texty });
+    }
+
+    // the String tool: from where the first press was to the second (or to
+    // where a drag lets go): on a scrap the end ties on just there, anywhere
+    // else it hangs loose; the same scrap twice, or a right-click, lets go
+    #pressString(pt, h, { ctrl = false, right = false } = {}) {
+        if (right) {
             this.from = null;
-            if ((f.key && f.key === end.key) || (f.pin && f.pin === end.pin)) return { do: 'select' };
-            return this.#stringAction(f, end);
+            return { do: 'select' };
         }
+        const end = this.#endAt(pt, h);
+        if (!this.from) {
+            this.from = end;
+            return { do: 'select' };
+        }
+        const f = this.from;
+        this.from = null;
+        if ((f.key && f.key === end.key) || (f.pin && f.pin === end.pin)) return { do: 'select' };
+        if (ctrl) this.chaining = true;
+        return this.#stringAction(f, end, ctrl ? { quick: true, chain: true } : {});
+    }
+
+    #pressRest(tool, pt, h, { ctrl, right, scrap, link, texty }) {
         if (tool === 'pin') {
             if (right) return null;
             const under = this.#scrapUnder(pt);
@@ -527,7 +699,12 @@ export class BoardControls {
             return h ? null : { do: 'add', type: tool === 'write' ? 'scrawl' : 'note', at: pt0(pt) };
         }
         if (tool === 'erase') {
+            if (h?.kind === 'bit') return this.gm ? { do: 'patch', patch: { bits: { [h.item.id]: null } } } : null;
             if (h?.kind === 'joint') return { do: 'patch', patch: this.#jointOut(h.link, h.idx) };
+            // (one of a card's own pieces: a strip of tape, a pin through its
+            // clipping, a ring, a web; never its picture or its writing)
+            const piece = PIECES.has(h?.kind) || h?.kind === 'link' ? null : this.#pieceAt(pt);
+            if (piece) return { do: 'patch', patch: this.dropPatch(piece.scrap.key, piece.id) };
             if (h?.kind === 'pin') return { do: 'remove', what: { scraps: [], pins: [h.pin.id], links: [] } };
             if (h?.kind === 'scrapPin' && this.may(h.scrap)) {
                 if (h.idx < 0) return { do: 'patch', patch: { scraps: { [h.scrap.key]: { pinOff: true } } } };
@@ -548,8 +725,24 @@ export class BoardControls {
             do: 'string',
             a: f.pin ? null : f.key ?? null, aAt: !f.pin && f.key ? f.at ?? null : null, aPt: f.pin || f.key ? null : f.pt, aPin: f.pin ?? null,
             b: end.pin ? null : end.key ?? null, bAt: !end.pin && end.key ? end.at ?? null : null, bPt: end.pin || end.key ? null : end.pt, bPin: end.pin ?? null,
-            quick: false, kind: null, prep, ...extra,
+            quick: false, kind: null, prep, endPt: end.pt ?? null, ...extra,
         };
+    }
+
+    // (Luke, 2026-10-03: Ctrl held, string after string) carry on from a new
+    // string's end pin: the next Ctrl+click runs the next string from it
+    chainFrom(pin, pt) {
+        if (!pin) return;
+        this.from = { pin, pt: pt ?? null };
+    }
+
+    // Ctrl let go: the chain ends
+    endChain() {
+        if (!this.chaining) return false;
+        this.chaining = false;
+        this.chainState = null;
+        this.from = null;
+        return true;
     }
 
     // where a string's end goes at a point: on a pin of the board's own
@@ -560,10 +753,44 @@ export class BoardControls {
         return under ? { key: under.key, at: onPaper(under, pt), pt: pt0(pt) } : { pt: pt0(pt) };
     }
 
-    // whether a string runs to a place hidden from the players
+    // whether a string runs to a place hidden from the players (tied to it, or
+    // held by a pin stuck in it)
     #hiddenEnd(l) {
-        const scraps = this.host.view()?.scraps ?? [];
-        return [l.a, l.b].some((k) => k && scraps.find((s) => s.key === k)?.state === 'hidden');
+        const view = this.host.view();
+        const scraps = view?.scraps ?? [];
+        const onOf = (pin) => (pin ? view?.pins?.find((p) => p.id === pin)?.on ?? null : null);
+        return [l.a ?? onOf(l.aPin), l.b ?? onOf(l.bPin)].some((k) => k && scraps.find((s) => s.key === k)?.state === 'hidden');
+    }
+
+    // A string's run (Luke, 2026-10-06): it and every string joined to it end
+    // to end, pin to pin, until the run branches (a pin holding more), ends,
+    // or comes apart (broken); the threads name tags hang by aren't strings
+    // of the run
+    sectionOf(link) {
+        const view = this.host.view();
+        const links = (view?.links ?? []).filter((l) => !l.thread);
+        const refs = new Map();
+        const add = (pin, ref) => { if (pin) (refs.get(pin) ?? refs.set(pin, []).get(pin)).push(ref); };
+        for (const l of links) {
+            add(l.aPin, { l, end: true });
+            add(l.bPin, { l, end: true });
+            for (const j of l.joints ?? []) add(j.shared, { l, end: false });
+        }
+        const out = new Map([[link.id, link]]);
+        const todo = [link];
+        while (todo.length) {
+            const l = todo.pop();
+            for (const pin of [l.aPin, l.bPin]) {
+                const rs = refs.get(pin) ?? [];
+                if (rs.length !== 2 || rs.some((r) => !r.end)) continue;
+                const next = rs.find((r) => r.l.id !== l.id)?.l;
+                if (next && !out.has(next.id)) {
+                    out.set(next.id, next);
+                    todo.push(next);
+                }
+            }
+        }
+        return [...out.values()];
     }
 
     #jointOut(l, idx) {
@@ -580,13 +807,26 @@ export class BoardControls {
     #pressMove(pt, ctrl) {
         if (this.onHandle(pt) || this.onRotor(pt)) return null;
         // a card's piece: it alone is selected
-        const part = this.#partAt(pt);
+        const part = this.#partAt(pt) ?? this.#clipPinAt(pt);
         if (part) {
             this.clear();
             this.part = { key: part.scrap.key, id: part.id };
             return { do: 'select' };
         }
         const h = this.hit(pt);
+        if (h?.kind === 'bit') {
+            if (!this.gm) return this.#pick(this.#ownCardUnder(pt, null), ctrl);
+            this.clear();
+            this.bit = h.item.id;
+            return { do: 'select' };
+        }
+        if (h && h.kind !== 'scrapPin' && !this.editor && this.#mineHit(h)) {
+            if (h.kind === 'pin') return this.#toggle(this.pins, h.pin.id, ctrl);
+            const id = h.kind === 'link' ? h.item.id : h.link.id;
+            const r = this.#toggle(this.links, id, ctrl);
+            this.link = this.links.has(id) ? id : this.links.size === 1 ? [...this.links][0] : null;
+            return r;
+        }
         if (this.editor && h) {
             if (h.kind === 'scrapPin') return this.#pick(h.scrap, ctrl);
             if (h.kind === 'pin') return this.#toggle(this.pins, h.pin.id, ctrl);
@@ -598,7 +838,7 @@ export class BoardControls {
             }
         }
         if (h?.kind === 'decor') return this.gm ? { do: 'decor', item: h.item } : this.#pick(null, ctrl);
-        return this.#pick(h?.kind === 'scrap' ? h.item : null, ctrl);
+        return this.#pick(h?.kind === 'scrap' ? h.item : this.#ownCardUnder(pt, h), ctrl);
     }
 
     // a pin or string pressed: Ctrl adds or takes it away; a press on one
@@ -636,13 +876,16 @@ export class BoardControls {
     double(tool, pt) {
         if (tool !== 'move') return null;
         const h = this.hit(this.#snap(pt));
-        if (h?.kind === 'scrap') {
-            const s = h.item;
+        // (a card's own pin, or one of its pieces, opens the card too)
+        const part = this.#partAt(pt);
+        const card = h?.kind === 'scrap' ? h.item : h?.kind === 'scrapPin' ? h.scrap : part?.scrap ?? null;
+        if (card) {
+            const s = card;
             if (s.type === 'note' || s.type === 'scrawl') return this.may(s) ? { do: 'edit', key: s.key } : null;
             return { do: this.gm ? 'open' : 'inspect', scrap: s };
         }
         const link = h?.kind === 'link' ? h.item : h?.kind === 'tag' ? h.link : null;
-        return this.editor && link ? { do: 'editString', link } : null;
+        return link && this.mine(link) ? { do: 'editString', link } : null;
     }
 
     /* -------------------------------------------- */
@@ -658,11 +901,13 @@ export class BoardControls {
         this.drag = null;
         if (!pt) return null;
         if (tool === 'string') {
-            if (!this.editor || !this.from) return null;
+            if (!this.from) return null;
             this.drag = { kind: 'string', start: pt };
             return 'string';
         }
         if (tool === 'mark') {
+            // (a doodle in hand: no stroke)
+            if (this.doodle && !erase && !shift && this.markMode !== 'select') return null;
             if (!erase && !shift && this.markMode === 'select') return this.#strokeDragStart(pt, ctrl);
             // (a stroke begun on a card is the card's, kept to it; Luke 2026-10-03)
             this.drag = erase || shift
@@ -672,13 +917,22 @@ export class BoardControls {
             return this.drag.kind;
         }
         if (tool !== 'move') return null;
-        if (!this.onHandle(pt) && !this.onRotor(pt)) pt = this.#snap(pt);
+        // (Ctrl on a pin is a new string, even where the pin's own handles
+        // lie: the heads are small and their handles close)
+        // (a pin within the reticle's reach counts at once: over a handle
+        // the reticle doesn't show)
+        const g = ctrl ? this.#grabAt(pt) : null;
+        const caught = g && !/^(part|link):/.test(g.key) ? { x: g.x, y: g.y } : null;
+        const snapped = caught ?? this.#snap(pt);
+        const h0 = ctrl ? this.hit(snapped) : null;
+        const pinFirst = Boolean(h0 && PINS.has(h0.kind) && this.#mineHit(h0));
+        if (pinFirst || (!this.onHandle(pt) && !this.onRotor(pt))) pt = snapped;
         // (the reticle is spent: after the drag it must catch again)
         this.grab = null;
         // (the board as the drag found it: each move is worked out from it,
         // never from the move before)
         const raw = JSON.parse(JSON.stringify(this.host.raw() ?? {}));
-        if (this.onRotor(pt) || this.onHandle(pt)) {
+        if (!pinFirst && (this.onRotor(pt) || this.onHandle(pt))) {
             const b = this.bounds();
             const t = this.#target();
             const turn = this.onRotor(pt);
@@ -690,12 +944,12 @@ export class BoardControls {
                 base.anchor = onPaper(t.scrap, { x: f[0], y: f[1] });
             }
             if (t.type === 'cards') {
-                if (turn) this.drag = { ...base, kind: 'turn', turns: Object.fromEntries(this.selected().map((s) => [s.key, turnOf(s)])) };
-                else this.drag = { ...base, kind: 'size', sizes: Object.fromEntries(this.selected().map((s) => [s.key, s.s ?? 1])) };
+                if (turn) this.drag = { ...base, kind: 'turn', turns: Object.fromEntries(this.selected().filter((s) => !s.locked).map((s) => [s.key, turnOf(s)])) };
+                else this.drag = { ...base, kind: 'size', sizes: Object.fromEntries(this.selected().filter((s) => !s.locked).map((s) => [s.key, s.s ?? 1])) };
             } else this.drag = { ...base, kind: turn ? 'turn' : 'size' };
             return this.drag.kind;
         }
-        const part = this.#partAt(pt);
+        const part = this.#partAt(pt) ?? this.#clipPinAt(pt);
         if (part) {
             this.clear();
             this.part = { key: part.scrap.key, id: part.id };
@@ -703,11 +957,17 @@ export class BoardControls {
             return 'part';
         }
         const h = this.hit(pt);
+        if (h?.kind === 'bit' && this.gm) {
+            this.clear();
+            this.bit = h.item.id;
+            this.drag = { kind: 'bit', start: pt, bit: h.item, raw };
+            return 'bit';
+        }
         // a string itself (Luke, 2026-10-02): Ctrl pins a new joint into it,
         // Shift breaks it there (the new end comes away with the pointer),
         // Alt reshapes it (where it was grabbed goes where the pointer goes,
         // gravity letting go of that span)
-        if (this.editor && h?.kind === 'link' && (ctrl || shift || alt)) {
+        if (h?.kind === 'link' && this.mine(h.item) && (ctrl || shift || alt)) {
             const l = h.item;
             const near = nearestOnPath(l.points, pt);
             const span = spanAt(l, near.i);
@@ -735,13 +995,14 @@ export class BoardControls {
         }
         // Ctrl+drag a pin: a new string from it to where it lets go, and
         // nothing else moves
-        if (this.editor && ctrl && h && PINS.has(h.kind)) {
+        if (ctrl && h && PINS.has(h.kind) && this.#mineHit(h)) {
             this.from = this.#shared(h, raw);
             // (the kind of a string through the pin; a pin holding none, the
             // last kind chosen. Luke, 2026-10-03: every end being a pin, it
             // had always been the default, a delve)
             const through = h.link ?? (h.kind === 'pin' ? this.#refsOf(h.pin.id)[0]?.link : null);
-            this.drag = { kind: 'string', start: pt, quick: true, linkKind: through?.kind ?? null, linkColor: through?.color ?? null, raw };
+            // (and shown or hidden as it is: Luke 2026-10-06)
+            this.drag = { kind: 'string', start: pt, quick: true, linkKind: through?.kind ?? null, linkColor: through?.color ?? null, linkState: through?.state ?? null, raw };
             return 'string';
         }
         // the selection, when the press was on any of it and there is more
@@ -749,7 +1010,7 @@ export class BoardControls {
         const inSel = (h?.kind === 'scrap' && this.selection.has(h.item.key)) || (h?.kind === 'pin' && this.pins.has(h.pin.id))
             || ((h?.kind === 'link' || (h && PIECES.has(h.kind) && h.link)) && this.links.has(h.kind === 'link' ? h.item.id : h.link.id));
         if (this.editor && inSel && this.count > 1) return this.#moveStart(pt, raw);
-        if (this.editor && shift && h?.kind === 'pin') {
+        if (shift && h?.kind === 'pin' && this.#mineHit(h)) {
             const refs = this.#refsOf(h.pin.id);
             // pins where strings meet: one comes away
             if (refs.length > 1) {
@@ -764,7 +1025,7 @@ export class BoardControls {
         }
         // (Luke, 2026-10-02: grab a card and it moves with every pin stuck in
         // it; grab a pin and only the pin moves, on its card or off it)
-        if (this.editor && h && PIECES.has(h.kind)) {
+        if (h && PIECES.has(h.kind) && (this.editor || (h.kind !== 'scrapPin' && this.#mineHit(h)))) {
             this.drag = { kind: 'piece', h, start: pt, T: h.link ? this.host.painter().tagOf(h.link) : null, raw, src: this.#sourceOf(h) };
             // a scrap's own (or added) pin dragged off its paper becomes a
             // pin of the board's own
@@ -772,7 +1033,7 @@ export class BoardControls {
             return 'piece';
         }
         // a string by itself: its loose ends and joints go with the pointer
-        if (this.editor && h?.kind === 'link') {
+        if (h?.kind === 'link' && this.mine(h.item)) {
             if (!this.links.has(h.item.id)) this.selectLink(h.item.id);
             return this.#moveStart(pt, raw);
         }
@@ -780,8 +1041,11 @@ export class BoardControls {
             this.drag = { kind: 'decor', item: h.item, start: pt };
             return 'decor';
         }
-        const scrap = h?.kind === 'scrap' && this.may(h.item) ? h.item : null;
-        if (scrap) {
+        // (a player pressing on their own card's pin takes the card: they may
+        // not move pins; Luke 2026-10-03, a note that wouldn't move)
+        const held = this.#ownCardUnder(pt, h);
+        const scrap = h?.kind === 'scrap' && this.may(h.item) ? h.item : held;
+        if (scrap && !scrap.locked) {
             if (!this.selection.has(scrap.key)) {
                 if (!ctrl) this.clear();
                 this.selection.add(scrap.key);
@@ -795,7 +1059,7 @@ export class BoardControls {
     // the whole selection taken hold of: its cards, its loose pins, and its
     // strings' loose ends and joints
     #moveStart(pt, raw) {
-        const from = Object.fromEntries(this.selected().map((s) => [s.key, { x: s.x, y: s.y }]));
+        const from = Object.fromEntries(this.selected().filter((s) => !s.locked).map((s) => [s.key, { x: s.x, y: s.y }]));
         const pins = Object.fromEntries([...this.pins].map((id) => [id, raw.pins?.[id]]).filter(([, p]) => p && !p.on && Number.isFinite(p.x)).map(([id, p]) => [id, { x: p.x, y: p.y }]));
         const links = Object.fromEntries([...this.links].map((id) => [id, raw.links?.[id]]).filter(([, l]) => l).map(([id, l]) => [id, { aPt: l.a ? null : l.aPt ?? null, bPt: l.b ? null : l.bPt ?? null, joints: l.joints ?? [] }]));
         this.drag = { kind: 'move', start: pt, from, pins, links };
@@ -840,6 +1104,8 @@ export class BoardControls {
         if (!d || !pt) return null;
         if (d.kind === 'box' || d.kind === 'string') {
             d.to = pt;
+            // (a new string's end: the pin within reach, shown by the reticle)
+            if (d.kind === 'string') d.snap = this.#grabAt(pt, { pinsOnly: true });
             return { marks: true };
         }
         if (d.kind === 'mbox') {
@@ -847,8 +1113,20 @@ export class BoardControls {
             return { marks: true };
         }
         if (d.kind === 'mmove' || d.kind === 'msize' || d.kind === 'mturn') {
+            // (Luke, 2026-10-03: shown as it goes) the strokes taken off where
+            // they were, once; then drawn over the board where they are going
+            // (marks().moving), the board left as it is until they are let go
             d.patch = this.#strokesPatch(d, pt);
-            return d.patch;
+            if (!d.lifted) {
+                d.lifted = true;
+                const off = { marks: {}, scraps: {} };
+                for (const st of d.chosen) {
+                    if (st.where.startsWith('@')) (off.scraps[st.where.slice(1)] ??= { marks: {} }).marks[st.id] = null;
+                    else (off.marks[st.where] ??= {})[st.id] = null;
+                }
+                return off;
+            }
+            return { marks: true };
         }
         if (d.kind === 'mark') {
             const n = d.pts.length;
@@ -890,10 +1168,10 @@ export class BoardControls {
         if (d.kind === 'mbox') {
             if (!d.to) return { select: true };
             const B = { x0: Math.min(d.start.x, d.to.x), y0: Math.min(d.start.y, d.to.y), x1: Math.max(d.start.x, d.to.x), y1: Math.max(d.start.y, d.to.y) };
+            // (any stroke it touches, not only those wholly in it: Luke 2026-10-06)
             for (const st of this.#strokes()) {
                 if (!mayRubOut(st.by, this.host.user())) continue;
-                const b = strokeBox(st.pts, st.w);
-                if (b.x0 >= B.x0 && b.x1 <= B.x1 && b.y0 >= B.y0 && b.y1 <= B.y1) this.markSel.add(st.key);
+                if (strokeMeets(st.pts, st.w, B)) this.markSel.add(st.key);
             }
             return { select: true };
         }
@@ -906,10 +1184,17 @@ export class BoardControls {
             const f = this.from;
             this.from = null;
             if (!d.to || !f) return { select: true };
+            if (d.snap) d.to = { x: d.snap.x, y: d.snap.y };
             const h = this.hit(d.to);
             const end = h && PINS.has(h.kind) && h.kind !== 'pin' && d.quick ? this.#shared(h, d.raw ?? JSON.parse(JSON.stringify(this.host.raw() ?? {}))) : this.#endAt(d.to, h, f.key);
             if ((f.pin && f.pin === end.pin) || (f.key && f.key === end.key && !end.pin)) return { select: true };
-            return this.#stringAction(f, end, d.quick ? { quick: true, kind: d.linkKind, color: d.linkColor ?? null } : {});
+            if (d.quick) {
+                this.chaining = true;
+                this.chainKind = d.linkKind ?? null;
+                this.chainColor = d.linkColor ?? null;
+                this.chainState = d.linkState ?? null;
+            }
+            return this.#stringAction(f, end, d.quick ? { quick: true, chain: true, kind: d.linkKind, color: d.linkColor ?? null, state: d.linkState ?? null } : {});
         }
         if (d.kind === 'box') {
             if (!d.to) return { select: true };
@@ -964,16 +1249,26 @@ export class BoardControls {
             const t = d.target;
             if (t?.type === 'part' && d.anchor) return this.#textBoxPatch(t, raw, pt, d.anchor);
             if (t?.type === 'part') return this.#partPatch(t, raw, d.kind === 'size' ? { f } : { delta });
+            if (t?.type === 'bit') return { bits: { [t.bit.id]: d.kind === 'size' ? { w: Math.max(6, Math.round(t.bit.w * f)) } : { r: Math.round(t.bit.r + delta) } } };
             if (t?.type === 'pin') {
                 const p = raw.pins?.[t.pin.id] ?? {};
-                return { pins: { [t.pin.id]: d.kind === 'size' ? { s: clampS((p.s ?? t.pin.sEff ?? 1) * f, this.#pinFloor(t.pin)) } : { r: Math.round((p.r ?? (t.pin.rot / DEGREE)) + delta) } } };
+                // (no pin grown past three times itself: a head's handles lie
+                // close, and a short pull was making it thirteen times)
+                const s0 = p.s ?? t.pin.sEff ?? 1;
+                return { pins: { [t.pin.id]: d.kind === 'size' ? { s: clampS(Math.min(Math.max(3, s0), s0 * f), this.#pinFloor(t.pin)) } : { r: Math.round((p.r ?? (t.pin.rot / DEGREE)) + delta) } } };
             }
             if (d.kind === 'size') return { scraps: Object.fromEntries(Object.entries(d.sizes).map(([k, s]) => [k, { s: clampS(s * f, this.#scrapFloor(k)) }])) };
             return { scraps: Object.fromEntries(Object.entries(d.turns).map(([k, r]) => [k, { r: Math.round(r + delta) }])) };
         }
+        if (d.kind === 'bit') return { bits: { [d.bit.id]: { x: Math.round(d.bit.x + dx), y: Math.round(d.bit.y + dy) } } };
         if (d.kind === 'part') {
             const { scrap, id } = d.part;
             const had = raw.scraps?.[scrap.key]?.parts ?? {};
+            // (a strip of tape or a web dragged off its card is the board's
+            // own from then on: Luke 2026-10-06; the picture and the writing
+            // stay on the card)
+            const off = this.gm && !pointInPoly(pt, scrap.layout.hull) ? this.#offCard(scrap, id, pt, raw) : null;
+            if (off) return off;
             const parts = { ...had, [id]: { ...(had[id] ?? {}), ...onPaper(scrap, pt) } };
             return { scraps: { [scrap.key]: { parts } } };
         }
@@ -996,11 +1291,12 @@ export class BoardControls {
             const rl = rawLink(d.link.id);
             const joints = [...(rl.joints ?? [])];
             joints.splice(d.ji, 0, { pin: d.pinId });
-            // (the string's own kind of pin; stuck in a note or writing it lands on)
-            const tex = d.link.ends[1]?.tex ?? d.link.ends[0]?.tex;
+            // (the string's own kind of pin and size; stuck in a note or writing it lands on)
+            const tex = d.link.pinTex ?? d.link.ends[0]?.tex;
+            const sz = d.link.pinS ? { s: d.link.pinS } : {};
             const under = this.#scrapUnder(pt);
             const on = under && (under.type === 'note' || under.type === 'scrawl') ? under : null;
-            const pin = on ? { tex, on: on.key, at: onPaper(on, pt) } : { tex, ...pt0(pt) };
+            const pin = on ? { tex, ...sz, on: on.key, at: onPaper(on, pt) } : { tex, ...sz, ...pt0(pt) };
             return { link: [d.link.id, { joints, pulls: pullsSplit(rl.pulls, d.span) }], pins: { [d.pinId]: pin } };
         }
         const { h, T } = d;
@@ -1128,9 +1424,9 @@ export class BoardControls {
             const d = Math.hypot(pt.x - p.x, pt.y - p.y);
             if (d <= reach && (!best || d < best.d)) best = { d, x: p.x, y: p.y, ...t };
         };
-        for (const p of view?.pins ?? []) if (p.pulls?.length && !minePins.has(p.id)) take(p, { kind: 'pin', pinId: p.id });
+        for (const p of view?.pins ?? []) if (p.pulls?.length && !minePins.has(p.id) && this.minePin(p.id)) take(p, { kind: 'pin', pinId: p.id });
         for (const l of view?.links ?? []) {
-            if (mine.has(l.id)) continue;
+            if (mine.has(l.id) || !this.mine(l)) continue;
             (l.ends ?? []).forEach((e, side) => { if (!e.shared) take(e, { kind: 'end', link: l, side }); });
             for (const j of l.joints ?? []) if (!j.shared) take(j, { kind: 'joint', link: l, idx: j.idx });
         }
@@ -1197,9 +1493,9 @@ export class BoardControls {
             ji = d.link.waypoints.slice(1, d.span + 1).filter((w) => w.kind === 'joint').length;
             endPin = d.ids.p1;
             spanCut = d.span + 1;
-            pins[d.ids.p1] = { tex: d.link.ends[1]?.tex ?? d.link.ends[0]?.tex, ...pt0(d.at) };
+            pins[d.ids.p1] = { tex: d.link.pinTex ?? d.link.ends[0]?.tex, ...(d.link.pinS ? { s: d.link.pinS } : {}), ...pt0(d.at) };
         }
-        const far = this.#pinAt(pt, { tex: d.link.ends[1]?.tex ?? d.link.ends[0]?.tex });
+        const far = this.#pinAt(pt, { tex: d.link.pinTex ?? d.link.ends[0]?.tex, s: d.link.pinS });
         pins[d.ids.p2] = far;
         const before = joints.slice(0, ji);
         const after = joints.slice(d.joint !== undefined ? ji + 1 : ji);
@@ -1400,6 +1696,7 @@ export class BoardControls {
         const raw = d.raw;
         const view = this.host.view();
         const patch = { marks: {}, scraps: {} };
+        d.preview = [];
         const f = d.kind === 'msize' ? Math.max(0.05, Math.hypot(pt.x - d.c.x, pt.y - d.c.y) / d.d0) : 1;
         const turn = d.kind === 'mturn' ? Math.atan2(pt.y - d.c.y, pt.x - d.c.x) - d.a0 : 0;
         const cs = Math.cos(turn);
@@ -1424,7 +1721,8 @@ export class BoardControls {
                 }
                 pts.push(Math.round(x * 10) / 10, Math.round(y * 10) / 10);
             }
-            const moved = { by: st.by, c: st.c, w: Math.max(0.5, st.w * f), ...(st.o === undefined ? {} : { o: st.o }), pts };
+            const moved = { by: st.by, c: st.c, w: Math.max(0.5, st.w * f), ...(st.o === undefined ? {} : { o: st.o }), ...(st.b === undefined ? {} : { b: st.b }), pts };
+            (d.preview ??= []).push(moved);
             // where it goes now
             const vs = st.card ? view.scraps.find((s) => s.key === st.card) : null;
             let to = st.where;
@@ -1488,6 +1786,87 @@ export class BoardControls {
         return { scrap: { w: s ? (s.layout.box?.w ?? 200) / (s.s ?? 1) : 200 } };
     }
 
+    // (a player's press on a string, a pin, or anything else of no use to them
+    // lying over a card of their own takes the card; Luke 2026-10-03, a note
+    // with a string across it wouldn't move)
+    #ownCardUnder(pt, h) {
+        if (this.editor || h?.kind === 'scrap') return null;
+        const s = this.#scrapUnder(pt);
+        return s && this.may(s) ? s : null;
+    }
+
+    // An editor's right-click on a card: locked to the sheet, or let go
+    #lockAt(pt) {
+        if (!this.editor) return null;
+        const h = this.hit(pt);
+        const card = h?.kind === 'scrap' ? h.item : h?.kind === 'scrapPin' ? h.scrap : this.#scrapUnder(pt);
+        return card ? { do: 'patch', patch: this.lockPatch(card.key) } : null;
+    }
+
+    // a card locked to the sheet, or let go
+    lockPatch(key) {
+        const s = this.host.view()?.scraps.find((x) => x.key === key);
+        return s ? { scraps: { [key]: { locked: !s.locked } } } : null;
+    }
+
+    // A card's own piece taken off (Luke, 2026-10-06): its picture and its
+    // writing never (they can't be made again)
+    dropPatch(key, id) {
+        const rs = this.host.raw()?.scraps?.[key];
+        if (!rs || !id || id === 'clip' || id === 'text') return null;
+        return { scraps: { [key]: { drop: [...new Set([...(rs.drop ?? []), id])] } } };
+    }
+
+    // A card's strip of tape or web off it, the board's own (a loose piece
+    // where it was dropped, as it lay), its card without it; null for
+    // anything else (its picture, its writing, a pin through its clipping)
+    #offCard(scrap, id, pt, raw) {
+        const L = scrap.layout;
+        const t = (L.tapes ?? []).find((x) => x.id === id);
+        const e = t ? null : (L.extras ?? []).find((x) => x.id === id && x.thing);
+        const piece = t ? { tex: t.tex, w: t.w, rot: t.rot, flip: false, alpha: 0.92 } : e ? { tex: e.tex, w: e.w, rot: e.rot, flip: Boolean(e.flip), alpha: e.alpha ?? 1 } : null;
+        if (!piece) return null;
+        const rs = raw.scraps?.[scrap.key] ?? {};
+        const parts = { ...(rs.parts ?? {}) };
+        delete parts[id];
+        const bitId = customKey('bit', raw.bits ?? {});
+        return {
+            scraps: { [scrap.key]: { drop: [...new Set([...(rs.drop ?? []), id])], parts } },
+            bits: { [bitId]: { tex: piece.tex, x: Math.round(pt.x), y: Math.round(pt.y), w: Math.round(piece.w), r: Math.round(piece.rot / DEGREE), flip: piece.flip, alpha: piece.alpha } },
+        };
+    }
+
+    // the selected piece of a card taken off (Delete), or a loose piece of
+    // the board's own; null for anything else
+    pieceOut() {
+        if (this.editor && this.bit && this.gm) {
+            const patch = { bits: { [this.bit]: null } };
+            this.bit = null;
+            return patch;
+        }
+        if (!this.editor || !this.part) return null;
+        const patch = this.dropPatch(this.part.key, this.part.id);
+        if (patch) this.part = null;
+        return patch;
+    }
+
+    // the card's piece under a point (the topmost card's first: a card over
+    // another hides its pieces), never its picture or its writing
+    #pieceAt(pt) {
+        if (!this.editor) return null;
+        const scraps = this.host.view()?.scraps ?? [];
+        for (let i = scraps.length - 1; i >= 0; i--) {
+            const s = scraps[i];
+            if (s.layout.bare) continue;
+            for (const p of s.layout.parts ?? []) if (p.id !== 'clip' && p.id !== 'text' && pointInPoly(pt, frameOf(p))) return { scrap: s, id: p.id };
+            // (rings, ink frames, and the paper under it are the card's own:
+            // never taken off; Luke 2026-10-06)
+            const onCard = pointInPoly(pt, s.layout.hull);
+            if (onCard) return null;
+        }
+        return null;
+    }
+
     #scrapUnder(pt, not) {
         const scraps = this.host.view()?.scraps ?? [];
         for (let i = scraps.length - 1; i >= 0; i--) {
@@ -1529,10 +1908,19 @@ export class BoardControls {
         return Object.keys(out).length ? { scraps: out } : null;
     }
 
-    // What taking the selection off the board removes: its cards (with the
-    // strings tied to them), its pins, and its strings
+    // What Delete takes off the board: its pins and its strings. Cards never
+    // (Luke, 2026-10-06: text and pictures can't be made again): they come
+    // off by their right-click menu, into the bin; `cards` says which were
+    // left on.
     removal() {
-        return { scraps: [...this.selection], pins: [...this.pins], links: [...this.links] };
+        if (!this.editor) {
+            const links = this.host.view()?.links ?? [];
+            return { scraps: [], pins: [...this.pins].filter((id) => this.minePin(id)), links: [...this.links].filter((id) => this.mine(links.find((l) => l.id === id))), cards: [] };
+        }
+        // (a card's picture or writing picked: the card itself, asked first,
+        // as they never come off alone; Luke 2026-10-06)
+        const whole = this.part && (this.part.id === 'clip' || this.part.id === 'text') ? [this.part.key] : [];
+        return { scraps: [], pins: [...this.pins], links: [...this.links], cards: [...new Set([...this.selection, ...whole])] };
     }
 
     /* -------------------------------------------- */
@@ -1550,8 +1938,9 @@ export class BoardControls {
     // two strings meet end to end goes, the two made one. Null when it is
     // neither (a pin holding more, or nothing).
     smooth() {
-        if (!this.editor || this.pins.size !== 1) return null;
+        if (this.pins.size !== 1) return null;
         const pinId = [...this.pins][0];
+        if (!this.minePin(pinId)) return null;
         const raw = this.host.raw() ?? {};
         const refs = this.#refsOf(pinId);
         if (refs.length === 1 && !('side' in refs[0])) {
@@ -1591,11 +1980,12 @@ export class BoardControls {
         const t = this.#target();
         const raw = this.host.raw() ?? {};
         if (t.type === 'part') return this.#partPatch(t, raw, ctrl ? { delta: step * 5 } : { f: step > 0 ? 0.95 : 1.05 });
+        if (t.type === 'bit') return { bits: { [t.bit.id]: ctrl ? { r: Math.round(t.bit.r + step * 5) } : { w: Math.max(6, Math.round(t.bit.w * (step > 0 ? 0.95 : 1.05))) } } };
         if (t.type === 'pin') {
             const p = raw.pins?.[t.pin.id] ?? {};
             return { pins: { [t.pin.id]: ctrl ? { r: Math.round((p.r ?? (t.pin.rot / DEGREE)) + step * 5) } : { s: clampS((p.s ?? t.pin.sEff ?? 1) * (step > 0 ? 0.95 : 1.05), this.#pinFloor(t.pin)) } } };
         }
-        const sel = this.selected();
+        const sel = this.selected().filter((s) => !s.locked);
         if (ctrl) return { scraps: Object.fromEntries(sel.map((s) => [s.key, { r: turnOf(s) + step * 5 }])) };
         return { scraps: Object.fromEntries(sel.map((s) => [s.key, { s: clampS((s.s ?? 1) * (step > 0 ? 0.95 : 1.05), this.#scrapFloor(s.key)) }])) };
     }

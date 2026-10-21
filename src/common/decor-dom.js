@@ -21,7 +21,11 @@
 //   activateListeners: this._decor.attach(SheetDecor.formOf(html));
 //   close: this._decor.stop();
 import './decor.sass';
-import { decorLayout, decorUV } from './decor';
+import { decorLayout, decorUV, hoverAnchor } from './decor';
+
+// an element that shows art of its own: a gear row with art, the character
+// sheet's art panes, a banner or item header with art
+const ART_PLACE = '.item.preview.has-art, .art-pane, .has-art';
 
 // what takes a click itself (so a click there never opens the gallery)
 const CLICKABLE = 'a, button, input, select, textarea, label, summary, option, [data-action], [contenteditable=""], [contenteditable="true"], .editor, .ProseMirror, .item, .clickable, [draggable="true"]';
@@ -108,13 +112,18 @@ export class SheetDecor {
             for (const el of form.querySelectorAll('[data-anchor]')) this.observer.observe(el);
         }
 
-        // hover behaviour: while the pointer is inside a decoration's anchor
+        // hover behaviour: while the pointer is inside a decoration's anchor,
+        // the innermost one only, and none while it is over something with
+        // art of its own (a gear row, a banner pane), which lifts instead
+        // (2026-10-03, Luke; decor.js hoverAnchor)
         form.addEventListener('mouseover', ev => {
-            const keys = new Set();
+            const decorated = new Set([...form.querySelectorAll('.heart-decor')].map(img => img.dataset.anchorOf));
+            const path = [];
             for (let el = ev.target; el && el !== form.parentElement; el = el.parentElement) {
-                if (el.dataset?.anchor) keys.add(el.dataset.anchor);
+                path.push({ anchor: el.dataset?.anchor, art: el.matches?.(ART_PLACE) ?? false });
             }
-            form.querySelectorAll('.heart-decor').forEach(img => img.classList.toggle('hov', keys.has(img.dataset.anchorOf)));
+            const hot = hoverAnchor(path, decorated);
+            form.querySelectorAll('.heart-decor').forEach(img => img.classList.toggle('hov', img.dataset.anchorOf === hot));
         });
         form.addEventListener('mouseleave', () => {
             form.querySelectorAll('.heart-decor.hov').forEach(img => img.classList.remove('hov'));

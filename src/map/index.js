@@ -15,9 +15,14 @@ import { ScrapboardLayer, boardControls } from './scrapboard/layer.js';
 import { loadBoardLook, reloadBoardLook } from './scrapboard/look.js';
 import {
     isBoardScene, boardOf, createBoardScene, setBoardScene, setScrap, setLink, addScrap, addLink, removeScrap,
-    removeLink, exportBoard, importBoard, restoreBackup, undo, isPlayersBoard, ownersOf, tidyBoardScene,
+    removeLink, exportBoard, importBoard, restoreBackup, undo, redo, isPlayersBoard, ownersOf, tidyBoardScene,
 } from './scrapboard/api.js';
 import { registerBoardSettings, registerBoardRelay, handOf, playersBoardDialog } from './scrapboard/notes.js';
+import { registerRailSettings, syncRail } from './scrapboard/rail.js';
+import { keepBackup } from './scrapboard/backups.js';
+
+// (the scenes whose board was copied as this session found it)
+const kept = new Set();
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const layer = () => canvas?.heartBoard;
@@ -75,6 +80,11 @@ function registerHooks() {
 
     Hooks.on('canvasReady', async () => {
         await convertOldMap(canvas.scene);
+        // (a copy of the board as the session found it: the GM's, once a scene)
+        if (game.user.isGM && isBoardScene(canvas.scene) && !kept.has(canvas.scene.id)) {
+            kept.add(canvas.scene.id);
+            await keepBackup(canvas.scene, foundry.utils.deepClone(boardOf(canvas.scene)), { force: true, why: 'start' });
+        }
         await tidyBoardScene(canvas.scene);
         layer()?.refresh();
         // the Heart Map control shows on scrapboard scenes only, and is the
@@ -85,7 +95,10 @@ function registerHooks() {
             canvas.tokens?.releaseAll();
             layer()?.activate();
         } else ui.controls?.initialize();
+        // (the Heart Map's own toolbar, when it is the one in use)
+        syncRail();
     });
+    Hooks.on('canvasTearDown', () => document.getElementById('heart-board-rail')?.remove());
 
     Hooks.on('updateScene', (scene, changes) => {
         if (scene.id !== canvas?.scene?.id || !foundry.utils.hasProperty(changes, 'flags.heart')) return;
@@ -109,6 +122,7 @@ function registerHooks() {
     // the marker's palette shows while the Marker is in hand
     Hooks.on('renderSceneControls', () => {
         if (onBoard()) layer()?.syncPalette();
+        syncRail();
     });
 
     // the selection's marks keep their width on screen
@@ -182,7 +196,23 @@ registerHooks();
 
 export function initialise() {
     CONFIG.Canvas.layers.heartBoard = { layerClass: ScrapboardLayer, group: 'interface' };
+    // undo and redo on the board (Luke, 2026-10-06): each user's own edits,
+    // only while the board's tools are in hand (else Foundry's own)
+    const { CONTROL, SHIFT } = KeyboardManager.MODIFIER_KEYS;
+    game.keybindings.register('heart', 'boardUndo', {
+        name: 'heart.board.key-undo',
+        editable: [{ key: 'KeyZ', modifiers: [CONTROL] }],
+        precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY,
+        onDown: () => { const l = layer(); if (!l?.active || !l.isBoard) return false; l.history('undo'); return true; },
+    });
+    game.keybindings.register('heart', 'boardRedo', {
+        name: 'heart.board.key-redo',
+        editable: [{ key: 'KeyZ', modifiers: [CONTROL, SHIFT] }, { key: 'KeyY', modifiers: [CONTROL] }],
+        precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY,
+        onDown: () => { const l = layer(); if (!l?.active || !l.isBoard) return false; l.history('redo'); return true; },
+    });
     registerBoardSettings();
+    registerRailSettings();
     registerBoardRelay();
     game.heart.board = {
         create: createBoardScene,
@@ -206,6 +236,7 @@ export function initialise() {
         import: importBoard,
         restoreBackup,
         undo,
+        redo,
         handOf,
         // the GM sees the board as players do (also the Player view tool)
         preview: (on = true) => layer()?.setPreview(on),

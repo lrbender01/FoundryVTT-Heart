@@ -121,9 +121,16 @@ export const DEFAULT_LOOK = {
         // the ledger's printed rules: a red double margin line down the left and a
         // rule under the head, `o` % strong (0: none)
         ledger: { o: 30 },
+        // the pages pasted on it (the newsprint; Luke, 2026-10-06: browned and
+        // quieted so they lie in the sheet, not over it): how far toward the
+        // sheet's own darkness (%), how browned (sepia %), their contrast (%),
+        // and how far their edges are soaked into the sheet (board px)
+        pages: { darken: 55, sepia: 55, contrast: 72, soak: 36 },
         // the sheet's edge: `margin` px of table around it, torn `jag` px,
-        // burnt `burn` px in (thin: it only marks where the sheet ends)
-        edge: { margin: 10, jag: 3, burn: 12 },
+        // burnt `burn` px in (thin: it only marks where the sheet ends);
+        // `tear` %: torn deeper and less evenly, bitten, a corner or two gone
+        // (Luke, 2026-10-06, the raggedness mock's A)
+        edge: { margin: 10, jag: 3, burn: 12, tear: 100 },
     },
     // firelight: warm light from below the sheet (the party's fire)
     fire: 45,
@@ -146,6 +153,13 @@ export const DEFAULT_LOOK = {
         paper: ['#241a16', '#1c2a44', '#5c1610', '#3a3631', '#4a2f1c', '#7a2414', '#7a3a18', '#5e4718', '#33421f', '#24443b', '#272a52', '#3e2546'],
         // paints and chalks on the dark sheet, worn into it
         sheet: ['#8c8473', '#7a2a1f', '#7d6029', '#3d5266', '#66615a', '#5c1714', '#844020', '#857337', '#4a5733', '#375a4f', '#343857', '#503755', '#744c4c'],
+        // the brush's paints, and coloured strings' (Luke, 2026-10-03: much
+        // brighter than the sheet's own inks, the players' canvas; still the
+        // Heart's: bone, blood, rust, ochre, moss, verdigris, sky, indigo,
+        // violet, rose, iron grey, soot, and (2026-10-06) a brown the
+        // brightness steps take from the paper's own to a light tan; the grey
+        // darker, clear of the bone)
+        marker: ['#e9dfc8', '#d4483a', '#e07a3a', '#e3b54a', '#c9c75a', '#8fbf5a', '#4fb3a0', '#6aa6e0', '#7a78e0', '#b07ad8', '#e070a0', '#6f6a65', '#3a3431', '#9a6a40'],
         auto: 4,
     },
     // colour grading, so book art sits in the same world as the paper:
@@ -159,7 +173,8 @@ export const DEFAULT_LOOK = {
         rail: { texs: ['rope/violet_1', 'rope/violet_2', 'rope/violet_3', 'rope/violet_4'] },
         path: { texs: ['rope/pale_1', 'rope/pale_2', 'rope/pale_3'] },
     },
-    string: { w: 4, slack: 100 },
+    // (Luke, 2026-10-03: half again as thick, more prominent)
+    string: { w: 6, slack: 100 },
     // small, so a campaign's twenty-odd places, their delves, and their tags
     // all fit with room to read
     scrap: { w: 200 },
@@ -172,7 +187,9 @@ export const DEFAULT_LOOK = {
     // and soot and gunpowder and blood from the heart all over everything")
     // stitches: seams sewn along the folds; mends: strips of tape over them
     // (none by default: Luke, 2026-10-02, tape stays off the background)
-    grime: { scraps: 60, sheet: 55, blood: 45, stitches: 70, mends: 0 },
+    // damp: tide lines in from the sheet's edges, water rings, and foxing
+    // (Luke, 2026-10-06, the raggedness mock's D); blood up (2026-10-06)
+    grime: { scraps: 60, sheet: 55, blood: 75, stitches: 70, mends: 0, damp: 60 },
     // the background's decorations (same shape as a board's decor): drawn
     // with the sheet, under everything on the board, the same on every map;
     // the board's own decor is the scene's foreground
@@ -199,8 +216,17 @@ export function normalizeLook(json) {
         };
     }
     const p = j.pools ?? {};
+    // each pin's size and turn, as tuned in the editor (Look, Pins)
+    const pinTune = {};
+    for (const [k, t] of Object.entries(j.pinTune ?? {})) {
+        const e = {};
+        if (Number.isFinite(t?.s)) e.s = clamp(t.s, 0.2, 4);
+        if (Number.isFinite(t?.r)) e.r = clamp(t.r, -180, 180);
+        if (Object.keys(e).length) pinTune[String(k)] = e;
+    }
+    tunePins(pinTune);
     return {
-        v: LOOK_VERSION, w, h, library,
+        v: LOOK_VERSION, w, h, library, pinTune,
         sheet: normalizeSheet(j.sheet ?? {}, D.sheet),
         fire: clamp(num(j.fire, D.fire), 0, 100),
         ropes: Object.fromEntries(['delve', 'rail', 'path'].map(k => [k, { texs: strList(j.ropes?.[k]?.texs, D.ropes[k].texs) }])),
@@ -216,10 +242,10 @@ export function normalizeLook(json) {
         grade: { clip: grade(j.grade?.clip, D.grade.clip), art: grade(j.grade?.art, D.grade.art), paper: grade(j.grade?.paper, D.grade.paper), panel: grade(j.grade?.panel, D.grade.panel) },
         ink: {
             text: color(j.ink?.text, color(D.ink.text)), scrawl: color(j.ink?.scrawl, color(D.ink.scrawl)), auto: clamp(num(j.ink?.auto, D.ink.auto), 1, MAX_INKS),
-            paper: inks(j.ink?.paper, D.ink.paper), sheet: inks(j.ink?.sheet, D.ink.sheet),
+            paper: inks(j.ink?.paper, D.ink.paper), sheet: inks(j.ink?.sheet, D.ink.sheet), marker: inks(j.ink?.marker, D.ink.marker),
         },
         scrap: { w: clamp(num(j.scrap?.w, D.scrap.w), 120, 800) },
-        grime: Object.fromEntries(['scraps', 'sheet', 'blood', 'stitches', 'mends'].map((k) => [k, clamp(num(j.grime?.[k], D.grime[k]), 0, 100)])),
+        grime: Object.fromEntries(['scraps', 'sheet', 'blood', 'stitches', 'mends', 'damp'].map((k) => [k, clamp(num(j.grime?.[k], D.grime[k]), 0, 100)])),
         pools: { papers: strList(p.papers, []), notes: strList(p.notes, []), pins: strList(p.pins, []), tapes: strList(p.tapes, []), stains: strList(p.stains, []), ends: Object.fromEntries(['delve', 'rail', 'path'].map(k => [k, strList(p.ends?.[k], [])])) },
         decor: normalizeDecor(j.decor),
     };
@@ -229,6 +255,9 @@ const grade = (g, d) => ({ sat: clamp(num(g?.sat, d.sat), 0, 200), sepia: clamp(
 
 // How big each handwriting face writes at the same size (their x-heights
 // differ a lot); 1 = as set
+// The typewriter (Luke, 2026-10-03): a card typed instead of handwritten
+// (`typed`), the GM's and a Witness's to choose
+export const TYPEWRITER = 'Special Elite';
 export const HAND_SCALE = {
     'Reenie Beanie': 1.2, 'Rock Salt': 0.72, 'Nothing You Could Do': 0.9, 'Homemade Apple': 0.78, 'Caveat': 1.02,
     'Covered By Your Grace': 1.02, 'Zeyada': 1.12, 'Dawning of a New Day': 1.0, 'La Belle Aurore': 0.9,
@@ -238,19 +267,65 @@ export const HAND_SCALE = {
 // Each pin's default size against the others (texture stem -> factor), set
 // by eye so pushpin and tack heads come out alike, nails a little smaller,
 // and the long pins by their length; 1 = as the scrap sizes it
-export const PIN_SCALE = {
-    // iron tacks: heads about 26 px at the default scrap size
-    fixture_dark_tack_head_flat: 0.76, fixture_dark_thumbtack_side: 0.76, fixture_grey_tack_head_round: 0.76,
-    fixture_grey_tack_small: 0.72, fixture_iron_nail_single: 0.72, fixture_iron_pushpin_dark: 0.72,
-    // coloured pushpins: heads about 22 px
-    fixture_red_pushpin_long: 1.0, fixture_violet_pushpin_patterned: 0.65,
-    // left out of the pools, sized in case one is picked by hand
-    fixture_red_pushpin_short: 1.0, fixture_bone_spike_pin: 0.8, fixture_iron_t_pin: 0.9, fixture_iron_nail_driven: 1.2,
+// (Luke, 2026-10-06: every head the same size, half the pin's base width:
+// each factor half over its head's measured share of its image's width)
+// (2026-10-06, second look: the short red pushpin's head was two thirds the
+// others', the bone spike a speck, and two nails never measured)
+const PIN_SCALE0 = {
+    fixture_dark_tack_head_flat: 0.749, fixture_dark_thumbtack_side: 0.701, fixture_grey_tack_head_round: 0.75,
+    fixture_grey_tack_small: 0.702, fixture_iron_nail_single: 0.758, fixture_iron_pushpin_dark: 0.687,
+    fixture_red_pushpin_long: 1.099, fixture_violet_pushpin_patterned: 0.698, fixture_red_pushpin_short: 1.9,
+    fixture_iron_nails_three_1_crop: 0.833, fixture_iron_nails_three_2_crop: 0.873, fixture_brass_pushpins_pair_crop: 0.843,
+    fixture_iron_t_pin: 0.743,
+    // (no head to speak of, or lying on its side: sized by eye)
+    fixture_bone_spike_pin: 1.5, fixture_iron_nail_driven: 1.2, fixture_bent_nails_pair: 1.1, fixture_iron_nails_three_3_crop: 0.85,
 };
+export const PIN_SCALE = { ...PIN_SCALE0 };
+// How far each pin's drawing leans from upright (degrees, its head to its
+// point; measured): turned back by this, every pin stands the same way before
+// its string's pull tips it (Luke, 2026-10-06)
+const PIN_LEAN0 = {
+    fixture_dark_tack_head_flat: -7.8, fixture_dark_thumbtack_side: -20.5, fixture_grey_tack_head_round: -3.5,
+    fixture_grey_tack_small: 15.4, fixture_iron_nail_single: 18.1, fixture_iron_pushpin_dark: 8.9,
+    fixture_iron_nails_three_1_crop: 4.5, fixture_iron_nails_three_2_crop: -2.9, fixture_brass_pushpins_pair_crop: -2.3,
+    fixture_red_pushpin_long: -12.7, fixture_red_pushpin_short: -42, fixture_violet_pushpin_patterned: -4.1,
+    fixture_bone_spike_pin: -8.4, fixture_iron_t_pin: -2.9,
+};
+export const PIN_LEAN = { ...PIN_LEAN0 };
+// The look's own sizes and turns for any pin (Luke, 2026-10-06: tuned by eye
+// in the editor's Look, Pins), over the measured ones above. normalizeLook
+// sets them, so both hosts draw every pin as the look says.
+export function tunePins(tune = {}) {
+    for (const k of Object.keys(PIN_SCALE)) delete PIN_SCALE[k];
+    for (const k of Object.keys(PIN_LEAN)) delete PIN_LEAN[k];
+    Object.assign(PIN_SCALE, PIN_SCALE0);
+    Object.assign(PIN_LEAN, PIN_LEAN0);
+    for (const [k, t] of Object.entries(tune ?? {})) {
+        if (Number.isFinite(t?.s)) PIN_SCALE[k] = t.s;
+        if (Number.isFinite(t?.r)) PIN_LEAN[k] = t.r;
+    }
+}
+// (a pin's texture stem, the key of its size and turn)
+export const pinStem = (id) => String(id ?? '').split('__').pop();
+export const pinUpright = (id) => ((PIN_LEAN[String(id ?? '').split('__').pop()] ?? 0) * Math.PI) / 180;
+
+// A string's pins in its colour (Luke, 2026-10-06): a pin on a string given a
+// colour of its own is that colour (the pin's light and shade kept); a plain
+// iron pin chosen for a delve or the Vermissian is painted their red or violet
+export const KIND_TINT = { delve: 0xc0442f, rail: 0x8f86da, path: null };
+const PLAIN_PIN = (tex) => !/red_|violet_|brass_|bone_/.test(String(tex ?? ''));
+export function pinTint(look, l, tex) {
+    if (l?.color !== null && l?.color !== undefined) return look.ink.marker?.[l.color] ?? null;
+    const t = KIND_TINT[l?.kind];
+    return t !== null && t !== undefined && PLAIN_PIN(tex) && (look.pools.ends?.[l.kind] ?? []).includes(tex) ? t : null;
+}
 // A pin stands mostly upright (Luke, 2026-10-02): it turns only part of the
 // way with the paper it is in, plus a little of its own tilt (radians)
 export const UPRIGHT = 0.3;
 export const pinTurn = (paperRot, own = 0) => paperRot * UPRIGHT + own;
+
+// a landmark's clipping's area, against the card's unit squared (its shape the art's)
+const CLIP_AREA = 0.42;
 
 export const pinScale = (id) => PIN_SCALE[String(id ?? '').split('__').pop()] ?? 1;
 
@@ -272,7 +347,8 @@ function normalizeSheet(s, D) {
         })),
         folds: { cols: clamp(Math.round(num(s.folds?.cols, D.folds.cols)), 1, 8), rows: clamp(Math.round(num(s.folds?.rows, D.folds.rows)), 1, 8), o: clamp(num(s.folds?.o, D.folds.o), 0, 100), wear: clamp(num(s.folds?.wear, D.folds.wear), 0, 100) },
         ledger: { o: clamp(num(s.ledger?.o, D.ledger.o), 0, 100) },
-        edge: { margin: clamp(num(s.edge?.margin, D.edge.margin), 0, 200), jag: clamp(num(s.edge?.jag, D.edge.jag), 0, 60), burn: clamp(num(s.edge?.burn, D.edge.burn), 0, 300) },
+        pages: Object.fromEntries(['darken', 'sepia', 'contrast', 'soak'].map((k) => [k, clamp(num(s.pages?.[k], D.pages[k]), 0, k === 'contrast' ? 150 : k === 'soak' ? 200 : 100)])),
+        edge: { margin: clamp(num(s.edge?.margin, D.edge.margin), 0, 200), jag: clamp(num(s.edge?.jag, D.edge.jag), 0, 60), burn: clamp(num(s.edge?.burn, D.edge.burn), 0, 300), tear: clamp(num(s.edge?.tear, D.edge.tear), 0, 200) },
     };
 }
 
@@ -280,8 +356,82 @@ function normalizeSheet(s, D) {
 export function sheetOutline(look, margin = look.sheet.edge.margin) {
     const w = look.w - margin * 2;
     const h = look.h - margin * 2;
-    return place(tornRect(w, h, { seed: 'sheet', jag: look.sheet.edge.jag, step: 22 }), look.w / 2, look.h / 2, 0);
+    const tear = (look.sheet.edge.tear ?? 0) / 100;
+    if (!tear) return place(tornRect(w, h, { seed: 'sheet', jag: look.sheet.edge.jag, step: 22 }), look.w / 2, look.h / 2, 0);
+    return place(raggedRect(w, h, { seed: 'sheet', jag: look.sheet.edge.jag, tear }), look.w / 2, look.h / 2, 0);
 }
+
+// A rectangle torn deep and unevenly (Luke, 2026-10-06): its edges wandering
+// in, bitten here and there, a corner or two torn away
+export function raggedRect(w, h, { seed = 'ragged', jag = 3, tear = 1 } = {}) {
+    const r = rng(`${seed}:ragged`);
+    const C = [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]];
+    const gone = C.map(() => r() < 0.35 * Math.min(1.5, tear));
+    const cut = C.map(() => [(70 + r() * 70) * tear, (60 + r() * 60) * tear]);
+    const pts = [];
+    for (let k = 0; k < 4; k++) {
+        const [x0, y0] = C[k];
+        const [x1, y1] = C[(k + 1) % 4];
+        const len = Math.hypot(x1 - x0, y1 - y0);
+        const tx = (x1 - x0) / len;
+        const ty = (y1 - y0) / len;
+        // (in: toward the sheet's middle)
+        const ix = -ty;
+        const iy = tx;
+        const ph = [r() * 6.28, r() * 6.28, r() * 6.28];
+        const bites = [];
+        for (let i = 0, n = Math.round((2 + r() * 3) * tear * len / 1000); i < n; i++) bites.push({ t: r() * len, w: 45 + r() * 110, d: (16 + r() * 34) * tear });
+        const a = gone[k] ? cut[k][0] : 0;
+        const nk = (k + 1) % 4;
+        const b = len - (gone[nk] ? cut[nk][1] : 0);
+        for (let t = a; t < b; t += 8) {
+            let d = (7 + 5 * Math.sin(t * 0.021 + ph[0]) + 4 * Math.sin(t * 0.067 + ph[1]) + 3 * Math.sin(t * 0.19 + ph[2])) * tear + (r() - 0.5) * 3 * tear + (r() - 0.5) * 2 * jag;
+            for (const q of bites) {
+                const u = (t - q.t) / q.w;
+                if (Math.abs(u) < 1) d += q.d * Math.sqrt(1 - u * u) * (0.85 + r() * 0.3);
+            }
+            d = Math.max(0, d);
+            pts.push(x0 + tx * t + ix * d, y0 + ty * t + iy * d);
+        }
+        // (the next corner torn away: a ragged line across it, sagging in)
+        if (gone[nk]) {
+            const [cx, cy] = C[nk];
+            const [qx, qy] = C[(nk + 1) % 4];
+            const ql = Math.hypot(qx - cx, qy - cy);
+            const E = { x: cx - tx * cut[nk][1], y: cy - ty * cut[nk][1] };
+            const S = { x: cx + ((qx - cx) / ql) * cut[nk][0], y: cy + ((qy - cy) / ql) * cut[nk][0] };
+            const inx = -Math.sign(cx);
+            const iny = -Math.sign(cy);
+            for (let i = 1; i < 12; i++) {
+                const t = i / 12;
+                const sag = Math.sin(t * Math.PI) * 18 * tear;
+                pts.push(E.x + (S.x - E.x) * t + inx * sag * 0.7 + (r() - 0.5) * 9, E.y + (S.y - E.y) * t + iny * sag * 0.7 + (r() - 0.5) * 9);
+            }
+        }
+    }
+    return pts;
+}
+
+// The board's scale (Luke, 2026-10-06): each fold panel is a printer's page,
+// 11 inches tall; board px per inch
+export const pxPerInch = (look) => look.h / Math.max(1, look.sheet.folds.rows) / 11;
+
+// Blood prints at their own size (Luke, 2026-10-06: hand and footprints were
+// far too small and strewn about): each print texture's one print, as a share
+// of its image's longest side (measured), and how long it is in inches
+export const PRINTS = {
+    blood_footprint_b1: { frac: 0.27, inches: 11, kind: 'foot' },
+    blood_footprint_b5: { frac: 0.27, inches: 11, kind: 'foot' },
+    blood_footprints_a1: { frac: 0.33, inches: 10.5, kind: 'trail' },
+    blood_footprints_b1: { frac: 0.31, inches: 10.5, kind: 'trail' },
+    blood_footprints_c1: { frac: 0.35, inches: 10.5, kind: 'trail' },
+    blood_handprint_a1: { frac: 0.26, inches: 7.5, kind: 'hand' },
+    blood_handprint_a3: { frac: 0.23, inches: 7.5, kind: 'hand' },
+    blood_handprint_b1: { frac: 0.2, inches: 3.5, kind: 'fingers' },
+    blood_handprint_b3: { frac: 0.17, inches: 3, kind: 'fingers' },
+    blood_handprints_a1: { frac: 0.41, inches: 9, kind: 'hand' },
+};
+export const printOf = (id) => PRINTS[String(id ?? '').split('__').pop()] ?? null;
 
 // A paper's solid region (fractions of its image: x0, y0, x1, y1), when its
 // size() doesn't say: most papers have a torn or burnt rim about this wide
@@ -291,6 +441,16 @@ export const DEFAULT_SAFE = [0.06, 0.06, 0.94, 0.94];
 export const MIN_COVER = 0.4;
 // the aspect (w / h) of a paper's solid region
 export const safeAspect = (z) => { const sb = z.safe ?? DEFAULT_SAFE; return (z.w * (sb[2] - sb[0])) / (z.h * (sb[3] - sb[1])); };
+
+// A paper as it lies turned `turn` quarters clockwise, mirrored first
+// (`flip`): its size and its solid region (Luke, 2026-10-06)
+export function paperAs(z, turn = 0, flip = false) {
+    let [x0, y0, x1, y1] = z.safe ?? DEFAULT_SAFE;
+    if (flip) [x0, x1] = [1 - x1, 1 - x0];
+    const t = ((turn % 4) + 4) % 4;
+    const safe = t === 0 ? [x0, y0, x1, y1] : t === 1 ? [1 - y1, x0, 1 - y0, x1] : t === 2 ? [1 - x1, 1 - y1, 1 - x0, 1 - y0] : [y0, 1 - x1, y1, 1 - x0];
+    return { ...z, w: t % 2 ? z.h : z.w, h: t % 2 ? z.w : z.h, safe };
+}
 
 // A colour [r, g, b] (0-255) through a grade { sat, sepia, bright }: the
 // same three steps as the CSS filter and the PIXI ColorMatrixFilter
@@ -434,8 +594,14 @@ export function normalizeBoard(json) {
             r: s.r === undefined || s.r === null ? null : num(s.r, 0),
             s: Math.max(0.001, num(s.s, 1)),
             paper: s.paper ? String(s.paper) : null,
-            fix: pick(s.fix, ['tape', 'pin'], null),
+            // how its clipping is held on: glue (nothing shows), tape, or a pin
+            fix: pick(s.fix, ['glue', 'tape', 'pin'], null),
             hand: s.hand ? String(s.hand) : null,
+            // typed (the typewriter) rather than written in its hand
+            typed: Boolean(s.typed),
+            // locked to the sheet (Luke, 2026-10-03: right-click): it doesn't
+            // move, size, or turn; what is on and around it still does
+            locked: Boolean(s.locked),
             // how its writing is set (align; bold, italic, underline, strike)
             ...textStyleOf(s),
             // who wrote it: a player's note (they may edit its text; it writes in
@@ -456,6 +622,12 @@ export function normalizeBoard(json) {
             // its ink: an index into the look's paper (or, for writing on the
             // sheet, sheet) inks; null: one picked by its name
             ink: s.ink === undefined || s.ink === null || !Number.isFinite(Number(s.ink)) ? null : clamp(Math.round(Number(s.ink)), 0, MAX_INKS - 1),
+            // its writing in one of the brush's paints, at a brightness (Luke,
+            // 2026-10-06: the same choices as the brush); over `ink`
+            paint: s.paint === undefined || s.paint === null || !Number.isFinite(Number(s.paint)) ? null : clamp(Math.round(Number(s.paint)), 0, MAX_INKS - 1),
+            bright: s.bright === undefined || s.bright === null || !Number.isFinite(Number(s.bright)) ? null : clamp(Math.round(Number(s.bright)), 0, BRIGHT_MAX),
+            // its paper's quarter turns, set by hand (null: by its seed)
+            pturn: s.pturn === undefined || s.pturn === null || !Number.isFinite(Number(s.pturn)) ? null : ((Math.round(Number(s.pturn)) % 4) + 4) % 4,
             // pieces of it moved by hand (the clipping, a strip of tape, a pin
             // through the clipping): { id: { u, v } } on its text box
             // (each { u, v } on its text box, and its own size s, turn r
@@ -463,6 +635,9 @@ export function normalizeBoard(json) {
             parts: Object.fromEntries(Object.entries(s.parts && typeof s.parts === 'object' ? s.parts : {}).map(([k, p]) => [k, partAt(p)]).filter(([, p]) => p)),
             // more pins the GM put in it ({ u, v } points on its text box)
             pins: (Array.isArray(s.pins) ? s.pins : []).map(endAt).filter(Boolean),
+            // its own pieces taken off (Luke, 2026-10-06: a strip of tape, a
+            // pin through the clipping, a ring or web: by the piece's id)
+            drop: strList(s.drop, []),
             // the marker on it (Luke, 2026-10-03): { id: { by, c, w, o, pts } },
             // its points in the card's own frame (card units: its width at
             // size 1 is look.scrap.w; x along it), so they go where it goes
@@ -488,6 +663,8 @@ export function normalizeBoard(json) {
         if (!l || !(a || aPt || aPin) || !(b || bPt || bPin) || (a && a === b) || (aPin && aPin === bPin)) continue;
         links[id] = {
             id, a, b, aPt, bPt, aPin, bPin, kind: pick(l.kind, LINK_KINDS, 'delve'), state: pick(l.state, STATES, 'known'),
+            // who made it (a player's own string: theirs to edit; Luke 2026-10-03)
+            author: l.author ? String(l.author) : null,
             // its colour (Luke, 2026-10-03: any string in any colour): an
             // index into the sheet's paints, the marker's; null: its kind's own
             color: l.color === undefined || l.color === null || l.color === '' || !Number.isFinite(Number(l.color)) ? null : clamp(Math.round(Number(l.color)), 0, MAX_INKS - 1),
@@ -509,7 +686,8 @@ export function normalizeBoard(json) {
             // ({ u, v }; null: the end of the tag facing the junction)
             tagPinAt: endAt(l.tagPinAt),
             // this string's own sag, in % of the look's gravity
-            slack: clamp(num(l.slack, 100), 0, 400),
+            // (Luke, 2026-10-03: half the sag it had)
+            slack: clamp(num(l.slack, 50), 0, 400),
             // pins the string is pulled to between its ends (Shift+drag), in
             // order: board points it runs through, each span hanging on its own
             // (a joint is a point, or a pin of the board's own: { pin })
@@ -528,7 +706,7 @@ export function normalizeBoard(json) {
         if (!p?.tex) continue;
         // (s: its size set by hand, null: by its strings; r: its turn set by
         // hand, null: by its strings' pull)
-        const base = { id, tex: String(p.tex), s: p.s === undefined || p.s === null ? null : Math.max(0.001, num(p.s, 1)), r: p.r === undefined || p.r === null ? null : num(p.r, 0), state: p.state === 'hidden' ? 'hidden' : 'known' };
+        const base = { id, tex: String(p.tex), s: p.s === undefined || p.s === null ? null : Math.max(0.001, num(p.s, 1)), r: p.r === undefined || p.r === null ? null : num(p.r, 0), state: p.state === 'hidden' ? 'hidden' : 'known', author: p.author ? String(p.author) : null };
         if (p.on && endAt(p.at)) pins[id] = { ...base, on: String(p.on), at: endAt(p.at) };
         else if (pointAt(p)) pins[id] = { ...base, on: null, ...pointAt(p) };
     }
@@ -544,7 +722,15 @@ export function normalizeBoard(json) {
         }
         if (Object.keys(out).length) marks[layer] = out;
     }
-    return { scraps, links, pins, marks, decor: normalizeDecor(j.decor) };
+    // loose pieces of the board's own (Luke, 2026-10-06): a strip of tape or
+    // a web taken off a card onto the board, there to move, size, turn, or
+    // take off by itself (only a card's picture and writing stay on it)
+    const bits = {};
+    for (const [id, b] of Object.entries(j.bits ?? {})) {
+        if (!b?.tex || !pointAt(b)) continue;
+        bits[id] = { id, tex: String(b.tex), ...pointAt(b), w: clamp(num(b.w, 40), 4, 3000), r: num(b.r, 0), flip: Boolean(b.flip), alpha: clamp(num(b.alpha, 1), 0.05, 1) };
+    }
+    return { scraps, links, pins, marks, bits, decor: normalizeDecor(j.decor) };
 }
 
 const partAt = (p) => {
@@ -554,6 +740,8 @@ const partAt = (p) => {
     if (Number.isFinite(Number(p.s))) out.s = Math.max(0.001, Number(p.s));
     if (Number.isFinite(Number(p.r))) out.r = clamp(Number(p.r), -360, 360);
     if (Number.isFinite(Number(p.w))) out.w = clamp(Number(p.w), 0.1, 3);
+    // (a writing box's height, shaped by hand: Luke 2026-10-03, it had been dropped)
+    if (Number.isFinite(Number(p.h))) out.h = clamp(Number(p.h), 0.05, 3);
     return out;
 };
 const pullAt = (p) => (p && [p.t, p.u, p.v].every((x) => Number.isFinite(Number(x))) ? { t: clamp(Number(p.t), 0.08, 0.92), u: clamp(Number(p.u), -3, 3), v: clamp(Number(p.v), -3, 3) } : null);
@@ -572,7 +760,11 @@ export function normalizeDecor(list) {
         x: num(d.x, 0), y: num(d.y, 0), w: Math.max(4, num(d.w, 200)), r: num(d.r, 0),
         o: clamp(num(d.o, 100), 0, 100), flip: Boolean(d.flip),
         blend: pick(d.blend, ['normal', 'multiply', 'screen', 'overlay', 'lighten'], 'normal'),
-        layer: pick(d.layer, ['under', 'over'], 'under'),
+        // ('page': a page pasted on the sheet itself, under the marker and the
+        // grime; Luke 2026-10-03, the newsprint)
+        layer: pick(d.layer, ['under', 'over', 'page'], 'under'),
+        // a page: sewn to the sheet (seams by its seed) unless false
+        seam: d.seam === false ? false : null,
     }));
 }
 
@@ -679,8 +871,43 @@ export function cleanStroke(m, { card = false } = {}) {
         ...(card ? { by: m.by ? String(m.by) : null } : {}),
         c: clamp(Math.round(num(m.c, 0)), 0, MAX_INKS - 1), w: clamp(num(m.w, 6), 0.5, 60), pts: card ? pts.map((v) => Math.round(v * 10000) / 10000) : pts,
         ...(m.o === undefined || m.o === null ? {} : { o: clamp(num(m.o, 0.85), 0.05, 1) }),
+        // its brightness (Luke, 2026-10-06): 0 dim (soaked in, as the brush
+        // first was), 1 as it is (the default), 2 bright
+        ...(m.b === undefined || m.b === null ? {} : { b: clamp(Math.round(num(m.b, 1)), 0, BRIGHT_MAX) }),
     };
 }
+export const BRIGHT_MAX = 2;
+// the brush's paints in the palette's order: Bone, the greys, Brown, then the
+// colours (Luke, 2026-10-06: named and sorted)
+export const PAINT_ORDER = [0, 11, 12, 13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+// A note's dialog answered, as a scrap's fields (Luke, 2026-10-06): its
+// writing in a brush paint at a brightness (or an ink of the paper's, as
+// before), its paper's quarter turns, its own turn, and where its writing
+// sits on it (merged into what was there: `had`, the scrap as it is)
+export function noteFields(a, look, had = null) {
+    const out = {};
+    const paint = a?.paint === '' || a?.paint === null || a?.paint === undefined ? null : Math.round(Number(a.paint));
+    if (Number.isInteger(paint) && paint >= 0 && paint < (look.ink.marker?.length ?? 0)) {
+        out.paint = paint;
+        out.bright = clamp(Math.round(num(a.bright, 1)), 0, BRIGHT_MAX);
+        out.ink = null;
+    } else {
+        out.paint = null;
+        out.bright = null;
+    }
+    if (a && 'pturn' in a) out.pturn = a.pturn === null || !Number.isFinite(Number(a.pturn)) ? null : ((Math.round(Number(a.pturn)) % 4) + 4) % 4;
+    if (a && 'r' in a) out.r = a.r === null || !Number.isFinite(Number(a.r)) ? null : clamp(Math.round(Number(a.r)), -180, 180);
+    const t = a?.textAt;
+    if (t && Number.isFinite(t.u) && Number.isFinite(t.v)) out.parts = { ...(had?.parts ?? {}), text: { ...(had?.parts?.text ?? {}), u: +clamp(t.u, -0.6, 0.6).toFixed(3), v: +clamp(t.v, -0.6, 0.6).toFixed(3) } };
+    return out;
+}
+// (Luke, 2026-10-06) the brush's paints by name, in the default palette's
+// order, and how each brightness mixes a paint (dim toward black, bright
+// toward white): the painter's and the palette's swatches alike
+export const PAINT_NAMES = ['Bone', 'Blood', 'Rust', 'Ochre', 'Moss', 'Leaf', 'Verdigris', 'Sky', 'Indigo', 'Violet', 'Rose', 'Iron', 'Soot', 'Brown'];
+export const BRIGHT_MIX = [[0x000000, 0.42], null, [0xffffff, 0.16]];
+export const brushColor = (c, b = 1) => { const m = BRIGHT_MIX[Math.max(0, Math.min(BRIGHT_MAX, b ?? 1))]; return m ? mixColor(c, m[0], m[1]) : c; };
 
 // A card's frame for its marker: its middle, turn, and unit (board px per
 // card unit), from its view
@@ -707,7 +934,7 @@ export function strokeFromCard(st, vs, look) {
         const p = toWorld(st.pts[i] * F.unit, st.pts[i + 1] * F.unit, F.cx, F.cy, F.rot);
         pts.push(p.x, p.y);
     }
-    return { by: st.by ?? null, c: st.c, w: st.w * (vs.s ?? 1), ...(st.o === undefined ? {} : { o: st.o }), pts };
+    return { by: st.by ?? null, c: st.c, w: st.w * (vs.s ?? 1), ...(st.o === undefined ? {} : { o: st.o }), ...(st.b === undefined ? {} : { b: st.b }), pts };
 }
 
 /* -------------------------------------------- */
@@ -733,10 +960,14 @@ const tilt = (v, max) => Math.sign(v) * max * Math.pow(Math.abs(2 * v), 1.5);
 // weight, for a place (landmark) and for a note; some cards get a second
 // touch from those that sit on the paper.
 const RECIPES = {
-    landmark: { plain: 30, stacked: 18, stamped: 12, ringed: 10, boxed: 12, taped: 10, webbed: 4, hazard: 4 },
-    note: { plain: 40, stacked: 15, stamped: 8, ringed: 12, taped: 15, tallied: 6, webbed: 2, hazard: 2 },
+    // (no stamps, the factions' own, nor tallies: Luke 2026-10-03; no tape of
+    // their own, at their corners or edges: Luke 2026-10-06, tape only holds
+    // the pictures on)
+    // (spiders rarely: Luke 2026-10-06)
+    landmark: { plain: 42, stacked: 22, ringed: 14, boxed: 16, webbed: 1 },
+    note: { plain: 57, stacked: 21, ringed: 19, webbed: 1 },
 };
-const ON_PAPER = ['stamped', 'ringed', 'tallied'];
+const ON_PAPER = ['ringed'];
 const TX = {
     stamps: ['tx/fixtures__fixture_red_ink_stamp_round', 'tx/fixtures__fixture_stamp_horned_head_brown'],
     rings: ['tx/ink__ink_coffee_ring_orange', 'tx/ink__ink_fingerprint_smudged_orange', 'tx/ink__ink_orange_fingerprint_smudge'],
@@ -813,10 +1044,12 @@ function cardExtras({ scrap, sk, W, H, PW, PH, pc, rot, depth, clip, look, size,
 export function scrapLayout(scrap, look, size, measure, libEntry = null) {
     const depth = depthAt(scrap.y, look);
     const r = rng(`scrap:${scrap.key}`);
-    const font = scrap.hand ?? pickFrom(look.fonts.hands, `hand:${scrap.key}`) ?? 'serif';
+    const font = scrap.typed ? TYPEWRITER : scrap.hand ?? pickFrom(look.fonts.hands, `hand:${scrap.key}`) ?? 'serif';
     const palette = scrap.type === 'scrawl' ? look.ink.sheet : look.ink.paper;
-    const ink = palette?.length ? palette[scrap.ink ?? -1] ?? pickFrom(palette.slice(0, look.ink.auto ?? 4), `ink:${scrap.key}`) : scrap.type === 'scrawl' ? look.ink.scrawl : look.ink.text;
-    const fk = look.fonts.scale[font] ?? 1;
+    const ink = scrap.paint !== null && scrap.paint !== undefined && look.ink.marker?.[scrap.paint] !== undefined
+        ? brushColor(look.ink.marker[scrap.paint], scrap.bright ?? 1)
+        : palette?.length ? palette[scrap.ink ?? -1] ?? pickFrom(palette.slice(0, look.ink.auto ?? 4), `ink:${scrap.key}`) : scrap.type === 'scrawl' ? look.ink.scrawl : look.ink.text;
+    const fk = scrap.typed ? 0.82 : look.fonts.scale[font] ?? 1;
     // its writing's style: measured as it is drawn
     const style = fontStyle(scrap);
     const align = scrap.align ?? 'center';
@@ -825,8 +1058,9 @@ export function scrapLayout(scrap, look, size, measure, libEntry = null) {
     // a line's offset across its box, by its alignment
     const across = (w, boxW) => (align === 'left' ? -(boxW - w) / 2 : align === 'right' ? (boxW - w) / 2 : 0);
     // its pieces moved, turned, or sized by hand (each on its text box,
-    // independent of the others)
+    // independent of the others), and those taken off
     const parts = scrap.parts ?? {};
+    const dropped = new Set(scrap.drop ?? []);
     if (scrap.type === 'scrawl') {
         const px = Math.round(look.scrap.w * scrap.s * 0.18 * fk);
         const lines = wrapText(scrap.text || '...', (t) => measure(t, px), look.scrap.w * scrap.s * 1.7);
@@ -849,23 +1083,79 @@ export function scrapLayout(scrap, look, size, measure, libEntry = null) {
     const sk = scrap.seed ? `${scrap.key}~${scrap.seed}` : scrap.key;
     const isNote = scrap.type === 'note' || rumour;
     const pool = isNote ? look.pools.notes : look.pools.papers;
-    // a paper of a fitting shape (by its text bounds: a landmark's clipping
-    // and name stack up about square) with enough of it solid; papers mostly torn away (diagonal tears, notches) are left out
-    const fits = (id) => {
-        const z = size(id); if (!z) return false;
-        const a = safeAspect(z);
-        return (z.cover ?? 1) >= MIN_COVER && (rumour ? a > 0.6 && a < 1.7 : isNote ? a > 0.55 : a > 0.72 && a < 1.1);
-    };
-    const shaped = pool.filter(fits);
     // a name tag is a ticket stub, sized to its writing
     const tagged = scrap.type === 'note' && scrap.tag;
+    // (Luke, 2026-10-06: the same paper never looking the same twice) its
+    // paper turned a quarter at a time (portrait becomes landscape) and
+    // mirrored, by its own seed; a name tag's stub lies as it is
+    const pr = rng(`paperturn:${sk}`);
+    const seeded = [0, 0, 1, 2, 3, 1, 3, 2][Math.floor(pr() * 8)];
+    // (or as its owner turned it, Luke 2026-10-06: kept so, whatever fits)
+    const handTurned = !tagged && scrap.pturn !== null && scrap.pturn !== undefined;
+    const turn0 = tagged ? 0 : handTurned ? scrap.pturn : seeded;
+    const flip = !tagged && pr() < 0.5;
+    // a landmark's paper the shape of its art (landscape art on landscape
+    // paper, portrait on portrait; Luke 2026-10-06), roughly: the clipping
+    // and the name under it
+    const artId0 = scrap.type === 'landmark' && !rumour ? scrap.art ?? libEntry?.art ?? null : null;
+    const az0 = artId0 ? size(artId0) : null;
+    const artAr0 = az0?.w && az0?.h ? az0.w / az0.h : null;
+    // (Luke, 2026-10-06: the same card should come out about the same size,
+    // its art too, whichever paper it draws) A landmark's clipping is sized
+    // by its art's shape alone (the same area, whatever its shape), and the
+    // paper is one shaped like the clipping and its name together, sized
+    // round them; a note's paper is never a long strip
+    const unit0 = look.scrap.w * scrap.s;
+    let land = null;
+    if (artAr0 !== null && !rumour) {
+        const aar = clamp(artAr0, 0.6, 1.8);
+        const A = unit0 * unit0 * CLIP_AREA;
+        const cw = Math.sqrt(A * aar);
+        const ch = cw / aar;
+        const hp = Math.round(unit0 * 0.15 * fk * (parts.text?.s ?? 1));
+        const nm = scrap.name || libEntry?.name || scrap.key;
+        const nl = wrapText(nm, (t) => measure(t, hp), Math.max(cw, unit0 * 0.6)).length;
+        const nameH = nl * hp * 0.95 + hp * 0.25;
+        land = { cw, ch, w: Math.max(cw, unit0 * 0.6) / 0.9, h: (ch + nameH) / 0.86 };
+    }
+    const want = land ? [(land.w / land.h) * 0.88, (land.w / land.h) * 1.18] : rumour ? [0.6, 1.7] : isNote ? [0.62, 1.6] : [0.72, 1.15];
+    // a paper of a fitting shape, as it lies, with enough of it solid; papers
+    // mostly torn away (diagonal tears, notches) are left out
+    const fits = (id, t) => {
+        const z = size(id); if (!z) return false;
+        const a = safeAspect(paperAs(z, t, false));
+        return (z.cover ?? 1) >= MIN_COVER && a > want[0] && a < want[1];
+    };
+    let turn = turn0;
+    let shaped = pool.filter((id) => fits(id, turn));
+    // (none fits turned so: the other way round)
+    if (!shaped.length && !tagged && !handTurned) {
+        turn = (turn0 + 1) % 4;
+        shaped = pool.filter((id) => fits(id, turn));
+    }
+    // (none fits at all, closely: the nearest shapes, either way round)
+    if (!shaped.length && land && !scrap.paper && !handTurned) {
+        const aim = land.w / land.h;
+        const near = (id, t) => { const z = size(id); return z && (z.cover ?? 1) >= MIN_COVER ? Math.abs(Math.log(safeAspect(paperAs(z, t, false)) / aim)) : Infinity; };
+        const ranked = pool.flatMap((id) => [[id, turn0], [id, (turn0 + 1) % 4]]).map(([id, t]) => [id, t, near(id, t)]).filter((x) => x[2] < Infinity).sort((a, b) => a[2] - b[2]);
+        if (ranked.length) {
+            // (any as near as the nearest, a hair either way)
+            const best = ranked.filter((x) => x[2] <= ranked[0][2] + 0.08);
+            const [id, t] = best[Math.floor(pr() * best.length)];
+            turn = t;
+            shaped = [id];
+        }
+    }
+    if (!shaped.length) turn = turn0;
     const paperTex = scrap.paper ?? (tagged && size(TAG_PAPER) ? TAG_PAPER : pickFrom(shaped.length ? shaped : pool, sk));
-    const pd = (paperTex && size(paperTex)) || { w: 3, h: 4 };
+    const pd = paperAs((paperTex && size(paperTex)) || { w: 3, h: 4 }, turn, flip);
     const sb = pd.safe ?? DEFAULT_SAFE;
     // W x H from here on is the paper's solid region, where everything goes
     const ar = safeAspect(pd);
     const unit = look.scrap.w * scrap.s;
-    let W = isNote ? unit * (rumour ? 0.62 : 0.72) * 0.85 : unit;
+    // (a landmark: the paper round its clipping and name, its whole content
+    // shown whichever way the paper is wider)
+    let W = isNote ? unit * (rumour ? 0.62 : 0.72) * 0.85 : land ? Math.max(land.w, land.h * ar) : unit;
     // writing has a set size (by the scrap size, not its paper); a note's
     // paper grows, keeping its shape, until its writing fits
     const notePx = Math.round(unit * (rumour ? 0.1 : 0.115) * fk);
@@ -892,7 +1182,7 @@ export function scrapLayout(scrap, look, size, measure, libEntry = null) {
     const PW = W / (sb[2] - sb[0]);
     const PH = H / (sb[3] - sb[1]);
     const pc = toWorld(PW * (0.5 - (sb[0] + sb[2]) / 2), PH * (0.5 - (sb[1] + sb[3]) / 2), scrap.x, scrap.y, rot);
-    const out = { key: scrap.key, seedKey: sk, depth, rumour, font, ink, paper: { tex: paperTex, cx: pc.x, cy: pc.y, w: PW, h: PH, rot }, box: { cx: scrap.x, cy: scrap.y, w: W, h: H, rot } };
+    const out = { key: scrap.key, seedKey: sk, depth, rumour, font, ink, paper: { tex: paperTex, cx: pc.x, cy: pc.y, w: PW, h: PH, rot, turn, flip }, box: { cx: scrap.x, cy: scrap.y, w: W, h: H, rot } };
     out.hull = place([-PW / 2, -PH / 2, PW / 2, -PH / 2, PW / 2, PH / 2, -PW / 2, PH / 2], pc.x, pc.y, rot);
 
     const handPx = tagged ? tagPx : Math.round((isNote ? notePx : unit * 0.15 * fk) * (parts.text?.s ?? 1));
@@ -926,19 +1216,24 @@ export function scrapLayout(scrap, look, size, measure, libEntry = null) {
         // the name under it
         // (its own seed, so the rest of the scrap's draws don't shift)
         const ar = rng(`assembly:${sk}`);
-        let cw = W * (0.68 + ar() * 0.2);
-        let ch = cw * (0.68 + ar() * 0.12);
+        // (Luke, 2026-10-03: the art as large as the paper allows, room left
+        // for its name: the clipping takes the art's own shape, so all of it
+        // shows, as wide or as tall as it can go)
         const name = scrap.name || libEntry?.name || scrap.key;
         const nameLines = wrapText(name, (t) => measure(t, handPx), textW).length;
         const nameH = nameLines * handPx * 0.95 + handPx * 0.25;
-        const room = H * 0.88 - nameH;
-        if (ch > room) {
-            ch = Math.max(room, H * 0.3);
-            cw = Math.min(cw, ch / 0.6);
-        }
-        // the clipping and the name roughly centred on the paper, the
-        // clipping nudged off true and tilted a little (always mostly upright)
-        top = Math.max(-H / 2 + H * 0.05, -(ch + nameH) / 2 - H * 0.03 + (ar() - 0.5) * H * 0.09);
+        const artId = scrap.art ?? libEntry?.art ?? null;
+        const az = artId ? size(artId) : null;
+        const artAr = az?.w && az?.h ? clamp(az.w / az.h, 0.6, 1.8) : 1.3;
+        const roomW = W * 0.92;
+        const roomH = Math.max(H * 0.3, H * 0.9 - nameH);
+        const fill = 0.95 + ar() * 0.05;
+        void ar();
+        const cw = (land ? Math.min(land.cw, roomW, roomH * artAr) : Math.min(roomW, roomH * artAr)) * fill;
+        const ch = cw / artAr;
+        // the clipping and the name together on the paper, nudged a little
+        // off true, the clipping tilted a little (always mostly upright)
+        top = clamp(-(ch + nameH) / 2 - H * 0.02 + (ar() - 0.5) * H * 0.05, -H / 2 + H * 0.04, H / 2 - H * 0.04 - (ch + nameH));
         const clipRot0 = (ar() - 0.5) * 2 * 6 * DEG;
         // (every draw is taken whatever is moved by hand, so the rest of the
         // assembly never shifts: a moved clipping keeps its tape)
@@ -957,40 +1252,33 @@ export function scrapLayout(scrap, look, size, measure, libEntry = null) {
         // how the clipping holds on: tape (across the top, over two or all four
         // corners) or pins (one, two, or a pin and a strip of tape), each tape
         // its own piece, length, and angle
-        const fix = scrap.fix ?? (ar() < 0.6 ? 'tape' : 'pin');
-        const style = pickFrom(fix === 'tape' ? ['corners', 'corners', 'top', 'cross', 'four'] : ['pin', 'pins', 'pin-tape'], `${sk}:fix`);
-        // (its tape and pins sit on the card where the clipping first was,
-        // each its own piece from then on)
-        const crot = rot + clipRot0;
-        const onClip = (lx, ly) => toWorld(lx, ly, c0.x, c0.y, crot);
+        // (Luke, 2026-10-06: glued on, or taped on its front; rarely a pin)
+        const fx = ar();
+        const fix = scrap.fix ?? (fx < 0.42 ? 'glue' : fx < 0.9 ? 'tape' : 'pin');
+        const style = fix === 'glue' ? 'glue' : pickFrom(fix === 'tape' ? ['corners', 'corners', 'top', 'cross', 'four'] : ['pin'], `${sk}:fix`);
+        // (its tape and pins go with the clipping, Luke 2026-10-06: tape left
+        // where the clipping first was looked strewn about; each still its
+        // own piece, to move by hand)
+        const crot = rot + clipRot;
+        const onClip = (lx, ly) => toWorld(lx * ck, ly * ck, c.x, c.y, crot);
         out.tapes = [];
         out.clipPins = [];
         const tape = (lx, ly, ang, len, i) => {
             const t = onClip(lx, ly);
             out.tapes.push({ tex: pickFrom(look.pools.tapes, `${sk}:tape:${i}`), cx: t.x, cy: t.y, w: len, rot: crot + ang * DEG });
         };
-        const corner = (sx, sy, i) => tape(sx * cw * (0.43 + ar() * 0.06), sy * ch * (0.43 + ar() * 0.06), sx * sy * (38 + ar() * 16), cw * (0.26 + ar() * 0.14), i);
+        const corner = (sx, sy, i) => tape(sx * cw * (0.43 + ar() * 0.06), sy * ch * (0.43 + ar() * 0.06), sx * sy * (38 + ar() * 16), cw * ck * (0.26 + ar() * 0.14), i);
         const pinAt = (lx, ly, i) => {
             const p = onClip(lx, ly);
             const tex = pickFrom(look.pools.pins, `${sk}:clippin:${i}`);
             out.clipPins.push({ tex, x: p.x, y: p.y, w: Math.max(12, W * 0.13) * pinScale(tex), rot: pinTurn(crot, (ar() - 0.5) * 0.35) });
         };
-        if (style === 'top') tape((ar() - 0.5) * cw * 0.3, -ch / 2, (ar() - 0.5) * 14, cw * (0.45 + ar() * 0.2), 0);
+        if (style === 'top') tape((ar() - 0.5) * cw * 0.3, -ch / 2, (ar() - 0.5) * 14, cw * ck * (0.45 + ar() * 0.2), 0);
         else if (style === 'corners') { corner(-1, -1, 0); corner(1, -1, 1); }
         else if (style === 'cross') { corner(-1, -1, 0); corner(1, 1, 1); }
         else if (style === 'four') { corner(-1, -1, 0); corner(1, -1, 1); corner(-1, 1, 2); corner(1, 1, 3); }
         else if (style === 'pin') pinAt((ar() - 0.5) * cw * 0.3, -ch * (0.36 + ar() * 0.08), 0);
-        else if (style === 'pins') { pinAt(-cw * 0.38, -ch * 0.38, 0); pinAt(cw * 0.38, -ch * 0.36, 1); }
-        else { pinAt((ar() < 0.5 ? -1 : 1) * cw * 0.38, -ch * 0.38, 0); corner(ar() < 0.5 ? -1 : 1, 1, 0); }
-        // now and then a strip of tape mending the paper's own edge
-        if (ar() < 0.25) {
-            const side = Math.floor(ar() * 4);
-            const along = (ar() - 0.5) * 0.7;
-            const lx = side % 2 ? (side === 1 ? W / 2 : -W / 2) : along * W;
-            const ly = side % 2 ? along * H : (side === 0 ? -H / 2 : H / 2);
-            const t = toWorld(lx, ly, scrap.x, scrap.y, rot);
-            out.tapes.push({ tex: pickFrom(look.pools.tapes, `${sk}:mend`), cx: t.x, cy: t.y, w: W * (0.18 + ar() * 0.12), rot: rot + ((side % 2 ? 0 : 90) + (ar() - 0.5) * 30) * DEG });
-        }
+        // (no tape mending the paper's own edge: Luke 2026-10-06)
         out.fix = fix;
         // each piece (the clipping, its tape, its pins) moved by hand, and
         // where its handle sits
@@ -1006,12 +1294,17 @@ export function scrapLayout(scrap, look, size, measure, libEntry = null) {
             if (!p) return;
             Object.assign(t, placeAt(p), { w: t.w * (p.s ?? 1) }, p.r !== undefined ? { rot: rot + p.r * DEG } : {});
         });
-        // each piece's handle, and its frame (for its own turn and size)
+        // each piece's handle, and its frame (for its own turn and size); a
+        // piece taken off (drop) is gone, the others keeping their ids
         const hOf = (tex, w) => { const z = size(tex); return z ? (w * z.h) / z.w : w * 0.3; };
+        out.tapes.forEach((t, i) => (t.id = `tape${i}`));
+        out.clipPins.forEach((t, i) => (t.id = `pin${i}`));
+        out.tapes = out.tapes.filter((t) => !dropped.has(t.id));
+        out.clipPins = out.clipPins.filter((t) => !dropped.has(t.id));
         out.parts = [
             { id: 'clip', x: c.x, y: c.y, w: cw * ck, h: ch * ck, rot: rot + clipRot },
-            ...out.tapes.map((t, i) => ({ id: `tape${i}`, x: t.cx, y: t.cy, w: t.w, h: hOf(t.tex, t.w), rot: t.rot })),
-            ...out.clipPins.map((t, i) => ({ id: `pin${i}`, x: t.x, y: t.y, w: t.w, h: hOf(t.tex, t.w), rot: t.rot })),
+            ...out.tapes.map((t) => ({ id: t.id, x: t.cx, y: t.cy, w: t.w, h: hOf(t.tex, t.w), rot: t.rot })),
+            ...out.clipPins.map((t) => ({ id: t.id, x: t.x, y: t.y, w: t.w, h: hOf(t.tex, t.w), rot: t.rot })),
         ];
     } else if (rumour) {
         // an ink blot somewhere on it (its own size, place, and splatter)
@@ -1026,6 +1319,12 @@ export function scrapLayout(scrap, look, size, measure, libEntry = null) {
         addLines(name, handPx);
     } else {
         if (tagged) top = -H / 2 + tagPx * 0.4;
+        // (a note's writing in the middle of its paper, a little high: Luke
+        // 2026-10-06, it hung from the top whatever the paper's shape)
+        else if (!boxH) {
+            const n = wrapText(scrap.text || '...', (t) => measure(t, handPx), textW).length;
+            top = clamp(-(n * handPx * 0.95) / 2 - H * 0.05, -H / 2 + H * 0.07, H / 2 - H * 0.07 - n * handPx * 0.95);
+        }
         addLines(scrap.text || '...', handPx);
     }
     // its writing, moved, turned, or given a new wrap width by hand (a handle
@@ -1082,7 +1381,26 @@ export function scrapLayout(scrap, look, size, measure, libEntry = null) {
         const tex = pickFrom(look.pools.pins, `${scrap.key}:pin:${i}`);
         return { tex, x: at.x, y: at.y, w: Math.max(12, W * 0.13) * pinScale(tex), rot: pinTurn(rot, (((hashSeed(`${scrap.key}:${i}`) % 40) - 20) * DEG) / 2) };
     });
-    if (!tagged) Object.assign(out, cardExtras({ scrap, sk, W, H, PW, PH, pc, rot, depth, clip: out.clip, look, size, isNote, paperTex }));
+    if (!tagged) {
+        Object.assign(out, cardExtras({ scrap, sk, W, H, PW, PH, pc, rot, depth, clip: out.clip, look, size, isNote, paperTex }));
+        // (each its own piece: moved, turned, or sized by hand, or taken off)
+        out.extras.forEach((e, i) => {
+            e.id = `x${i}`;
+            const p = parts[e.id];
+            if (!p) return;
+            const q = toWorld(p.u * W, p.v * H, scrap.x, scrap.y, rot);
+            Object.assign(e, { cx: q.x, cy: q.y, w: e.w * (p.s ?? 1), ...(e.h ? { h: e.h * (p.s ?? 1) } : {}) }, p.r !== undefined ? { rot: rot + p.r * DEG } : {});
+        });
+        out.extras = out.extras.filter((e) => !dropped.has(e.id));
+        // (Luke, 2026-10-06) a web (a spider) is a thing on the card, as a pin
+        // is: it has a handle, moves, and comes off; rings, ink frames, and
+        // the paper under it are the card's own, never edited
+        for (const e of out.extras) {
+            if (!e.h) { const z = size(e.tex); e.h = z ? (e.w * z.h) / z.w : e.w * 0.3; }
+            e.thing = e.tex === TX.web;
+            if (e.thing) (out.parts ??= []).push({ id: e.id, x: e.cx, y: e.cy, w: e.w, h: e.h, rot: e.rot });
+        }
+    }
     // the marker on it, on the board (Luke, 2026-10-03)
     out.strokes = Object.entries(scrap.marks ?? {}).map(([id, m]) => ({ id, ...strokeFromCard(m, { s: scrap.s, layout: out }, look) }));
     return out;
@@ -1265,7 +1583,8 @@ export function boardView(look, board, viewer, size, measure) {
     const pinHidden = (p) => p.state === 'hidden' || (p.on && hidden(p.on));
     const pins = Object.values(board.pins ?? {}).filter((p) => gm || !pinHidden(p)).map((p) => {
         const w = Math.max(11, base * (p.s ?? 1)) * pinScale(p.tex);
-        const own = ((hashSeed(p.id) % 40) - 20) / 2;
+        // (a little turn of its own: Luke 2026-10-06, they stood too crooked)
+        const own = ((hashSeed(p.id) % 21) - 10) / 2;
         const look2 = pinHidden(p) ? 'ghost' : 'known';
         if (!p.on) return { ...p, w, rot: (p.r ?? own) * DEG, look: look2 };
         const s = byKey[p.on];
@@ -1296,15 +1615,15 @@ export function boardView(look, board, viewer, size, measure) {
             // (a tied end faces its nearest joint, else the other end)
             const a = endOf(A, ca, l.aAt, l.aPt, l.aPin, J[0] ?? toward(cb, l.bPt, l.bPin));
             const b = endOf(B, cb, l.bAt, l.bPt, l.bPin, J[J.length - 1] ?? toward(ca, l.aPt, l.aPin));
-            const pin = (p, side) => {
-                // the string's own family of pins (red for a delve, violet for the
-                // Vermissian, iron tacks for a path)
-                const ends = look.pools.ends?.[l.kind];
-                const tex = pickFrom(ends?.length ? ends : look.pools.pins, `${l.id}:${side}`);
-                return { ...p, tex, w: Math.max(11, look.scrap.w * 0.13 * 0.85 * size) * pinScale(tex), rot: (hashSeed(`${l.id}:${side}`) % 40 - 20) * DEG };
-            };
-            // (its pins' size, once its length is known)
-            let size = 1;
+            // the string's one kind of pin, the same at every end and joint
+            // (Luke, 2026-10-06): its first pin's, else one of its family's (red
+            // for a delve, violet for the Vermissian, iron tacks for a path),
+            // and its first pin's size for any it is given
+            const fam0 = look.pools.ends?.[l.kind];
+            const P0 = pinById[l.aPin] ?? pinById[l.bPin] ?? null;
+            const pinTex = P0?.tex ?? pickFrom(fam0?.length ? fam0 : look.pools.pins, l.id);
+            const pinS = P0?.s ?? null;
+            const pin = (p, side) => ({ ...p, tex: pinTex, tint: pinTint(look, l, pinTex), w: Math.max(11, look.scrap.w * 0.13 * 0.85 * (pinS ?? 1)) * pinScale(pinTex), rot: (hashSeed(`${l.id}:${side}`) % 40 - 20) * DEG });
             const depth = depthAt((a.y + b.y) / 2, look);
             // the way it runs: its ends, the joints it is pulled through, and a
             // named string's junction where the GM pinned it (an older board's
@@ -1332,42 +1651,69 @@ export function boardView(look, board, viewer, size, measure) {
                 spans.push({ from, to: points.length / 2 - 1 });
             }
             if (l.label && !l.via) { const p = pointAlong(points, pathLength(points) * l.tagAt); junction = { x: p.x, y: p.y }; }
-            // a string's pins come in three sizes, bigger the further it runs
-            // (Luke, 2026-10-02: they grow as they're pulled apart, in steps)
+            // (pins no longer grow with a string's length: Luke 2026-10-06, it
+            // felt a bug; a head is sized by hand)
             const run = pathLength(points);
-            size = run < 700 ? 0.8 : run < 1600 ? 1 : 1.3;
             // (an end or joint held by a board pin shows that pin, not its own)
             const ends = [{ ...pin(a, 'a'), shared: l.aPin }, { ...pin(b, 'b'), shared: l.bPin }];
             if (junction) junction = pin(junction, 'join');
             const joints = J.map((p) => ({ ...pin(p, `j${p.idx}`), idx: p.idx, shared: p.pin ?? null }));
             const pinHid = [l.aPin, l.bPin, ...J.map((j) => j.pin)].some((id) => id && pinById[id]?.look === 'ghost');
             return {
-                ...l, depth, junction, joints, waypoints, spans, ends, run, tier: size,
+                ...l, depth, junction, joints, waypoints, spans, ends, run, pinTex, pinS,
                 look: l.state === 'hidden' || hidden(l.a) || hidden(l.b) || pinHid ? 'ghost' : l.state,
                 points,
             };
         })
         // (players never see a string held by a pin they can't see)
         .filter((l) => gm || l.look !== 'ghost');
+    // (Luke, 2026-10-06) a string players can't see takes its name with it:
+    // the thread its tag hangs by, the tag, and their pins
+    if (!gm) {
+        const seen = new Set(links.map((l) => l.id));
+        const gonePins = new Set();
+        for (const [id, rl] of Object.entries(board.links)) if (!seen.has(id)) for (const j of rl.joints ?? []) if (j?.pin) gonePins.add(j.pin);
+        const goneLinks = new Set();
+        const goneNotes = new Set();
+        for (const t of links) {
+            const far = gonePins.has(t.aPin) ? 'b' : gonePins.has(t.bPin) ? 'a' : null;
+            if (!far) continue;
+            const key = t[far] ?? (t[`${far}Pin`] ? pinById[t[`${far}Pin`]]?.on ?? null : null);
+            if (key && byKey[key]?.type === 'note' && byKey[key].tag) {
+                goneLinks.add(t.id);
+                goneNotes.add(key);
+            }
+        }
+        if (goneLinks.size) {
+            for (let i = links.length - 1; i >= 0; i--) if (goneLinks.has(links[i].id)) links.splice(i, 1);
+            for (let i = scraps.length - 1; i >= 0; i--) if (goneNotes.has(scraps[i].key)) scraps.splice(i, 1);
+            const used = new Set(links.flatMap((l) => [l.aPin, l.bPin, ...l.joints.map((j) => j.shared)]).filter(Boolean));
+            for (let i = pins.length - 1; i >= 0; i--) {
+                const p = pins[i];
+                if ((gonePins.has(p.id) && !used.has(p.id)) || (p.on && goneNotes.has(p.on))) pins.splice(i, 1);
+            }
+        }
+    }
     // a scrap a string ties to is held by that string's pins; its own pin
     // shows only when nothing else holds it
     for (const l of links) for (const k of [l.a, l.b]) if (k && byKey[k]) byKey[k].tied = true;
-    // a pin holding strings: as big as its longest string says (Luke,
-    // 2026-10-02: by distance, or by hand; never by joining), and the scrap
-    // it is stuck in is held by it
+    // (a pin holding strings holds the scrap it is stuck in)
     for (const l of links) {
         for (const id of [l.aPin, l.bPin, ...l.waypoints.filter((w) => w.kind === 'joint' && w.pin).map((w) => w.pin)]) {
             const p = id && pinById[id];
-            if (!p) continue;
-            p.tier = Math.max(p.tier ?? 0, l.tier);
-            if (p.on && byKey[p.on]) byKey[p.on].tied = true;
+            if (p?.on && byKey[p.on]) byKey[p.on].tied = true;
         }
     }
-    for (const p of pins) {
-        if (p.s === null && p.tier) p.w = Math.max(11, base * p.tier) * pinScale(p.tex);
-        // (its size against a string's middle pin, for sizing it by hand)
-        p.sEff = p.w / (base * pinScale(p.tex));
+    // (a board pin a string runs through takes that string's colour: the
+    // first string's, by the board's order)
+    for (const l of links) {
+        for (const id of [l.aPin, l.bPin, ...l.waypoints.filter((w) => w.kind === 'joint' && w.pin).map((w) => w.pin)]) {
+            const p = id && pinById[id];
+            if (p && p.tint === undefined) p.tint = pinTint(look, l, p.tex);
+        }
     }
+    // (its size against the plain size, for sizing it by hand)
+    for (const p of pins) p.sEff = p.w / (base * pinScale(p.tex));
     // a string from a pin lying on a card to a pin stuck in that card (a name
     // tag set back on its route's pin): the near pin holds the card, so the
     // string and its far pin aren't shown (Luke, 2026-10-02)
@@ -1418,9 +1764,42 @@ export function boardView(look, board, viewer, size, measure) {
             }
         }
     }
+    // (the GM's view: a string the players can't see hangs its name as a
+    // ghost too, its thread and tag)
+    if (gm) {
+        for (const l of links) {
+            if (l.look !== 'ghost') continue;
+            for (const id of l.threads ?? []) {
+                const t = links.find((x) => x.id === id);
+                if (t) t.look = 'ghost';
+            }
+            if (l.nameNote && byKey[l.nameNote]) byKey[l.nameNote].look = 'ghost';
+        }
+    }
     // players never see a pin that only hidden strings hold
     const shown = gm ? pins : pins.filter((p) => !Object.values(board.links).some((l) => l.state === 'hidden' && [l.aPin, l.bPin, ...(l.joints ?? []).map((j) => j.pin)].includes(p.id)) || (p.pulls?.length ?? 0) > 0);
-    return { viewer: gm ? 'gm' : 'player', scraps, links, pins: shown, marks: board.marks ?? {}, decor: board.decor };
+    // (each loose piece its height by its picture's shape)
+    const bits = Object.values(board.bits ?? {}).map((b) => { const z = size(b.tex); return { ...b, h: z?.w ? (b.w * z.h) / z.w : b.w * 0.3, rot: b.r * DEG }; });
+    return { viewer: gm ? 'gm' : 'player', scraps, links, pins: shown, marks: board.marks ?? {}, bits, decor: board.decor };
+}
+
+// The players' strings alone (Luke, 2026-10-06: a view of just theirs): every
+// string a player made, with the threads their names hang by; the GM's
+// strings gone, with their name tags, and the pins only those held
+export function onlyPlayersStrings(view) {
+    const keep = new Set(view.links.filter((l) => l.author).map((l) => l.id));
+    for (const l of view.links) if (keep.has(l.id)) for (const t of l.threads ?? []) keep.add(t);
+    const gone = view.links.filter((l) => !keep.has(l.id));
+    const tags = new Set(gone.map((l) => l.nameNote).filter(Boolean));
+    const links = view.links.filter((l) => keep.has(l.id));
+    const used = new Set(links.flatMap((l) => [l.aPin, l.bPin, ...(l.joints ?? []).map((j) => j.shared)]).filter(Boolean));
+    const held = new Set(gone.flatMap((l) => [l.aPin, l.bPin, ...(l.joints ?? []).map((j) => j.shared)]).filter(Boolean));
+    return {
+        ...view,
+        links,
+        scraps: view.scraps.filter((s) => !tags.has(s.key)),
+        pins: (view.pins ?? []).filter((p) => used.has(p.id) || !held.has(p.id)),
+    };
 }
 
 // A junction's place from { t, off } against the line a -> b, and back
@@ -1492,6 +1871,8 @@ export function hitTest(view, pt, size, { tol = 14, decorUnder = true } = {}) {
     view = { ...view, links: view.links.filter((l) => !l.collapsed) };
     const over = view.decor.filter(d => d.layer === 'over');
     for (let i = over.length - 1; i >= 0; i--) if (pointInPoly(pt, decorHull(over[i], size))) return { kind: 'decor', item: over[i] };
+    // (a name tag lies over the strings)
+    for (let i = view.scraps.length - 1; i >= 0; i--) if (view.scraps[i].tag && pointInPoly(pt, view.scraps[i].layout.hull)) return { kind: 'scrap', item: view.scraps[i] };
     for (const l of view.links) {
         const p = l.points;
         for (let i = 2; i < p.length; i += 2) if (segDist(pt, p[i - 2], p[i - 1], p[i], p[i + 1]) <= tol) return { kind: 'link', item: l };
@@ -1534,6 +1915,11 @@ export function applyPatch(board, patch) {
     for (const [k, p] of Object.entries(patch?.newLinks ?? {})) board.links[k] = p;
     for (const [k, p] of Object.entries(patch?.scraps ?? {})) {
         if (!board.scraps[k]) continue;
+        // (a card taken off: into the bin, binPatch)
+        if (p === null) {
+            delete board.scraps[k];
+            continue;
+        }
         // (a card's marker strokes: each set, or taken off by a null)
         const { marks, ...rest } = p;
         Object.assign(board.scraps[k], rest);
@@ -1566,6 +1952,18 @@ export function applyPatch(board, patch) {
         if (p === null) delete board.pins[id];
         else board.pins[id] = { ...(board.pins[id] ?? {}), ...p };
     }
+    // (the board's loose pieces)
+    for (const [id, p] of Object.entries(patch?.bits ?? {})) {
+        board.bits ??= {};
+        if (p === null) delete board.bits[id];
+        else board.bits[id] = { ...(board.bits[id] ?? {}), ...p };
+    }
+    // (the bin: cards taken off, or put back)
+    for (const [k, e] of Object.entries(patch?.bin ?? {})) {
+        board.bin ??= {};
+        if (e === null) delete board.bin[k];
+        else board.bin[k] = e;
+    }
     return board;
 }
 
@@ -1591,12 +1989,14 @@ export function labelPatch(raw, id, label, look, size, measure, { at = null, tag
     if (T.r !== undefined && T.r !== null) note.r = T.r;
     const threadId = customKey('l', { ...(raw.links ?? {}), [id]: 1 });
     const tagPin = customKey('pin', { ...(raw.pins ?? {}), [pinId]: 1 });
-    const tex = pickFrom(fam, `${id}:join`) ?? 'tx/fixtures__fixture_grey_tack_small';
+    // (the string's own kind of pin, and its size)
+    const tex = l.pinTex ?? pickFrom(fam, id) ?? 'tx/fixtures__fixture_grey_tack_small';
+    const sz = l.pinS ? { s: l.pinS } : {};
     return {
         pins: {
-            [pinId]: { tex, x: Math.round(mid.x), y: Math.round(mid.y) },
+            [pinId]: { tex, ...sz, x: Math.round(mid.x), y: Math.round(mid.y) },
             // (the thread's far pin, through the top of the tag)
-            [tagPin]: { tex: pickFrom(fam, `${id}:tag`) ?? tex, on: noteKey, at: { u: 0, v: -0.42 } },
+            [tagPin]: { tex, ...sz, on: noteKey, at: { u: 0, v: -0.42 } },
         },
         links: { [id]: { joints, pulls: splitPulls(rl.pulls, span) } },
         newScraps: { [noteKey]: note },
@@ -1651,21 +2051,27 @@ function cardUnder(view, pt, not = null) {
 // A new string: a pin at each end (one already there, or one made where the
 // end was asked for: stuck in the scrap under it, else loose), and the string
 // between them; `prep` first (a pin it shares, made). Returns { id, patch }.
-export function newStringPatch(raw, act, kind, look, { color = null } = {}) {
+export function newStringPatch(raw, act, kind, look, { color = null, author = null, state = 'known' } = {}) {
     const fam = look.pools.ends?.[kind]?.length ? look.pools.ends[kind] : look.pools.pins;
     const id = customKey('l', raw.links ?? {});
     const patch = { pins: { ...(act.prep?.pins ?? {}) }, links: { ...(act.prep?.links ?? {}) }, scraps: { ...(act.prep?.scraps ?? {}) } };
     const used = { ...(raw.pins ?? {}), ...patch.pins };
-    const make = (key, at, pt, side) => {
+    // (one kind of pin a string, chosen when it is made; run on from a pin, that
+    // pin's kind and size: Luke 2026-10-06)
+    const from = used[act.aPin] ?? used[act.bPin] ?? null;
+    const tex = from?.tex ?? pickFrom(fam, id) ?? 'tx/fixtures__fixture_grey_tack_small';
+    const sz = from?.s ? { s: from.s } : {};
+    const make = (key, at, pt) => {
         const pid = customKey('pin', used);
         used[pid] = 1;
-        const tex = pickFrom(fam, `${id}:${side}`) ?? 'tx/fixtures__fixture_grey_tack_small';
-        patch.pins[pid] = key ? { tex, on: key, at: at ?? { u: 0, v: -0.4 } } : { tex, x: Math.round(pt.x), y: Math.round(pt.y) };
+        patch.pins[pid] = key ? { tex, ...sz, on: key, at: at ?? { u: 0, v: -0.4 } } : { tex, ...sz, x: Math.round(pt.x), y: Math.round(pt.y) };
+        if (author) patch.pins[pid].author = author;
         return pid;
     };
-    const aPin = act.aPin ?? make(act.a, act.aAt, act.aPt, 'a');
-    const bPin = act.bPin ?? make(act.b, act.bAt, act.bPt, 'b');
-    patch.newLinks = { [id]: { kind, state: 'known', aPin, bPin, ...(color === null || color === undefined ? {} : { color }) } };
+    const aPin = act.aPin ?? make(act.a, act.aAt, act.aPt);
+    const bPin = act.bPin ?? make(act.b, act.bAt, act.bPt);
+    // (a string run on from another is shown or hidden as that one is: Luke 2026-10-06)
+    patch.newLinks = { [id]: { kind, state: state === 'hidden' ? 'hidden' : 'known', aPin, bPin, ...(color === null || color === undefined ? {} : { color }), ...(author ? { author } : {}) } };
     return { id, patch };
 }
 
@@ -1720,7 +2126,34 @@ export function tidyBoard(raw, look, size, measure) {
         rp.at = uvOn(s.layout, p);
         changed = true;
     }
+    // (once, 2026-10-06: each string's pins made one kind, its first pin's;
+    // only the pins of its family that no other string holds)
+    if ((board.pinsEd ?? 0) < 1) {
+        unifyStringPins(board, look);
+        board.pinsEd = 1;
+        changed = true;
+    }
     return { board, changed };
+}
+
+// Each string's own pins (held by no other string) the kind of its first pin,
+// where both are of its family's pool. Returns whether any changed.
+export function unifyStringPins(board, look) {
+    const holds = {};
+    for (const l of Object.values(board.links ?? {})) for (const id of [l?.aPin, l?.bPin, ...(l?.joints ?? []).map((j) => j?.pin)]) if (id) holds[id] = (holds[id] ?? 0) + 1;
+    let any = false;
+    for (const l of Object.values(board.links ?? {})) {
+        if (!l) continue;
+        const fam = new Set([...(look.pools.ends?.[l.kind] ?? []), ...(look.pools.pins ?? [])]);
+        const ids = [l.aPin, l.bPin, ...(l.joints ?? []).map((j) => j?.pin)].filter((id) => id && board.pins?.[id]);
+        const first = ids.map((id) => board.pins[id]).find((p) => fam.has(p.tex));
+        if (!first) continue;
+        for (const id of ids) {
+            const p = board.pins[id];
+            if (holds[id] === 1 && p.tex !== first.tex && fam.has(p.tex)) { p.tex = first.tex; any = true; }
+        }
+    }
+    return any;
 }
 
 // What taking things off the board takes with them: the pins in a scrap
@@ -1750,4 +2183,372 @@ export function customKey(prefix, existing = {}) {
     let i = 1;
     while (existing[`${prefix}${i}`]) i++;
     return `${prefix}${i}`;
+}
+
+/* -------------------------------------------- */
+/*  The brush's doodles (Luke, 2026-10-06)      */
+/* -------------------------------------------- */
+
+// A bank of quick brush drawings: placed from the brush's doodle palette
+// where they are wanted, and now and then on a card as it comes. Each is
+// clean shapes (polylines in a box from -1 to 1) drawn over by a shaky human
+// hand (humanize: a slow waver, a little tremor, an overshot end). Laid down
+// they are ordinary strokes of whoever placed them (or the card's owner),
+// theirs to move or rub out.
+const arcPts = (cx, cy, rx, ry, a0, a1, n = 24) => { const out = []; for (let i = 0; i <= n; i++) { const a = a0 + ((a1 - a0) * i) / n; out.push(cx + Math.cos(a) * rx, cy + Math.sin(a) * ry); } return out; };
+const TAU = Math.PI * 2;
+// (a hand's curve through points: Catmull-Rom, n steps a span)
+const smooth = (p, n = 6) => {
+    const m = p.length / 2;
+    const P = (i) => { const k = Math.max(0, Math.min(m - 1, i)); return [p[2 * k], p[2 * k + 1]]; };
+    const out = [];
+    for (let i = 0; i < m - 1; i++) {
+        const [x0, y0] = P(i - 1), [x1, y1] = P(i), [x2, y2] = P(i + 1), [x3, y3] = P(i + 2);
+        for (let k = 0; k < n; k++) {
+            const t = k / n, t2 = t * t, t3 = t2 * t;
+            out.push(0.5 * (2 * x1 + (-x0 + x2) * t + (2 * x0 - 5 * x1 + 4 * x2 - x3) * t2 + (-x0 + 3 * x1 - 3 * x2 + x3) * t3),
+                0.5 * (2 * y1 + (-y0 + y2) * t + (2 * y0 - 5 * y1 + 4 * y2 - y3) * t2 + (-y0 + 3 * y1 - 3 * y2 + y3) * t3));
+        }
+    }
+    out.push(p[p.length - 2], p[p.length - 1]);
+    return out;
+};
+const circle = (cx, cy, r, n = 18) => arcPts(cx, cy, r, r, 0, TAU + 0.25, n);
+const starPts = (r) => { const p = []; for (let k = 0; k <= 5; k++) { const a = -Math.PI / 2 + (k % 5) * ((4 * Math.PI) / 5); p.push(Math.cos(a) * r, Math.sin(a) * r); } return p; };
+export const DOODLES = {
+    ring: (r) => { const a0 = r() * TAU; return [arcPts(0, 0, 1, 0.62, a0, a0 + TAU + 0.35 + r() * 0.3, 40)]; },
+    loops: (r) => { const a0 = r() * TAU; return [[...arcPts(0, 0, 1, 0.6, a0, a0 + TAU, 36), ...arcPts(0.04, 0.03, 0.9, 0.52, a0, a0 + TAU * 0.85, 30)]]; },
+    underline: () => [[-1, 0.05, -0.3, 0.1, 0.4, 0.06, 1, 0.12]],
+    double: () => [[-1, -0.1, 0, -0.06, 1, -0.02], [-0.9, 0.16, 0, 0.2, 0.92, 0.22]],
+    arrow: () => [[-1, 0.15, -0.2, 0.05, 0.85, -0.05], [0.45, -0.4, 0.88, -0.05, 0.42, 0.32]],
+    // (an arc over and down, its head at its end along its last turn)
+    swoop: () => [arcPts(0, 0.55, 0.95, 0.95, Math.PI * 1.05, Math.PI * 1.9, 20), [0.97, -0.08, 0.9, 0.26, 0.64, 0.03]],
+    down: () => [[0.05, -1, 0, -0.2, 0.02, 0.85], [-0.35, 0.45, 0.02, 0.88, 0.38, 0.42]],
+    question: () => [[...arcPts(0, -0.45, 0.5, 0.42, Math.PI * 1.1, Math.PI * 2.35, 16), 0.04, 0.25], circle(0.04, 0.72, 0.07, 8)],
+    shout: () => [[0.02, -0.95, 0, -0.25, 0.04, 0.35], circle(0.04, 0.74, 0.07, 8)],
+    cross: () => [[-0.8, -0.8, 0.82, 0.78], [0.78, -0.85, -0.8, 0.8]],
+    tick: () => [[-0.85, 0.05, -0.32, 0.62, 0.9, -0.85]],
+    star: () => { const p = []; for (let k = 0; k <= 5; k++) { const a = -Math.PI / 2 + (k % 5) * ((4 * Math.PI) / 5); p.push(Math.cos(a) * 0.95, Math.sin(a) * 0.95); } return [p]; },
+    spiral: () => { const p = []; for (let i = 0; i <= 60; i++) { const t = i / 60, a = t * TAU * 2.4, rr = 0.95 * (1 - t * 0.88); p.push(Math.cos(a) * rr, Math.sin(a) * rr * 0.82); } return [p]; },
+    wave: () => { const p = []; for (let i = 0; i <= 24; i++) { const t = i / 24; p.push(-1 + 2 * t, Math.sin(t * TAU * 1.5) * 0.28); } return [p]; },
+    bracket: () => [[0.35, -0.95, -0.2, -0.92, -0.28, 0, -0.22, 0.92, 0.36, 0.96]],
+    box: () => [[-0.95, -0.7, 0.92, -0.74, 0.96, 0.68, -0.9, 0.72, -0.98, -0.78, -0.6, -0.72]],
+    warning: () => [[0, -0.95, 0.95, 0.75, -0.95, 0.78, 0.04, -0.98], [0.02, -0.4, 0, 0.25], circle(0.03, 0.5, 0.06, 8)],
+    // (the heart curve, one stroke from its cleft round and back)
+    heart: () => { const p = []; for (let i = 0; i <= 40; i++) { const t = (i / 40) * TAU; p.push((16 * Math.sin(t) ** 3) / 17, -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) / 17); } return [p]; },
+    eye: () => [[...arcPts(0, 0.55, 1.05, 0.95, Math.PI * 1.17, Math.PI * 1.83, 16)], [...arcPts(0, -0.55, 1.05, 0.95, Math.PI * 0.17, Math.PI * 0.83, 16)], arcPts(0, 0, 0.24, 0.24, 0, TAU, 14)],
+    skull: () => [arcPts(0, -0.15, 0.78, 0.72, Math.PI * 0.75, Math.PI * 2.25, 30), arcPts(-0.3, -0.18, 0.17, 0.17, 0, TAU, 10), arcPts(0.3, -0.18, 0.17, 0.17, 0, TAU, 10), [-0.32, 0.55, -0.3, 0.9], [0, 0.6, 0, 0.92], [0.3, 0.55, 0.3, 0.9], [-0.42, 0.62, 0.42, 0.62]],
+    moon: () => [[...arcPts(0, 0, 0.92, 0.92, Math.PI * 0.35, Math.PI * 1.65, 24), ...arcPts(0.38, 0, 0.62, 0.7, Math.PI * 1.55, Math.PI * 0.45, 20)]],
+    sun: () => { const out = [arcPts(0, 0, 0.45, 0.45, 0, TAU + 0.3, 20)]; for (let k = 0; k < 8; k++) { const a = (k / 8) * TAU; out.push([Math.cos(a) * 0.62, Math.sin(a) * 0.62, Math.cos(a) * 0.98, Math.sin(a) * 0.98]); } return out; },
+    scratch: () => { const p = []; for (let i = 0; i <= 9; i++) p.push(-0.95 + i * 0.21, i % 2 ? 0.55 : -0.55); return [p]; },
+    asterisk: () => [[0, -0.95, 0, 0.95], [-0.82, -0.48, 0.82, 0.48], [-0.82, 0.48, 0.82, -0.48]],
+    // (2026-10-06, the bank grown: Luke wanted more, and more kinds)
+    key: () => [circle(-0.58, 0, 0.32), [-0.26, 0, 0.95, 0.02], [0.62, 0.01, 0.62, 0.32], [0.84, 0.02, 0.84, 0.26]],
+    keyhole: () => [circle(0, -0.4, 0.36), [-0.12, -0.08, -0.32, 0.9, 0.32, 0.9, 0.12, -0.08]],
+    door: () => [[-0.6, 0.95, -0.6, -0.25, ...arcPts(0, -0.25, 0.6, 0.65, Math.PI, TAU, 14), 0.6, 0.95], circle(0.33, 0.28, 0.06, 8)],
+    stairs: () => [[-0.95, 0.9, -0.95, 0.45, -0.5, 0.45, -0.5, 0, -0.05, 0, -0.05, -0.45, 0.4, -0.45, 0.4, -0.9, 0.95, -0.9]],
+    ladder: () => [[-0.42, -0.95, -0.38, 0.95], [0.4, -0.95, 0.43, 0.95], [-0.4, -0.55, 0.41, -0.55], [-0.39, -0.1, 0.42, -0.1], [-0.39, 0.35, 0.42, 0.35], [-0.38, 0.75, 0.43, 0.75]],
+    flame: () => [smooth([0, -0.95, 0.3, -0.4, 0.55, 0.15, 0.4, 0.68, 0, 0.92, -0.4, 0.68, -0.55, 0.15, -0.28, -0.25, -0.12, 0, 0, -0.95]), smooth([0.02, 0.72, -0.18, 0.4, 0.04, 0.08, 0.18, 0.42, 0.02, 0.72])],
+    drop: () => [smooth([0, -0.95, 0.28, -0.4, 0.5, 0.18, 0.42, 0.66, 0, 0.94, -0.42, 0.66, -0.5, 0.18, -0.28, -0.4, 0, -0.95])],
+    tally: () => [[-0.62, -0.7, -0.64, 0.72], [-0.24, -0.72, -0.25, 0.7], [0.14, -0.7, 0.12, 0.72], [0.5, -0.72, 0.5, 0.7], [-0.9, 0.48, 0.8, -0.42]],
+    hash: () => [[-0.32, -0.92, -0.5, 0.92], [0.42, -0.92, 0.26, 0.92], [-0.9, -0.32, 0.92, -0.36], [-0.95, 0.34, 0.86, 0.3]],
+    dagger: () => [[0, -0.95, 0.15, -0.68, 0.12, 0.25, -0.12, 0.25, -0.15, -0.68, 0, -0.95], [-0.45, 0.3, 0.46, 0.28], [0, 0.32, 0.01, 0.78], circle(0.01, 0.86, 0.09, 10)],
+    hook: () => [[0.1, -0.95, 0.1, 0.4, ...arcPts(-0.28, 0.4, 0.38, 0.5, 0, Math.PI, 14)], [-0.66, 0.4, -0.48, 0.18]],
+    sigil: () => [[0, -0.92, 0.88, 0.72, -0.88, 0.72, 0, -0.92], [0, -0.3, 0, 0.95], [-0.42, 0.2, 0.42, 0.2]],
+    crosshair: () => [circle(0, 0, 0.66, 22), [-0.98, 0, -0.42, 0], [0.42, 0, 0.98, 0], [0, -0.98, 0, -0.42], [0, 0.42, 0, 0.98]],
+    marked: () => [circle(0, 0, 0.9, 24), [-0.5, -0.5, 0.52, 0.5], [0.5, -0.52, -0.5, 0.52]],
+    bolt: () => [[0.32, -0.95, -0.3, -0.05, 0.24, 0.05, -0.32, 0.95]],
+    water: () => [-0.55, 0, 0.55].map((y0) => { const p = []; for (let i = 0; i <= 16; i++) { const t = i / 16; p.push(-0.95 + 1.9 * t, y0 + Math.sin(t * TAU * 1.5) * 0.14); } return p; }),
+    mountain: () => [[-0.95, 0.72, -0.4, -0.45, -0.05, 0.18, 0.42, -0.8, 0.95, 0.72]],
+    tombstone: () => [[-0.6, 0.86, -0.6, -0.3, ...arcPts(0, -0.3, 0.6, 0.6, Math.PI, TAU, 14), 0.6, 0.86], [-0.95, 0.9, 0.95, 0.88], [0, -0.5, 0, 0.25], [-0.25, -0.22, 0.25, -0.22]],
+    coffin: () => [[-0.22, -0.95, 0.22, -0.95, 0.52, -0.42, 0.3, 0.95, -0.3, 0.95, -0.52, -0.42, -0.22, -0.95]],
+    crown: () => [[-0.86, 0.6, -0.92, -0.5, -0.45, 0.04, 0, -0.75, 0.45, 0.04, 0.92, -0.5, 0.86, 0.6, -0.86, 0.6]],
+    bone: () => [[-0.55, -0.12, 0.55, -0.12], [-0.55, 0.12, 0.55, 0.12], circle(-0.72, -0.2, 0.2, 12), circle(-0.72, 0.2, 0.2, 12), circle(0.72, -0.2, 0.2, 12), circle(0.72, 0.2, 0.2, 12)],
+    hourglass: () => [[-0.6, -0.92, 0.6, -0.92, -0.6, 0.92, 0.6, 0.92, -0.6, -0.92]],
+    dots: () => [circle(-0.7, 0, 0.1, 8), circle(0, 0, 0.1, 8), circle(0.7, 0, 0.1, 8)],
+    tentacle: () => [smooth([-0.85, 0.95, -0.6, 0.4, -0.66, -0.1, -0.3, -0.52, 0.2, -0.72, 0.6, -0.5, 0.55, -0.14, 0.25, -0.2, 0.3, -0.42])],
+    pentacle: () => [circle(0, 0, 0.95, 28), starPts(0.9)],
+    teeth: () => [[-0.95, -0.1, 0.95, -0.1], arcPts(0, -0.1, 0.95, 0.85, 0, Math.PI, 18), [-0.75, -0.1, -0.6, 0.22, -0.45, -0.08, -0.3, 0.3, -0.15, -0.08, 0, 0.34, 0.15, -0.08, 0.3, 0.3, 0.45, -0.08, 0.6, 0.22, 0.75, -0.1]],
+    coil: () => { const p = []; for (let i = 0; i <= 64; i++) { const t = i / 64; p.push(-0.9 + 1.8 * t - 0.22 * Math.sin(t * TAU * 4), -0.3 * Math.cos(t * TAU * 4)); } return [p]; },
+    north: () => [[0, 0.95, 0, -0.9], [-0.32, -0.5, 0, -0.95, 0.32, -0.5], [-0.3, 0.3, 0.3, 0.3]],
+};
+export const DOODLE_KINDS = Object.keys(DOODLES);
+
+// A clean line drawn by a hand: walked along at an even pace, wavering
+// slowly to either side, trembling a little, its end overshot
+function humanize(pts, r, k = 1) {
+    const out = [];
+    const n = pts.length / 2;
+    if (n < 2) return pts;
+    let total = 0;
+    for (let i = 1; i < n; i++) total += Math.hypot(pts[2 * i] - pts[2 * i - 2], pts[2 * i + 1] - pts[2 * i - 1]);
+    if (total < 0.12) {
+        // (a dot: a short dab)
+        const x = pts[0];
+        const y = pts[1];
+        return [x - 0.03, y - 0.01, x + 0.02 + r() * 0.02, y + 0.03];
+    }
+    const step = 0.045;
+    const f1 = 1.3 + r() * 1.4;
+    const f2 = 4 + r() * 3;
+    const p1 = r() * TAU;
+    const p2 = r() * TAU;
+    const amp = 0.035 * k;
+    let run = 0;
+    const over = 0.05 + r() * 0.05;
+    for (let i = 1; i < n; i++) {
+        const x0 = pts[2 * i - 2];
+        const y0 = pts[2 * i - 1];
+        const dx = pts[2 * i] - x0;
+        const dy = pts[2 * i + 1] - y0;
+        const len = Math.hypot(dx, dy) || 1e-6;
+        const nx = -dy / len;
+        const ny = dx / len;
+        const last = i === n - 1;
+        const reach = last ? len + over : len;
+        for (let d = i === 1 ? 0 : step - (run % step); d <= reach; d += step) {
+            const t = (run + d) / total;
+            const w = amp * (0.6 * Math.sin(t * TAU * f1 + p1) + 0.4 * Math.sin(t * TAU * f2 + p2)) + (r() - 0.5) * 0.012 * k;
+            out.push(x0 + (dx / len) * d + nx * w, y0 + (dy / len) * d + ny * w);
+        }
+        run += len;
+    }
+    return out;
+}
+
+// A doodle's strokes: its shapes humanized, turned a little, `size` across
+// (a half-width), set at x, y (in whatever units those are: board px on the
+// sheet, card units on a card)
+// (every doodle fitted to the same box, its widest way across it, centred,
+// so each comes out the same size at every size: Luke 2026-10-06)
+function fitShapes(polys) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const p of polys) for (let i = 0; i < p.length; i += 2) { x0 = Math.min(x0, p[i]); x1 = Math.max(x1, p[i]); y0 = Math.min(y0, p[i + 1]); y1 = Math.max(y1, p[i + 1]); }
+    const k = 0.95 / Math.max(0.05, (x1 - x0) / 2, (y1 - y0) / 2);
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    return polys.map((p) => p.map((v, i) => (v - (i % 2 ? cy : cx)) * k));
+}
+function doodlePaths(kind, seed, { x = 0, y = 0, size = 1, turn = null } = {}) {
+    const make = DOODLES[kind];
+    if (!make) return [];
+    const r = rng(`doodle:${seed}`);
+    const a = turn ?? (r() - 0.5) * 0.45;
+    const cs = Math.cos(a);
+    const sn = Math.sin(a);
+    return fitShapes(make(r)).map((poly) => {
+        const h = humanize(poly, r);
+        const out = [];
+        for (let i = 0; i < h.length; i += 2) out.push(x + (h[i] * cs - h[i + 1] * sn) * size, y + (h[i] * sn + h[i + 1] * cs) * size);
+        return out;
+    });
+}
+
+// A doodle laid on the sheet (board px): strokes { c, w, b, o, pts }. `w` is
+// the brush's width at the palette's middle size (DOODLE_SIZE); the line
+// thickens and thins with the doodle, so it reads the same small or large
+// (Luke, 2026-10-06)
+export const DOODLE_SIZE = 50;
+export const doodleWidth = (w, size) => Math.max(1.5, Math.round(w * (size / DOODLE_SIZE) * 10) / 10);
+export function doodleBoard(kind, seed, { x, y, size = DOODLE_SIZE, c = 1, w = 8, b = 1, o = 0.85 } = {}) {
+    const ww = doodleWidth(w, size);
+    return doodlePaths(kind, seed, { x, y, size }).map((pts) => cleanStroke({ c, w: ww, b, o, pts: pts.map((v) => Math.round(v * 10) / 10) })).filter(Boolean);
+}
+
+// A doodle laid on a card (card units: its width at size 1 is one), at
+// (u, v), `size` across, in a paint, as its owner's strokes ({ id: stroke })
+export function doodleStrokes(kind, seed, { u = 0, v = 0, size = 0.16, c = 1, w = 7, by = null, b = 1 } = {}) {
+    const out = {};
+    doodlePaths(kind, seed, { x: u, y: v, size }).forEach((pts, i) => {
+        const st = cleanStroke({ by, c, w, b, pts }, { card: true });
+        if (st) out[`d${i + 1}`] = st;
+    });
+    return out;
+}
+
+// the paints a doodle comes in on a card, clear on paper: blood, soot, rust, brown
+const DOODLE_PAINTS = [1, 12, 1, 2, 13];
+
+// Whether a card comes with a doodle, and which (Luke, 2026-10-06: seasoned
+// onto notes and cards; his brush's own weight, about): about a card in four,
+// by its key; its strokes, or {}
+export function seasonMarks(key, { by = null, type = 'note' } = {}) {
+    const r = rng(`season:${key}`);
+    if (r() > (type === 'note' ? 0.3 : 0.2)) return {};
+    const kind = DOODLE_KINDS[Math.floor(r() * DOODLE_KINDS.length)];
+    return doodleStrokes(kind, key, {
+        u: (r() - 0.5) * 0.45, v: (r() - 0.5) * 0.45, size: 0.12 + r() * 0.1,
+        c: DOODLE_PAINTS[Math.floor(r() * DOODLE_PAINTS.length)], w: 6 + r() * 2.5, by, b: r() < 0.5 ? 1 : 0,
+    });
+}
+
+/* -------------------------------------------- */
+/*  History (Luke, 2026-10-06)                  */
+/* -------------------------------------------- */
+
+// An edit kept as what it changed, path by path, so it can be undone (or
+// done again) by itself: never a whole board put back over what others have
+// done since. A record is { ops: [{ path, b?, a? }] }: each op a path into the
+// board's JSON and its value before (b) and after (a), a missing key meaning
+// it wasn't there. Values are whole only where one side had nothing there;
+// otherwise the paths go down to plain values and arrays.
+const BOARD_KEYS = ['scraps', 'links', 'pins', 'marks', 'bits', 'decor', 'bin'];
+const isPlain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const copy = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
+const sameJSON = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const getAt = (o, path) => path.reduce((v, k) => (v && typeof v === 'object' ? v[k] : undefined), o);
+function setAt(o, path, has, v) {
+    let at = o;
+    for (const k of path.slice(0, -1)) {
+        if (!isPlain(at[k])) {
+            if (!has) return;
+            at[k] = {};
+        }
+        at = at[k];
+    }
+    const last = path[path.length - 1];
+    if (has) at[last] = copy(v);
+    else delete at[last];
+}
+
+function diffInto(ops, path, a, b) {
+    if (sameJSON(a, b)) return;
+    if (isPlain(a) && isPlain(b)) {
+        for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) diffInto(ops, [...path, k], a[k], b[k]);
+        return;
+    }
+    const op = { path };
+    if (a !== undefined) op.b = copy(a);
+    if (b !== undefined) op.a = copy(b);
+    ops.push(op);
+}
+
+// What changed between two boards' JSON: everywhere, or only under `roots`
+// (paths: what an edit touched)
+export function diffBoard(before = {}, after = {}, roots = null) {
+    const ops = [];
+    const list = roots ? roots.filter((p, i) => !roots.some((q, j) => j !== i && q.length < p.length && q.every((k, n) => k === p[n])) && !roots.slice(0, i).some((q) => sameJSON(q, p))) : BOARD_KEYS.map((k) => [k]);
+    for (const p of list) diffInto(ops, p, getAt(before, p), getAt(after, p));
+    return { ops };
+}
+
+// Records one after another, as one
+export const mergeRecords = (list) => ({ ops: (list ?? []).flatMap((r) => r?.ops ?? []) });
+
+// A board as a record leaves it: undone ('before') or done ('after')
+export function recordTarget(board, rec, side = 'before') {
+    const out = copy(board ?? {});
+    const key = side === 'before' ? 'b' : 'a';
+    const ops = side === 'before' ? [...(rec?.ops ?? [])].reverse() : rec?.ops ?? [];
+    for (const op of ops) setAt(out, op.path, key in op, op[key]);
+    return out;
+}
+
+// The scene update that takes a board to where a record says (`prefix`: the
+// board's place in the scene's data), one key per path: a value set, or
+// '-=' taking a key away
+export function recordUpdate(board, rec, side = 'before', prefix = 'flags.heart.board') {
+    const target = recordTarget(board, rec, side);
+    const { ops } = diffBoard(board ?? {}, target, (rec?.ops ?? []).map((o) => o.path));
+    const data = {};
+    for (const op of ops) {
+        const head = [prefix, ...op.path.slice(0, -1)].join('.');
+        if ('a' in op) data[`${head}.${op.path[op.path.length - 1]}`] = op.a;
+        else data[`${head}.-=${op.path[op.path.length - 1]}`] = null;
+    }
+    return data;
+}
+
+// The roots an update's keys touch (each 'flags.heart.board.<coll>.<id>...'),
+// or null when it replaces the whole board
+export function updateRoots(data, prefix = 'flags.heart.board') {
+    const roots = [];
+    for (const k of Object.keys(data ?? {})) {
+        if (k === prefix) return null;
+        if (!k.startsWith(`${prefix}.`)) continue;
+        const parts = k.slice(prefix.length + 1).split('.').map((s) => s.replace(/^-=/, ''));
+        const deep = parts[0] === 'marks' ? 3 : parts[0] === 'decor' ? 1 : 2;
+        roots.push(parts.slice(0, deep));
+    }
+    return roots;
+}
+
+/* -------------------------------------------- */
+/*  The bin (Luke, 2026-10-06)                  */
+/* -------------------------------------------- */
+
+// Cards (text and pictures, irreplaceable) are never deleted outright: taken
+// off the board they go to the board's bin with their pins and strings, the
+// newest BIN_MAX kept, and can be put back. bin: { key: { at, by, scrap,
+// pins, links } }.
+export const BIN_MAX = 60;
+
+// The patch taking cards off into the bin (with what goes with them)
+export function binPatch(raw, keys, { at = Date.now(), by = null } = {}) {
+    const r = removalOf(raw, { scraps: keys });
+    if (!r.scraps.length) return null;
+    const bin = {};
+    const owner = (id) => r.scraps.find((k) => raw.pins?.[id]?.on === k);
+    const placed = new Set();
+    for (const k of r.scraps) bin[k] = { at, by, scrap: copy(raw.scraps[k]), pins: {}, links: {} };
+    for (const id of r.pins) {
+        const k = owner(id);
+        if (k) bin[k].pins[id] = copy(raw.pins[id]);
+    }
+    for (const id of r.links) {
+        const l = raw.links?.[id];
+        if (!l) continue;
+        const k = r.scraps.find((s) => l.a === s || l.b === s || bin[s].pins[l.aPin] || bin[s].pins[l.bPin]);
+        if (k && !placed.has(id)) {
+            bin[k].links[id] = copy(l);
+            placed.add(id);
+        }
+    }
+    // (the oldest let go past BIN_MAX)
+    const all = Object.entries(raw.bin ?? {}).sort((x, y) => (x[1]?.at ?? 0) - (y[1]?.at ?? 0));
+    const over = all.length + r.scraps.length - BIN_MAX;
+    for (let i = 0; i < over; i++) bin[all[i][0]] = null;
+    // (a card already in the bin under its key: the older one goes)
+    return {
+        scraps: Object.fromEntries(r.scraps.map((k) => [k, null])),
+        pins: Object.fromEntries(r.pins.map((id) => [id, null])),
+        links: { ...Object.fromEntries(r.links.map((id) => [id, null])), ...r.edits },
+        bin,
+    };
+}
+
+// The patch putting a binned card back, with its pins and the strings whose
+// other ends are still there (any of its ids now taken by something else
+// given a new one)
+export function unbinPatch(raw, key) {
+    const e = raw.bin?.[key];
+    if (!e?.scrap) return null;
+    const scraps = { ...(raw.scraps ?? {}) };
+    const pinsNow = { ...(raw.pins ?? {}) };
+    const linksNow = { ...(raw.links ?? {}) };
+    const k = scraps[key] ? customKey(e.scrap.type === 'note' ? 'n' : e.scrap.type === 'scrawl' ? 'w' : 'c', scraps) : key;
+    const pinId = {};
+    const newPins = {};
+    for (const [id, p] of Object.entries(e.pins ?? {})) {
+        const nid = pinsNow[id] ? customKey('pin', { ...pinsNow, ...newPins }) : id;
+        pinId[id] = nid;
+        newPins[nid] = { ...p, ...(p.on === key ? { on: k } : {}) };
+    }
+    const there = (end, pin) => (pin ? Boolean(pinId[pin] || pinsNow[pin]) : end ? end === key || Boolean(scraps[end]) : true);
+    const newLinks = {};
+    for (const [id, l] of Object.entries(e.links ?? {})) {
+        if (!there(l.a, l.aPin) || !there(l.b, l.bPin)) continue;
+        const nid = linksNow[id] ? customKey('l', { ...linksNow, ...newLinks }) : id;
+        const fix = (v) => (v === key ? k : v);
+        const pin = (v) => (v ? pinId[v] ?? v : v);
+        newLinks[nid] = { ...l, a: fix(l.a ?? null), b: fix(l.b ?? null), aPin: pin(l.aPin ?? null), bPin: pin(l.bPin ?? null), joints: (l.joints ?? []).filter((j) => !j?.pin || pinId[j.pin] || pinsNow[j.pin]).map((j) => (j?.pin ? { pin: pin(j.pin) } : j)) };
+    }
+    return { newScraps: { [k]: copy(e.scrap) }, pins: newPins, newLinks, bin: { [key]: null } };
+}
+
+// What the bin holds, newest first: [{ key, at, by, type, name }]
+export function binList(raw, look = null) {
+    return Object.entries(raw?.bin ?? {}).filter(([, e]) => e?.scrap).map(([key, e]) => ({
+        key, at: e.at ?? 0, by: e.by ?? null, type: e.scrap.type ?? 'landmark',
+        name: e.scrap.name || (e.scrap.lib ? look?.library?.[e.scrap.lib]?.name : '') || e.scrap.text || key,
+    })).sort((a, b) => b.at - a.at);
 }

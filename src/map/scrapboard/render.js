@@ -18,7 +18,7 @@
 //   without a whole image is painted again when it comes.
 // - Zoomed in, the view is painted again at the screen's own resolution (a
 //   second, finer set of tiles over it), so writing is sharp at any zoom.
-import { normalizeBoard, boardView } from './model.js';
+import { normalizeBoard, boardView, onlyPlayersStrings } from './model.js';
 import { createPainter, sheetGeometry } from './paint.js';
 import { loadBoardLook, textureUrl, previewUrl } from './look.js';
 import { boardOf } from './api.js';
@@ -395,7 +395,9 @@ export class ScrapboardRenderer {
         for (const s of Object.values(board.scraps)) {
             if (s.uuid && !s.name) s.name = fromUuidSync(s.uuid, { strict: false })?.name ?? '';
         }
-        const view = boardView(look, board, viewer, this.size, this.measure);
+        let view = boardView(look, board, viewer, this.size, this.measure);
+        // (the players' strings alone, on this screen: Luke 2026-10-06)
+        if (this.playerStringsOnly) view = onlyPlayersStrings(view);
         // marker layers this client has hidden (the GM's view of each one)
         if (this.hiddenMarks.size) view.marks = Object.fromEntries(Object.entries(view.marks).filter(([k]) => !this.hiddenMarks.has(k)));
         return view;
@@ -405,6 +407,8 @@ export class ScrapboardRenderer {
     hiddenMarks = new Set();
     // the drawing alone, without the board's pieces (this client's)
     marksOnly = false;
+    // the players' strings alone (this client's)
+    playerStringsOnly = false;
 
     /* -------------------------------------------- */
     /*  Drawing                                     */
@@ -466,12 +470,17 @@ export class ScrapboardRenderer {
             out.set(`s:${s.key}`, { sig: sigOf(s), box: boxOf(pts, 50) });
         }
         for (const l of view.links ?? []) {
-            const pts = [...(l.points ?? [])];
+            // (a long string: a box for each stretch of it, not one round it all)
+            const P0 = l.points ?? [];
+            const boxes = [];
+            for (let i = 0; i < P0.length; i += 16) boxes.push(boxOf(P0.slice(i, i + 18), 60));
             const T = l.label ? P.tagOf(l) : null;
-            if (T) pts.push(T.x - T.w, T.y - T.w, T.x + T.w, T.y + T.w, T.mid.x, T.mid.y);
-            out.set(`l:${l.id}`, { sig: sigOf(l), box: boxOf(pts, 60) });
+            if (T) boxes.push(boxOf([T.x - T.w, T.y - T.w, T.x + T.w, T.y + T.w, T.mid.x, T.mid.y], 60));
+            out.set(`l:${l.id}`, { sig: sigOf(l), boxes: boxes.filter(Boolean) });
         }
         for (const p of view.pins ?? []) out.set(`p:${p.id}`, { sig: sigOf(p), box: boxOf([p.x, p.y], (p.w ?? 40) + 20) });
+        // (the board's loose pieces: tape and webs off their cards)
+        for (const b of view.bits ?? []) out.set(`b:${b.id}`, { sig: sigOf(b), box: boxOf([b.x, b.y], Math.max(b.w, b.h ?? 0) + 30) });
         (view.decor ?? []).forEach((d, i) => out.set(`d:${i}`, { sig: sigOf(d), box: boxOf([d.x, d.y], (d.w ?? 100) * 1.5 + 20) }));
         // the marker's strokes are the sheet's: a change repaints the sheet there
         for (const [id, m] of P.markState()) out.set(`m:${id}`, { sig: m.sig, box: m.box, sheet: true });
@@ -481,7 +490,9 @@ export class ScrapboardRenderer {
     // the parts of the board a change of pieces touches
     #changes(was, now) {
         const out = [];
-        const take = (e) => e?.box && out.push({ box: e.box, sheet: Boolean(e.sheet) });
+        const take = (e) => {
+            for (const box of e?.boxes ?? (e?.box ? [e.box] : [])) out.push({ box, sheet: Boolean(e.sheet) });
+        };
         for (const [id, a] of was) {
             const b = now.get(id);
             if (!b || b.sig !== a.sig) take(a);

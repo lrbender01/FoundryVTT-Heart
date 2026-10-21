@@ -175,3 +175,18 @@ export function decorUV(point, { center, width, height, r = 0, flip = false, sca
     const v = y / height + 0.5;
     return u >= 0 && u <= 1 && v >= 0 && v <= 1 ? { u, v } : null;
 }
+
+// Which decorations play their hover (2026-10-03, Luke: stacked hovers
+// looked wrong; "only the one hovered should have its opacity and brightness
+// boosted"). `path` is what is under the pointer, innermost first: each step
+// { anchor, art } (art: the element shows art of its own, a gear row's or a
+// banner's). Only the innermost art place reacts: the nearest anchor that
+// has decorations plays, unless an element with its own art comes first, in
+// which case no decoration plays (that element lifts instead).
+export function hoverAnchor(path, decorated) {
+    for (const step of path ?? []) {
+        if (step.art) return null;
+        if (step.anchor && decorated.has(step.anchor)) return step.anchor;
+    }
+    return null;
+}

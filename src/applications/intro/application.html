@@ -1,0 +1,20 @@
+<form class="heart-intro" autocomplete="off" onsubmit="event.preventDefault()">
+    <nav class="intro-tabs">
+        {{#each pages}}
+        <a class="intro-tab {{#if active}}active{{/if}}" data-page="{{index}}"><span class="intro-n">{{n}}</span>{{title}}</a>
+        {{/each}}
+    </nav>
+    <div class="intro-body">
+        {{#each pages}}
+        <section class="intro-page" data-page="{{index}}" {{#unless active}}hidden{{/unless}}>
+            <h2>{{title}}</h2>
+            {{{body}}}
+        </section>
+        {{/each}}
+    </div>
+    <footer class="intro-nav">
+        <button type="button" data-action="prev">{{previous}}</button>
+        <span class="intro-count">1 / {{count}}</span>
+        <button type="button" data-action="next" class="primary">{{next}}</button>
+    </footer>
+</form>

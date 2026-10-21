@@ -14,13 +14,35 @@
 // Call set({ look, view, geo }) before drawing.
 import {
     hashSeed, rng, pickFrom, markMax, cssColor, mixColor, inkAt, handLine, clipArtBox, stringPoints, pointAlong, pathLength,
-    pinScale, nearestOnPath, sheetOutline, foldLines, foldCrossings, ledgerRules, sheetPanels,
+    pinScale, pinUpright, brushColor, nearestOnPath, sheetOutline, foldLines, foldCrossings, ledgerRules, sheetPanels, pxPerInch, printOf,
 } from './model.js';
 
 // The sheet's geometry for a look (`tone(id)`, `safe(id)`: a paper's mean
 // colour and solid region, from the texture set's metadata)
 export function sheetGeometry(look, tone = () => null, safe = () => null) {
     return { outline: sheetOutline(look), folds: foldLines(look), crossings: foldCrossings(look), ledger: ledgerRules(look), panels: sheetPanels(look, tone, safe) };
+}
+
+// A pin's picture for a picker (Luke, 2026-10-06: the cards should size to
+// the pins themselves): stood upright as the board stands it, cut to what is
+// drawn of it, and fitted to a px square. A canvas.
+export function pinThumb(im, tex, px = 64) {
+  const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
+  const out = document.createElement("canvas"); out.width = out.height = px;
+  if (!iw || !ih) return out;
+  const D = Math.ceil(Math.hypot(iw, ih)), c = document.createElement("canvas"); c.width = c.height = D;
+  const x = c.getContext("2d");
+  x.translate(D / 2, D / 2); x.rotate(pinUpright(tex)); x.drawImage(im, -iw / 2, -ih / 2); x.setTransform(1, 0, 0, 1, 0, 0);
+  let x0 = 0, y0 = 0, x1 = D, y1 = D;
+  try {
+    const p = x.getImageData(0, 0, D, D).data;
+    x0 = D; y0 = D; x1 = 0; y1 = 0;
+    for (let y = 0; y < D; y++) for (let i = 0; i < D; i++) if (p[(y * D + i) * 4 + 3] > 40) { if (i < x0) x0 = i; if (i > x1) x1 = i; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 < x0) { x0 = 0; y0 = 0; x1 = D; y1 = D; }
+  } catch { /* (a tainted image: the whole of it) */ }
+  const w = x1 - x0 + 1, h = y1 - y0 + 1, k = (px * 0.86) / Math.max(w, h);
+  out.getContext("2d").drawImage(c, x0, y0, w, h, (px - w * k) / 2, (px - h * k) / 2, w * k, h * k);
+  return out;
 }
 
 export function createPainter(env) {
@@ -93,6 +115,7 @@ let pinView = null;
 // every frame, for every pin, is slow): kept per texture, size, and turn
 const shadowed = new Map();
 function shadowedSprite(im, id, w, hh, rot, flip, flipY, shadow, filter) {
+  // (id carries a pin's tint)
   const q = cacheQ();
   const key = `${id}|${filter}|${Math.round(w * 4)}|${Math.round(hh * 4)}|${Math.round(rot * 200)}|${flip}|${flipY}|${shadow}|${q}`;
   let e = shadowed.get(key);
@@ -112,13 +135,15 @@ function shadowedSprite(im, id, w, hh, rot, flip, flipY, shadow, filter) {
   return e;
 }
 // a sprite: the texture centred at cx, cy, w wide, turned rot (radians)
-function sprite(g, id, cx, cy, w, rot, { alpha = 1, flip = false, flipY = false, shadow = 0, blend = "source-over", h = null, filter = "none" } = {}) {
+function sprite(g, id, cx, cy, w, rot, { alpha = 1, flip = false, flipY = false, shadow = 0, blend = "source-over", h = null, filter = "none", tint = null } = {}) {
   if (pinView && (cx < pinView.x0 || cx > pinView.x1 || cy < pinView.y0 || cy > pinView.y1)) return;
-  const im0 = img(id); if (!im0) return;
+  const raw = img(id); if (!raw) return;
+  // (a pin in its string's colour)
+  const im0 = tint === null || tint === undefined ? raw : tintedPin(raw, tint);
   if (shadow && blend === "source-over" && !BAKING && w * pxs() < 400) {
     const im = graded(im0, filter, Math.max(256, w * 2 * pxs()));
     const hh = h ?? w * ((im0.naturalHeight || im0.height) / (im0.naturalWidth || im0.width));
-    const e = shadowedSprite(im, id, w, hh, rot, flip, flipY, shadow, filter);
+    const e = shadowedSprite(im, tint === null || tint === undefined ? id : `${id}#${tint}`, w, hh, rot, flip, flipY, shadow, filter);
     g.save(); g.globalAlpha = alpha; g.imageSmoothingQuality = "high";
     g.drawImage(e.canvas, cx - e.half, cy - e.half, e.half * 2, e.half * 2);
     g.restore();
@@ -131,6 +156,32 @@ function sprite(g, id, cx, cy, w, rot, { alpha = 1, flip = false, flipY = false,
   g.translate(cx, cy); g.rotate(rot); g.scale(flip ? -1 : 1, flipY ? -1 : 1);
   g.drawImage(im, -ww / 2, -hh / 2, ww, hh);
   g.restore();
+}
+
+// A pin's drawing in a colour (Luke, 2026-10-06): its light and shade kept,
+// its hue the colour's (the string's own); made once
+const pinTints = new Map();
+function tintedPin(im, color) {
+  const key = `${im.src ?? ""}#${color}`;
+  if (pinTints.has(key)) return pinTints.get(key);
+  const w = im.naturalWidth || im.width, h = im.naturalHeight || im.height;
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d"); x.drawImage(im, 0, 0);
+  let d;
+  try { d = x.getImageData(0, 0, w, h); } catch { pinTints.set(key, im); return im; }
+  const px = d.data, cr = (color >> 16) & 255, cg = (color >> 8) & 255, cb = color & 255;
+  let top = 1;
+  for (let i = 0; i < px.length; i += 4) if (px[i + 3] > 60) top = Math.max(top, 0.3 * px[i] + 0.59 * px[i + 1] + 0.11 * px[i + 2]);
+  for (let i = 0; i < px.length; i += 4) {
+    const l = (0.3 * px[i] + 0.59 * px[i + 1] + 0.11 * px[i + 2]) / top;
+    // (the colour in its mid tones, its ink outlines staying dark, a glint lighter)
+    const k = Math.pow(l, 0.85) * 1.2, hi = Math.max(0, l - 0.82) * 1.1;
+    px[i] = Math.min(255, cr * k + 255 * hi); px[i + 1] = Math.min(255, cg * k + 255 * hi); px[i + 2] = Math.min(255, cb * k + 255 * hi);
+  }
+  x.putImageData(d, 0, 0);
+  c.naturalWidth = w; c.naturalHeight = h; c.src = key;
+  pinTints.set(key, c);
+  return c;
 }
 
 // (a line's glyphs laid out once: the writing is painted every frame now)
@@ -149,7 +200,15 @@ function hand(g, ln, color, alpha, depth) {
   g.translate(ln.x, ln.y); g.rotate(ln.rot); g.translate(ln.align === "left" ? -half : ln.align === "right" ? half - hl.width : -hl.width / 2, 0);
   for (const gl of hl.glyphs) { g.save(); g.translate(gl.x, gl.y); g.rotate(gl.rot); g.fillText(gl.ch, 0, 0); g.restore(); }
   // underlined, struck through: a pen line along it, a little unsteady
-  for (const [on, y] of [[ln.underline, ln.size * 0.4], [ln.strike, ln.size * 0.06]]) {
+  // (the face's own letter heights, about the middle baseline: a strike
+  // through the middle of its small letters, or its capitals when it has
+  // none; an underline just under where its letters sit)
+  const met = (ch) => { const m = g.measureText(ch); return { a: m.actualBoundingBoxAscent || ln.size * 0.3, d: m.actualBoundingBoxDescent || ln.size * 0.2 }; };
+  const xm = met("x"), cap = met("H");
+  const lower = /[a-z]/.test(ln.text);
+  const strikeY = lower ? (xm.d - xm.a) / 2 : (cap.d - cap.a) / 2;
+  const underY = cap.d + ln.size * 0.12;
+  for (const [on, y] of [[ln.underline, underY], [ln.strike, strikeY]]) {
     if (!on) continue;
     const r = rng(`rule:${ln.seed}:${y}`), w = hl.width;
     g.strokeStyle = color; g.lineCap = "round"; g.lineWidth = ln.size * (ln.style?.includes("bold") ? 0.085 : 0.06);
@@ -226,8 +285,13 @@ function drawSheet(g, area = null) {
   g.save(); g.globalCompositeOperation = "multiply"; g.lineCap = "round";
   for (const r of geo.ledger) { g.globalAlpha = r.o; g.strokeStyle = cssColor(r.color); g.lineWidth = r.w; line(g, r.pts); g.stroke(); }
   g.restore();
-  // the marker, on the paper, under everything that has happened to it since
+  // pages pasted on it (the look's decorations of the 'page' layer), each
+  // lifted a little (Luke, 2026-10-03: a collage of scraps)
+  drawPages(g, area);
+  // the marker and the writing on the sheet, on the paper, under everything
+  // that has happened to it since (Luke, 2026-10-03)
   drawInk(g, area);
+  drawSheetWriting(g, area);
   // the grime runs across the whole sheet, over the folds, at about its own
   // resolution: tiled mirrored (no seams), each layer turned and shifted by
   // its seed so the repeats don't line up (PIXI: a TilingSprite of the
@@ -242,11 +306,15 @@ function drawSheet(g, area = null) {
     if (sc.blur) g.filter = `blur(${sc.blur * pxs()}px)`;
     g.fillStyle = pat; fill(sc.blur ? sc.blur * 3 + 4 : 0); g.restore();
   });
-  drawFolds(g);
   sheetGrime(g, near);
+  sheetDamp(g, near);
+  drawFolds(g);
   const wash = g.createLinearGradient(0, 0, 0, H);
   wash.addColorStop(0, `rgba(8,3,2,${look.wash.top / 100})`); wash.addColorStop(1, `rgba(8,3,2,${look.wash.bottom / 100})`);
   g.fillStyle = wash; fill();
+  // (a bright stroke laid over its grime a little too: Luke 2026-10-06, the
+  // players' paint dulled and see-through under it)
+  drawInk(g, area, { over: true });
   if (look.glow) {
     g.save(); g.translate(W / 2, H * 0.92); g.scale(W * 0.8, H * 0.22);
     const rg = g.createRadialGradient(0, 0, 0, 0, 0, 1);
@@ -258,9 +326,106 @@ function drawSheet(g, area = null) {
     g.shadowColor = "rgba(14,7,4,1)"; g.shadowBlur = S.edge.burn * 0.6 * pxs(); poly(g, out); g.stroke();
   }
   g.restore();
-  g.save(); // the edge itself: a dark line with a pale lip, like the fold seams
+  // the edge itself: a dark line with a pale lip, like the fold seams (Luke,
+  // 2026-10-03: a second save here, never restored, kept the first repaint's
+  // clip on the canvas; marker strokes drawn later showed only inside it)
   g.save(); g.lineJoin = "round"; g.strokeStyle = "rgba(8,4,2,0.6)"; g.lineWidth = 3; poly(g, out); g.stroke();
   g.strokeStyle = "rgba(230,205,170,0.18)"; g.lineWidth = 6; poly(g, shrink(out, look.w / 2, look.h / 2, 0.996)); g.stroke(); g.restore();
+}
+
+// Bloody prints on the sheet (Luke, 2026-10-06), at their own size (a
+// hand about 7.5 inches, a foot about 11; the board's inches: model.js
+// pxPerInch) and placed as hands and feet would leave them: hands by the
+// sheet's edges, as if it was held, fingers in; a trail of footprints
+// walking down toward the Heart; a fingertip smear or two by an edge
+function sheetPrints(g, near) {
+  const B = look.grime.blood / 100;
+  const prints = (look.pools.stains ?? []).filter((id) => printOf(id));
+  if (!B || !prints.length) return;
+  const W = look.w, H = look.h, ppi = pxPerInch(look), r = rng("sheet:prints");
+  const of = (kind) => prints.filter((id) => printOf(id).kind === kind);
+  const put = (id, x, y, rot, a) => {
+    const P = printOf(id);
+    // (the texture drawn so its one print is its own length)
+    const w = (P.inches * ppi) / P.frac;
+    // (its colour drawn whether or not it is in the part being painted: the
+    // draws stay the same for every part)
+    const col = BLOOD[Math.floor(r() * BLOOD.length)];
+    if (near(x, y, w * 0.6)) stain(g, id, x, y, w, rot, a, col, { crisp: true });
+  };
+  // hands at the edges, mostly the lower half, fingers pointing in
+  const hands = [...of("hand"), ...of("fingers")];
+  for (let i = 0, n = Math.round(4 * B); i < n && hands.length; i++) {
+    const side = r() < 0.5 ? -1 : 1, y = H * (0.35 + 0.6 * r());
+    const x = side < 0 ? W * (0.02 + r() * 0.05) : W * (0.93 + r() * 0.05);
+    // (an image's fingers point up: turned so they point across the sheet)
+    put(pickFrom(hands, `hand:${i}`), x, y, -side * Math.PI / 2 + (r() - 0.5) * 0.7, 0.35 + r() * 0.25);
+  }
+  // a trail of footprints walking down (the images' toes point up)
+  const trails = of("trail"), feet = of("foot");
+  for (let i = 0, n = Math.max(trails.length || feet.length ? 1 : 0, Math.round(2 * B)); i < n; i++) {
+    const x = W * (0.2 + 0.6 * r()), y = H * (0.6 + 0.3 * r()), rot = Math.PI + (r() - 0.5) * 0.6;
+    if (trails.length && r() < 0.7) put(pickFrom(trails, `trail:${i}`), x, y, rot, 0.3 + r() * 0.2);
+    else if (feet.length) {
+      // (two or three steps, one after another down the sheet)
+      const steps = 2 + Math.floor(r() * 2), stride = 26 * ppi;
+      // (each step on along the way it faces, left and right of its line)
+      const fx = Math.sin(rot), fy = -Math.cos(rot), sx = Math.cos(rot), sy = Math.sin(rot);
+      for (let s = 0; s < steps; s++) { const side = (s % 2 ? 1 : -1) * 4 * ppi; put(pickFrom(feet, `foot:${i}:${s}`), x + fx * stride * s + sx * side, y + fy * stride * s + sy * side, rot, 0.3 + r() * 0.2); }
+    }
+  }
+}
+
+// Damp (Luke, 2026-10-06, the raggedness mock's D): tide stains in from the
+// sheet's edges with a darker tide line, a few water rings, and freckles of
+// foxing; over the paper and the pages, under the folds
+function sheetDamp(g, near) {
+  const s = (look.grime.damp ?? 0) / 100;
+  if (!s) return;
+  const W = look.w, H = look.h, r = rng("sheet:damp"), m = look.sheet.edge.margin ?? 10;
+  g.save(); g.globalCompositeOperation = "multiply";
+  const sides = [
+    { ax: "y", at: m, a: m, b: W - m, out: -1 }, { ax: "x", at: W - m, a: m, b: H - m, out: 1 },
+    { ax: "y", at: H - m, a: m, b: W - m, out: 1 }, { ax: "x", at: m, a: m, b: H - m, out: -1 },
+  ];
+  for (const E of sides) {
+    for (let i = 0, n = Math.round(1.6 * s * (E.b - E.a) / 1300); i < n; i++) {
+      const len = 260 + r() * 420, t0 = E.a + r() * Math.max(1, E.b - E.a - len), depth = (50 + r() * 110) * Math.min(1.4, s * 1.4), ph = r() * 6.28;
+      const pts = [E.ax === "x" ? [E.at, t0] : [t0, E.at]];
+      for (let t = 0; t <= len; t += 8) {
+        const k = Math.sin((t / len) * Math.PI), d = depth * Math.pow(k, 0.6) * (0.75 + 0.25 * Math.sin(t * 0.04 + ph) + 0.1 * Math.sin(t * 0.17));
+        pts.push(E.ax === "x" ? [E.at - E.out * d, t0 + t] : [t0 + t, E.at - E.out * d]);
+      }
+      pts.push(E.ax === "x" ? [E.at, t0 + len] : [t0 + len, E.at]);
+      const mx = pts.reduce((v, p) => v + p[0], 0) / pts.length, my = pts.reduce((v, p) => v + p[1], 0) / pts.length;
+      if (!near(mx, my, len)) continue;
+      g.fillStyle = `rgba(110,78,48,${0.2 * Math.min(1.4, s * 1.4)})`; g.beginPath(); pts.forEach(([x, y], j) => (j ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.fill();
+      g.strokeStyle = `rgba(80,48,24,${0.45 * Math.min(1.4, s * 1.4)})`; g.lineWidth = 2.4; g.lineJoin = "round";
+      g.beginPath(); pts.slice(1, -1).forEach(([x, y], j) => (j ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
+    }
+  }
+  // water rings (a glass, a lamp set down)
+  for (let i = 0, n = Math.round(14 * s); i < n; i++) {
+    const x = W * (0.06 + r() * 0.88), y = H * (0.06 + r() * 0.88), rad = 38 + r() * 60, gap = r() < 0.6 ? r() * 2 : 0, lw = 2 + r() * 1.5;
+    if (!near(x, y, rad + 4)) continue;
+    g.strokeStyle = `rgba(90,58,30,${0.4 * Math.min(1.3, s * 1.3)})`; g.lineWidth = lw;
+    g.beginPath();
+    for (let a = gap; a <= Math.PI * 2; a += 0.05) { const k = 1 + 0.03 * Math.sin(a * 5 + x); const px = x + Math.cos(a) * rad * k, py = y + Math.sin(a) * rad * k; a === gap ? g.moveTo(px, py) : g.lineTo(px, py); }
+    g.stroke();
+    g.fillStyle = `rgba(130,96,60,${0.06 * s})`; g.beginPath(); g.arc(x, y, rad, 0, 7); g.fill();
+  }
+  // foxing: freckles of rust-brown in clusters
+  for (let i = 0, n = Math.round(56 * s); i < n; i++) {
+    const cx = r() * W, cy = r() * H, k = 6 + Math.floor(r() * 22), spread = 30 + r() * 70;
+    const far = !near(cx, cy, spread * 1.5);
+    for (let j = 0; j < k; j++) {
+      const x = cx + (r() - 0.5) * spread * 2, y = cy + (r() - 0.5) * spread * 2, rad = 1.2 + r() * r() * 7, a = 0.3 + r() * 0.35;
+      if (far) continue;
+      const rg = g.createRadialGradient(x, y, 0, x, y, rad); rg.addColorStop(0, `rgba(125,70,30,${a})`); rg.addColorStop(1, "rgba(125,70,30,0)");
+      g.fillStyle = rg; g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+    }
+  }
+  g.restore();
 }
 
 // The sheet's own wear (baked with it): soot, blood thickening toward the
@@ -282,18 +447,23 @@ function sheetGrime(g, near = () => true) {
   }
   g.restore();
   // stains: soot and blood, the blood gathering toward the Heart below
-  const pool = look.pools.stains ?? [];
+  // (the prints apart: their own size, placed with care)
+  const pool = (look.pools.stains ?? []).filter((id) => !printOf(id));
   if (pool.length) {
     for (let i = 0, n = Math.round(18 * A); i < n; i++) {
       const x = r() * W, y = r() * H, w = 120 + r() * 360, rot = r() * 6.3, a = 0.18 + r() * 0.25;
-      if (near(x, y, w)) stain(g, pickFrom(pool, `sheet:soot:${i}`), x, y, w, rot, a, SOOT);
+      if (near(x, y, w * 1.6)) stain(g, pickFrom(pool, `sheet:soot:${i}`), x, y, w, rot, a, SOOT);
     }
-    for (let i = 0, n = Math.round(26 * B); i < n; i++) {
-      const y = H * (0.2 + 0.8 * Math.sqrt(r()));
-      const x = r() * W, w = 90 + r() * 380 * (0.5 + y / H), rot = r() * 6.3, a = 0.25 + r() * 0.35;
-      if (near(x, y, w)) stain(g, pickFrom(pool, `sheet:blood:${i}`), x, y, w, rot, a, BLOOD[i % BLOOD.length]);
+    // (Luke, 2026-10-06: much more of it, larger toward the Heart)
+    // (Luke, 2026-10-06: none blown up past what its texture holds: more of
+    // them, none huge)
+    for (let i = 0, n = Math.round(44 * B); i < n; i++) {
+      const y = H * (0.15 + 0.85 * Math.sqrt(r()));
+      const x = r() * W, w = 90 + r() * 300 * (0.5 + y / H), rot = r() * 6.3, a = 0.3 + r() * 0.4;
+      if (near(x, y, w * 1.6)) stain(g, pickFrom(pool, `sheet:blood:${i}`), x, y, w, rot, a, BLOOD[i % BLOOD.length]);
     }
   }
+  sheetPrints(g, near);
   // gunpowder
   g.save(); g.fillStyle = "rgba(14,9,7,0.8)";
   for (let i = 0, n = Math.round(2600 * A); i < n; i++) {
@@ -398,14 +568,14 @@ function drawDecor(g, list, layer = null) {
 const tints = new WeakMap();
 // (Luke, 2026-10-03: never flat: each of a few variants pooled darker in
 // places, thinned in others, and smudged off to one side)
-function tinted(im, color, variant = 0) {
+function tinted(im, color, variant = 0, cap = 600) {
   let per = tints.get(im);
   if (!per) tints.set(im, (per = new Map()));
-  const key = `${color}|${variant}`;
+  const key = `${color}|${variant}|${cap}`;
   if (per.has(key)) return per.get(key);
   const c = document.createElement("canvas");
   const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
-  const k = Math.min(1, 600 / Math.max(iw, ih));
+  const k = Math.min(1, cap / Math.max(iw, ih));
   c.width = Math.max(1, Math.round(iw * k)); c.height = Math.max(1, Math.round(ih * k));
   const x = c.getContext("2d");
   x.drawImage(im, 0, 0, c.width, c.height);
@@ -436,9 +606,39 @@ function tinted(im, color, variant = 0) {
 
 // A stain at a point: a splatter from the look's stains, tinted (blood,
 // soot) or as drawn, multiplied in
-function stain(g, tex, x, y, w, rot, alpha, color = null) {
-  const im = img(tex); if (!im) return;
-  const src = color ? tinted(im, color, hashSeed(`${tex}:${Math.round(x)}:${Math.round(y)}`) % 5) : im;
+// A small texture drawn large, crisp (Luke, 2026-10-06: the blood prints
+// soft at their own size; the sources are small): enlarged smoothly, then its
+// edge sharpened (its alpha through a narrow ramp), so a print reads clean
+// without an upscaler's artifacts. Kept per image and size.
+const crisps = new WeakMap();
+function crispen(im, px) {
+  const cap = Math.min(768, Math.max(256, Math.round(px / 128) * 128));
+  let per = crisps.get(im);
+  if (!per) crisps.set(im, (per = new Map()));
+  if (per.has(cap)) return per.get(cap);
+  const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
+  const k = cap / Math.max(iw, ih);
+  if (k <= 1.05) { per.set(cap, im); return im; }
+  const c = document.createElement("canvas");
+  c.width = Math.round(iw * k); c.height = Math.round(ih * k);
+  const x = c.getContext("2d"); x.imageSmoothingQuality = "high"; x.drawImage(im, 0, 0, c.width, c.height);
+  try {
+    const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+    for (let i = 3; i < p.length; i += 4) { const a = Math.max(0, Math.min(1, (p[i] / 255 - 0.3) / 0.32)); p[i] = Math.round(255 * a * a * (3 - 2 * a)); }
+    x.putImageData(d, 0, 0);
+  } catch { /* (a tainted image: smooth only) */ }
+  c.naturalWidth = c.width; c.naturalHeight = c.height;
+  per.set(cap, c);
+  return c;
+}
+function stain(g, tex, x, y, w, rot, alpha, color = null, { crisp = false } = {}) {
+  const im0 = img(tex); if (!im0) return;
+  // (a blood stain drawn far past its own size is sharpened too: Luke
+  // 2026-10-06, the big splats soft; two looks of each, to keep memory low)
+  const iw0 = Math.max(im0.naturalWidth || im0.width, im0.naturalHeight || im0.height);
+  const sharp = crisp || (color && color !== SOOT && w * pxs() > iw0 * 1.15);
+  const im = sharp ? crispen(im0, w * pxs()) : im0;
+  const src = color ? tinted(im, color, hashSeed(`${tex}:${Math.round(x)}:${Math.round(y)}`) % (sharp ? 2 : 5), sharp ? 768 : 600) : im;
   const h = w * ((im.naturalHeight || im.height) / (im.naturalWidth || im.width));
   g.save(); g.globalCompositeOperation = "multiply"; g.globalAlpha = alpha;
   g.translate(x, y); g.rotate(rot); g.drawImage(src, -w / 2, -h / 2, w, h); g.restore();
@@ -480,7 +680,8 @@ function scrapGrime(g, s, W, H) {
   }
   g.restore();
   // stains: splatters, rings, fingerprints; blood more often the deeper
-  const pool = look.pools.stains ?? [];
+  // (never a hand or footprint: Luke 2026-10-06, they are the sheet's)
+  const pool = (look.pools.stains ?? []).filter((id) => !printOf(id));
   const n = pool.length ? Math.floor(0.6 + r() * (1.4 + 3 * amt)) : 0;
   const bloodChance = (look.grime.blood / 100) * (0.25 + depth);
   for (let i = 0; i < n; i++) {
@@ -522,7 +723,7 @@ function keepScrap(key, E) {
 }
 function scrapImage(s) {
   const L = s.layout, P = L.paper, q = cacheQ();
-  const key = JSON.stringify([s.key, s.seed, s.ink, s.marks, s.parts, s.type, s.lib, s.uuid, s.name, s.text, s.art, s.s, s.paper, s.fix, s.hand, s.state, s.look, Math.round(P.w), Math.round(L.depth * 20), q, lookStamp, s.lib ? look.library[s.lib]?.clip : null, s.lib ? look.library[s.lib]?.name : null]);
+  const key = JSON.stringify([s.key, s.seed, s.ink, s.paint, s.bright, s.pturn, s.marks, s.parts, s.drop, s.type, s.lib, s.uuid, s.name, s.text, s.art, s.s, s.paper, s.fix, s.hand, s.state, s.look, Math.round(P.w), Math.round(L.depth * 20), q, lookStamp, s.lib ? look.library[s.lib]?.clip : null, s.lib ? look.library[s.lib]?.name : null]);
   const have = scrapCache.get(key);
   // (most recently used last)
   if (have) { scrapCache.delete(key); scrapCache.set(key, have); return have; }
@@ -546,6 +747,17 @@ function scrapImage(s) {
     g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "destination-in"; g.drawImage(mask, 0, 0); g.globalCompositeOperation = "source-over";
     g.setTransform(q, 0, 0, q, (P.w / 2 + pad) * q, (P.h / 2 + pad) * q);
     g.rotate(-P.rot); g.translate(-P.cx, -P.cy);
+    const bright = (L.strokes ?? []).filter((st) => st.b === 2);
+    if (bright.length) {
+      g.save();
+      if (L.clip) {
+        g.beginPath(); g.rect(-1e6, -1e6, 2e6, 2e6);
+        const C = L.clip.pts; g.moveTo(C[0], C[1]); for (let i = 2; i < C.length; i += 2) g.lineTo(C[i], C[i + 1]); g.closePath();
+        g.clip("evenodd");
+      }
+      for (const st of bright) brush(g, { ...st, w: Math.min(st.w, markMax(look)) }, look.ink.marker[st.c] ?? look.ink.marker[0] ?? 0xa39a86, rng(`cmark:${s.key}:${st.id}`), { atop: true, over: true });
+      g.restore();
+    }
     clipArt(g, s);
   } finally { BAKING = wasBaking; }
   const E = { canvas: c, pad, q, lit: null, complete: !missing };
@@ -589,18 +801,24 @@ function extras(g, s, layer) {
     sprite(g, e.tex, e.cx, e.cy, e.w, e.rot, { h: e.h ?? null, flip: Boolean(e.flip), alpha: e.alpha ?? 1, blend: layer === "on" ? "source-atop" : "source-over", filter: e.grade ? gradeFilter(jitterGrade(look.grade.paper, `${s.layout.seedKey ?? s.key}:${e.tex}`, 1)) : "none" });
   }
 }
+// a clipping's torn paper rim round its art, either side (board px; Luke,
+// 2026-10-03: the jagged rim kept, but thin)
+const CLIP_RIM = 4;
 function scrapFace(g, s) {
   const L = s.layout, P = L.paper;
   const ink = cssColor(inkAt(L.depth, L.ink ?? look.ink.text));
   const G = look.grime.scraps / 100;
   extras(g, s, "under");
-  if (P.tex) sprite(g, P.tex, P.cx, P.cy, P.w, P.rot, { h: P.h, filter: gradeFilter(jitterGrade(look.grade.paper, s.layout.seedKey ?? s.key, G)) });
+  // (its paper turned a quarter at a time and mirrored as its layout says:
+  // the texture drawn turned, its own width along the card's height)
+  const odd = (P.turn ?? 0) % 2 === 1;
+  if (P.tex) sprite(g, P.tex, P.cx, P.cy, odd ? P.h : P.w, P.rot + (P.turn ?? 0) * Math.PI / 2, { h: odd ? P.w : P.h, flip: Boolean(P.flip), filter: gradeFilter(jitterGrade(look.grade.paper, s.layout.seedKey ?? s.key, G)) });
   else { g.save(); g.fillStyle = "#dccfb3"; poly(g, L.hull); g.fill(); g.restore(); }
   extras(g, s, "on");
   // the marker on it, only on its paper, under its grime (Luke, 2026-10-03)
   if (L.strokes?.length) {
     g.save(); g.globalCompositeOperation = "source-atop";
-    for (const st of L.strokes) brush(g, { ...st, w: Math.min(st.w, markMax(look)) }, look.ink.sheet[st.c] ?? look.ink.sheet[0] ?? 0xa39a86, rng(`cmark:${s.key}:${st.id}`));
+    for (const st of L.strokes) brush(g, { ...st, w: Math.min(st.w, markMax(look)) }, look.ink.marker[st.c] ?? look.ink.marker[0] ?? 0xa39a86, rng(`cmark:${s.key}:${st.id}`), { atop: true });
     g.restore();
   }
   if (L.clip) {
@@ -608,7 +826,7 @@ function scrapFace(g, s) {
     g.save(); g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 7 * pxs(); g.shadowOffsetY = 3 * pxs();
     g.fillStyle = "#e9dfcb"; poly(g, C.pts); g.fill(); g.restore();
     const art = img(C.art);
-    const inner = shrink(C.pts, B.cx, B.cy, 1 - 10 / Math.max(B.w, 1));
+    const inner = shrink(C.pts, B.cx, B.cy, 1 - CLIP_RIM / Math.max(B.w, 1));
     g.save(); poly(g, inner); g.clip();
     // (the art itself goes on after the grime: clipArt)
     if (!art) {
@@ -631,8 +849,8 @@ function clipArt(g, s) {
   const art = img(C.art);
   if (!art) return;
   const B = C.box;
-  const inner = shrink(C.pts, B.cx, B.cy, 1 - 10 / Math.max(B.w, 1));
-  const ab = clipArtBox({ w: B.w - 10, h: B.h - 10 }, (art.naturalWidth || art.width) / (art.naturalHeight || art.height), C.frame);
+  const inner = shrink(C.pts, B.cx, B.cy, 1 - CLIP_RIM / Math.max(B.w, 1));
+  const ab = clipArtBox({ w: B.w - CLIP_RIM, h: B.h - CLIP_RIM }, (art.naturalWidth || art.width) / (art.naturalHeight || art.height), C.frame);
   g.save(); poly(g, inner); g.clip();
   g.translate(B.cx, B.cy); g.rotate(B.rot); g.imageSmoothingQuality = "high";
   g.drawImage(art, ab.x, ab.y, ab.w, ab.h);
@@ -642,9 +860,7 @@ function clipArt(g, s) {
 function drawScrap(g, s) {
   const L = s.layout, ghost = s.look === "ghost", a = ghost ? 0.32 : 1;
   if (L.bare) {
-    // grease pencil straight on the sheet, warming to rust the deeper it is
-    const chalk = cssColor(mixColor(L.ink ?? look.ink.scrawl, 0x8a2a1e, Math.pow(L.depth, 1.4) * 0.35));
-    for (const ln of L.lines) hand(g, ln, chalk, a * 0.88, L.depth);
+    // (its writing is the sheet's: drawSheet; a hidden one's outline here)
     if (ghost) { g.save(); g.strokeStyle = "#e2d4ba"; g.globalAlpha = 0.5; g.lineWidth = 3; g.setLineDash([14, 10]); poly(g, L.hull); g.stroke(); g.restore(); }
     return;
   }
@@ -803,7 +1019,7 @@ function drawLink(g, l) {
   // see-through only when the players can't see it (the GM's ghost)
   const alpha = ghost ? 0.35 : 1;
   // (in its own colour, or its kind's)
-  const color = l.color === null || l.color === undefined ? null : look.ink.sheet[l.color] ?? null;
+  const color = l.color === null || l.color === undefined ? null : look.ink.marker[l.color] ?? null;
   drawRope(g, l.points, ropeFor(l.kind, l.id), look.string.w, alpha, l.id, color);
   const T = l.look === "rumoured" ? null : tagOf(l);
   if (T) {
@@ -821,9 +1037,10 @@ function drawLink(g, l) {
 function lean(p, toward, seed) {
   const ang = Math.atan2(toward.y - p.y, toward.x - p.x);
   let d = ang + Math.PI / 2; d = Math.atan2(Math.sin(d), Math.cos(d));
-  // (mostly upright: a third of the pull, never past 25 degrees)
-  const own = ((hashSeed(seed) % 9) - 4) * Math.PI / 180;
-  return Math.max(-0.44, Math.min(0.44, d * 0.3)) + own;
+  // (mostly upright: a fifth of the pull, never past 15 degrees; Luke
+  // 2026-10-06, they stood too crooked)
+  const own = ((hashSeed(seed) % 5) - 2) * Math.PI / 180;
+  return Math.max(-0.26, Math.min(0.26, d * 0.2)) + own;
 }
 // The way the string itself pulls on a pin partway along it: toward the
 // middle of the string a little before it and a little after (its sag)
@@ -845,32 +1062,32 @@ function drawPins(g) {
   for (const l of view.links) {
     const a = l.look === "ghost" ? 0.35 : 1, P = l.points, n = P.length;
     const [pa, pb] = l.ends ?? [];
-    if (pa?.tex && !pa.shared) sprite(g, pa.tex, pa.x, pa.y, pa.w, lean(pa, { x: P[Math.min(6, n - 2)], y: P[Math.min(7, n - 1)] }, l.id + "a"), { alpha: a, shadow: 6 });
-    if (pb?.tex && !pb.shared) sprite(g, pb.tex, pb.x, pb.y, pb.w, lean(pb, { x: P[Math.max(0, n - 8)], y: P[Math.max(1, n - 7)] }, l.id + "b"), { alpha: a, shadow: 6 });
+    if (pa?.tex && !pa.shared) sprite(g, pa.tex, pa.x, pa.y, pa.w, lean(pa, { x: P[Math.min(6, n - 2)], y: P[Math.min(7, n - 1)] }, l.id + "a") + pinUpright(pa.tex), { alpha: a, shadow: 6, tint: pa.tint });
+    if (pb?.tex && !pb.shared) sprite(g, pb.tex, pb.x, pb.y, pb.w, lean(pb, { x: P[Math.max(0, n - 8)], y: P[Math.max(1, n - 7)] }, l.id + "b") + pinUpright(pb.tex), { alpha: a, shadow: 6, tint: pb.tint });
     // a named string's junction pin and the pins it is pulled through keep
     // to the string itself (Luke, 2026-10-02: never leaning toward a tag or
     // a note); the pin through the tag leans toward the junction
     const T = tagOf(l);
     if (T) {
       const J = l.junction;
-      if (J?.tex) sprite(g, J.tex, J.x, J.y, J.w, lean(J, alongString(l, J), l.id + "j"), { alpha: a, shadow: 6 });
-      if (!T.over && T.pin?.tex) sprite(g, T.pin.tex, T.pin.x, T.pin.y, T.pin.w, lean(T.pin, T.mid, l.id + "t"), { alpha: a, shadow: 6 });
+      if (J?.tex) sprite(g, J.tex, J.x, J.y, J.w, lean(J, alongString(l, J), l.id + "j") + pinUpright(J.tex), { alpha: a, shadow: 6, tint: J.tint });
+      if (!T.over && T.pin?.tex) sprite(g, T.pin.tex, T.pin.x, T.pin.y, T.pin.w, lean(T.pin, T.mid, l.id + "t") + pinUpright(T.pin.tex), { alpha: a, shadow: 6 });
     }
-    for (const j of l.joints ?? []) if (j.tex && !j.shared) sprite(g, j.tex, j.x, j.y, j.w, lean(j, alongString(l, j), `${l.id}j${j.idx}`), { alpha: a, shadow: 6 });
+    for (const j of l.joints ?? []) if (j.tex && !j.shared) sprite(g, j.tex, j.x, j.y, j.w, lean(j, alongString(l, j), `${l.id}j${j.idx}`) + pinUpright(j.tex), { alpha: a, shadow: 6, tint: j.tint });
   }
   // the board's own pins (loose, or in a scrap)
-  for (const p of view.pins ?? []) if (p.tex && !p.hidden) sprite(g, p.tex, p.x, p.y, p.w, p.r === null && p.pulls?.length ? lean(p, pulledBy(p), p.id) : p.rot, { alpha: p.look === "ghost" ? 0.35 : 1, shadow: 6 });
+  for (const p of view.pins ?? []) if (p.tex && !p.hidden) sprite(g, p.tex, p.x, p.y, p.w, (p.r === null && p.pulls?.length ? lean(p, pulledBy(p), p.id) : p.rot) + pinUpright(p.tex), { alpha: p.look === "ghost" ? 0.35 : 1, shadow: 6, tint: p.tint });
   for (const s of view.scraps) {
     if (s.layout.bare) continue;
     const al = s.look === "ghost" ? 0.35 : 1;
     // its own pin, when nothing else holds it (or the GM wants it anyway)
     if (!s.layout.pinOff && (!s.tied || s.pinShow)) {
       const p = s.layout.pin;
-      if (p.tex) sprite(g, p.tex, p.x, p.y, p.w, p.rot, { alpha: al, shadow: 6 });
+      if (p.tex) sprite(g, p.tex, p.x, p.y, p.w, p.rot + pinUpright(p.tex), { alpha: al, shadow: 6 });
       else { g.save(); g.fillStyle = "#8f1d18"; g.beginPath(); g.arc(p.x, p.y, 9, 0, 7); g.fill(); g.restore(); }
     }
     // pins through the clipping, and pins the GM added
-    for (const p of [...(s.layout.clipPins ?? []), ...(s.layout.pins ?? [])]) if (p.tex) sprite(g, p.tex, p.x, p.y, p.w, p.rot, { alpha: al, shadow: 6 });
+    for (const p of [...(s.layout.clipPins ?? []), ...(s.layout.pins ?? [])]) if (p.tex) sprite(g, p.tex, p.x, p.y, p.w, p.rot + pinUpright(p.tex), { alpha: al, shadow: 6 });
   }
 }
 
@@ -883,6 +1100,10 @@ function drawPins(g) {
 // The marker is part of the sheet (under its grime), so it is baked with it:
 // a stroke drawn or rubbed out redoes only its own part of the bake.
 const BAKE_PAD = 40;
+// how much the sheet's grime darkens what is under it, about (a multiply:
+// a preview of a stroke takes this, so it shows as dark as it will be)
+// (measured 2026-10-06: a finished stroke against its preview, three paints)
+const GRIME_VEIL = 0xada094;
 let bake = null;
 // the strokes as they are: id -> [what it is, where it reaches]
 function markState() {
@@ -891,8 +1112,12 @@ function markState() {
     for (const [id, m] of Object.entries(strokes)) {
       let h = m.pts.length;
       for (let i = 0; i < m.pts.length; i++) h = (h * 31 + m.pts[i] * (i + 1)) % 1000003;
-      out.set(`${layer}:${id}`, { sig: `${m.c}|${m.w}|${h}`, box: markBox(m) });
+      out.set(`${layer}:${id}`, { sig: `${m.c}|${m.w}|${m.o}|${m.b}|${h}`, box: markBox(m) });
     }
+  }
+  for (const s of view?.scraps ?? []) {
+    if (!s.layout?.bare) continue;
+    out.set(`w:${s.key}`, { sig: JSON.stringify([s.layout.lines.map((l) => [l.text, Math.round(l.x), Math.round(l.y), l.size, l.font, Math.round(l.rot * 1000), l.style, l.underline, l.strike, l.align]), s.layout.ink, s.look]), box: writingBox(s) });
   }
   return out;
 }
@@ -910,13 +1135,16 @@ function paintSheet(c, scale, ox, oy, area = null) {
   const g = c.getContext("2d");
   g.save();
   g.setTransform(scale, 0, 0, scale, ox, oy);
+  // (a part redone on whole bitmap px: a part edge across a px blends the old
+  // painting with the new, a seam; Luke 2026-10-03, rectangles on the board)
+  if (area) area = { x0: (Math.floor(area.x0 * scale + ox) - ox) / scale, y0: (Math.floor(area.y0 * scale + oy) - oy) / scale, x1: (Math.ceil(area.x1 * scale + ox) - ox) / scale, y1: (Math.ceil(area.y1 * scale + oy) - oy) / scale };
   if (area) {
     g.beginPath(); g.rect(area.x0, area.y0, area.x1 - area.x0, area.y1 - area.y0); g.clip();
     g.clearRect(area.x0, area.y0, area.x1 - area.x0, area.y1 - area.y0);
   }
   const wasBaking = BAKING;
   BAKING = scale;
-  try { drawSheet(g, area); drawDecor(g, look.decor); } finally { BAKING = wasBaking; g.restore(); }
+  try { drawSheet(g, area); drawDecor(g, look.decor.filter((d) => d.layer !== "page")); } finally { BAKING = wasBaking; g.restore(); }
 }
 function bakeBackground(key, scale = 1) {
   const marks = markState();
@@ -941,24 +1169,46 @@ function bakeBackground(key, scale = 1) {
 // about 2 px per board px, so finer than 2.5 buys nothing.
 let patch = null;
 const PATCH_SIDE = 4096;
+// The finer patch is painted a strip at a time (a big view at once took the
+// editor long enough to hang it; Luke 2026-10-03), the old one shown until the
+// new one is whole. Returns the patch in use, and says whether one is coming:
+// sharpenContinue(ms) paints more of it (true once it is done).
+let nextPatch = null;
 function sharpenBackground(key, area, q) {
   const A = { x0: Math.max(-BAKE_PAD, Math.floor(area.x0)), y0: Math.max(-BAKE_PAD, Math.floor(area.y0)), x1: Math.min(look.w + BAKE_PAD, Math.ceil(area.x1)), y1: Math.min(look.h + BAKE_PAD, Math.ceil(area.y1)) };
   const w = A.x1 - A.x0, h = A.y1 - A.y0;
-  if (w < 2 || h < 2) { patch = null; return null; }
+  if (w < 2 || h < 2) return patch;
   const k = Math.min(q, 2.5, PATCH_SIDE / w, PATCH_SIDE / h);
-  if (patch && patch.key === key && patch.complete && patch.k >= k * 0.99 && patch.A.x0 <= A.x0 && patch.A.y0 <= A.y0 && patch.A.x1 >= A.x1 && patch.A.y1 >= A.y1) return patch;
+  const holds = (P) => P && P.key === key && P.k >= k * 0.99 && P.A.x0 <= A.x0 && P.A.y0 <= A.y0 && P.A.x1 >= A.x1 && P.A.y1 >= A.y1;
+  if (holds(patch) && patch.complete) return patch;
+  if (holds(nextPatch)) return patch;
   const c = document.createElement("canvas");
   c.width = Math.ceil(w * k); c.height = Math.ceil(h * k);
-  const before = missing;
-  missing = false;
-  paintSheet(c, k, -A.x0 * k, -A.y0 * k);
-  patch = { key, A, k, canvas: c, complete: !missing, marks: markState() };
-  missing = before || missing;
+  const step = 256 / k, bands = [];
+  for (let y = A.y0; y < A.y1; y += step) bands.push({ x0: A.x0, y0: y, x1: A.x1, y1: Math.min(A.y1, y + step) });
+  nextPatch = { key, A, k, canvas: c, complete: true, marks: markState(), bands };
+  sharpenContinue(8);
   return patch;
+}
+function sharpenContinue(ms = 8) {
+  const N = nextPatch;
+  if (!N) return true;
+  const t0 = performance.now();
+  const before = missing;
+  while (N.bands.length && (performance.now() - t0 < ms)) {
+    missing = false;
+    paintSheet(N.canvas, N.k, -N.A.x0 * N.k, -N.A.y0 * N.k, N.bands.shift());
+    if (missing) N.complete = false;
+  }
+  missing = before;
+  if (N.bands.length) return false;
+  patch = N;
+  nextPatch = null;
+  return true;
 }
 function drawBackground(g, { key = "", live = false, scale = 1, sharp = true } = {}) {
   drawTable(g);
-  if (live) { drawSheet(g); drawDecor(g, look.decor); return; }
+  if (live) { drawSheet(g); drawDecor(g, look.decor.filter((d) => d.layer !== "page")); return; }
   const B = bakeBackground(key, scale);
   g.drawImage(B.canvas, -BAKE_PAD, -BAKE_PAD, look.w + BAKE_PAD * 2, look.h + BAKE_PAD * 2);
   if (sharp) drawPatch(g, key, B.marks);
@@ -992,57 +1242,233 @@ function markBox(m) {
   return b;
 }
 const meets = (a, b) => a.x1 >= b.x0 && a.x0 <= b.x1 && a.y1 >= b.y0 && a.y0 <= b.y1;
-// A brush's stroke (Luke, 2026-10-03: a brush texture in the marker; no
-// soak or shadow under it): a thin wash, then a dozen or so bristles along
-// it, each its own weight and shade, with dry gaps, more of them at its edges.
-// Its opacity (o, 0 to 1) is its own.
-function brush(g, m, c, r) {
+// An ink brush's stroke (Luke, 2026-10-03: no soak or shadow; an ink brush,
+// not streaks, and not bold, bright, or clean at its edges): painted into a
+// layer of its own, pressed down as it starts and easing off at its end, its
+// edges ragged; dry where the brush ran thin (gaps along it, more at its
+// edges and its end); the ink
+// gathered along its middle and rims. Then soaked into the paper
+// (multiplied), with a little of its colour laid back over. Its opacity (o, 0
+// to 1) is its own. `atop`: only where there is already paper (a card).
+// (its brightness, Luke 2026-10-06: dim as it first was, soaked into the
+// paper; as it is; bright, laid on all but opaque)
+const BRIGHTS = [{ soak: 0.85, lay: 0.38 }, { soak: 0.3, lay: 0.78 }, { soak: 0.06, lay: 0.98 }];
+// `over`: a bright stroke's light pass over the grime
+const OVER = 0.42;
+function brush(g, m, c0, r, { atop = false, over = false, layerOnly = false } = {}) {
   const P = m.pts, n = P.length / 2;
   if (n < 2) return;
   const o = m.o ?? 0.85;
-  // each point's way across the stroke
-  const nx = new Float32Array(n), ny = new Float32Array(n);
-  let total = 0;
+  const B = BRIGHTS[Math.max(0, Math.min(BRIGHTS.length - 1, m.b ?? 1))];
+  const c = brushColor(c0, m.b ?? 1);
+  const L = new Float32Array(n), nx = new Float32Array(n), ny = new Float32Array(n);
+  for (let i = 1; i < n; i++) L[i] = L[i - 1] + Math.hypot(P[2 * i] - P[2 * i - 2], P[2 * i + 1] - P[2 * i - 1]);
   for (let i = 0; i < n; i++) {
-    const a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1);
-    let dx = P[2 * b] - P[2 * a], dy = P[2 * b + 1] - P[2 * a + 1];
-    const d = Math.hypot(dx, dy) || 1;
-    dx /= d; dy /= d;
-    nx[i] = -dy; ny[i] = dx;
-    if (i) total += Math.hypot(P[2 * i] - P[2 * i - 2], P[2 * i + 1] - P[2 * i - 1]);
+    const a = Math.max(0, i - 2), b = Math.min(n - 1, i + 2);
+    const dx = P[2 * b] - P[2 * a], dy = P[2 * b + 1] - P[2 * a + 1], d = Math.hypot(dx, dy) || 1;
+    nx[i] = -dy / d; ny[i] = dx / d;
   }
-  g.save(); g.lineCap = "round"; g.lineJoin = "round";
-  g.strokeStyle = cssColor(c); g.globalAlpha = o * 0.42; g.lineWidth = m.w * 0.88; line(g, P); g.stroke();
-  const bristles = Math.max(5, Math.min(14, Math.round(m.w * 1.1)));
-  for (let k = 0; k < bristles; k++) {
-    const t = k / (bristles - 1) - 0.5, edge = Math.abs(t) * 2;
-    const off = t * m.w * 0.92 + (r() - 0.5) * m.w * 0.08;
-    const pts = new Array(P.length);
-    for (let i = 0; i < n; i++) { pts[2 * i] = P[2 * i] + nx[i] * off; pts[2 * i + 1] = P[2 * i + 1] + ny[i] * off; }
-    // (dry: gaps along it, more and longer toward the edges)
+  const total = L[n - 1] || 1;
+  const ph = [r() * 6.28, r() * 6.28, r() * 6.28, r() * 6.28, r() * 6.28], f = [0.6 + r() * 0.6, 1.7 + r() * 1.4];
+  const width = (i) => {
+    const t = L[i] / total, run = L[i];
+    const press = Math.min(1, 0.4 + run / Math.max(m.w * 1.5, 1)) * Math.min(1, 0.2 + (total - run) / Math.max(m.w * 3, 1));
+    return (m.w / 2) * press * (1 + 0.1 * Math.sin(t * 6.28 * f[0] + ph[0]) + 0.06 * Math.sin(t * 6.28 * f[1] + ph[1]));
+  };
+  // (ragged: a slow waver and a fine tearing of the edge)
+  const edge = (i, k) => 1 + 0.08 * Math.sin(L[i] * 0.19 + ph[2 + k]) + 0.07 * Math.sin(L[i] * 0.83 + ph[3 + k] * 2) + 0.05 * Math.sin(L[i] * 2.3 + ph[4 - k]);
+  // its own layer, the size of the stroke where it is drawn
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < n; i++) { x0 = Math.min(x0, P[2 * i]); x1 = Math.max(x1, P[2 * i]); y0 = Math.min(y0, P[2 * i + 1]); y1 = Math.max(y1, P[2 * i + 1]); }
+  const pad = m.w + 4; x0 -= pad; y0 -= pad; x1 += pad; y1 += pad;
+  const T = typeof g.getTransform === "function" ? g.getTransform() : null;
+  const k = Math.min(T ? Math.hypot(T.a, T.b) || 1 : 1, 4096 / Math.max(1, x1 - x0), 4096 / Math.max(1, y1 - y0));
+  const lay = document.createElement("canvas");
+  lay.width = Math.max(1, Math.ceil((x1 - x0) * k)); lay.height = Math.max(1, Math.ceil((y1 - y0) * k));
+  const x = lay.getContext("2d");
+  x.setTransform(k, 0, 0, k, -x0 * k, -y0 * k);
+  x.lineCap = "round"; x.lineJoin = "round";
+  const outline = () => {
+    x.beginPath();
+    for (let i = 0; i < n; i++) { const w = width(i) * edge(i, 0); const px = P[2 * i] + nx[i] * w, py = P[2 * i + 1] + ny[i] * w; if (i) x.lineTo(px, py); else x.moveTo(px, py); }
+    for (let i = n - 1; i >= 0; i--) { const w = width(i) * edge(i, 1); x.lineTo(P[2 * i] - nx[i] * w, P[2 * i + 1] - ny[i] * w); }
+    x.closePath();
+  };
+  x.fillStyle = cssColor(c);
+  outline(); x.fill();
+  for (const i of [0, n - 1]) { x.beginPath(); x.arc(P[2 * i], P[2 * i + 1], width(i) * 0.9, 0, 6.3); x.fill(); }
+  // the ink gathered: denser along its middle and at its rims
+  x.globalCompositeOperation = "source-atop";
+  x.strokeStyle = cssColor(mixColor(c, 0x0a0503, 0.35));
+  x.globalAlpha = 0.28; x.lineWidth = m.w * 0.3; line(x, P); x.stroke();
+  x.globalAlpha = 0.35; x.lineWidth = Math.max(0.6, m.w * 0.1); outline(); x.stroke();
+  // dry: thin gaps run along it where the brush ran out, more at its edges
+  // and toward its end (no specks: Luke 2026-10-03, they read as dots)
+  x.globalCompositeOperation = "destination-out";
+  const bristles = Math.max(4, Math.round(m.w * 0.9));
+  for (let b = 0; b < bristles; b++) {
+    const t = (r() - 0.5) * 0.95, edgeK = Math.abs(t) * 2;
+    const off = t * m.w;
+    const pts = [];
+    for (let i = 0; i < n; i++) pts.push(P[2 * i] + nx[i] * off, P[2 * i + 1] + ny[i] * off);
     const dash = [];
     for (let run = 0; run < total;) {
-      const on = Math.max(1, m.w * (2 + r() * 10) * (1 - edge * 0.55));
-      const gap = r() < 0.2 + edge * 0.5 ? m.w * (0.3 + r() * 1.4) : 0.4;
+      const fade = run / total;
+      const on = m.w * (0.6 + r() * 2.2) * (0.5 + fade);
+      const gap = m.w * (1.5 + r() * 8) * (1.4 - fade) * (1 - edgeK * 0.5);
       dash.push(on, gap); run += on + gap;
     }
-    g.setLineDash(dash); g.lineDashOffset = r() * m.w * 4;
-    g.strokeStyle = cssColor(mixColor(c, r() < 0.5 ? 0x120a06 : 0xe2d6bc, r() * 0.2));
-    g.globalAlpha = o * (0.5 + r() * 0.5) * (1 - edge * 0.3);
-    g.lineWidth = Math.max(0.6, (m.w / bristles) * (1.1 + r() * 0.9));
-    line(g, pts); g.stroke();
+    x.setLineDash(dash); x.lineDashOffset = r() * m.w * 6;
+    x.globalAlpha = (0.35 + r() * 0.5) * (0.5 + edgeK * 0.6);
+    x.lineWidth = Math.max(0.5, m.w * (0.05 + r() * 0.08));
+    line(x, pts); x.stroke();
   }
+  x.setLineDash([]);
+
+  // (the layer alone, for a host's preview: it composes it as below)
+  // (a bright stroke's light pass over the grime too: `over`)
+  if (layerOnly) return { canvas: lay, x0, y0, x1, y1, soak: o * B.soak, lay: o * B.lay, over: (m.b ?? 1) >= BRIGHTS.length - 1 ? o * OVER : 0 };
+  // into the paper: soaked in, then a little of its colour back over it
+  g.save();
+  g.imageSmoothingQuality = "high";
+  // (Luke, 2026-10-03: lighter, its colour kept, on the sheet and on a card
+  // alike; a little soaked in, the rest laid on; how much of each by its
+  // brightness)
+  if (over) {
+    g.globalCompositeOperation = atop ? "source-atop" : "source-over";
+    g.globalAlpha = o * OVER;
+    g.drawImage(lay, x0, y0, x1 - x0, y1 - y0);
+    g.restore();
+    return;
+  }
+  g.globalCompositeOperation = atop ? "source-atop" : "multiply";
+  g.globalAlpha = o * B.soak;
+  g.drawImage(lay, x0, y0, x1 - x0, y1 - y0);
+  g.globalCompositeOperation = atop ? "source-atop" : "source-over";
+  g.globalAlpha = o * B.lay;
+  g.drawImage(lay, x0, y0, x1 - x0, y1 - y0);
   g.restore();
 }
-function drawInk(g, area = null) {
-  const pal = look.ink.sheet;
+
+// The pages pasted on the sheet: each drawn lifted a little (no seams or tape
+// of their own: Luke, 2026-10-03). Those out of the area are passed over.
+function drawPages(g, area = null) {
+  const pages = (look.decor ?? []).filter((d) => d.layer === "page");
+  const T = look.sheet.pages ?? { darken: 0, sepia: 0, contrast: 100, soak: 0 };
+  for (const d of pages) {
+    const meta = piece(d.tex);
+    const ar = meta?.w && meta?.h ? meta.h / meta.w : 1.3;
+    const w = d.w, h = d.w * ar, rot = d.r * Math.PI / 180;
+    const reach = Math.hypot(w, h) / 2 + 40;
+    if (area && !meets({ x0: d.x - reach, y0: d.y - reach, x1: d.x + reach, y1: d.y + reach }, area)) continue;
+    const im = img(d.tex);
+    if (!im) continue;
+    // (Luke, 2026-10-06: browned, quieted, and darkened toward the sheet,
+    // their edges soaked in: lying in the sheet, never over the board)
+    const page = tonedPage(im, d, T, Math.min(1600, Math.max(256, w * 1.2 * pxs())));
+    g.save(); g.globalAlpha = d.o / 100;
+    g.shadowColor = "rgba(0,0,0,0.45)"; g.shadowBlur = 4 * pxs(); g.shadowOffsetY = 2 * pxs();
+    g.translate(d.x, d.y); g.rotate(rot); g.scale(d.flip ? -1 : 1, 1);
+    g.imageSmoothingQuality = "high";
+    g.drawImage(page, -w / 2, -h / 2, w, h);
+    g.restore();
+  }
+}
+// A page as it lies in the sheet: browned and its contrast lowered, then
+// darkened toward the sheet's own tone, its edges soaked darker the way damp
+// paper takes up what it is pasted on. Made once for each page and setting.
+const tonedPages = new WeakMap();
+function tonedPage(im, d, T, cap) {
+  let per = tonedPages.get(im);
+  if (!per) tonedPages.set(im, (per = new Map()));
+  const S = look.sheet;
+  const key = `${Math.round(cap / 64)}|${Math.round(d.w)}|${JSON.stringify(T)}|${JSON.stringify(d.fx ?? null)}|${S.tint}|${S.darken}`;
+  if (per.has(key)) return per.get(key);
+  const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
+  const k = Math.min(1, cap / Math.max(iw, ih));
+  const W = Math.max(1, Math.round(iw * k)), H = Math.max(1, Math.round(ih * k));
+  const canvas = (w = W, h = H) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+  const c = canvas(), x = c.getContext("2d");
+  x.imageSmoothingQuality = "high";
+  const filter = [d.fx ? gradeFilter(d.fx) : "", T.sepia ? `sepia(${T.sepia}%)` : "", T.contrast !== 100 ? `contrast(${T.contrast}%)` : ""].filter(Boolean).join(" ") || "none";
+  if (HAS_FILTER) x.filter = filter;
+  x.drawImage(im, 0, 0, W, H);
+  x.filter = "none";
+  // darkened toward the sheet (as the sheet's own paper is: its tint, by
+  // `darken` % of the sheet's darkening), only where the page is
+  if (T.darken) {
+    x.globalCompositeOperation = "multiply";
+    x.fillStyle = cssColor(mixColor(0xffffff, S.tint, (S.darken / 100) * (T.darken / 100)));
+    x.fillRect(0, 0, W, H);
+    x.globalCompositeOperation = "destination-in";
+    x.drawImage(im, 0, 0, W, H);
+  }
+  // its edges soaked: darker the nearer its edge (a blur of its outline, turned inside out)
+  const r = (T.soak ?? 0) * k * (iw / Math.max(1, d.w || iw));
+  if (r >= 1 && HAS_FILTER) {
+    const pad = Math.ceil(r * 2);
+    const m = canvas(W + pad * 2, H + pad * 2), mx = m.getContext("2d");
+    mx.filter = `blur(${r}px)`; mx.drawImage(im, pad, pad, W, H); mx.filter = "none";
+    const e = canvas(W + pad * 2, H + pad * 2), ex = e.getContext("2d");
+    ex.fillStyle = cssColor(mixColor(S.tint, 0x0a0503, 0.45)); ex.fillRect(0, 0, e.width, e.height);
+    ex.globalCompositeOperation = "destination-out"; ex.drawImage(m, 0, 0);
+    x.globalCompositeOperation = "source-atop"; x.globalAlpha = 0.85;
+    x.drawImage(e, -pad, -pad);
+    x.globalAlpha = 1;
+  }
+  // worn (Luke, 2026-10-06): a crease or two where it was folded, pale on
+  // one side and dark on the other, only where the page is
+  const wr = rng(`pagewear:${d.id}:${d.tex}`);
+  x.globalCompositeOperation = "source-atop";
+  for (let i = 0, n = 1 + Math.floor(wr() * 2); i < n; i++) {
+    const across = wr() < 0.5, at = (0.25 + wr() * 0.5) * (across ? H : W), tilt = (wr() - 0.5) * 0.12 * (across ? W : H);
+    const line = (off, color, lw) => {
+      x.strokeStyle = color; x.lineWidth = lw * k * (iw / Math.max(1, d.w || iw)) * 2;
+      x.beginPath();
+      if (across) { x.moveTo(0, at - tilt + off); x.lineTo(W, at + tilt + off); } else { x.moveTo(at - tilt + off, 0); x.lineTo(at + tilt + off, H); }
+      x.stroke();
+    };
+    const lw = Math.max(1, 1.2 * k * (iw / Math.max(1, d.w || iw)) * 2);
+    line(-lw, "rgba(255,245,225,0.22)", 1.4);
+    line(lw * 0.6, "rgba(30,18,10,0.3)", 1.1);
+  }
+  x.globalCompositeOperation = "source-over";
+  per.set(key, c);
+  return c;
+}
+// Writing straight on the sheet: grease pencil, warming to rust the deeper it
+// is (a hidden one, the GM's, faint)
+function drawSheetWriting(g, area = null) {
+  for (const s of view?.scraps ?? []) {
+    const L = s.layout;
+    if (!L?.bare || (area && !meets(writingBox(s), area))) continue;
+    const chalk = cssColor(mixColor(L.ink ?? look.ink.scrawl, 0x8a2a1e, Math.pow(L.depth, 1.4) * 0.35));
+    for (const ln of L.lines) hand(g, ln, chalk, (s.look === "ghost" ? 0.32 : 1) * 0.88, L.depth);
+  }
+}
+// a sheet writing's extent, with a margin for its hand
+const writingBoxes = new WeakMap();
+function writingBox(s) {
+  let b = writingBoxes.get(s.layout);
+  if (b) return b;
+  const h = s.layout.hull;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < h.length; i += 2) { x0 = Math.min(x0, h[i]); x1 = Math.max(x1, h[i]); y0 = Math.min(y0, h[i + 1]); y1 = Math.max(y1, h[i + 1]); }
+  const p = (s.layout.lines?.[0]?.size ?? 20) * 0.6;
+  b = { x0: x0 - p, y0: y0 - p, x1: x1 + p, y1: y1 + p };
+  writingBoxes.set(s.layout, b);
+  return b;
+}
+function drawInk(g, area = null, { over = false } = {}) {
+  const pal = look.ink.marker;
   for (const strokes of Object.values(view?.marks ?? {})) {
     for (const [id, m0] of Object.entries(strokes)) {
+      if (over && m0.b !== 2) continue;
       if (area && !meets(markBox(m0), area)) continue;
       const c = pal[m0.c] ?? pal[0] ?? 0xa39a86;
       // (never wider than three strings, however it was drawn)
       const m = { ...m0, w: Math.min(m0.w, markMax(look)) };
-      brush(g, m, c, rng(`mark:${id}:${m.pts.length}`));
+      brush(g, m, c, rng(`mark:${id}:${m.pts.length}`), { over });
     }
   }
 }
@@ -1088,8 +1514,13 @@ function drawForeground(g, { marksOnly = false } = {}) {
   if (marksOnly) return;
   const r = inView(g);
   drawDecor(g, view.decor, "under");
-  for (const s of view.scraps) if (scrapShows(s, r)) drawScrap(g, s);
+  // (writing on the sheet is the sheet's, baked under its grime; a name tag
+  // hangs over the strings, Luke 2026-10-03)
+  for (const s of view.scraps) if (!s.tag && scrapShows(s, r)) drawScrap(g, s);
+  // (the board's loose pieces: tape and webs taken off cards)
+  for (const b of view.bits ?? []) sprite(g, b.tex, b.x, b.y, b.w, b.rot, { flip: b.flip, alpha: b.alpha ?? 1, shadow: 4, filter: gradeFilter(look.grade.paper) });
   for (const l of view.links) if (linkShows(l, r)) drawLink(g, l);
+  for (const s of view.scraps) if (s.tag && scrapShows(s, r)) drawScrap(g, s);
   pinView = r;
   try { drawPins(g); } finally { pinView = null; }
   drawDecor(g, view.decor, "over");
@@ -1100,9 +1531,20 @@ return {
     if (s.look && s.look !== look) { look = s.look; lookStamp = JSON.stringify([look.grade, look.ink, look.fonts, look.grime, look.scrap, look.pools.stains, look.pools.papers, look.pools.notes]); }
     if (s.view) view = s.view; if (s.geo) geo = s.geo;
   },
-  drawTable, drawSheet, drawBackground, bakeBackground, sharpenBackground, drawPatch, paintSheet, markState, markChanges, drawForeground,
+  // a marker stroke as the brush draws it (the tools' marks: one being moved)
+  drawStroke(g, m, seed = "") { brush(g, { ...m, w: Math.min(m.w, markMax(look)) }, look.ink.marker[m.c] ?? look.ink.marker[0] ?? 0xa39a86, rng(`mark:${seed}`)); },
+  // a stroke's own painted layer and how it is laid down (a host's preview
+  // composes it the same way: soaked in by multiply, then laid over), and the
+  // darkening the sheet's grime gives it once it is down (Luke, 2026-10-06:
+  // the preview as dark as the drawing will be)
+  strokeLayer(m, scale, seed = "") {
+    const g = { getTransform: () => new DOMMatrix([scale, 0, 0, scale, 0, 0]) };
+    return brush(g, { ...m, w: Math.min(m.w, markMax(look)) }, look.ink.marker[m.c] ?? look.ink.marker[0] ?? 0xa39a86, rng(`mark:${seed}`), { layerOnly: true });
+  },
+  get grimeVeil() { return GRIME_VEIL; },
+  drawTable, drawSheet, drawBackground, bakeBackground, sharpenBackground, sharpenContinue, drawPatch, paintSheet, markState, markChanges, drawForeground,
   // (the bake and patch let go: a picture painted, or the board left)
-  dropBake() { bake = null; patch = null; },
+  dropBake() { bake = null; patch = null; nextPatch = null; },
   resetMissing() { missing = false; }, drawLight, drawDecor, drawScrap, drawLink, drawPins, drawInk,
   tagOf, onTag, ropeFor, layerCanvas, poly, line, shrink, gradeFilter, graded,
   get missing() { return missing; },
