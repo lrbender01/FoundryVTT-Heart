@@ -1,4 +1,4 @@
-// The party sheet's art (2026-10-02, docs/plans/heart-party-art.md): the
+// The party sheet's art (2026-10-02; the plan is in CHANGELOG.md): the
 // export of Luke's Heart Party Sheet Art tool, which fvtt-heart-content
 // ships as assets/art/party/party-art.json beside its pieces (read once,
 // common/decor-file.js). The layout maths is in decor.js.

@@ -51,3 +51,10 @@ export function renamedCards(raw, uuid, name) {
     for (const [k, s] of Object.entries(raw?.scraps ?? {})) if (s?.uuid === uuid && s.name !== name) out[k] = { name };
     return out;
 }
+
+// The same place's cards in the bin whose stored name isn't its actor's now:
+// their bin keys (Luke, 2026-10-21: one put back came back under its old name)
+export function renamedBinned(raw, uuid, name) {
+    if (!uuid || !name) return [];
+    return Object.entries(raw?.bin ?? {}).filter(([, e]) => e?.scrap?.uuid === uuid && e.scrap.name !== name).map(([k]) => k);
+}

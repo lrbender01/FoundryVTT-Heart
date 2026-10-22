@@ -1,16 +1,26 @@
 import './sheet.sass';
-import sheetHTML from './sheet.html';
 import HeartSheetMixin from '../../common/sheet';
-import { iconFor } from '../../common/icons';
 import { heartDialogOptions } from '../../common/dialog';
 import { removalLoss, confirmRemoval } from '../../items/removal';
-import { actorDropRefusal } from '../../common/drops';
+import { actorDropRefusal, draggableRowUuid, rowItemId } from '../../common/drops';
+import { showsLimitedSheet } from '../../common/gm-notes';
+import { newItemName } from '../../common/localize';
+import limitedHTML from './limited.html';
+
+// The cut-down sheet for a Limited viewer of an adversary, landmark, or
+// delve (Luke, 2026-10-21; common/gm-notes.js)
+export const LIMITED_SHEET = limitedHTML.path;
 
 export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
+    // (no template of its own since 2026-10-21, Luke: every registered actor
+    // sheet names its own; the unused base page went)
     static get type() { return 'base'; }
 
-    get template() {
-        return sheetHTML.path;
+    // Whether this user gets the cut-down sheet (name, picture, public
+    // description); the sheets with GM Notes check it in their template
+    // and rich-text getters
+    get limitedView() {
+        return showsLimitedSheet(this.actor, game.user);
     }
 
     get img() {
@@ -74,7 +84,7 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
 
           const doc = new CONFIG.Item.documentClass({
               type,
-              name: game.i18n.format('heart.new-item', { type }),
+              name: newItemName(type),
               system: itemData
           });
 
@@ -84,7 +94,7 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
         html.find('[data-action=view]').click(async ev => {
           const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
           const item = await fromUuid(uuid);
-          item.sheet.render(true);
+          item?.sheet.render(true);
         });
 
         html.find('[data-action=delete]').click(async ev => {
@@ -103,6 +113,7 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
         html.find('[data-action=item-roll]').click(async ev => {
           const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
           const item = await fromUuid(uuid);
+          if (!item) return;
 
           let rollOptions = {'stepIncrease': false, 'stepDecrease': false};
 
@@ -120,11 +131,10 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
 
           await roll.evaluate();
 
-          roll.toMessage({
-              // the item's own icon leads the card (2026-09-30)
-              flavor: `${iconFor(item.img)}${localizeHeart(item.name)} (<span class="item-type">${item.type}</span>)`,
-              speaker: {actor: this.actor.id}
-          });
+          // no flavor (Luke, 2026-10-21): the card already shows the item's
+          // icon and escaped name, and a flavor built from the name ran any
+          // markup typed into it on every client
+          roll.toMessage({ speaker: {actor: this.actor.id} });
         });
       
         // Heart rolls (2026-09-30 rebuild): every entry point opens the
@@ -163,114 +173,53 @@ export default class HeartActorSheet extends HeartSheetMixin(ActorSheet) {
         
         
 
-        html.find('[data-item-id] [data-action=activate]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
+        // Switch a row's item on or off, or finish it. A row whose item is
+        // gone (a stale render) does nothing (Luke, 2026-10-21: these threw).
+        // (open-compendium and open-type-compendium went 2026-10-21: no
+        // template had them; the slots open the Choose window)
+        const setField = (action, changes) => html.find(`[data-item-id] [data-action=${action}]`).click(async ev => {
+            const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
             const item = await fromUuid(uuid);
-            item.update({'system.active': true});
+            await item?.update(changes);
         });
-
-        html.find('[data-item-id] [data-action=deactivate]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            item.update({'system.active': false});
-        });
-
-        html.find('[data-item-id] [data-action=complete]').click(async ev => {
-          const target = $(ev.currentTarget);
-          const uuid = target.closest('[data-item-id]').data('itemId');
-          const item = await fromUuid(uuid);
-          item.update({'system.complete': true});
-        });
-
-        html.find('[data-item-id] [data-action=uncomplete]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            item.update({'system.complete': false});
-        });
-
-        html.find('[data-action=open-compendium]').click(async ev => {
-            // Get the compendium name from the data-compendium attribute
-            const target = $(ev.currentTarget);
-
-            const compendiumName = target.data('compendium'); // e.g., "heart.items"
-        
-            if (!compendiumName) {
-                console.error("No compendium name specified in the data-compendium attribute.");
-                return;
-            }
-        
-            // Retrieve the compendium
-            const pack = game.packs.get(compendiumName);
-        
-            if (!pack) {
-                console.error(`Compendium '${compendiumName}' not found.`);
-                return;
-            }
-        
-            // Render the compendium
-            pack.render(true);
-        });
-
-        // Like open-compendium, but opens EVERY Item compendium that provides
-        // the given item type instead of a hardcoded pack id - so "Select a
-        // Class" shows the core book AND Ways & Means packs together
-        // (2026-09-29), and content modules can supply types the system
-        // doesn't ship packs for (e.g. ancestries).
-        html.find('[data-action=open-type-compendium]').click(async ev => {
-            const type = $(ev.currentTarget).data('itemType');
-            if (!type) {
-                console.error("No item type specified in the data-item-type attribute.");
-                return;
-            }
-
-            let opened = 0;
-            for (const pack of game.packs) {
-                if (pack.metadata.type !== 'Item') continue;
-                if (!pack.visible) continue;
-                const index = await pack.getIndex();
-                if (index.some(entry => entry.type === type)) {
-                    pack.render(true);
-                    opened++;
-                }
-            }
-            if (opened > 0) return;
-
-            ui.notifications.warn(game.i18n.format('heart.compendium.none-for-type', { type }));
-        });
+        setField('activate', { 'system.active': true });
+        setField('deactivate', { 'system.active': false });
+        setField('complete', { 'system.complete': true });
+        setField('uncomplete', { 'system.complete': false });
     }
 
+    // A row's drag carries the item's own drag data (its uuid), so a drop
+    // back on the same actor sorts instead of making a copy (Luke,
+    // 2026-10-21, S5: the panel sheets sent a copy with no uuid, and every
+    // drop on the sheet created a duplicate). A drop on another actor or the
+    // sidebar still copies it, as before. One copy for every actor sheet
+    // (the character sheet's own went). A class's or calling's child row,
+    // a tab link, or a content link drags nothing (common/drops.js).
     async _onDragStart(event) {
         const li = event.currentTarget;
-        if (event.target.classList.contains("content-link")) return;
+        if (event.target?.classList?.contains('content-link')) return;
+        const uuid = draggableRowUuid(li.dataset.itemId);
+        if (!uuid) return;
+        const item = await fromUuid(uuid);
+        if (!item) return;
+        event.dataTransfer.setData('text/plain', JSON.stringify(item.toDragData()));
+    }
 
-        // Create drag data
-        let dragData = {
-            actorId: this.actor.id,
-            sceneId: this.actor.isToken ? canvas.scene?.id : null,
-            tokenId: this.actor.isToken ? this.actor.token.id : null,
-            pack: this.actor.pack
-        };
-
-        // Owned Items
-        if (li.dataset.itemId) {
-            const item = await fromUuid(li.dataset.itemId);
-            dragData.type = "Item";
-            dragData.data = item.toObject();
-            // Delete _id so that when dropped in Item panel Foundry knows to create a new Item
-            delete dragData.data._id;
-        }
-
-        // Active Effect
-        if (li.dataset.effectId) {
-            const effect = this.actor.heart_effects.get(li.dataset.effectId);
-            dragData.type = "ActiveEffect";
-            dragData.data = effect.data;
-        }
-
-        // Set data transfer
-        event.dataTransfer.setData("text/plain", JSON.stringify(dragData));
+    // Foundry's sort reads item ids from data-item-id; Heart's rows carry
+    // uuids, so its own sort found no target and threw. The same sort, by
+    // the rows' item ids (common/drops.js rowItemId).
+    async _onSortItem(event, itemData) {
+        const items = this.actor.items;
+        const source = items.get(itemData?._id);
+        const dropTarget = event.target?.closest?.('[data-item-id]');
+        if (!source || !dropTarget) return;
+        const target = items.get(rowItemId(dropTarget.dataset.itemId));
+        if (!target || target.id === source.id) return;
+        const siblings = [...(dropTarget.parentElement?.children ?? [])]
+            .map(el => items.get(rowItemId(el.dataset?.itemId)))
+            .filter(i => i && i.id !== source.id);
+        const updates = SortingHelpers.performIntegerSort(source, { target, siblings })
+            .map(u => ({ ...u.update, _id: u.target.id }));
+        return this.actor.updateEmbeddedDocuments('Item', updates);
     }
 }

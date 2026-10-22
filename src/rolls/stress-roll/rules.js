@@ -5,10 +5,29 @@
 
 export const DIE_ORDER = ['d4', 'd6', 'd8', 'd10', 'd12'];
 
-// One die size smaller; a D4 (or anything off the ladder) stays as it is
+// The dice ladder (HCB p. 7: D4, D6, D8, D10, D12; nothing below D4 or
+// above D12). One die size smaller; a D4 (or anything off the ladder) stays
+// as it is
 export function stepDown(die) {
     const i = DIE_ORDER.indexOf(String(die).toLowerCase());
     return i > 0 ? DIE_ORDER[i - 1] : die;
+}
+
+// One die size larger; a D12 (or anything off the ladder) stays as it is
+// (2026-10-21: the item roll's own copy stepped an unknown die to D4)
+export function stepUp(die) {
+    const i = DIE_ORDER.indexOf(String(die).toLowerCase());
+    return i >= 0 && i < DIE_ORDER.length - 1 ? DIE_ORDER[i + 1] : die;
+}
+
+// An item roll's die (Shift+click steps it up, Alt+click down; R4,
+// 2026-10-21): { die, stepped: 'up' | 'down' | '' }, stepped only when the
+// die really moved, so the card never says "stepped down" for a D4
+export function itemRollDie(die, { stepIncrease = false, stepDecrease = false } = {}) {
+    const from = String(die ?? '').toLowerCase();
+    const to = stepIncrease ? stepUp(from) : stepDecrease ? stepDown(from) : from;
+    const stepped = to === from ? '' : stepIncrease ? 'up' : 'down';
+    return { die: to, stepped };
 }
 
 // The die a stress roll uses: the GM's pick (D4 by default), one size smaller
@@ -30,6 +49,22 @@ export function stressFormula(die, result) {
 export function afterProtection(total, protection, ignoreProtection = false) {
     const p = ignoreProtection ? 0 : (Number(protection) || 0);
     return { protection: p, amount: Math.max(0, total - p) };
+}
+
+// A resistance track's size (Luke, 2026-10-21, R17): its own max, else the
+// book's ten boxes (player-reference: a 10-box track)
+export const TRACK_MAX = 10;
+export function trackMax(res) {
+    const max = Number(res?.max);
+    return max > 0 ? max : TRACK_MAX;
+}
+
+// A track after taking stress: capped at its last box (R17: a character's
+// track ran past ten while a companion's stopped; one rule for both). A
+// track already past its max (from before the cap) is never lowered.
+export function markedValue(value, amount, max) {
+    const now = Number(value) || 0;
+    return Math.max(now, Math.min(Number(max) || TRACK_MAX, now + Math.max(0, Number(amount) || 0)));
 }
 
 // Where a stress roll stands (Luke, 2026-10-21: "there must be separate roll

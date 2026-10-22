@@ -1,0 +1,29 @@
+<!-- A real <form> (2026-09-29): without one, FormApplication had nothing to
+     submit and knack edits were lost. Changes apply on Save. -->
+<!-- Titled container (2026-09-30, Luke): the same title plate, glyph, and
+     small column heads as the character sheet's Skills & Domains tab. -->
+<!-- One template for skills and domains since 2026-10-21 (kind "skill" or
+     "domain", group "skills" or "domains"; applications/base/traits.js) -->
+<form class="{{group}}-manager" autocomplete="off">
+  <div class="character-tab-container trait-edit-container">
+    <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" group}}}</span>{{localizeHeart kind "label-multiple"}}</div>
+    <div class="container-content">
+    <div class="section {{group}} grid-2 auto-first-col">
+      <span class="trait-edit-head">{{localizeHeart kind "label-multiple"}}</span>
+      <span class="trait-edit-head">{{localizeHeart kind "knack" "label-multiple"}}</span>
+      {{#each traits as |trait name|}}
+      <div class="{{../kind}}-edit-row {{#if trait.value}}selected{{else}}unselected{{/if}}" data-tooltip="{{heartTip ../kind name}}">
+        <input type="checkbox" name="system.{{../group}}.{{name}}.value" {{checked trait.value}} />
+        <span class="trait-glyph">{{{heartGlyph ../kind name}}}</span>
+        <span class="{{../kind}}-name">{{localizeHeart ../kind name}}</span>
+      </div>
+      <textarea class="knack-input" name="system.{{../group}}.{{name}}.knack" rows="1" {{#unless trait.value}}disabled{{/unless}}>{{trait.knack}}</textarea>
+      {{/each}}
+    </div>
+    </div>
+  </div>
+    <footer class="manager-buttons">
+      <button type="button" data-action="cancel"><span class="fas fa-times"></span> {{localizeHeart "cancel"}}</button>
+      <button type="button" data-action="save"><span class="fas fa-save"></span> {{localizeHeart "save"}}</button>
+    </footer>
+</form>

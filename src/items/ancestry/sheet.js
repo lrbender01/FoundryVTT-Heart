@@ -35,12 +35,6 @@ export default class extends HeartItemSheet {
         return data.img;
     }
 
-    // Same id scheme the factory sheets use, so an ancestry opened from a
-    // character sheet gets a stable window id.
-    get id() {
-        return `${this.constructor.name}-${this.document.uuid.replace(/[\.@]/g, "-")}`;
-    }
-
     getData() {
         const data = super.getData();
         // the rolled keepsake, shown as an item row in the Keepsake section

@@ -13,6 +13,7 @@ import {
   onRelayMessage,
   RelayTimeout,
   RELAY_CHANNEL,
+  HANDLER_LIMIT_MS,
 } from "../src/common/relay.js";
 
 const tick = (ms = 5) => new Promise((r) => setTimeout(r, ms));
@@ -55,6 +56,19 @@ describe("the queue", () => {
     registerRelayHandler("fine", async () => "ok");
     await expect(runQueued("boom")).rejects.toThrow("no");
     await expect(runQueued("fine")).resolves.toBe("ok");
+  });
+
+  // 2026-10-21 (R16): one stuck handler stalled every later request
+  it("a handler that never answers times out, and the queue moves on", async () => {
+    vi.useFakeTimers();
+    registerRelayHandler("stuck", () => new Promise(() => {}));
+    registerRelayHandler("after", async () => "next");
+    const stuck = runQueued("stuck");
+    const next = runQueued("after");
+    const stuckDone = expect(stuck).rejects.toBeInstanceOf(RelayTimeout);
+    await vi.advanceTimersByTimeAsync(HANDLER_LIMIT_MS + 1);
+    await stuckDone;
+    await expect(next).resolves.toBe("next");
   });
 
   it("an unknown operation rejects", async () => {
@@ -130,6 +144,40 @@ describe("the GM's side", () => {
     await onRelayMessage({ kind: "request", id: "r1", op: "not-mine", data: {}, from: "player", to: "gm" });
     expect(fn).not.toHaveBeenCalled();
     expect(game.socket.emit).not.toHaveBeenCalled();
+  });
+
+  // 2026-10-21 (R5): Foundry's server passes the real sender's id
+  it("runs a request as the user Foundry says sent it", async () => {
+    game.user = { id: "gm", isGM: true };
+    registerRelayHandler("who", async (data, userId) => ({ status: "done", userId }));
+    await onRelayMessage({ kind: "request", id: "r3", op: "who", data: {}, from: "player", to: "gm" }, "player");
+    expect(game.socket.emit.mock.calls[0][1]).toMatchObject({ to: "player", result: { status: "done", userId: "player" } });
+  });
+
+  it("refuses a request whose `from` is not its sender", async () => {
+    game.user = { id: "gm", isGM: true };
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fn = vi.fn(async () => ({ status: "done" }));
+    registerRelayHandler("spoofed", fn);
+    await onRelayMessage({ kind: "request", id: "r4", op: "spoofed", data: {}, from: "gm", to: "gm" }, "player");
+    expect(fn).not.toHaveBeenCalled();
+    expect(game.socket.emit).toHaveBeenCalledWith(RELAY_CHANNEL, {
+      kind: "response",
+      id: "r4",
+      to: "player",
+      result: { status: "not-allowed" },
+      error: null,
+    });
+  });
+
+  it("takes an answer only from a GM's client", async () => {
+    game.users = Object.assign(new Map([["gm", { id: "gm", isGM: true }], ["p2", { id: "p2", isGM: false }]]), {
+      activeGM: { id: "gm", isSelf: false },
+    });
+    const asked = relay("remote");
+    await onRelayMessage({ kind: "response", id: "req-1", to: "player", result: { status: "done", forged: true }, error: null }, "p2");
+    await onRelayMessage({ kind: "response", id: "req-1", to: "player", result: { status: "done" }, error: null }, "gm");
+    await expect(asked).resolves.toEqual({ status: "done" });
   });
 
   it("reports a failing handler as an error answer", async () => {

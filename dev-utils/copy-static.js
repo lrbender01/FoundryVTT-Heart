@@ -1,6 +1,7 @@
 // Cross-platform replacement for the Unix-only `bash -c 'cp -r LICENSE
 // static/. dist/'` copy-static script. Merges into dist/ without deleting
-// existing build output (so it must run AFTER build-packs, same as before).
+// existing build output, so it runs last in build-all (after webpack, which
+// cleans dist/).
 const fs = require('fs');
 const path = require('path');
 

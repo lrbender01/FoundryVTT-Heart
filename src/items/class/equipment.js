@@ -4,6 +4,12 @@
 // "weapon_*" and "kit_*" are two). Shared by the class sheet (sections) and
 // the character sheet (the "not picked yet" indicator).
 
+// The choice an option belongs to: its id less a trailing number
+// ("group_2" -> "group", "weapon-1" -> "weapon"); one copy since 2026-10-21
+export function choiceKey(id) {
+    return String(id).replace(/[_-]?\d+$/, '') || String(id);
+}
+
 export function equipmentChoices(cls) {
     const system = cls?.system ?? {};
     const groups = system.equipment_groups ?? [];
@@ -11,7 +17,7 @@ export function equipmentChoices(cls) {
     const choices = new Map();
     for (const id of groups) {
         if (id === 'core') continue;
-        const key = id.replace(/[_-]?\d+$/, '') || id;
+        const key = choiceKey(id);
         if (!choices.has(key)) choices.set(key, []);
         choices.get(key).push({ id, active: active.has(id) });
     }

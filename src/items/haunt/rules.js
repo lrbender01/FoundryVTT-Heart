@@ -39,6 +39,33 @@ export function resourcePayments(characters, hauntDie, dieSizes = DIE_SIZES) {
     return out;
 }
 
+// Upgrade (delta 1) or Downgrade (delta -1) every service of a haunt one
+// die size: the update paths, one place for the haunt sheet and the
+// landmark's haunt rows (Luke, 2026-10-21; it was written twice). A die
+// already at the end stays, and so does a die outside the list (Luke,
+// 2026-10-22, audit S20: it became the smallest on Upgrade).
+export function stepServices(services, delta, dieSizes = DIE_SIZES) {
+    const updates = {};
+    for (const [key, service] of Object.entries(services ?? {})) {
+        const at = dieSizes.indexOf(service?.die_size);
+        if (at < 0) continue;
+        const i = at + delta;
+        if (i >= 0 && i < dieSizes.length) updates[`system.resistances.${key}.die_size`] = dieSizes[i];
+    }
+    return updates;
+}
+
+// The whole Upgrade or Downgrade write, or null when no service moves. An
+// Upgrade that steps any service clears the upgrade track; one that steps
+// none (every die at the top) leaves the track alone, and the sheet says so
+// (Luke, 2026-10-22, audit S20: it cleared the track for nothing).
+export function hauntStep(services, delta, dieSizes = DIE_SIZES) {
+    const updates = stepServices(services, delta, dieSizes);
+    if (!Object.keys(updates).length) return null;
+    if (delta > 0) updates['system.upgradeTrack'] = 0;
+    return updates;
+}
+
 // A payment that is not a resource (a job, a favour; the GM sets its worth):
 // the dice up to the haunt's
 export function otherPaymentDice(hauntDie, dieSizes = DIE_SIZES) {

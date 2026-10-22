@@ -308,6 +308,20 @@ export function emphasizeTerms(html, { abilityRefs = false } = {}) {
     }).join('');
 }
 
+// Plain text someone typed (a companion's Cost, an ancestry question): its
+// markup characters are escaped first, then the terms highlighted, so what
+// was typed shows as text and never runs as HTML (Luke, 2026-10-21: a typed
+// <img onerror> ran on every client that drew the sheet). Book text through
+// here is plain too, so it reads the same.
+const TEXT_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
+export function escapeText(text) {
+    return String(text ?? '').replace(/[&<>"]/g, (c) => TEXT_ESCAPES[c]);
+}
+
+export function emphasizeTermsText(text, options = {}) {
+    return emphasizeTerms(escapeText(text), options);
+}
+
 // Highlight already-rendered text (description panels etc.) in place. Only
 // the displayed view changes: Foundry opens an editor from the stored data,
 // not from this DOM. A data flag keeps it idempotent.

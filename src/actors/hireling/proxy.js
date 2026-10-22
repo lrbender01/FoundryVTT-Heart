@@ -13,9 +13,6 @@ export default {
                     return game.actors.filter(a => a.type === 'character'
                         && a.items.some(i => i.type === 'bond' && i.system.target === actor.uuid));
                 }
-                if (name === 'effects') {
-                    return actor.items.reduce((o, item) => o.concat(item.transferredEffects), []);
-                }
             }
         });
     }

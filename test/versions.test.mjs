@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { compareVersions, versionParts } from "../src/common/versions.js";
+import { compareVersions, versionParts, startupVersions } from "../src/common/versions.js";
 
 describe("version order", () => {
   it("reads a label as numbers, the fork suffix aside", () => {
@@ -17,5 +17,24 @@ describe("version order", () => {
     expect(compareVersions("v0.8.7", "v0.8.7")).toBe(0);
     const sorted = ["v0.5.0", "v0.10.5-pr94", "v0.8.7", "v0.8.10", "v0.6.0"].sort((a, b) => compareVersions(b, a));
     expect(sorted).toEqual(["v0.10.5-pr94", "v0.8.10", "v0.8.7", "v0.6.0", "v0.5.0"]);
+  });
+});
+
+// The startup changelog (Luke, 2026-10-21): English, the fallback every
+// language has, so es and it (no versions) no longer throw and pt (older
+// versions only) shows the current one
+describe("startupVersions", () => {
+  const en = { heart: { versions: { a: { version: "v0.8.7" }, b: { version: "v0.10.5-pr94" } } } };
+  it("reads English when another language is active, newest first", () => {
+    const es = { heart: { dialog: { skip: "Saltar" } } };
+    expect(startupVersions(es, en).map((v) => v.version)).toEqual(["v0.10.5-pr94", "v0.8.7"]);
+    const pt = { heart: { versions: { old: { version: "v0.5.0" } } } };
+    expect(startupVersions(pt, en).map((v) => v.version)).toEqual(["v0.10.5-pr94", "v0.8.7"]);
+  });
+
+  it("reads the active translations in English (no fallback), and never throws", () => {
+    expect(startupVersions(en, {}).map((v) => v.version)).toEqual(["v0.10.5-pr94", "v0.8.7"]);
+    expect(startupVersions(undefined, undefined)).toEqual([]);
+    expect(startupVersions({ heart: {} }, null)).toEqual([]);
   });
 });

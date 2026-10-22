@@ -1,7 +1,8 @@
 import sheetHTML from './sheet.html';
 import templateJSON from './template.json';
 import HeartItemSheet from '../base/sheet';
-import { needsEquipmentPick } from './equipment';
+import { needsEquipmentPick, equipmentChoices, choiceKey } from './equipment';
+import { localizeHeart } from '../../common/localize';
 import { heartDialogOptions } from '../../common/dialog';
 import { shareOfCharacter } from '../../common/window-sizes';
 
@@ -41,31 +42,26 @@ export default class extends HeartItemSheet {
         // other group is one option of a pick-one choice, clustered by name
         // prefix ("group_1..3" -> one choice; Blightborn's "weapon_*" and
         // "kit_*" -> two). Each choice renders as ONE section of options.
+        // (the choices themselves: equipment.js equipmentChoices, one copy
+        // since 2026-10-21)
         const groups = this.item.system.equipment_groups ?? [];
         const active = new Set([...(this.item.system.active_equipment_groups ?? []), this.item.system.active_equipment_group].filter(Boolean));
         const equipment = this.item.children.filter(x => x.type === 'equipment');
-        const option = (id) => ({ id, active: active.has(id), items: equipment.filter(e => e.system.group === id) });
-        data.youGet = groups.includes('core') ? option('core') : null;
+        const itemsOf = (id) => equipment.filter(e => e.system.group === id);
+        data.youGet = groups.includes('core') ? { id: 'core', active: active.has('core'), items: itemsOf('core') } : null;
         data.needsEquipment = needsEquipmentPick(this.item);
-        const choices = new Map();
-        for (const id of groups) {
-            if (id === 'core') continue;
-            const key = id.replace(/[_-]?\d+$/, '') || id;
-            if (!choices.has(key)) choices.set(key, []);
-            choices.get(key).push(option(id));
-        }
         // Once a character picks an option it is locked (2026-09-30 review):
         // the others stay listed but ghosted and unpickable; the GM can
         // still change it
         const owned = this.item.isEmbedded || this.item.isChild;
-        data.pickOnes = [...choices.entries()].map(([key, options]) => {
+        data.pickOnes = equipmentChoices(this.item).map(({ key, options }) => {
             const picked = owned && options.some(o => o.active);
             return {
                 key,
                 label: key === 'group' ? '' : key.replace(/_/g, ' '),
                 picked,
                 locked: picked && !game.user.isGM,
-                options: options.map(o => ({ ...o, ghost: picked && !o.active })),
+                options: options.map(o => ({ ...o, items: itemsOf(o.id), ghost: picked && !o.active })),
             };
         });
         return data;
@@ -74,10 +70,9 @@ export default class extends HeartItemSheet {
     activateListeners(html) {
         super.activateListeners(html);
 
-        html.find('[data-action=add-equipment-group]').click(ev => {
-            const id = foundry.utils.randomID();
-            const groups = this.item.system.equipment_groups || [];
-            groups.push(id);
+        // a copy, never the item's own array (Luke, 2026-10-21)
+        html.find('[data-action=add-equipment-group]').click(() => {
+            const groups = [...(this.item.system.equipment_groups ?? []), foundry.utils.randomID()];
             return this.item.update({'system.equipment_groups': groups});
         });
 
@@ -91,9 +86,10 @@ export default class extends HeartItemSheet {
               title: game.i18n.localize('heart.class.equipment.delete-title'),
               content: `<p>${game.i18n.localize('heart.class.equipment.delete-body')}</p>`,
               options: heartDialogOptions(),
-              yes: () => {
-                this.item.deleteChildren(ids);
-                this.render();
+              // the children go first, then the group, one write after the
+              // other; the updates redraw the sheet (Luke, 2026-10-21)
+              yes: async () => {
+                await this.item.deleteChildren(ids);
                 return this.item.update({'system.equipment_groups': groups});
               }
             });
@@ -103,7 +99,6 @@ export default class extends HeartItemSheet {
         html.find('[data-group-id] [data-action=activate-group]').click(async ev => {
             const target = $(ev.currentTarget);
             const groupId = target.closest('[data-group-id]').data('groupId');
-            const activeGroupId = this.item.system.active_equipment_group;
 
             // On a character the pick is final: say so and ask first
             if (this.item.isEmbedded || this.item.isChild) {
@@ -125,7 +120,7 @@ export default class extends HeartItemSheet {
             // fix: picking dropped every other active group, so a class with
             // two choices, Blightborn's weapon_* and kit_*, lost one pick
             // when the other was made). Copies, never the live array.
-            const choiceOf = (id) => String(id).replace(/[_-]?\d+$/, '') || String(id);
+            const choiceOf = choiceKey;
             const previousEquipmentGroups = [...(this.item.system.active_equipment_groups ?? [])];
             let activeEquipmentGroups = [...previousEquipmentGroups];
             if (groupId === "core") {
@@ -138,7 +133,7 @@ export default class extends HeartItemSheet {
 
             await this.item.update({'system.active_equipment_groups': activeEquipmentGroups});
 
-            this.item.children.filter(x => x.type === 'equipment').forEach(async child => {
+            this.item.children.filter(x => x.type === 'equipment').forEach(child => {
                 if(previousEquipmentGroups.includes(child.system.group) && !activeEquipmentGroups.includes(child.system.group)) {
                     childrenUpdates[`${child.id}.system.active`] = false;
                 }
@@ -158,7 +153,7 @@ export default class extends HeartItemSheet {
             const groupId = target.closest('[data-group-id]').data('groupId');
 
             const childrenUpdates = {};
-            this.item.children.filter(x => x.type === 'equipment').forEach(async child => {
+            this.item.children.filter(x => x.type === 'equipment').forEach(child => {
                 if(child.system.group === groupId) {
                     childrenUpdates[`${child.id}.system.active`] = false;
                 }

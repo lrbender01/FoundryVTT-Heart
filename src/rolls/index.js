@@ -23,8 +23,8 @@ export function initialise() {
         game.heart.rolls[Roll.name] = Roll;
 
         if(Roll.activateListeners !== undefined) {
-            Hooks.on('renderChatLog', (app, html, data) => Roll.activateListeners(html));
-            Hooks.on('renderChatPopout', (app, html, data) => Roll.activateListeners(html));
+            Hooks.on('renderChatLog', (app, html) => Roll.activateListeners(html));
+            Hooks.on('renderChatPopout', (app, html) => Roll.activateListeners(html));
         }
     
         if(module.initialise !== undefined) {

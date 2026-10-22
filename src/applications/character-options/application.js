@@ -1,6 +1,8 @@
 import applicationHTML from './application.html';
 import { artOf, showArt } from '../../common/art';
 import { artShown, artToggleButton, markArtButton } from '../../common/art-toggle';
+import { localizeHeart } from '../../common/localize';
+import { CONTENT, sourceOrder, bySourceOrder } from './order';
 
 // Character Options picker (2026-09-29). The "+" on the character sheet's
 // Class / Calling / Ancestry slots opens this instead of raw compendiums:
@@ -9,24 +11,7 @@ import { artShown, artToggleButton, markArtButton } from '../../common/art-toggl
 // source order (no book headings since 2026-09-30). Click a name to preview it; Choose adds it to the character through
 // the sheet's normal drop path (which already replaces an existing class or
 // calling, and the createItem hook dedups ancestries).
-// Source order (2026-09-30): the book an option comes from (core, then Ways
-// and Means, then anything else) and its page, as fvtt-heart-content records
-// them (flags.fvtt-heart-content.book / .page); then the pack's own sort,
-// then the name for anything without book data.
-const CONTENT = 'fvtt-heart-content';
-const BOOK_RANK = { core: 0, wm: 1 };
-function sourceOrder(entry) {
-    const f = foundry.utils.getProperty(entry, `flags.${CONTENT}`) ?? {};
-    const book = BOOK_RANK[f.book] ?? 9;
-    // pages are "35" (core) or "W12" (Ways and Means): the digits sort within a book
-    const page = Number.parseInt(String(f.page ?? "").replace(/D+/g, ""), 10);
-    return [book, Number.isFinite(page) ? page : 99999, Number(entry.sort) || 0];
-}
-function bySourceOrder(a, b) {
-    const x = a.order ?? [9, 99999, 0], y = b.order ?? [9, 99999, 0];
-    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i];
-    return String(a.name ?? a.label ?? "").localeCompare(String(b.name ?? b.label ?? ""));
-}
+// Source order (book, page, pack sort, name): ./order.js
 
 // Cards per row and window size per picker (2026-09-30 review): the four
 // ancestries in one row, the thirteen classes five across in three rows.

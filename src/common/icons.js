@@ -103,32 +103,28 @@ export function registerIconHelpers() {
 // (children included). A type + name that two entries give different icons
 // is left alone rather than guessed. Only img changes, and only on copies
 // still showing a generic image, so an icon someone picked by hand stays.
-export async function adoptPackIcons() {
-    if (!game.user.isGM) return;
-    const key = (type, name) => `${type}|${game.i18n.localize(name ?? '').trim().toLowerCase()}`;
+// The pure half (tested; 2026-10-21): the icon each type + name has in the
+// packs' index entries (nested children included; null where two entries
+// disagree), and the update paths that give item sources (toObject()) still
+// showing a generic image their pack icon.
+const iconKey = (type, name, localize) => `${type}|${localize(name ?? '').trim().toLowerCase()}`;
+
+export function learnPackIcons(entries, localize = (n) => n) {
     const known = new Map();
     const learn = (e) => {
+        // the children first, whatever the parent's own icon
+        for (const c of Object.values(e?.system?.children ?? {})) learn(c);
         if (!e?.type || !e.img || DEFAULT_IMGS.has(e.img)) return;
-        const k = key(e.type, e.name);
+        const k = iconKey(e.type, e.name, localize);
         if (!known.has(k)) known.set(k, e.img);
         else if (known.get(k) !== e.img) known.set(k, null);
     };
-    const learnChildren = (children) => {
-        for (const c of Object.values(children ?? {})) {
-            learn(c);
-            learnChildren(c?.system?.children);
-        }
-    };
-    for (const pack of game.packs.filter(p => p.documentName === 'Item')) {
-        const index = await pack.getIndex({ fields: ['type', 'img', 'system.children'] });
-        for (const e of index) {
-            learn(e);
-            learnChildren(e.system?.children);
-        }
-    }
-    if (![...known.values()].some(Boolean)) return;
+    for (const e of entries ?? []) learn(e);
+    return known;
+}
 
-    const wanted = (d) => DEFAULT_IMGS.has(d?.img ?? '') ? known.get(key(d.type, d.name)) : null;
+export function packIconUpdates(sources, known, localize = (n) => n) {
+    const wanted = (d) => DEFAULT_IMGS.has(d?.img ?? '') ? known.get(iconKey(d.type, d.name, localize)) : null;
     // flattened update paths for one top-level item and its nested children
     const diff = (source, prefix, out) => {
         const img = wanted(source);
@@ -138,9 +134,24 @@ export async function adoptPackIcons() {
         }
         return out;
     };
-    const fix = (items) => items
-        .map(i => ({ _id: i.id, ...diff(i.toObject(), '', {}) }))
+    return (sources ?? [])
+        .map(s => ({ _id: s._id, ...diff(s, '', {}) }))
         .filter(u => Object.keys(u).length > 1);
+}
+
+// (only the active GM's client, 2026-10-21: every connected GM wrote the
+// same updates at once)
+export async function adoptPackIcons() {
+    if (!game.users.activeGM?.isSelf) return;
+    const localize = (n) => game.i18n.localize(n);
+    const entries = [];
+    for (const pack of game.packs.filter(p => p.documentName === 'Item')) {
+        entries.push(...await pack.getIndex({ fields: ['type', 'img', 'system.children'] }));
+    }
+    const known = learnPackIcons(entries, localize);
+    if (![...known.values()].some(Boolean)) return;
+
+    const fix = (items) => packIconUpdates(items.map(i => i.toObject()), known, localize);
 
     let changed = 0;
     for (const actor of game.actors) {

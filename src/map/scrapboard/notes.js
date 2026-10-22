@@ -9,7 +9,7 @@
 // control and, in the player view, can try the picker without claiming a
 // hand. Players' writes go through the GM's relay (one queue on the GM's
 // client; each request checked against who asked).
-import { HAND_SCALE, pinChoices, pickFrom, ALIGNS, TEXT_STYLES, textStyleOf, markMax, cleanStroke, customKey, TYPEWRITER, newStringPatch, mergeRecords, recordTarget, recordUpdate, binList, removalOf, seasonMarks, brushColor, PAINT_NAMES, PAINT_ORDER, noteFields } from './model.js';
+import { HAND_SCALE, pinChoices, pickFrom, ALIGNS, TEXT_STYLES, textStyleOf, markMax, cleanStroke, customKey, keysTaken, safePath, TYPEWRITER, newStringPatch, mergeRecords, recordTarget, recordUpdate, binList, removalOf, seasonMarks, brushColor, PAINT_NAMES, PAINT_ORDER, noteFields } from './model.js';
 import { listBackups, readBackup } from './backups.js';
 import { askGM, registerRelayHandler } from '../../common/relay.js';
 import { heartDialogOptions } from '../../common/dialog.js';
@@ -364,7 +364,12 @@ export async function playerAddNote(scene, at, type = 'note') {
     if (!hand) return;
     const answer = await noteDialog({ hand, type, title: type === 'scrawl' ? 'heart.board.write-title' : 'heart.board.note-title' });
     if (!answer?.text) return;
-    return asked(scene, 'board.addNote', { sceneId: scene.id, type, x: Math.round(at.x), y: Math.round(at.y), text: answer.text, paper: answer.paper, ink: answer.ink, style: answer.style, typed: answer.typed, look: noteLookOf(answer) });
+    // (a click just off the sheet puts it at the sheet's edge: the GM's
+    // client refuses a point past it; Luke, 2026-10-21)
+    const { look } = await loadBoardLook();
+    const x = Math.max(0, Math.min(look.w, Math.round(at.x)));
+    const y = Math.max(0, Math.min(look.h, Math.round(at.y)));
+    return asked(scene, 'board.addNote', { sceneId: scene.id, type, x, y, text: answer.text, paper: answer.paper, ink: answer.ink, style: answer.style, typed: answer.typed, look: noteLookOf(answer) });
 }
 
 // A player's request to the GM: what it changed comes back, kept as their
@@ -400,8 +405,6 @@ export async function editNote(scene, key) {
     if (gm) return setScrap(scene, key, { text: answer.text, hand: answer.hand === face && !s.hand ? null : answer.hand, paper: answer.paper, ink: answer.ink, typed: Boolean(answer.typed), ...answer.style, ...noteFields(answer, look, s) });
     return asked(scene, 'board.editNote', { sceneId: scene.id, key, text: answer.text, paper: answer.paper, ink: answer.ink, style: answer.style, typed: answer.typed, look: noteLookOf(answer) });
 }
-// (the earlier name)
-export const editNoteText = editNote;
 
 // A players' board owner's edit, or anyone's marker stroke, through the GM
 export function boardEdit(scene, request) {
@@ -473,14 +476,16 @@ async function ownStrings(scene, board, req, userId, sink) {
         const clean = ownPatchOf(board, patch, userId, look);
         if (!clean) return { status: 'not-allowed' };
         await applyBoardPatch(scene, clean, { sink });
-        if (req.ownString.label) await labelString(scene, id, String(req.ownString.label).slice(0, MAX_TEXT), { sink });
+        if (req.ownString.label) await labelString(scene, id, String(req.ownString.label).slice(0, MAX_TEXT), { sink, author: userId });
         return { status: 'done', id };
     }
     if (req.ownLabel) {
         const l = board.links?.[req.ownLabel.id];
         if (!l || l.author !== userId) return { status: 'not-allowed' };
         const text = String(req.ownLabel.text ?? '').slice(0, MAX_TEXT).trim();
-        if (text) await labelString(scene, req.ownLabel.id, text, { sink });
+        // (the name tag, its thread, and their pins theirs: Luke, 2026-10-21,
+        // else their undo of the name was refused and the tag not theirs to edit)
+        if (text) await labelString(scene, req.ownLabel.id, text, { sink, author: userId });
         return { status: 'done' };
     }
     if (req.ownRemove) {
@@ -515,6 +520,11 @@ export function ownCardsOf(board, keys, who) {
 // pins, their strokes; on a players' board, an owner's any but the GM's places)
 export function mayHistory(board, rec, side, who) {
     if (who.isGM) return true;
+    // (Luke, 2026-10-21: a path to a whole collection, ['scraps'] or
+    // ['links'], named no card or string, so every check below passed and a
+    // crafted record could empty the board; an edit's records never hold one,
+    // nor a path through __proto__)
+    if (!(rec?.ops ?? []).every((op) => safePath(op?.path) && op.path.length >= 2)) return false;
     const target = recordTarget(board, rec, side);
     const mine = (v) => v?.author === who.id;
     for (const op of rec?.ops ?? []) {
@@ -522,8 +532,15 @@ export function mayHistory(board, rec, side, who) {
         const versions = (b) => [board, target].map((x) => (b(x)));
         if (coll === 'marks') {
             if (!(who.owner || id === who.id)) return false;
-        } else if (coll === 'scraps' && field === 'marks' && sub) {
-            if (!versions((x) => x?.scraps?.[id]?.marks?.[sub]).every((st) => !st || who.owner || st.by === who.id)) return false;
+        } else if (coll === 'scraps' && field === 'marks') {
+            // (one stroke, or a card's strokes whole: its first stroke made
+            // the record name them all, Luke 2026-10-21, so a player's undo
+            // of their first stroke on a place was refused)
+            const strokes = (x) => (sub ? [x?.scraps?.[id]?.marks?.[sub]] : Object.values(x?.scraps?.[id]?.marks ?? {}));
+            if (!versions(strokes).flat().every((st) => !st || who.owner || st.by === who.id)) return false;
+        } else if (coll === 'bits') {
+            // (the board's loose pieces: a players' board's owners move them)
+            if (!who.owner) return false;
         } else if (coll === 'scraps') {
             if (!versions((x) => x?.scraps?.[id]).every((sc) => !sc || ((sc.type === 'note' || sc.type === 'scrawl') && (who.owner || mine(sc))))) return false;
         } else if (coll === 'links') {
@@ -542,6 +559,47 @@ export function mayHistory(board, rec, side, who) {
     return true;
 }
 
+// The edits the GM's client handed back to each player this session, per
+// scene (Luke, 2026-10-21): a player's undo or redo is taken only when it is
+// one of them, word for word, so a record made up or changed on its way
+// back (a note's size, `typed`, another's hand, a string's kind, past what
+// the dialogs allow) is refused. In memory only: once the GM's client
+// reloads, a player's older records are refused as forgotten (Luke: "Undo
+// doesn't need to survive reloading"). The newest HANDED_MAX are kept, past
+// the UNDO_MAX a player's client keeps (api.js).
+const HANDED_MAX = 300;
+const handed = new Map();
+// (a record as one string, its keys in order: it crosses the socket twice)
+const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v);
+const recordText = (rec) => JSON.stringify(canon(rec?.ops ?? []));
+function handOut(userId, sceneId, rec) {
+    if (!rec?.ops?.length) return rec;
+    const at = `${userId}:${sceneId}`;
+    const list = handed.get(at) ?? new Set();
+    handed.set(at, list);
+    const text = recordText(rec);
+    list.delete(text);
+    list.add(text);
+    while (list.size > HANDED_MAX) list.delete(list.values().next().value);
+    return rec;
+}
+const wasHanded = (userId, sceneId, rec) => Boolean(handed.get(`${userId}:${sceneId}`)?.has(recordText(rec)));
+// (what a reload of the GM's client does to them: the tests' stand-in)
+export function forgetHandedRecords() {
+    handed.clear();
+}
+
+// Whether a player may put a note on a scene (Luke, 2026-10-21): one they
+// can see, the active scene or one they have at least Limited on, or the one
+// they are on (a GM's pull), never any board scene by its id
+function maySeeScene(scene, user) {
+    if (!scene || !user) return false;
+    if (user.isGM || scene.active || user.viewedScene === scene.id) return true;
+    return Boolean(scene.testUserPermission(user, 'LIMITED'));
+}
+// A point on the board (board px within the look's sheet, never past it)
+const onBoard = (look, x, y) => Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0 && x <= look.w && y <= look.h;
+
 // The relay's handlers (run on the GM's client, inside its queue)
 export function registerBoardRelay() {
     registerRelayHandler('board.claimHand', async ({ face }, userId) => {
@@ -559,12 +617,18 @@ export function registerBoardRelay() {
         const scene = game.scenes.get(sceneId);
         const hand = hands()[userId];
         if (!isBoardScene(scene) || !hand || !['note', 'scrawl'].includes(type)) return { status: 'not-allowed' };
+        // (a board the player can see, never another by its id; Luke, 2026-10-21)
+        if (!maySeeScene(scene, game.users.get(userId))) return { status: 'not-allowed' };
         const clean = String(text ?? '').slice(0, MAX_TEXT).trim();
         if (!clean || !Number.isFinite(x) || !Number.isFinite(y)) return { status: 'not-allowed' };
         const { look } = await loadBoardLook();
-        const scraps = boardOf(scene).scraps ?? {};
+        // (on the sheet: the player's own client keeps a click there, so a
+        // point past it is refused)
+        if (!onBoard(look, x, y)) return { status: 'not-allowed' };
+        // (never a key a card in the bin holds: model.js keysTaken)
+        const taken = keysTaken(boardOf(scene));
         let i = 1;
-        while (scraps[`p${i}`]) i++;
+        while (taken[`p${i}`]) i++;
         const data = { type, text: clean, x, y, hand, author: userId, state: 'known', ...textStyleOf(style), ...(typed && mayType(userId) ? { typed: true } : {}) };
         if (type === 'note' && paper && look.pools.notes.includes(paper)) data.paper = paper;
         if (cleanInk(ink) !== null) data.ink = cleanInk(ink);
@@ -575,7 +639,7 @@ export function registerBoardRelay() {
         if (Object.keys(doodle).length) data.marks = doodle;
         const sink = [];
         await writeBoard(scene, { [`flags.heart.board.scraps.p${i}`]: data }, { sink });
-        return { status: 'done', key: `p${i}`, undo: mergeRecords(sink) };
+        return { status: 'done', key: `p${i}`, undo: handOut(userId, scene.id, mergeRecords(sink)) };
     });
     // a player moves their own notes and writing (an owner any), nothing else
     registerRelayHandler('board.moveOwn', async ({ sceneId, moves }, userId) => {
@@ -595,7 +659,7 @@ export function registerBoardRelay() {
         }
         const sink = [];
         if (Object.keys(data).length) await writeBoard(scene, data, { sink });
-        return { status: 'done', undo: mergeRecords(sink) };
+        return { status: 'done', undo: handOut(userId, scene.id, mergeRecords(sink)) };
     });
     registerRelayHandler('board.editNote', async ({ sceneId, key, text, paper, ink, style = {}, typed = false, look: noteLook = null }, userId) => {
         if (!game.user.isGM) return { status: 'needs-gm' };
@@ -615,16 +679,19 @@ export function registerBoardRelay() {
         for (const [k, v] of Object.entries(noteFields(noteLook ?? {}, look, s))) if (s.type === 'note' || k === 'paint' || k === 'bright' || k === 'ink') data[`flags.heart.board.scraps.${key}.${k}`] = v;
         const sink = [];
         await writeBoard(scene, data, { sink });
-        return { status: 'done', undo: mergeRecords(sink) };
+        return { status: 'done', undo: handOut(userId, scene.id, mergeRecords(sink)) };
     });
     // a player's own edit undone or done again (api.js step): checked, then
     // applied to the board as it is now
     registerRelayHandler('board.history', async ({ sceneId, record, side }, userId) => {
         if (!game.user.isGM) return { status: 'needs-gm' };
         const scene = game.scenes.get(sceneId);
-        if (!isBoardScene(scene) || !Array.isArray(record?.ops) || !['before', 'after'].includes(side)) return { status: 'missing' };
+        if (!isBoardScene(scene) || !Array.isArray(record?.ops) || !record.ops.every((op) => safePath(op?.path)) || !['before', 'after'].includes(side)) return { status: 'missing' };
         const user = game.users.get(userId);
         if (!user) return { status: 'not-allowed' };
+        // (only a record this client handed them, unchanged: else made up, or
+        // from before a reload; Luke, 2026-10-21)
+        if (!user.isGM && !wasHanded(userId, scene.id, record)) return { status: 'forgotten' };
         const who = { id: userId, isGM: user.isGM, owner: ownsBoard(scene, userId) };
         const board = boardOf(scene);
         if (!mayHistory(board, record, side, who)) return { status: 'not-allowed' };
@@ -646,7 +713,7 @@ export function registerBoardRelay() {
         // (what it changes, handed back: the asker's own edit to undo)
         const sink = [];
         const res = await boardEditFor(scene, board, req, userId, who, sink);
-        return res?.status === 'done' ? { ...res, undo: mergeRecords(sink) } : res;
+        return res?.status === 'done' ? { ...res, undo: handOut(userId, scene.id, mergeRecords(sink)) } : res;
     });
 }
 

@@ -36,7 +36,7 @@
 // (Ctrl) or sizes it (Shift). Other players may select and move only their
 // own notes and writing, and draw with the marker on their own layer.
 import { hitAt, onPaper, onTagAt } from './hits.js';
-import { viaFrom, pointInPoly, nearestOnPath, customKey, revealOf, applyPatch, strokeToCard } from './model.js';
+import { viaFrom, pointInPoly, nearestOnPath, customKey, revealOf, revealPatch, applyPatch, strokeToCard, strokePatch, splitPulls } from './model.js';
 
 // (the patch rule lives with the model; here for the hosts and tests)
 export { applyPatch };
@@ -96,16 +96,8 @@ const PINS = new Set(['end', 'joint', 'join', 'tagPin', 'pin', 'scrapPin']);
 // The span of a string a path vertex lies in
 const spanAt = (l, i) => Math.max(0, l.spans.findIndex((s) => i >= s.from && i < s.to));
 
-// A string's pulls with one span split in two (a new joint) or two merged
-// (a joint taken out); the spans either side keep theirs
-function pullsSplit(pulls, span) {
-    const out = [];
-    (pulls ?? []).forEach((p, k) => {
-        if (k < span) out[k] = p;
-        else if (k > span) out[k + 1] = p;
-    });
-    return Array.from(out, (p) => p ?? null);
-}
+// A string's pulls with two spans merged (a joint taken out; split in two,
+// a new joint, is model.js splitPulls): the spans either side keep theirs
 function pullsMerge(pulls, w) {
     const out = [];
     (pulls ?? []).forEach((p, k) => {
@@ -115,7 +107,6 @@ function pullsMerge(pulls, w) {
     return Array.from(out, (p) => p ?? null);
 }
 
-// Whether a point is within `r` of a stroke
 // a stroke's box (with half its width round it)
 function strokeBox(pts, w) {
     let x0 = Infinity;
@@ -169,6 +160,7 @@ export function strokeMeets(pts, w, B) {
 // a sheet's stroke keeps no author (its layer is who drew it)
 const stripBy = ({ by, ...st }) => (void by, st);
 
+// Whether a point is within `r` of a stroke
 function nearStroke(pts, pt, r) {
     for (let i = 0; i < pts.length; i += 2) {
         const x0 = pts[i];
@@ -301,8 +293,6 @@ export class BoardControls {
         this.bit = null;
     }
 
-    // the card whose pieces show their handles: the one selected, or the one
-    // a selected piece belongs to
     // The pins stuck in a card, for its white dots: its own (when shown) and
     // the board's pins in it
     #pinsIn(s) {
@@ -314,6 +304,8 @@ export class BoardControls {
         return out.map((p) => ({ x: p.x, y: p.y, on: false }));
     }
 
+    // the card whose pieces show their handles: the one selected, or the one
+    // a selected piece belongs to
     #partsCard() {
         if (!this.editor) return null;
         const view = this.host.view();
@@ -598,7 +590,8 @@ export class BoardControls {
 
     // A press (mouse down) with a tool. Returns what to do:
     //   { do: 'select' }                     the selection changed (redraw)
-    //   { do: 'reveal', scrap | link, to }   its new state
+    //   { do: 'reveal', scrap | pin | link, to, patch }
+    //                                        its new state, and the patch to write
     //   { do: 'refuse', why }                'hidden-place': a string to a hidden place stays hidden
     //   { do: 'string', a, aAt, aPt, b, bAt, bPt, quick, kind }
     //                                        a new string (each end a scrap's
@@ -651,8 +644,11 @@ export class BoardControls {
         }
         if (tool === 'reveal') {
             if (!this.gm) return null;
-            if (scrap) return { do: 'reveal', scrap, dir: right ? -1 : 1, to: revealOf(scrap, right ? -1 : 1) };
-            if (h?.kind === 'pin') return { do: 'reveal', pin: h.pin, to: h.pin.state === 'hidden' ? 'known' : 'hidden' };
+            // (the patch the host writes, model.js revealPatch: one copy for
+            // both hosts, Luke 2026-10-21)
+            const shown = (a) => ({ ...a, patch: revealPatch(a) });
+            if (scrap) return shown({ do: 'reveal', scrap, dir: right ? -1 : 1, to: revealOf(scrap, right ? -1 : 1) });
+            if (h?.kind === 'pin') return shown({ do: 'reveal', pin: h.pin, to: h.pin.state === 'hidden' ? 'known' : 'hidden' });
             // a string is drawn or not (two states), and only between places
             // the players may see
             if (link) {
@@ -663,10 +659,10 @@ export class BoardControls {
                 const to = link.state === 'hidden' ? 'known' : 'hidden';
                 if (to === 'known' && run.some((l) => this.#hiddenEnd(l))) return { do: 'refuse', why: 'hidden-place' };
                 const others = run.filter((l) => l.id !== link.id);
-                return {
+                return shown({
                     do: 'reveal', link, dir: 1, to,
                     also: { links: [...new Set([...others.map((l) => l.id), ...run.flatMap((l) => l.threads ?? [])])], scraps: run.map((l) => l.nameNote).filter(Boolean) },
-                };
+                });
             }
             return null;
         }
@@ -938,7 +934,9 @@ export class BoardControls {
         // (the board as the drag found it: each move is worked out from it,
         // never from the move before)
         const raw = JSON.parse(JSON.stringify(this.host.raw() ?? {}));
-        if (!pinFirst && (this.onRotor(pt) || this.onHandle(pt))) {
+        // (the brush's stroke handles are the brush's: with Move they caught a
+        // press with nothing to size, and the drag threw; Luke, 2026-10-21)
+        if (!pinFirst && (this.onRotor(pt) || this.onHandle(pt)) && this.#target() && !(this.markMode === 'select' && this.markSel.size)) {
             const b = this.bounds();
             const t = this.#target();
             const turn = this.onRotor(pt);
@@ -1066,8 +1064,15 @@ export class BoardControls {
     // strings' loose ends and joints
     #moveStart(pt, raw) {
         const from = Object.fromEntries(this.selected().filter((s) => !s.locked).map((s) => [s.key, { x: s.x, y: s.y }]));
-        const pins = Object.fromEntries([...this.pins].map((id) => [id, raw.pins?.[id]]).filter(([, p]) => p && !p.on && Number.isFinite(p.x)).map(([id, p]) => [id, { x: p.x, y: p.y }]));
-        const links = Object.fromEntries([...this.links].map((id) => [id, raw.links?.[id]]).filter(([, l]) => l).map(([id, l]) => [id, { aPt: l.a ? null : l.aPt ?? null, bPt: l.b ? null : l.bPt ?? null, joints: l.joints ?? [] }]));
+        const chosen = [...this.links].map((id) => [id, raw.links?.[id]]).filter(([, l]) => l);
+        // (a string's joints go with it, as they always did: a joint pinned in
+        // with Ctrl is a pin, not a point, so its pin moves, unless it is
+        // stuck in a card. Luke, 2026-10-22: moving it as a point sent the
+        // string to the board's corner)
+        const stringPins = chosen.flatMap(([, l]) => (l.joints ?? []).map((j) => j?.pin)).filter((id) => id && this.minePin(id));
+        const pinIds = new Set([...this.pins, ...stringPins]);
+        const pins = Object.fromEntries([...pinIds].map((id) => [id, raw.pins?.[id]]).filter(([, p]) => p && !p.on && Number.isFinite(p.x)).map(([id, p]) => [id, { x: p.x, y: p.y }]));
+        const links = Object.fromEntries(chosen.map(([id, l]) => [id, { aPt: l.a ? null : l.aPt ?? null, bPt: l.b ? null : l.bPt ?? null, joints: l.joints ?? [] }]));
         this.drag = { kind: 'move', start: pt, from, pins, links };
         return 'move';
     }
@@ -1163,14 +1168,15 @@ export class BoardControls {
     }
 
     // Let go: the patch to write, { select: true } after a box, or an action
-    // (String: the new string; the marker: { do: 'mark', pts } a stroke, or
+    // (String: the new string; the marker: { do: 'mark', pts, on, stroke,
+    // patch } a stroke, or
     // { do: 'unmark', strokes: [[layer, id]] } those rubbed out)
     dragEnd() {
         const d = this.drag;
         this.drag = null;
         this.grab = null;
         if (!d) return null;
-        if (d.kind === 'mark') return d.pts.length >= 4 ? { do: 'mark', pts: d.pts, on: d.on, patch: d.on ? this.#cardStrokePatch(d.on, d.pts) : null } : null;
+        if (d.kind === 'mark') return d.pts.length >= 4 ? this.#markAction(d) : null;
         if (d.kind === 'mbox') {
             if (!d.to) return { select: true };
             const B = { x0: Math.min(d.start.x, d.to.x), y0: Math.min(d.start.y, d.to.y), x1: Math.max(d.start.x, d.to.x), y1: Math.max(d.start.y, d.to.y) };
@@ -1241,10 +1247,12 @@ export class BoardControls {
         if (d.kind === 'move') {
             const out = { scraps: Object.fromEntries(Object.entries(d.from).map(([k, p]) => [k, by(p)])) };
             if (Object.keys(d.pins ?? {}).length) out.pins = Object.fromEntries(Object.entries(d.pins).map(([id, p]) => [id, by(p)]));
-            const links = Object.entries(d.links ?? {}).filter(([, l]) => l.aPt || l.bPt || l.joints.length);
+            // (a joint that is a pin stays a pin: the pin itself moved above)
+            const points = (l) => l.joints.some((j) => !j?.pin);
+            const links = Object.entries(d.links ?? {}).filter(([, l]) => l.aPt || l.bPt || points(l));
             if (links.length) {
                 out.links = Object.fromEntries(links.map(([id, l]) => [id, {
-                    ...(l.aPt ? { aPt: by(l.aPt) } : {}), ...(l.bPt ? { bPt: by(l.bPt) } : {}), ...(l.joints.length ? { joints: l.joints.map(by) } : {}),
+                    ...(l.aPt ? { aPt: by(l.aPt) } : {}), ...(l.bPt ? { bPt: by(l.bPt) } : {}), ...(points(l) ? { joints: l.joints.map((j) => (j?.pin ? j : by(j))) } : {}),
                 }]));
             }
             return out;
@@ -1303,7 +1311,7 @@ export class BoardControls {
             const under = this.#scrapUnder(pt);
             const on = under && (under.type === 'note' || under.type === 'scrawl') ? under : null;
             const pin = on ? { tex, ...sz, on: on.key, at: onPaper(on, pt) } : { tex, ...sz, ...pt0(pt) };
-            return { link: [d.link.id, { joints, pulls: pullsSplit(rl.pulls, d.span) }], pins: { [d.pinId]: pin } };
+            return { link: [d.link.id, { joints, pulls: splitPulls(rl.pulls, d.span) }], pins: { [d.pinId]: pin } };
         }
         const { h, T } = d;
         switch (h.kind) {
@@ -1390,11 +1398,6 @@ export class BoardControls {
         return { scraps: { [scrap.key]: { parts: { ...(raw.scraps?.[scrap.key]?.parts ?? {}), [part.id]: next } } } };
     }
 
-    // A pin to share (Ctrl+drag from it, Luke 2026-10-02: a new string through
-    // the same pin, not a second one on top): a pin of the board's own as it
-    // is; else one is made where the pin was (in the scrap it was in, if any)
-    // and the string or scrap it belonged to is held by it from then on.
-    // Returns { pin, pt, prep } (prep: the patch that makes it so).
     // Which strings a board pin holds: [{ link, side } | { link, idx }]
     #refsOf(pinId) {
         const out = [];
@@ -1466,8 +1469,6 @@ export class BoardControls {
         return patch;
     }
 
-    // Shift+drag a shared pin: the string pulling most the way the pointer
-    // goes comes away on a pin of its own
     // ids a break makes: a pin at each new end and the second string
     #freshIds(raw) {
         const pins = { ...(raw.pins ?? {}) };
@@ -1506,13 +1507,21 @@ export class BoardControls {
         const before = joints.slice(0, ji);
         const after = joints.slice(d.joint !== undefined ? ji + 1 : ji);
         const bSide = Object.fromEntries(['b', 'bAt', 'bPt', 'bPin'].filter((k) => rl[k] !== undefined && rl[k] !== null).map((k) => [k, rl[k]]));
+        // (each half keeps its spans' pulls; the span that came apart hangs
+        // free: Luke, 2026-10-21, a joint's break dropped the near half's last
+        // pull, and a break mid-span shifted the far half's by one)
+        const atJoint = d.joint !== undefined;
+        const nearEnd = atJoint ? spanCut : spanCut - 1;
+        const farFrom = atJoint ? spanCut + 1 : spanCut;
         return {
             pins,
-            links: { [d.link.id]: { b: null, bAt: null, bPt: null, bPin: endPin, joints: before, pulls: pulls.slice(0, Math.max(0, spanCut - 1)) } },
-            newLinks: { [d.ids.link]: { kind: rl.kind ?? 'delve', state: rl.state ?? 'known', aPin: d.ids.p2, ...bSide, joints: after, pulls: pulls.slice(spanCut).length ? [null, ...pulls.slice(spanCut + 1)] : [] } },
+            links: { [d.link.id]: { b: null, bAt: null, bPt: null, bPin: endPin, joints: before, pulls: pulls.slice(0, Math.max(0, nearEnd)) } },
+            newLinks: { [d.ids.link]: { kind: rl.kind ?? 'delve', state: rl.state ?? 'known', aPin: d.ids.p2, ...bSide, joints: after, pulls: pulls.slice(farFrom - 1).length ? [null, ...pulls.slice(farFrom)] : [] } },
         };
     }
 
+    // Shift+drag a shared pin: the string pulling most the way the pointer
+    // goes comes away on a pin of its own
     #splitPatch(pt) {
         const d = this.drag;
         const dx = pt.x - d.start.x;
@@ -1547,6 +1556,11 @@ export class BoardControls {
         return { pins: { [d.newId]: pinData }, links: { [r.link.id]: edit } };
     }
 
+    // A pin to share (Ctrl+drag from it, Luke 2026-10-02: a new string through
+    // the same pin, not a second one on top): a pin of the board's own as it
+    // is; else one is made where the pin was (in the scrap it was in, if any)
+    // and the string or scrap it belonged to is held by it from then on.
+    // Returns { pin, pt, prep } (prep: the patch that makes it so).
     #shared(h, raw) {
         if (h.kind === 'pin') return { pin: h.pin.id, pt: pt0(h.pin) };
         const view = this.host.view();
@@ -1591,7 +1605,6 @@ export class BoardControls {
         return { ...keep, on: null, at: null, ...pt0(pt) };
     }
 
-    // The topmost scrap under a point, but not `not` (a string's other end)
     /* -------------------------------------------- */
     /*  The marker's strokes (Luke, 2026-10-03)     */
     /* -------------------------------------------- */
@@ -1709,7 +1722,6 @@ export class BoardControls {
         const sn = Math.sin(turn);
         const dx = d.kind === 'mmove' ? pt.x - d.start.x : 0;
         const dy = d.kind === 'mmove' ? pt.y - d.start.y : 0;
-        const keep = new Set();
         const sel = new Set();
         for (const st of d.chosen) {
             const pts = [];
@@ -1746,7 +1758,6 @@ export class BoardControls {
             };
             if (to === st.where) {
                 set(to, st.id, card ? strokeToCard(moved, card, this.host.look?.() ?? this.#look()) : stripBy(moved));
-                keep.add(JSON.stringify([to, st.id]));
                 sel.add(JSON.stringify([to, st.id]));
             } else {
                 set(st.where, st.id, null);
@@ -1757,7 +1768,6 @@ export class BoardControls {
                 sel.add(JSON.stringify([to, id]));
             }
         }
-        void keep;
         d.nextSel = sel;
         return patch;
     }
@@ -1775,13 +1785,13 @@ export class BoardControls {
         return null;
     }
 
-    // a stroke drawn on a card: the card's (its own new id), as a patch
-    #cardStrokePatch(key, pts) {
-        const vs = this.host.view()?.scraps.find((s) => s.key === key);
-        if (!vs) return null;
-        const raw = this.host.raw() ?? {};
-        const id = customKey('m', raw.scraps?.[key]?.marks ?? {});
-        return { key, id, stroke: (st) => strokeToCard({ ...st, pts }, vs, this.host.look?.() ?? this.#look()) };
+    // a stroke laid down: on the card it began on (its own, in its frame) or
+    // the sheet, in the brush the host holds (host.brush(): { c, w, o, b }),
+    // as the patch both hosts write (model.js strokePatch: Luke, 2026-10-21,
+    // one copy, not one in each host); `stroke` is what a player sends the GM
+    #markAction(d) {
+        const { on, stroke, patch } = strokePatch(this.host.raw() ?? {}, this.host.view(), { pts: d.pts, on: d.on }, this.host.brush?.() ?? {}, this.host.look?.() ?? this.#look(), this.host.user()?.id);
+        return { do: 'mark', pts: d.pts, on, stroke, patch };
     }
 
     // the look the cards were laid out with (a card's unit: look.scrap.w)
@@ -1873,6 +1883,7 @@ export class BoardControls {
         return null;
     }
 
+    // The topmost scrap under a point, but not `not` (a string's other end)
     #scrapUnder(pt, not) {
         const scraps = this.host.view()?.scraps ?? [];
         for (let i = scraps.length - 1; i >= 0; i--) {

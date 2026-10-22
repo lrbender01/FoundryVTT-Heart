@@ -95,3 +95,18 @@ export function partyMembers(party) {
         .filter(a => a?.type === 'character')
         .sort((a, b) => a.name.localeCompare(b.name, game.i18n.lang));
 }
+
+// Who a roll may name as helpers, one list for the roll prompt and the GM's
+// roll request (Luke, 2026-10-21, R27: the two picked from different lists):
+// the party's members and no one else (Luke, 2026-10-22; their companions
+// join them in companions.js). Only a world with no party members yet falls
+// back to the characters that have a player, else every character, so the
+// roll request still lists someone. Alphabetical, like the members.
+export function helperPool(party = game.heart?.party, actors = game.actors) {
+    const members = party ? partyMembers(party) : [];
+    if (members.length) return members;
+    const characters = (actors?.filter?.(a => a.type === 'character') ?? []);
+    const played = characters.filter(a => a.hasPlayerOwner);
+    return (played.length ? played : characters)
+        .sort((a, b) => a.name.localeCompare(b.name, game.i18n.lang));
+}

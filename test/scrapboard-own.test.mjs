@@ -57,8 +57,11 @@ describe("a player takes their own notes and writing off", () => {
     const before = structuredClone(RAW);
     const board = applyPatch(structuredClone(RAW), binPatch(RAW, ["mine"], { at: 1, by: "ana" }));
     expect(board.bin.mine.scrap.text).toBe("mine");
-    const rec = diffBoard(before, board);
+    // (scoped as api.js update() scopes it: by what the write touched)
+    const rec = diffBoard(before, board, [["scraps", "mine"], ["bin", "mine"]]);
     expect(rec.ops.some((op) => op.path[0] === "bin")).toBe(true);
+    // (a record naming the whole bin is refused: 2026-10-21)
+    expect(mayHistory(board, diffBoard(before, board), "before", ANA)).toBe(false);
     expect(mayHistory(board, rec, "before", ANA)).toBe(true);
     expect(mayHistory(board, rec, "before", { id: "bo", isGM: false, owner: false })).toBe(false);
   });

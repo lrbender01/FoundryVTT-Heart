@@ -1,6 +1,36 @@
 import './chat-message.sass';
 import './ledger.sass';
 import { stakesText } from '../rolls/stress-roll/rules';
+import { requestHelpers } from '../rolls/heart-roll/pool';
+import { oneAtATime } from '../common/busy';
+import { stripGmOnly } from '../fallout-picker/button';
+
+// A roll chained onto a card in its flags, or undefined when the JSON names
+// no registered roll class or cannot be read (Luke, 2026-10-21, R8: a bad
+// flag threw inside getHTML, so the card stopped rendering for everyone)
+function chainedRoll(json) {
+    if (!json || typeof json !== 'object') return undefined;
+    const cls = CONFIG.Dice.rolls.find(x => x.name === json.class);
+    if (!cls) return undefined;
+    try {
+        return cls.fromData(json);
+    } catch (err) {
+        console.warn('heart | a chained roll on a card could not be read', err);
+        return undefined;
+    }
+}
+
+// A chained roll's block, or '' when it cannot be drawn: the card above it
+// still shows (Luke, 2026-10-21, R8: fail soft, never a blank card for
+// everyone because one chained roll is bad)
+export async function renderChained(roll, options) {
+    try {
+        return await roll.render(options);
+    } catch (err) {
+        console.warn('heart | a chained roll on a card could not be drawn', err);
+        return '';
+    }
+}
 
 class HeartChatMessage extends ChatMessage {
     get isRollRequest() {
@@ -11,19 +41,7 @@ class HeartChatMessage extends ChatMessage {
         if(this.rolls[0] instanceof game.heart.rolls.StressRoll) {
             return this.rolls[0];
         }
-
-        const json = this.getFlag('heart', 'stress-roll');
-        if (json === undefined) {
-            return
-        }
-        const Roll = CONFIG.Dice.rolls.find(x => x.name === json.class);
-        const roll = Roll.fromData(json);
-        return roll;
-    }
-
-    async setStressRoll(roll) {
-        const json = roll.toJSON()
-        await this.setFlag('heart', 'stress-roll', json);
+        return chainedRoll(this.getFlag('heart', 'stress-roll'));
     }
 
     get showStressRollButton() {
@@ -36,10 +54,6 @@ class HeartChatMessage extends ChatMessage {
         } else {
             return Boolean(showStressRollButton);
         }
-    }
-
-    set showStressRollButton(value) {
-        return this.setFlag('heart', 'show-stress-roll-button', value);
     }
 
     get showTakeStressButton() {
@@ -55,33 +69,11 @@ class HeartChatMessage extends ChatMessage {
         }
     }
 
-    set showTakeStressButton(value) {
-        return this.setFlag('heart', 'show-take-stress-button', value);
-    }
-
     get falloutRoll() {
         if(this.rolls[0] instanceof game.heart.rolls.FalloutRoll) {
             return this.rolls[0];
         }
-
-        const json = this.getFlag('heart', 'fallout-roll');
-        if (json === undefined) {
-            return
-        }
-        const Roll = CONFIG.Dice.rolls.find(x => x.name === json.class);
-        const roll = Roll.fromData(json);
-        return roll;
-    }
-
-    set falloutRoll(roll) {
-        const json = roll.toJSON()
-        this.setFlag('heart', 'fallout-roll', json);
-        return
-    }
-
-    async setFalloutRoll(roll) {
-        const json = roll.toJSON()
-        await this.setFlag('heart', 'fallout-roll', json);
+        return chainedRoll(this.getFlag('heart', 'fallout-roll'));
     }
 
     // Stress got through, so fallout may be rolled. Per character since
@@ -99,25 +91,17 @@ class HeartChatMessage extends ChatMessage {
         return this.getFlag('heart', 'fallout-done') ?? [];
     }
 
-    set showFalloutRollButton(value) {
-        return this.setFlag('heart', 'show-fallout-roll-button', value);
-    }
-
     get showClearStressButton() {
         const showClearStressButton = this.getFlag('heart', 'show-clear-stress-button')
         if (this.falloutRoll !== undefined) {
             if (showClearStressButton === undefined) {
-                return this.falloutRoll.result == 'no-fallout' ? false : true;
+                return this.falloutRoll.result !== 'no-fallout';
             } else {
                 return Boolean(showClearStressButton);
             }
         }
         return false;
 
-    }
-
-    set showClearStressButton(value) {
-        return this.setFlag('heart', 'show-clear-stress-button', value);
     }
 
     async getHTML() {
@@ -139,25 +123,25 @@ class HeartChatMessage extends ChatMessage {
             );
 
             if (this.stressRoll && this.stressRoll !== this.rolls[0]) {
-                const stressContent = await this.stressRoll.render({
+                const stressContent = await renderChained(this.stressRoll, {
                     isPrivate: false,
                     showTakeStressButton: this.showTakeStressButton,
                     showFalloutRollButton: this.showFalloutRollButton,
                     showClearStressButton: this.showClearStressButton,
                     falloutDone: this.falloutDone,
                 });
-                html.append(
+                if (stressContent) html.append(
                     $('<div class="message-content"></div>').append(stressContent)
                 );
             }
 
             if (this.falloutRoll && this.falloutRoll !== this.rolls[0]) {
-                const falloutContent = await this.falloutRoll.render({
+                const falloutContent = await renderChained(this.falloutRoll, {
                     isPrivate: false,
                     showClearStressButton: this.showClearStressButton,
                     falloutPick: this.getFlag('heart', 'fallout-pick'),
                 });
-                html.append(
+                if (falloutContent) html.append(
                     $('<div class="message-content"></div>').append(falloutContent)
                 );
             }
@@ -183,7 +167,10 @@ class HeartChatMessage extends ChatMessage {
         // (2026-09-30, round-2 mock B review)
         html.find('.ledger').slice(1).addClass('chained');
 
-        return html;
+        // last, on the markup as it will be shown (Luke, 2026-10-21, R1):
+        // the redraw above came after Foundry's renderChatMessage hook, so
+        // GM-only controls are taken out here, not there
+        return stripGmOnly(html);
     }
 }
 
@@ -225,6 +212,38 @@ function pinChatPanel(html) {
     }
 }
 
+// A roll request card's "Roll as": everything is on the card, so no
+// prompt. The pool rules (missing skills, Tired / Clouded) apply in
+// buildPool; the helper rules (eligibility, two at most) are the prompt's,
+// applied here by requestHelpers (Luke, 2026-10-21, R2): a GM may override,
+// as in the prompt, and anyone else's ineligible or extra helpers are left
+// out with a note on the card.
+export async function rollFromRequest(button, character, messageId) {
+    const form = button.closest('form.roll-request');
+    const data = new FormData(form.get(0));
+    // the GM's stakes ride on the roll; its Roll Stress preselects them
+    // (2026-10-21)
+    const stakes = game.messages.get(messageId)?.getFlag('heart', 'roll-request')?.stakes;
+    const skill = data.get('skill') || null;
+    const domain = data.get('domain') || null;
+    const { helpers, notes } = requestHelpers(data.getAll('helper'), { roller: character, skill, domain, isGM: game.user.isGM });
+
+    const roll = await game.heart.rolls.HeartRoll.build({
+        character: character,
+        difficulty: data.get('difficulty') || 'standard',
+        skill,
+        domain,
+        mastery: data.get('mastery') === "on",
+        helpers,
+        stakes,
+    });
+    if (!roll) return null;
+    if (notes.length) roll.options.notes = [...(roll.options.notes ?? []), ...notes];
+
+    await roll.toMessage({speaker: ChatMessage.getSpeaker({ actor: game.actors.get(character) })});
+    return roll;
+}
+
 function activateListeners(html) {
 
     html.on('click', 'form button', ev => {
@@ -236,33 +255,15 @@ function activateListeners(html) {
     // broke the layout
     html.on('click', '.ledger button', ev => ev.stopPropagation());
 
-    html.on('click', 'form.roll-request [data-action=roll][data-character]', async (ev) => {
+    html.on('click', 'form.roll-request [data-action=roll][data-character]', (ev) => {
+        ev.preventDefault();
         const button = $(ev.currentTarget);
-        const {
-            character
-        } = button.data();
-
-        const form = button.closest('form.roll-request');
-        const data = new FormData(form.get(0));
-        // the GM's stakes ride on the roll; its Roll Stress preselects them
-        // (2026-10-21)
+        const { character } = button.data();
         const messageId = button.closest('[data-message-id]').data('messageId');
-        const stakes = game.messages.get(messageId)?.getFlag('heart', 'roll-request')?.stakes;
-
-        // Everything is on the card, so no prompt; the pool rules (missing
-        // skills, Tired / Clouded, helper checks) still apply
-        const roll = await game.heart.rolls.HeartRoll.build({
-            character: character,
-            difficulty: data.get('difficulty') || 'standard',
-            skill: data.get('skill') || null,
-            domain: data.get('domain') || null,
-            mastery: data.get('mastery') === "on",
-            helpers: data.getAll('helper'),
-            stakes,
-        });
-        if (!roll) return;
-
-        await roll.toMessage({speaker: ChatMessage.getSpeaker({ actor: game.actors.get(character) })});
+        // one roll per click (Luke, 2026-10-21, R12: a double-click rolled
+        // twice); oneAtATime also reports a failure instead of leaving an
+        // unhandled rejection
+        return oneAtATime(`${messageId}:roll:${character}`, ev.currentTarget, () => rollFromRequest(button, character, messageId));
     });
 
     // delegated (2026-09-30 review): previews posted after the log first
@@ -348,9 +349,9 @@ export function initialise() {
 
     // every render (2026-10-02): a re-drawn log or a second chat popout is
     // new markup that needs its handlers (the roll cards bind the same way)
-    Hooks.on('renderChatLog', (app, html, data) => {
+    Hooks.on('renderChatLog', (app, html) => {
         activateListeners(html);
         pinChatPanel(html);
     });
-    Hooks.on('renderChatPopout', (app, html, data) => activateListeners(html));
+    Hooks.on('renderChatPopout', (app, html) => activateListeners(html));
 }

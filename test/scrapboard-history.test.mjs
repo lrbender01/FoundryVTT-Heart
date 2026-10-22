@@ -11,7 +11,7 @@
 import { describe, it, expect } from "vitest";
 import {
   normalizeLook, normalizeBoard, boardView, applyPatch, diffBoard, recordTarget, recordUpdate, updateRoots, mergeRecords,
-  binPatch, unbinPatch, binList, BIN_MAX, scrapLayout,
+  binPatch, unbinPatch, binList, BIN_MAX, scrapLayout, keysTaken, takeOffPatch, doodlePatch, labelPatch,
 } from "../src/map/scrapboard/model.js";
 import { BoardControls } from "../src/map/scrapboard/controls.js";
 import { mayHistory } from "../src/map/scrapboard/notes.js";
@@ -148,6 +148,98 @@ describe("the bin: cards never deleted outright", () => {
   });
 });
 
+describe("the bin's edge cases (2026-10-21 code audit)", () => {
+  const two = () => ({
+    scraps: { a: { type: "note", text: "a", x: 0, y: 0 }, b: { type: "note", text: "b", x: 500, y: 0 } },
+    pins: { pa: { tex: "t", on: "a", at: { u: 0, v: 0 } }, pb: { tex: "t", on: "b", at: { u: 0, v: 0 } } },
+    links: { ab: { kind: "path", aPin: "pa", bPin: "pb" } },
+  });
+
+  it("a string between two cards binned together comes back with the second", () => {
+    const b = two();
+    applyPatch(b, binPatch(b, ["a", "b"], { at: 1 }));
+    applyPatch(b, unbinPatch(b, "a"));
+    expect(b.links.ab).toBeUndefined();
+    expect(b.bin.b.links.ab).toBeDefined();
+    applyPatch(b, unbinPatch(b, "b"));
+    expect(b.links.ab).toMatchObject({ aPin: "pa", bPin: "pb" });
+  });
+
+  it("a full bin never lets go of the card going in under a key it already holds", () => {
+    const b = two();
+    b.bin = Object.fromEntries(Array.from({ length: BIN_MAX }, (_, i) => [i ? `old${i}` : "a", { at: i, scrap: { type: "note", text: String(i), x: 0, y: 0 } }]));
+    const p = binPatch(b, ["a"], { at: 1e9 });
+    expect(p.bin.a).toMatchObject({ at: 1e9, scrap: { text: "a" } });
+    applyPatch(b, p);
+    expect(b.bin.a.scrap.text).toBe("a");
+  });
+
+  it("a card put back under a new key never takes a binned card's", () => {
+    const b = two();
+    applyPatch(b, binPatch(b, ["a"], { at: 1 }));
+    b.scraps.a = { type: "note", text: "new a", x: 1, y: 1 };
+    b.bin.n1 = { at: 2, scrap: { type: "note", text: "n1", x: 0, y: 0 }, pins: {}, links: {} };
+    const p = unbinPatch(b, "a");
+    expect(Object.keys(p.newScraps)).toEqual(["n2"]);
+    expect(keysTaken(b)).toMatchObject({ a: expect.anything(), n1: expect.anything(), b: expect.anything() });
+  });
+
+  it("takeOffPatch: cards into the bin and pins off, as one patch", () => {
+    const b = two();
+    b.pins.loose = { tex: "t", x: 9, y: 9 };
+    b.links.l2 = { kind: "path", aPin: "pb", bPin: "loose" };
+    const p = takeOffPatch(b, { scraps: ["a"], pins: ["loose"] }, { at: 3, by: "gm" });
+    applyPatch(b, p);
+    expect(b.scraps.a).toBeUndefined();
+    expect(b.bin.a).toMatchObject({ at: 3, by: "gm", links: { ab: expect.anything() } });
+    expect(b.pins.loose).toBeUndefined();
+    expect(b.links.l2).toBeUndefined();
+    expect(b.scraps.b).toBeDefined();
+    expect(takeOffPatch(b, { scraps: ["nothing"] })).toBeNull();
+  });
+
+  it("a record's path through __proto__ is never followed", () => {
+    const rec = { ops: [{ path: ["__proto__", "polluted"], a: "yes" }, { path: ["constructor", "prototype", "x"], a: 1 }] };
+    recordTarget({}, rec, "after");
+    recordUpdate({}, rec, "after");
+    expect({}.polluted).toBeUndefined();
+    expect({}.x).toBeUndefined();
+  });
+
+  it("an undo of a field of a card gone since makes no blank card; a stroke's new layer is made", () => {
+    const board = { scraps: {}, marks: {} };
+    expect(recordTarget(board, { ops: [{ path: ["scraps", "c1", "x"], b: 5, a: 9 }] }, "before").scraps).toEqual({});
+    expect(recordTarget(board, { ops: [{ path: ["marks", "ana", "m1"], a: { c: 0 } }] }, "after").marks).toEqual({ ana: { m1: { c: 0 } } });
+  });
+});
+
+describe("a doodle laid down (doodlePatch, both hosts, 2026-10-21)", () => {
+  it("on the sheet in the placer's layer, or on the card under it in its frame", () => {
+    const raw = { scraps: { n1: { type: "note", text: "x", x: 600, y: 600 } }, marks: { ana: { m1: { c: 0, w: 2, pts: [0, 0, 1, 1] } } } };
+    const view = boardView(look, normalizeBoard(raw), "gm", size, measure);
+    const brush = { size: 40, c: 2, w: 99, b: 1, o: 0.8 };
+    const sheet = doodlePatch(raw, view, { kind: "ring", seed: "s", at: { x: 2000, y: 2000 } }, brush, look, "ana");
+    const ids = Object.keys(sheet.marks.ana);
+    expect(ids).not.toContain("m1");
+    expect(Object.values(sheet.marks.ana)[0]).toMatchObject({ c: 2, o: 0.8 });
+    expect(Object.values(sheet.marks.ana)[0].w).toBeLessThanOrEqual(look.string.w * 3);
+    const card = doodlePatch(raw, view, { kind: "ring", seed: "s", at: { x: 600, y: 600 }, on: "n1" }, brush, look, "ana");
+    expect(Object.values(card.scraps.n1.marks)[0]).toMatchObject({ by: "ana", c: 2 });
+  });
+});
+
+describe("a player's name for their own string (labelPatch author, 2026-10-21)", () => {
+  it("the tag, its thread, and their pins are the player's", () => {
+    const raw = { scraps: {}, pins: { a: pin(1000, 2000, { author: "ana" }), b: pin(2000, 2000, { author: "ana" }) }, links: { s: { kind: "path", aPin: "a", bPin: "b", author: "ana", color: 1 } } };
+    const p = labelPatch(raw, "s", "Home", look, size, measure, { author: "ana" });
+    expect(Object.values(p.newScraps)[0]).toMatchObject({ type: "note", tag: true, author: "ana" });
+    expect(Object.values(p.newLinks)[0].author).toBe("ana");
+    expect(Object.values(p.pins).every((x) => x.author === "ana")).toBe(true);
+    // (the GM's, as before: no author)
+    expect(Object.values(labelPatch(raw, "s", "Home", look, size, measure).newScraps)[0].author).toBeUndefined();
+  });
+});
+
 describe("Delete and Erase (Luke, 2026-10-06: never text or pictures)", () => {
   const RAW = { scraps: { grip: { lib: "grip", x: 600, y: 600, r: 0, fix: "tape" } }, links: {}, pins: { p1: pin(2000, 2000) } };
   const live = () => {
@@ -218,5 +310,68 @@ describe("a player's own undo, checked on the GM's client", () => {
     expect(mayHistory(board, rec(["bin", "x"], undefined, {}), "before", ANA)).toBe(false);
     // (nor a note of theirs made the GM's)
     expect(mayHistory(board, rec(["scraps", "p1", "author"], "gm", "ana"), "before", ANA)).toBe(false);
+  });
+});
+
+describe("joints through a binned card's pins come back with it (M9, Luke 2026-10-21)", () => {
+  const JOINTS = [{ x: 10, y: 10 }, { pin: "pc" }, { x: 20, y: 20 }];
+  const PULLS = [null, { t: 0.5, u: 0.1, v: 0 }, null, null];
+  const board = () => ({
+    scraps: { a: { type: "note", text: "a", x: 0, y: 0 }, b: { type: "note", text: "b", x: 900, y: 0 }, c: { type: "note", text: "c", x: 450, y: 400 } },
+    pins: { pa: { tex: "t", on: "a", at: { u: 0, v: 0 } }, pb: { tex: "t", on: "b", at: { u: 0, v: 0 } }, pc: { tex: "t", on: "c", at: { u: 0, v: 0 } } },
+    links: { ab: { kind: "path", aPin: "pa", bPin: "pb", joints: clone(JOINTS), pulls: clone(PULLS) } },
+  });
+
+  it("taken off, the string lets go of the joint; put back, it runs through it again, pulls and all", () => {
+    const b = board();
+    applyPatch(b, binPatch(b, ["c"], { at: 1 }));
+    expect(b.links.ab.joints).toEqual([{ x: 10, y: 10 }, { x: 20, y: 20 }]);
+    expect(b.bin.c.joints.ab).toEqual({ was: JOINTS, pulls: PULLS });
+    applyPatch(b, unbinPatch(b, "c"));
+    expect(b.links.ab.joints).toEqual(JOINTS);
+    expect(b.links.ab.pulls).toEqual(PULLS);
+    expect(b.pins.pc).toBeDefined();
+    expect(b.bin.c).toBeUndefined();
+  });
+
+  it("reshaped since, the joint goes back after the one it followed, and the pulls let go", () => {
+    const b = board();
+    applyPatch(b, binPatch(b, ["c"], { at: 1 }));
+    b.links.ab.joints = [{ x: 10, y: 10 }, { x: 50, y: 50 }, { x: 20, y: 20 }];
+    applyPatch(b, unbinPatch(b, "c"));
+    expect(b.links.ab.joints).toEqual([{ x: 10, y: 10 }, { pin: "pc" }, { x: 50, y: 50 }, { x: 20, y: 20 }]);
+    expect(b.links.ab.pulls).toEqual([]);
+  });
+
+  it("its pin's id taken since, the joint follows the pin's new id", () => {
+    const b = board();
+    applyPatch(b, binPatch(b, ["c"], { at: 1 }));
+    b.pins.pc = { tex: "t", x: 5, y: 5 };
+    applyPatch(b, unbinPatch(b, "c"));
+    const mine = Object.keys(b.pins).find((id) => b.pins[id].on === "c");
+    expect(mine).not.toBe("pc");
+    expect(b.links.ab.joints[1]).toEqual({ pin: mine });
+  });
+
+  it("a string in the bin since waits there, its joint put back in it", () => {
+    const b = board();
+    applyPatch(b, binPatch(b, ["c"], { at: 1 }));
+    applyPatch(b, binPatch(b, ["a"], { at: 2 }));
+    expect(b.bin.a.links.ab.joints).toEqual([{ x: 10, y: 10 }, { x: 20, y: 20 }]);
+    applyPatch(b, unbinPatch(b, "c"));
+    expect(b.bin.a.links.ab.joints).toEqual(JOINTS);
+    applyPatch(b, unbinPatch(b, "a"));
+    expect(b.links.ab.joints).toEqual(JOINTS);
+  });
+
+  it("a string gone, or already through the pin, is left as it is", () => {
+    const gone = board();
+    applyPatch(gone, binPatch(gone, ["c"], { at: 1 }));
+    delete gone.links.ab;
+    expect(unbinPatch(gone, "c").links).toBeUndefined();
+    const again = board();
+    applyPatch(again, binPatch(again, ["c"], { at: 1 }));
+    again.links.ab.joints = [{ pin: "pc" }];
+    expect(unbinPatch(again, "c").links).toBeUndefined();
   });
 });

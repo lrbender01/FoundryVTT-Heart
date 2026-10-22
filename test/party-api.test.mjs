@@ -419,6 +419,8 @@ describe("the restock card's payer fallout button", () => {
   const render = (message, html) => hooks.callbacks("renderChatMessage")[0](message, html);
 
   it("a claimed button is left out; the box goes when it is empty", () => {
+    character("vess", { owners: ["p1"] });
+    character("kettle", { owners: ["p1"] });
     const msg = fakeMessage({ flags: { heart: { claimed: { "fallout-vess": true } } } });
     const one = card([{ claim: "fallout-vess", character: "vess" }, { character: "kettle" }]);
     render(msg, one.html);
@@ -436,7 +438,8 @@ describe("the restock card's payer fallout button", () => {
     render(msg, c.html);
     queueDice(3);
     await c.click(c.els[0]);
-    expect(msg.flags.heart.claimed).toEqual({ "fallout-vess": true });
+    // who claimed it (2026-10-21, R13)
+    expect(msg.flags.heart.claimed).toEqual({ "fallout-vess": "p1" });
     const [falloutCard] = posted();
     expect(falloutCard.rolls[0]).toBeInstanceOf(FalloutRoll);
     expect(falloutCard.rolls[0].options).toMatchObject({ character: "vess", resistance: "supplies", totalStress: 6 });
@@ -444,6 +447,31 @@ describe("the restock card's payer fallout button", () => {
     expect(posted()).toHaveLength(1);
     expect(warned()).toEqual(["heart.relay.already"]);
     expect(vess.update).not.toHaveBeenCalled();
+  });
+
+  // 2026-10-21 (R13): a failed roll kept the claim and the button was gone
+  it("the button comes back when the fallout card could not be posted", async () => {
+    character("vess", { owners: ["p1"], resistances: { supplies: { value: 6 } } });
+    const msg = fakeMessage();
+    const c = card([{ claim: "fallout-vess", character: "vess", resistance: "supplies" }]);
+    render(msg, c.html);
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    FakeChatMessage.create.mockRejectedValueOnce(new Error("server said no"));
+    await c.click(c.els[0]);
+    expect(msg.flags.heart.claimed).toEqual({ "fallout-vess": false });
+    expect(ui.notifications.error).toHaveBeenCalledWith("heart.relay.failed");
+    error.mockRestore();
+  });
+
+  // Luke, 2026-10-21 (R8): only the GM and the payer's player may roll it,
+  // so only they see the button
+  it("is drawn only for the GM and the payer's player", () => {
+    character("vess", { owners: ["p2"] });
+    const msg = fakeMessage();
+    const c = card([{ claim: "fallout-vess", character: "vess", resistance: "supplies" }]);
+    render(msg, c.html);
+    expect(c.els[0].removed).toBe(true);
+    expect(c.acts.removed).toBe(true);
   });
 
   it("only the payer's own player (or the GM) may roll it", async () => {

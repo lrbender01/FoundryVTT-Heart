@@ -1,6 +1,7 @@
-// The scrapboard map on the canvas (2026-10-02, monorepo
-// docs/plans/heart-map.md): the shared painter (paint.js, the same drawing
-// code the Heart Map Board mock runs) paints the look and a viewer's board
+// The scrapboard map on the canvas (2026-10-02; the map's story is in the
+// monorepo's HEART.md and this fork's CHANGELOG): the shared painter
+// (paint.js, the same drawing code the Heart Map Board mock runs) paints the
+// look and a viewer's board
 // into tiles, shown as sprites in the primary canvas group, above the scene's
 // background and below tiles and tokens, so the delvers' tokens walk on it.
 // Nothing here is interactive: the tools are the ScrapboardLayer (layer.js).
@@ -13,13 +14,18 @@
 //   with the last, piece by piece (cards, strings, pins, decorations, marker
 //   strokes), and only those tiles are painted and sent to the GPU again.
 // - What is on screen is painted at once; the rest a few tiles a frame, so a
-//   big board never stalls the page.
-// - Images come small first (previews) and whole later; a tile painted
-//   without a whole image is painted again when it comes.
+//   big board never stalls the page. A tile's sheet is painted a band at a
+//   time, within the frame's budget (Luke, 2026-10-21: a year's board froze
+//   the page for seconds a tile).
+// - Images come small first (previews) and whole later; where a tile was
+//   painted without a whole image, that part of it is painted again when it
+//   comes (the painter notes where each image was drawn short).
+// - The painter keeps each brush stroke's painted layer (paint.js), so a
+//   repaint never builds a stroke again.
 // - Zoomed in, the view is painted again at the screen's own resolution (a
 //   second, finer set of tiles over it), so writing is sharp at any zoom.
 import { normalizeBoard, boardView, onlyPlayersStrings } from './model.js';
-import { createPainter, sheetGeometry } from './paint.js';
+import { createPainter, sheetGeometry, pointsHash, arrivalAreas, sheetBands } from './paint.js';
 import { loadBoardLook, textureUrl, previewUrl } from './look.js';
 import { boardOf } from './api.js';
 
@@ -109,7 +115,10 @@ function boxOf(pts, pad = 0) {
     return x0 === Infinity ? null : grow({ x0, y0, x1, y1 }, pad);
 }
 // a piece as it is drawn, as a string to compare (numbers to a tenth;
-// nothing twice)
+// nothing twice). A run of numbers (a card's strokes, a string's points) is
+// its hash (paint.js pointsHash, to a tenth, kept with the points), never
+// written out number by number (Luke, 2026-10-21: every change wrote out
+// every card's strokes)
 function sigOf(x) {
     const seen = new WeakSet();
     return JSON.stringify(x, (_k, v) => {
@@ -118,6 +127,7 @@ function sigOf(x) {
         if (v && typeof v === 'object') {
             if (seen.has(v)) return undefined;
             seen.add(v);
+            if (Array.isArray(v) && v.length >= 16 && v.every((n) => typeof n === 'number')) return `#${v.length}:${pointsHash(v, { round: true })}`;
         }
         return v;
     });
@@ -136,7 +146,7 @@ class TileGrid {
         this.tiles = [];
         for (let by = y0; by < y1; by += step) {
             for (let bx = x0; bx < x1; bx += step) {
-                this.tiles.push({ bx0: bx, by0: by, bx1: Math.min(x1, bx + step), by1: Math.min(y1, by + step), canvas: null, bg: null, sprite: null, dirty: true, bgDirty: true, short: false, bgShort: false });
+                this.tiles.push({ bx0: bx, by0: by, bx1: Math.min(x1, bx + step), by1: Math.min(y1, by + step), canvas: null, bg: null, sprite: null, dirty: true, bgDirty: true });
             }
         }
     }
@@ -155,42 +165,67 @@ class TileGrid {
         }
     }
 
-    markAll({ sheet = false } = {}) {
-        for (const t of this.tiles) {
-            t.dirty = true;
-            if (sheet) t.bgDirty = true;
-        }
-    }
-
     get done() {
         return this.tiles.every((t) => !t.dirty);
     }
 
-    // its part of the sheet, painted (all of it, or the areas a stroke changed)
-    #sheet(t, P) {
+    // Its part of the sheet, painted: all of it, a band at a time (Luke,
+    // 2026-10-21: one tile's sheet froze the page for seconds), then the parts
+    // a stroke changed or an image that came covers. `until` (a
+    // performance.now() time): stop at a band's end once past it; false while
+    // bands are left (the next frame goes on with them). Every image drawn
+    // short of itself is noted with where it lies (`bgUses`).
+    #sheet(t, P, until = null) {
         const R = this.reach(t);
-        const kb = this.kb;
-        const side = Math.ceil((this.size * kb) / this.k);
         if (!t.bg || t.bgDirty) {
+            const side = Math.ceil((this.size * this.kb) / this.k);
             t.bg ??= document.createElement('canvas');
             t.bg.width = t.bg.height = side;
-            P.resetMissing();
-            this.r.short = false;
-            P.paintSheet(t.bg, kb, -R.x0 * kb, -R.y0 * kb, R);
-            t.bgShort = P.missing || this.r.short;
+            t.bands = sheetBands(R, this.kb);
+            t.bgUses = [];
             t.bgDirty = false;
             t.bgAreas = null;
-            return;
         }
+        while (t.bands?.length) {
+            this.#sheetPart(t, P, t.bands.shift());
+            if (until !== null && t.bands.length && performance.now() > until) return false;
+        }
+        t.bands = null;
         for (const a of t.bgAreas ?? []) {
             const A = { x0: Math.max(a.x0, R.x0), y0: Math.max(a.y0, R.y0), x1: Math.min(a.x1, R.x1), y1: Math.min(a.y1, R.y1) };
-            if (A.x1 > A.x0 && A.y1 > A.y0) P.paintSheet(t.bg, kb, -R.x0 * kb, -R.y0 * kb, A);
+            if (A.x1 > A.x0 && A.y1 > A.y0) this.#sheetPart(t, P, A);
         }
         t.bgAreas = null;
+        return true;
     }
 
-    paint(t, P, { marksOnly }) {
-        this.#sheet(t, P);
+    // a part of its sheet (board px, within its reach), painted
+    #sheetPart(t, P, A) {
+        const R = this.reach(t);
+        const kb = this.kb;
+        P.watch();
+        try {
+            P.paintSheet(t.bg, kb, -R.x0 * kb, -R.y0 * kb, A);
+        } finally {
+            t.bgUses ??= [];
+            // (each once: an image that never came was noted again by every
+            // repaint of a part it lies in; Luke, 2026-10-21)
+            const had = new Set(t.bgUses.map((u) => `${u.id}|${JSON.stringify(u.box)}`));
+            for (const u of P.unwatch()) {
+                const key = `${u.id}|${JSON.stringify(u.box)}`;
+                if (had.has(key)) continue;
+                had.add(key);
+                t.bgUses.push(u);
+            }
+        }
+    }
+
+    // Paint a tile: its sheet (see #sheet), then the board over it, sent to
+    // the GPU. False while its sheet isn't done (or `until` is spent before
+    // the board goes over it): a later frame goes on with it.
+    paint(t, P, { marksOnly, until = null }) {
+        if (!this.#sheet(t, P, until)) return false;
+        if (until !== null && performance.now() > until) return false;
         const k = this.k;
         const R = this.reach(t);
         t.canvas ??= Object.assign(document.createElement('canvas'), { width: this.size, height: this.size });
@@ -200,16 +235,26 @@ class TileGrid {
         g.setTransform(k, 0, 0, k, -R.x0 * k, -R.y0 * k);
         P.resetMissing();
         this.r.short = false;
-        P.drawTable(g);
-        g.save();
-        g.imageSmoothingQuality = 'high';
-        g.drawImage(t.bg, R.x0, R.y0, R.x1 - R.x0, R.y1 - R.y0);
-        g.restore();
-        P.drawForeground(g, { marksOnly });
-        P.drawLight(g);
-        t.short = t.bgShort || P.missing || this.r.short;
+        // (the images the board over it was drawn short of: it is painted
+        // again only when one of them comes)
+        P.watch();
+        try {
+            P.drawTable(g);
+            g.save();
+            g.imageSmoothingQuality = 'high';
+            // (at its own scale: its side is rounded up to whole px, so a
+            // finer tile's sheet drawn to the reach was stretched by up to a
+            // px; Luke, 2026-10-21)
+            g.drawImage(t.bg, R.x0, R.y0, t.bg.width / this.kb, t.bg.height / this.kb);
+            g.restore();
+            P.drawForeground(g, { marksOnly });
+            P.drawLight(g);
+        } finally {
+            t.fgIds = new Set(P.unwatch().map((u) => u.id));
+        }
         t.dirty = false;
         this.#upload(t);
+        return true;
     }
 
     #upload(t) {
@@ -275,6 +320,8 @@ export class ScrapboardRenderer {
     #whole = '';
     #epoch = 0;
     #pumping = false;
+    #lookSeen = null;
+    #lookGen = 0;
     // (set when a preview stood in for an image: the tile is painted again)
     short = false;
     look = null;
@@ -333,9 +380,9 @@ export class ScrapboardRenderer {
             const own = String(id).startsWith(ACTOR_ART);
             const url = own ? String(id).slice(ACTOR_ART.length) : textureUrl(this.#textures, id);
             if (!url) return null;
-            e = { full: this.#load(url, true), prev: null };
+            e = { full: this.#load(url, true, id), prev: null };
             const pv = own ? null : previewUrl(this.#textures, id);
-            if (pv) e.prev = this.#load(pv, false);
+            if (pv) e.prev = this.#load(pv, false, id);
             this.#images.set(id, e);
         }
         if (e.full.ready) return e.full.im;
@@ -346,19 +393,23 @@ export class ScrapboardRenderer {
         return null;
     }
 
-    #load(url, whole) {
+    #load(url, whole, id) {
         const im = new Image();
         const e = { im: null, ready: false, done: null };
         e.done = new Promise((resolve) => {
             im.onload = () => {
                 e.im = whole ? this.#shrunk(im) : Object.assign(im, { preview: true });
                 e.ready = true;
+                this.#came.add(id);
                 this.#arrived();
                 resolve();
             };
             im.onerror = () => {
                 // (a preview that isn't there: the whole one only)
                 e.ready = !whole;
+                // (a whole one that can't come is waited for no longer:
+                // Luke, 2026-10-21, a picture of the board ran every round)
+                e.failed = whole;
                 resolve();
             };
         });
@@ -390,14 +441,26 @@ export class ScrapboardRenderer {
         return Promise.race([z, new Promise((resolve) => setTimeout(() => resolve(null), 4000))]);
     }
 
-    // an image came: the tiles painted without it, again (a little later, so
-    // a burst of arrivals is one repaint)
+    // An image came: where tiles were painted without it, again (a little
+    // later, so a burst of arrivals is one repaint). Only the parts of a
+    // tile's sheet it lies in (Luke, 2026-10-21: every arrival repainted
+    // whole sheets), and the board over a tile only when that was drawn
+    // without one of them.
+    #came = new Set();
     #arrived = foundry.utils.debounce(() => {
         this.#epoch++;
+        const came = this.#came;
+        this.#came = new Set();
         for (const grid of [this.#base, this.#focus, this.#nextFocus]) {
             for (const t of grid?.tiles ?? []) {
-                if (t.bgShort) t.bgDirty = true;
-                if (t.short || t.bgShort) t.dirty = true;
+                if (t.bgUses?.length) {
+                    const a = arrivalAreas(t.bgUses, came);
+                    t.bgUses = a.rest;
+                    if (a.whole) t.bgDirty = true;
+                    else for (const box of a.areas) (t.bgAreas ??= []).push(box);
+                    if (a.whole || a.areas.length) t.dirty = true;
+                }
+                if (t.fgIds) for (const id of t.fgIds) if (came.has(id)) t.dirty = true;
             }
         }
         this.#pump();
@@ -416,15 +479,18 @@ export class ScrapboardRenderer {
         const g = c.getContext('2d');
         g.imageSmoothingQuality = 'high';
         g.drawImage(im, 0, 0, c.width, c.height);
-        // (the painter reads an image's natural size)
+        // (the painter reads an image's natural size, and keys its ropes and
+        // tints by its src: Luke, 2026-10-21, every shrunk image shared one
+        // key, so at light detail one rope drew as another)
         c.naturalWidth = c.width;
         c.naturalHeight = c.height;
+        c.src = im.src;
         return c;
     }
 
     // the whole images still coming
     #loading() {
-        return [...this.#images.values()].filter((e) => !e.full.ready).map((e) => e.full.done);
+        return [...this.#images.values()].filter((e) => !e.full.ready && !e.full.failed).map((e) => e.full.done);
     }
 
     clear() {
@@ -434,6 +500,8 @@ export class ScrapboardRenderer {
         this.#sigs = new Map();
         this.#whole = '';
         this.#painter.dropBake();
+        // (the strokes' kept layers let go with the board)
+        this.#painter.dropLayers();
         this.view = null;
     }
 
@@ -486,7 +554,14 @@ export class ScrapboardRenderer {
         await this.#fonts(look, view);
         if (ticket !== this.#ticket || !canvas.primary || canvas.scene !== scene) return null;
         this.view = view;
-        const key = JSON.stringify(look.sheet) + look.w + look.h;
+        // (a look read again, File, Reload the look, is a new one even when
+        // its sheet is the same: Luke, 2026-10-21, new grime or pools never
+        // showed until the page was reloaded)
+        if (look !== this.#lookSeen) {
+            this.#lookSeen = look;
+            this.#lookGen++;
+        }
+        const key = `${JSON.stringify(look.sheet)}${look.w}${look.h}#${this.#lookGen}`;
         if (key !== this.lookKey) {
             this.geo = sheetGeometry(look, (id) => this.#textures[id]?.tone ?? null, (id) => this.#textures[id]?.safe ?? null);
             this.lookKey = key;
@@ -595,19 +670,24 @@ export class ScrapboardRenderer {
         queue.sort((a, b) => a.rank - b.rank);
         P.set({ look, view: this.view, geo: this.geo });
         const start = performance.now();
-        let i = 0;
-        for (; i < queue.length; i++) {
+        for (let i = 0; i < queue.length; i++) {
             const { grid, t, rank } = queue[i];
             if (now ? rank !== 0 : i > 0 && performance.now() - start > FRAME_BUDGET) break;
+            // (a sheet to paint whole goes a band at a time even for an edit:
+            // the frame's budget, at least one band a frame)
+            const whole = !t.bg || t.bgDirty || t.bands?.length;
+            const until = now && !whole ? null : start + FRAME_BUDGET;
+            let done;
             this.#pxs = grid.k;
             try {
-                grid.paint(t, P, opts);
+                done = grid.paint(t, P, { ...opts, until });
             } finally {
                 this.#pxs = null;
             }
+            if (!done && !now) break;
         }
         this.#swapFocus();
-        if (i < queue.length && !this.#pumping) {
+        if (queue.some(({ t }) => t.dirty) && !this.#pumping) {
             this.#pumping = true;
             requestAnimationFrame(() => {
                 this.#pumping = false;
@@ -696,6 +776,9 @@ export class ScrapboardRenderer {
                 const waiting = this.#loading();
                 if (!waiting.length && !this.short) break;
                 await Promise.all(waiting);
+                // (the sheet baked without them is painted again; the
+                // arrivals' own repaint comes a moment later: Luke, 2026-10-21)
+                P.dropBake();
             }
         } finally {
             // (the picture's bake let go; the board on screen is its tiles)

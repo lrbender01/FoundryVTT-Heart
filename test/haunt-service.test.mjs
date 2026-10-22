@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { serviceDie, resourcePayments, otherPaymentDice } from "../src/items/haunt/rules.js";
+import { serviceDie, resourcePayments, otherPaymentDice, stepServices, hauntStep } from "../src/items/haunt/rules.js";
 
 describe("serviceDie", () => {
   it("rolls the resource's die when the haunt's is as large or larger", () => {
@@ -57,5 +57,45 @@ describe("otherPaymentDice", () => {
   it("offers the dice up to the haunt's", () => {
     expect(otherPaymentDice("d6")).toEqual(["d4", "d6"]);
     expect(otherPaymentDice("d12")).toEqual(["d4", "d6", "d8", "d10", "d12"]);
+  });
+});
+
+// Upgrade / Downgrade (one copy since 2026-10-21, the haunt sheet and the
+// landmark rows). Audit S20 settled 2026-10-22 (Luke): a die outside the list
+// stays, and an Upgrade at the top writes nothing.
+describe("stepServices", () => {
+  const services = { a: { die_size: "d4" }, b: { die_size: "d12" }, c: { die_size: "d8" } };
+  it("steps every service one size, ends stay", () => {
+    expect(stepServices(services, 1)).toEqual({
+      "system.resistances.a.die_size": "d6",
+      "system.resistances.c.die_size": "d10",
+    });
+    expect(stepServices(services, -1)).toEqual({
+      "system.resistances.b.die_size": "d10",
+      "system.resistances.c.die_size": "d6",
+    });
+  });
+
+  it("an unknown die stays as it is either way (Luke, 2026-10-22, S20)", () => {
+    expect(stepServices({ x: { die_size: "d20" } }, 1)).toEqual({});
+    expect(stepServices({ x: { die_size: "d20" } }, -1)).toEqual({});
+    expect(stepServices({ x: { die_size: "d20" }, y: { die_size: "d6" } }, 1)).toEqual({ "system.resistances.y.die_size": "d8" });
+    expect(stepServices(undefined, 1)).toEqual({});
+  });
+});
+
+describe("hauntStep: the whole Upgrade or Downgrade write (Luke, 2026-10-22, S20)", () => {
+  it("an Upgrade that steps a service clears the track; a Downgrade leaves it", () => {
+    expect(hauntStep({ a: { die_size: "d4" }, b: { die_size: "d12" } }, 1)).toEqual({
+      "system.resistances.a.die_size": "d6",
+      "system.upgradeTrack": 0,
+    });
+    expect(hauntStep({ a: { die_size: "d6" } }, -1)).toEqual({ "system.resistances.a.die_size": "d4" });
+  });
+
+  it("nothing moves at the top or the bottom: no write at all, so the track is kept", () => {
+    expect(hauntStep({ a: { die_size: "d12" }, b: { die_size: "d12" } }, 1)).toBeNull();
+    expect(hauntStep({ a: { die_size: "d4" } }, -1)).toBeNull();
+    expect(hauntStep({}, 1)).toBeNull();
   });
 });

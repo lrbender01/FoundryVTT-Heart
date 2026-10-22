@@ -32,40 +32,13 @@ class HeartActor extends Actor {
         return this._proxy;
     }
 
-    get heart_effects() {
-        if(this.proxy !== undefined) {
-            const effects = new Collection(super.effects.entries());
-            this.proxy.effects.forEach(effect => {
-                effects.set(effect.id, effect);
-            });
-            return effects;
-        } else {
-            return super.effects;
-        }
-    }
-
-    getEmbeddedDocument(embeddedName, embeddedId) {
-        if(embeddedName.startsWith('@')) {
-            if(this.system.children === undefined) 
-            return;
-        
-            const child_data = this.system.children[embeddedId];
-            if(child_data === undefined)
-                return undefined;
-            const documentName = embeddedName.slice(1) || child_data.documentName;
-            return new CONFIG[documentName].documentClass(child_data, {
-                parentItem: this
-            });
-        } else {
-            return super.getEmbeddedDocument(embeddedName, embeddedId);
-        }
-    };
+    // (heart_effects, the dead ActiveEffect chain, and the "@" branch of
+    // getEmbeddedDocument went 2026-10-21: actors hold no system.children)
 }
 
 HeartActor.proxies = {};
 
 export function initialise() {
-    console.log('heart | Registering actor sheets');
     Actors.unregisterSheet('core', ActorSheet);
 
     sheet_modules.forEach(function(module) {

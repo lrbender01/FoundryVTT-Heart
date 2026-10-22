@@ -17,6 +17,7 @@
 // it holds at any card or window size.
 import './art.sass';
 import { FITTED, zoomAt, panBy, wheelFactor, wheelPixels } from './art-zoom';
+import { localizeHeart } from './localize';
 
 const CONTENT = 'fvtt-heart-content';
 const ART_FLAG = `flags.${CONTENT}.art`;

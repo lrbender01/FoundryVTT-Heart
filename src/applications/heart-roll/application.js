@@ -1,6 +1,9 @@
 import applicationHTML from './application.html';
 import './application.sass';
 import { buildPool, helperEligibility, falloutFlags, difficultyHints, knackFor, HELPER_LIMIT } from '../../rolls/heart-roll/pool';
+import { companionCandidates, isCompanion } from '../../rolls/heart-roll/companions';
+import { bondTarget } from '../../bonds/bonds';
+import { helperPool } from '../../actors/party/view';
 
 // Roll prompt (2026-09-30 rebuild, approved "Heart Roll Prompt" mock).
 // Knows who is rolling: marks the skills / domains they have and their
@@ -47,12 +50,24 @@ export default class HeartRollPrompt extends Application {
         return game.actors.get(this.state.character) ?? null;
     }
 
-    // Characters who could appear as helpers: the party (player-owned), or
-    // every character when none are assigned yet; never the roller
+    // Characters who could appear as helpers: the party's members, else the
+    // player-owned characters, else every character; never the roller.
+    // The roll request offers the same list (actors/party/view.js
+    // helperPool; Luke, 2026-10-21, R27).
     _helperCandidates() {
-        const characters = game.actors.filter(a => a.type === 'character');
-        const party = characters.some(a => a.hasPlayerOwner) ? characters.filter(a => a.hasPlayerOwner) : characters;
-        return party.filter(a => a.id !== this.state.character);
+        return this._party().filter(a => a.id !== this.state.character);
+    }
+
+    _party() {
+        return helperPool();
+    }
+
+    // Companions who could appear as helpers (Luke, 2026-10-21 and 22): the
+    // roller's bonded companions and the rest of the party's (a Gleeman
+    // helps everyone), no one else. companions.js decides the list.
+    _companionCandidates(roller = this.actor) {
+        if (!roller) return [];
+        return companionCandidates({ roller, party: this._party(), targetOf: bondTarget });
     }
 
     getData() {
@@ -90,14 +105,23 @@ export default class HeartRollPrompt extends Application {
         const domains = game.heart.domains.map(id => trait('domain', id));
 
         const helperIds = s.helpers;
-        const helpers = this._helperCandidates().map(h => {
+        const chip = (h) => {
             const e = helperEligibility(h, s.skill, s.domain);
             const on = helperIds.includes(h.id);
             const full = !on && helperIds.length >= HELPER_LIMIT;
             const clickable = on || isGM || (e.ok && !full);
             const reason = !e.ok ? e.reason : full ? loc('heart.roll-prompt.helper-full') : e.reason;
-            return { id: h.id, name: h.name, on, ok: e.ok, blocked: !clickable, override: isGM && (!e.ok || full) && !on, tip: reason };
-        });
+            // a companion's tooltip adds its notes (Despondent, ...)
+            const tip = [reason, ...(e.notes ?? [])].filter(Boolean).join(' ');
+            return { id: h.id, name: h.name, on, ok: e.ok, blocked: !clickable, override: isGM && (!e.ok || full) && !on, tip, e };
+        };
+        const helpers = this._helperCandidates().map(chip);
+        // companions (Luke, 2026-10-21): a person ticks the box when the
+        // trigger applies, so a ticked one shows its trigger text below
+        const companions = this._companionCandidates(actor).map(chip);
+        const companionTriggers = companions.filter(c => c.on && c.e.trigger).map(c => ({
+            name: c.name, ability: c.e.ability ?? '', trigger: c.e.trigger,
+        }));
 
         const pool = buildPool(actor, s);
         const count = pool.count;
@@ -116,7 +140,7 @@ export default class HeartRollPrompt extends Application {
             s.skill ? loc(`heart.skill.${s.skill}`) : null].filter(Boolean).join(' ');
 
         return {
-            actor, isGM, characters, difficulties, skills, domains, helpers,
+            actor, isGM, characters, difficulties, skills, domains, helpers, companions, companionTriggers,
             hasHelpers: helpers.length > 0,
             noSkill: s.skill === null, noDomain: s.domain === null,
             mastery: s.mastery,
@@ -141,7 +165,13 @@ export default class HeartRollPrompt extends Application {
             if (el.classList.contains('blocked')) return;
             const { k, v } = el.dataset;
             switch (k) {
-                case 'character': s.character = v; s.helpers = s.helpers.filter(id => id !== v); break;
+                case 'character': {
+                    s.character = v;
+                    // the new roller's companions may differ (2026-10-21)
+                    const offered = new Set(this._companionCandidates().map(c => c.id));
+                    s.helpers = s.helpers.filter(id => id !== v && (!isCompanion(game.actors.get(id)) || offered.has(id)));
+                    break;
+                }
                 case 'difficulty': s.difficulty = v; break;
                 case 'skill': s.skill = v || null; break;
                 case 'domain': s.domain = v || null; break;

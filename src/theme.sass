@@ -35,6 +35,39 @@
     // the glyph, so every glyph stands off any ground. Dark scheme: glyphs
     // are light, the halo is dark.
     --heart-glyph-halo: rgba(0, 0, 0, 0.9)
+    // The reds above as channels, for the glass's alphas (common/glass.sass;
+    // glass draws only in the dark scheme). Keep them equal to the reds.
+    --heart-red-deep-rgb: 92, 10, 10
+    --heart-red-mid-rgb: 154, 20, 20
+    --heart-red-bright-rgb: 239, 90, 77
+
+// Fixed roles (2026-10-21, Luke: the literal colours that lived in other
+// stylesheets, named here with the same values). The same in both schemes:
+// halos and art chrome sit on book art or the canvas, and the glass is the
+// dark scheme's alone. Channel roles take an alpha where used:
+// rgba(util.$ink, 0.55).
+:root
+    // black and white as channels
+    --heart-ink: 0, 0, 0
+    --heart-paper: 255, 255, 255
+    // the dark halo that keeps text legible over art
+    --heart-halo: #000
+    // the character header's field wells (fixed-dark header art)
+    --heart-header-field-bg: rgba(0, 0, 0, 0.35)
+    // the art viewer's stage and chrome, the art band's labels
+    --heart-art-stage: #000
+    --heart-art-fg: #fff
+    --heart-art-dim: #c4c4c4
+    // the title bar's Art and Glass buttons: white on, grey off
+    --heart-title-btn-on: #fff
+    --heart-title-btn-off: #808080
+    // the glass, as channels: the charcoal tint every layer is, the
+    // window's charcoal under the ground, the solid ground on every sheet,
+    // and the title bar
+    --heart-glass-tint: 12, 12, 14
+    --heart-glass-base: 21, 18, 18
+    --heart-glass-window: 26, 24, 24
+    --heart-glass-title: 14, 13, 13
 
 :root[data-heart-scheme="light"]
     // Light (option) - approximates the pre-2026-09-29 white sheet

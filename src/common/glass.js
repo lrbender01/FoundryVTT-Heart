@@ -61,13 +61,15 @@ export function glassPass(seeThrough, blur) {
 // dark a thing reads is how many layers it sits under: a section is one, a
 // row in it two, a chip on the row three (the browser stacks them). Pieces
 // that stand alone are given their layer count outright, each 1 - (1 - t)^n:
-// header boxes 3, the red tab strip 6, title pills 7 (at the default 25%,
-// Luke's pick in Foundry: 58%, 82%, 87%).
+// header boxes 3, the red tab strip 6, title pills 7 (at the default 80%,
+// Luke's pick on 2026-10-22: 99%, 100%, 100%). The tint runs to 90% so the
+// glass can go nearly black.
 export const TINT_SETTING = 'glassTint';
 export const LAYERS = { section: 1, head: 3, strip: 6, pill: 7 };
+export const TINT_MAX = 90;
 
 export function glassLayers(tint) {
-    const t = Math.min(60, Math.max(0, Number(tint) || 0)) / 100;
+    const t = Math.min(TINT_MAX, Math.max(0, Number(tint) || 0)) / 100;
     const of = (n) => Math.round((1 - (1 - t) ** n) * 1000) / 1000;
     return Object.fromEntries(Object.entries(LAYERS).map(([k, n]) => [k, of(n)]));
 }

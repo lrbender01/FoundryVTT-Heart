@@ -4,7 +4,7 @@
 // attributes on the <strong> (a tooltip, say) can change freely.
 
 import { describe, it, expect } from "vitest";
-import { emphasizeTerms } from "../src/common/terms.js";
+import { emphasizeTerms, emphasizeTermsText, escapeText } from "../src/common/terms.js";
 import { highlights, abilityRefs, plainText, termTooltips } from "./helpers.mjs";
 
 const check = (input, expected, options) => {
@@ -223,5 +223,24 @@ describe("ability references ({ abilityRefs: true })", () => {
       expect(abilityRefs(out)).toEqual([]);
       expect(highlights(out)).toEqual([]);
     }
+  });
+});
+
+// Plain text a player typed (Luke, 2026-10-21: a companion's Cost or an
+// ancestry question typed as <img onerror> ran on every client): escaped
+// first, then highlighted
+describe("plain typed text (heartTermsText)", () => {
+  it("escapes markup and still highlights the terms", () => {
+    const out = emphasizeTermsText("<b>Kill</b> it <img src=x onerror=alert(1)>");
+    expect(out).not.toMatch(/<b>|<img/);
+    expect(out).toContain("&lt;b&gt;");
+    expect(out).toContain("&lt;img src=x onerror=alert(1)&gt;");
+    expect(highlights(out)).toEqual(["Kill"]);
+  });
+
+  it("leaves ordinary text as it was", () => {
+    expect(escapeText("What do you owe the Hound?")).toBe("What do you owe the Hound?");
+    expect(escapeText(null)).toBe("");
+    expect(plainText(emphasizeTermsText("Take D6 Stress to Mind."))).toBe("Take D6 Stress to Mind.");
   });
 });

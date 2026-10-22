@@ -9,6 +9,16 @@
 // three panel sheets share on top of that. Forms carry .panel-sheet; the
 // window carries .heart-panel-sheet (panel-sheet.js).
 
+// Helpers from the upstream sheet, one copy (2026-10-21; they were in the
+// adversary, delve, and landmark stylesheets alike). Scoped to Heart
+// (util.$in-heart, same specificity) 2026-09-30: they were global.
+#{util.$in-heart} .section
+    padding: 0.5em
+
+#{util.$in-heart} a[disabled]
+    opacity: 0.5
+    pointer-events: none
+
 $row: 30px
 $box-height: 2 * $row + 6px + 2 * 6px + 4px
 

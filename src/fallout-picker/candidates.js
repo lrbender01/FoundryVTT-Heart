@@ -39,16 +39,52 @@ export function restrictionAllows(restrictedTo, owned = []) {
     return owned.some((i) => i?.type === restrictedTo.type && String(i.name ?? '').toLowerCase() === want);
 }
 
+// The characters whose class and calling decide which restricted Fallouts a
+// target is offered: a character itself, a person bond's holder, and a
+// companion's employers (Luke, 2026-10-21, C13: a Demagogue's follower may
+// be a companion, so their Bond Fallouts, "Shaken Faith", "Ignoble
+// Sacrifice", and "Ideological Death", are offered for it too); none for
+// the party
+export function restrictionHolders(target) {
+    if (target?.documentName === 'Item' && target.type === 'bond') return target.parent ? [target.parent] : [];
+    if (target?.documentName !== 'Actor') return [];
+    if (target.type === 'character') return [target];
+    if (target.type === 'hireling') return [...(target.proxy?.employers ?? [])];
+    return [];
+}
+
+// What those holders have, as { type, name }, for restrictionAllows
+export function holderItems(target) {
+    return restrictionHolders(target).flatMap((h) => [...(h?.items ?? [])].map((i) => ({ type: i.type, name: i.name })));
+}
+
+// Are two candidates one Fallout seen from two places? Same name, severity,
+// and resistance; two pack entries are one only when they are the same
+// entry (Luke, 2026-10-21, C12: the core "Blinded" and Ways and Means'
+// Illicit Magic "Blinded" are both Major Blood, and one of them never
+// showed); an own or world copy is the pack entry it was copied from,
+// unless both name a source and the sources differ.
+function sameFallout(a, b) {
+    if (a.name.toLowerCase() !== b.name.toLowerCase() || a.severity !== b.severity || a.resistance !== b.resistance) return false;
+    if (a.origin === 'book' && b.origin === 'book') return (a.uuid ?? a.key) === (b.uuid ?? b.key);
+    return !(a.source && b.source && a.source !== b.source);
+}
+
 // The same Fallout from two places (a pack and a world copy) shows once;
 // the target's own entries win, then the packs
 export function dedupe(list) {
     const rank = { own: 0, builtin: 1, book: 2, world: 3 };
-    const seen = new Map();
+    const kept = new Map();
+    const out = [];
     for (const c of [...list].sort((a, b) => rank[a.origin] - rank[b.origin])) {
         const key = `${c.name.toLowerCase()}|${c.severity}|${c.resistance}`;
-        if (!seen.has(key)) seen.set(key, c);
+        const same = kept.get(key) ?? [];
+        if (same.some(k => sameFallout(k, c))) continue;
+        same.push(c);
+        kept.set(key, same);
+        out.push(c);
     }
-    return [...seen.values()];
+    return out;
 }
 
 // Does a candidate show under the picker's filters? resistance '' is all;

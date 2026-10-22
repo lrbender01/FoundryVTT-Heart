@@ -1,15 +1,20 @@
 name: Test Build
 run-name: ${{ github.actor }} testing a new push
 on: push
+# The fork's build and rules tests (2026-10-21): build-all is the one full
+# pipeline (empty-dist, webpack, manifest, template, static); the system
+# ships no packs since 2026-09-30, so there is no packs step. vitest is a
+# devDependency of the fork, so the tests run here as they do in the monorepo.
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
       - run: npm ci
-      - run: npm run build-prod
-      - run: npm run build-manifest -- 0.X.Y
-      - run: npm run build-packs
-      - run: npm run build-template
+      - run: npm test
+      - run: npm run build-all

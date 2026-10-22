@@ -1,11 +1,15 @@
 import sheetHTML from './sheet.html';
 import './landmark.sass';
-import HeartActorSheet from '../base/sheet';
+import HeartActorSheet, { LIMITED_SHEET } from '../base/sheet';
 import template from './template.json';
 import { activatePanelSheet, panelSheetDefaults, toChips } from '../../common/panel-sheet';
-import { iconFor } from '../../common/icons';
 import { BannerSheet } from '../../common/banner';
 import { rollHauntService } from '../../items/haunt/service';
+import { hauntStep } from '../../items/haunt/rules';
+import { bindTrack } from '../../common/tracks';
+import { richFieldsOf } from '../../common/rich-text';
+import { activeData } from '../drop-active';
+import { bySort } from '../proxy-lists';
 
 // Landmark sheet (redesigned 2026-09-29). Layout in sheet.html; shared
 // tabs / editor / edit-toggle / die-roll behaviour in common/panel-sheet.js.
@@ -23,19 +27,24 @@ export default class LandmarkSheet extends BannerSheet(HeartActorSheet) {
         this._editing = false;
     }
 
+    // dropped items land switched on (a folder arrives as a list:
+    // actors/drop-active.js)
     async _onDropItemCreate(itemData) {
-        if(this.actor.type === 'landmark') {
+        return super._onDropItemCreate(this.actor.type === 'landmark' ? activeData(itemData) : itemData);
+    }
 
-            itemData.system.active = true;
-        }
-
-        return super._onDropItemCreate(itemData);
+    // rich text the sheet draws (common/rich-text.js); a Limited viewer's
+    // sheet draws the description alone, and GM Notes go to the GM only
+    // (common/gm-notes.js, 2026-10-21)
+    _richFields() {
+        if (this.limitedView) return richFieldsOf(this.actor, ['system.description']);
+        return richFieldsOf(this.actor, ['system.specialRules', 'system.potentialPlots', 'system.description', 'system.notes']);
     }
 
     static get type() { return Object.keys(template.Actor)[0]; }
 
     get template() {
-        return sheetHTML.path;
+        return this.limitedView ? LIMITED_SHEET : sheetHTML.path;
     }
 
     get img() {
@@ -53,7 +62,7 @@ export default class LandmarkSheet extends BannerSheet(HeartActorSheet) {
             return map;
         }, {});
         data.domainChips = toChips(this.actor.system.domains);
-        data.inactiveItems = this.actor.items.filter(i => i.system.active !== undefined && !i.system.active);
+        data.inactiveItems = bySort(this.actor.items.filter(i => i.system.active !== undefined && !i.system.active));
         return data;
     }
 
@@ -66,31 +75,26 @@ export default class LandmarkSheet extends BannerSheet(HeartActorSheet) {
         super.activateListeners(html);
         activatePanelSheet(this, html);
 
-        // Haunt upgrade track (lives on the haunt item, not the actor). Click a
-        // marked box again to clear it (was item.data - undefined on v12).
-        html.find('.item.preview.haunt .ordered-checkable-box').click(async ev => {
-            ev.preventDefault();
-            const element = ev.currentTarget;
-            const index = parseInt(element.dataset.index);
-            const target = element.parentElement.dataset.target;
-            const item = await this._haunt(ev);
-            if (!item) return;
-            const current = Number(foundry.utils.getProperty(item, target)) || 0;
-            const marked = element.classList.contains('checked');
-            item.update({ [target]: marked && index + 1 === current ? index : index + 1 });
+        // Haunt upgrade track (lives on the haunt item, not the actor;
+        // common/tracks.js), for those who may edit the landmark
+        const hauntOf = (box) => fromUuid($(box).closest('[data-item-id]').data('itemId'));
+        bindTrack(html, '.item.preview.haunt .ordered-checkable-box', {
+            editable: this.isEditable,
+            read: async (box) => {
+                const item = await hauntOf(box);
+                return item ? Number(foundry.utils.getProperty(item, box.parentElement.dataset.target)) || 0 : null;
+            },
+            write: async (box, value) => (await hauntOf(box))?.update({ [box.parentElement.dataset.target]: value }),
         });
 
+        // Upgrade / Downgrade every service (items/haunt/rules.js)
         const step = async (ev, delta) => {
+            if (!this.isEditable) return;
             const item = await this._haunt(ev);
             if (!item) return;
-            const dieSizes = game.heart.die_sizes;
-            const updates = {};
-            if (delta > 0) updates['system.upgradeTrack'] = 0;
-            for (const [key, service] of Object.entries(item.system.resistances ?? {})) {
-                const i = dieSizes.indexOf(service.die_size) + delta;
-                if (i >= 0 && i < dieSizes.length) updates[`system.resistances.${key}.die_size`] = dieSizes[i];
-            }
-            item.update(updates);
+            const updates = hauntStep(item.system.resistances, delta, game.heart.die_sizes);
+            if (updates) item.update(updates);
+            else if (delta > 0) ui.notifications.info(game.i18n.format('heart.haunt.upgrade-at-top', { haunt: item.name }));
         };
         html.find('.item.preview.haunt [data-action=upgrade]').click(ev => step(ev, 1));
         html.find('.item.preview.haunt [data-action=downgrade]').click(ev => step(ev, -1));

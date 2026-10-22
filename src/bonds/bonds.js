@@ -39,7 +39,7 @@ import {
     bondActionDice,
     bondActionResult,
 } from './rules';
-import { afterProtection } from '../rolls/stress-roll/rules';
+import { afterProtection, DIE_ORDER, trackMax, markedValue } from '../rolls/stress-roll/rules';
 import { ledgerCard } from '../common/ledger';
 import { glyphFor } from '../common/icons';
 import { pickFalloutButton } from '../fallout-picker/button';
@@ -50,7 +50,8 @@ export const BOND_IMG = 'systems/heart/assets/icons/resistances/bond.svg';
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const esc = (text) => Handlebars.escapeExpression(String(text ?? ''));
-const DICE = ['d4', 'd6', 'd8', 'd10', 'd12'];
+// the one dice ladder (stress-roll/rules.js; 2026-10-21, R21)
+const DICE = DIE_ORDER;
 
 // ---------------------------------------------------------------- reading
 
@@ -63,7 +64,7 @@ export function bondsOf(character) {
 export function bondTarget(bond) {
     const uuid = bond?.system?.target;
     if (!uuid) return null;
-    try { return fromUuidSync(uuid) ?? null; } catch (e) { return null; }
+    try { return fromUuidSync(uuid) ?? null; } catch { return null; }
 }
 
 // The bond's person-bond Fallout entries (children), open ones only
@@ -348,7 +349,8 @@ export async function markBondStress({ characterId, bondId, resistance = 'mind',
         const track = hireling.system.resistances?.[resistance] ?? {};
         const { amount: taken, protection } = afterProtection(rolled, track.protection, ignoreProtection);
         const before = Number(track.value) || 0;
-        const after = Math.min(Number(track.max) || 10, before + taken);
+        // (the one cap rule, stress-roll/rules.js, 2026-10-21)
+        const after = markedValue(before, taken, trackMax(track));
         await hireling.update({ [`system.resistances.${resistance}.value`]: after });
         line = { name: esc(hireling.name), value: esc(loc('heart.bond.card.track-protected', { resistance: loc(`heart.resistance.${resistance}`), from: before, to: after, protection })) };
     } else {

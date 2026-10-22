@@ -1,9 +1,9 @@
-// The Heart map's painter (2026-10-02, monorepo docs/plans/heart-map.md):
-// draws a look and a board view (model.js) with canvas 2D. The one drawing
+// The Heart map's painter (2026-10-02; the map's story is in the monorepo's
+// HEART.md and this fork's CHANGELOG): draws a look and a board view (model.js) with canvas 2D. The one drawing
 // code both editors run: the Heart Map Board mock (docs/mocks/heart-map/,
 // the primary editor and the source of truth for how the map looks) inlines
-// it into its page; the system's map scene paints into an offscreen canvas
-// and shows it as a PIXI texture under the tokens. Change how the map looks
+// it into its page; the system's map scene paints it into tiles (render.js)
+// shown as PIXI sprites under the tokens. Change how the map looks
 // here, then rebuild the mock (node build.mjs there).
 //
 // What differs between the two comes in through `env`:
@@ -45,13 +45,149 @@ export function pinThumb(im, tex, px = 64) {
   return out;
 }
 
+// A run of numbers (a stroke's or a string's points) as a short string that
+// changes when any of them does (Luke, 2026-10-21: every change hashed or
+// stringified every point of every stroke): two 32-bit hashes of each
+// number's own bits, kept per array (a laid-out stroke's points never change
+// in place). `round`: to a tenth first, as the renderer's piece signatures
+// compare numbers.
+const pointHashes = new WeakMap();
+const hashWord = new Float64Array(1);
+const hashHalves = new Uint32Array(hashWord.buffer);
+export function pointsHash(pts, { round = false } = {}) {
+  let memo = pointHashes.get(pts);
+  if (!memo || memo.n !== pts.length) pointHashes.set(pts, (memo = { n: pts.length }));
+  const slot = round ? "r" : "e";
+  if (memo[slot] !== undefined) return memo[slot];
+  let a = 0x811c9dc5 ^ pts.length, b = 0x9e3779b9 ^ pts.length;
+  for (let i = 0; i < pts.length; i++) {
+    hashWord[0] = round ? Math.round(pts[i] * 10) : +pts[i];
+    const lo = hashHalves[0], hi = hashHalves[1];
+    a = Math.imul(a ^ lo, 0x01000193); a = Math.imul(a ^ hi, 0x01000193);
+    b = Math.imul(b ^ hi, 0x85ebca6b); b ^= b >>> 13; b = Math.imul(b ^ lo, 0xc2b2ae35); b ^= b >>> 16;
+  }
+  return (memo[slot] = `${(a >>> 0).toString(36)}.${(b >>> 0).toString(36)}`);
+}
+
+// The brush's painted layers, kept (Luke, 2026-10-21): pieces of a stroke's
+// layer (a canvas and the part of the layer it holds, i0..i1 x j0..j1 in the
+// layer's own px), found by the stroke's key and any piece that covers the
+// part asked for, the most recently used kept within `budget` bytes. A piece
+// larger than a quarter of the budget is used once and not kept.
+export class StrokeLayerCache {
+  constructor(budget) {
+    this.budget = budget;
+    this.bytes = 0;
+    this.pieces = new Map();
+    this.byStroke = new Map();
+  }
+
+  get(key, i0, j0, i1, j1) {
+    for (const id of this.byStroke.get(key) ?? []) {
+      const p = this.pieces.get(id);
+      if (p.i0 <= i0 && p.j0 <= j0 && p.i1 >= i1 && p.j1 >= j1) {
+        this.pieces.delete(id);
+        this.pieces.set(id, p);
+        return p;
+      }
+    }
+    return null;
+  }
+
+  put(key, p) {
+    const bytes = (p.i1 - p.i0) * (p.j1 - p.j0) * 4;
+    if (bytes > this.budget / 4) return p;
+    const id = `${key}#${p.i0},${p.j0},${p.i1},${p.j1}`;
+    // (the stroke's smaller pieces inside this one are no use now)
+    for (const other of this.byStroke.get(key) ?? []) {
+      const q = this.pieces.get(other);
+      if (q.i0 >= p.i0 && q.j0 >= p.j0 && q.i1 <= p.i1 && q.j1 <= p.j1) this.#drop(other);
+    }
+    Object.assign(p, { key, bytes });
+    this.pieces.set(id, p);
+    let ids = this.byStroke.get(key);
+    if (!ids) this.byStroke.set(key, (ids = new Set()));
+    ids.add(id);
+    this.bytes += bytes;
+    for (const old of this.pieces.keys()) {
+      if (this.bytes <= this.budget) break;
+      if (old !== id) this.#drop(old);
+    }
+    return p;
+  }
+
+  #drop(id) {
+    const p = this.pieces.get(id);
+    if (!p) return;
+    this.pieces.delete(id);
+    this.bytes -= p.bytes;
+    const ids = this.byStroke.get(p.key);
+    ids?.delete(id);
+    if (ids && !ids.size) this.byStroke.delete(p.key);
+  }
+
+  clear() {
+    this.pieces.clear();
+    this.byStroke.clear();
+    this.bytes = 0;
+  }
+}
+
+// Images that came (a host's ids) against what was drawn short of them while
+// it watched (painter watch / unwatch: [{ id, box }], box in board px, null
+// where it may be anywhere): the parts to paint again (`whole` when one of
+// them could be anywhere; more than eight parts become the one box round
+// them, as a change of strokes does) and the uses still waiting
+export function arrivalAreas(uses, arrived) {
+  const rest = [], areas = [];
+  let whole = false;
+  for (const u of uses ?? []) {
+    if (!arrived.has(u.id)) rest.push(u);
+    else if (!u.box) whole = true;
+    else areas.push(u.box);
+  }
+  if (whole) return { whole, areas: [], rest };
+  if (areas.length <= 8) return { whole, areas, rest };
+  return { whole, areas: [areas.reduce((u, b) => ({ x0: Math.min(u.x0, b.x0), y0: Math.min(u.y0, b.y0), x1: Math.max(u.x1, b.x1), y1: Math.max(u.y1, b.y1) }))], rest };
+}
+
+// A part of the board (board px) cut into bands `rows` bitmap px tall at
+// `scale`, top to bottom: a tile's sheet painted a band at a time (Luke,
+// 2026-10-21: a tile froze the page for seconds)
+export function sheetBands(R, scale, rows = 256) {
+  const out = [], step = rows / scale;
+  for (let y = R.y0; y < R.y1; y += step) out.push({ x0: R.x0, y0: y, x1: R.x1, y1: Math.min(R.y1, y + step) });
+  return out;
+}
+
 export function createPainter(env) {
 let look = null, view = null, geo = null;
 let missing = false;
 const piece = (id) => env.piece(id);
 // (an image the host has only a small preview of yet counts as missing: what
 // it is drawn into is done again when the whole one comes)
-const img = (id) => { const im = env.img(id); if ((!im || im.preview) && id) missing = true; return im; };
+// While a host watches (watch / unwatch), each image drawn short is noted
+// with where it lies (`where()`: a box in board px, or null for anywhere), so
+// only those parts are painted again when it comes (Luke, 2026-10-21: every
+// image that came repainted whole tiles of the sheet)
+let watching = null;
+const img = (id, where = null) => {
+  const im = env.img(id);
+  if ((!im || im.preview) && id) {
+    missing = true;
+    if (watching) watching.push({ id, box: where ? where() : null });
+  }
+  return im;
+};
+// a box round a point (board px)
+const around = (x, y, rad) => ({ x0: x - rad, y0: y - rad, x1: x + rad, y1: y + rad });
+// where a texture drawn w wide (h tall, or at its own shape) about a point
+// reaches, turned any way (null when its shape isn't known)
+const reachOf = (id, x, y, w, h = null, extra = 0) => {
+  const meta = piece(id);
+  const hh = h ?? (meta?.w && meta?.h ? (w * meta.h) / meta.w : null);
+  return hh === null || !Number.isFinite(hh) ? null : around(x, y, Math.hypot(w, hh) / 2 + extra + 4);
+};
 const measure = (text, px, font) => env.measure(text, px, font);
 const rgba = (c, a = 1) => `rgba(${(c >> 16) & 255},${(c >> 8) & 255},${c & 255},${a})`;
 
@@ -137,13 +273,15 @@ function shadowedSprite(im, id, w, hh, rot, flip, flipY, shadow, filter) {
 // a sprite: the texture centred at cx, cy, w wide, turned rot (radians)
 function sprite(g, id, cx, cy, w, rot, { alpha = 1, flip = false, flipY = false, shadow = 0, blend = "source-over", h = null, filter = "none", tint = null } = {}) {
   if (pinView && (cx < pinView.x0 || cx > pinView.x1 || cy < pinView.y0 || cy > pinView.y1)) return;
-  const raw = img(id); if (!raw) return;
+  const raw = img(id, () => reachOf(id, cx, cy, w, h, shadow * 2.2)); if (!raw) return;
   // (a pin in its string's colour)
   const im0 = tint === null || tint === undefined ? raw : tintedPin(raw, tint);
   if (shadow && blend === "source-over" && !BAKING && w * pxs() < 400) {
     const im = graded(im0, filter, Math.max(256, w * 2 * pxs()));
     const hh = h ?? w * ((im0.naturalHeight || im0.height) / (im0.naturalWidth || im0.width));
-    const e = shadowedSprite(im, tint === null || tint === undefined ? id : `${id}#${tint}`, w, hh, rot, flip, flipY, shadow, filter);
+    // (a preview's sprite is not the whole image's: Luke, 2026-10-21, a pin
+    // first drawn from its preview stayed blurred once the whole one came)
+    const e = shadowedSprite(im, `${tint === null || tint === undefined ? id : `${id}#${tint}`}${raw.preview ? "~preview" : ""}`, w, hh, rot, flip, flipY, shadow, filter);
     g.save(); g.globalAlpha = alpha; g.imageSmoothingQuality = "high";
     g.drawImage(e.canvas, cx - e.half, cy - e.half, e.half * 2, e.half * 2);
     g.restore();
@@ -233,7 +371,7 @@ function cover(g, im, x, y, w, h, { flipX = false, flipY = false, dx = 0.5, dy =
   g.restore();
 }
 function tiled(g, id, tile, x, y, w, h, { alpha = 1, blend = "source-over" } = {}) {
-  const im = img(id); if (!im) return;
+  const im = img(id, () => ({ x0: x - 2, y0: y - 2, x1: x + w + 2, y1: y + h + 2 })); if (!im) return;
   const pat = g.createPattern(im, "repeat"); const k = tile / im.naturalWidth;
   pat.setTransform(new DOMMatrix([k, 0, 0, k, 0, 0]));
   g.save(); g.globalAlpha = alpha; g.globalCompositeOperation = blend; g.fillStyle = pat; g.fillRect(x, y, w, h); g.restore();
@@ -267,7 +405,7 @@ function drawSheet(g, area = null) {
   g.save(); poly(g, out); g.clip();
   if (S.mode === "panels") {
     for (const p of geo.panels) {
-      const im = img(p.tex); if (!im) continue;
+      const im = img(p.tex, () => ({ x0: p.x - 3, y0: p.y - 3, x1: p.x + p.w + 3, y1: p.y + p.h + 3 })); if (!im) continue;
       // the paper zoomed past its own border, its tone evened toward the
       // sheet's (PIXI: one ColorMatrixFilter scaling r, g, b by p.gain; here a
       // brightness lift to the largest gain, then a multiply by the rest)
@@ -290,7 +428,9 @@ function drawSheet(g, area = null) {
   drawPages(g, area);
   // the marker and the writing on the sheet, on the paper, under everything
   // that has happened to it since (Luke, 2026-10-03)
-  drawInk(g, area);
+  // (the bright strokes' layers held for their light pass below)
+  const hold = new Map();
+  drawInk(g, area, { hold });
   drawSheetWriting(g, area);
   // the grime runs across the whole sheet, over the folds, at about its own
   // resolution: tiled mirrored (no seams), each layer turned and shifted by
@@ -314,7 +454,7 @@ function drawSheet(g, area = null) {
   g.fillStyle = wash; fill();
   // (a bright stroke laid over its grime a little too: Luke 2026-10-06, the
   // players' paint dulled and see-through under it)
-  drawInk(g, area, { over: true });
+  drawInk(g, area, { over: true, hold });
   if (look.glow) {
     g.save(); g.translate(W / 2, H * 0.92); g.scale(W * 0.8, H * 0.22);
     const rg = g.createRadialGradient(0, 0, 0, 0, 0, 1);
@@ -531,7 +671,8 @@ function drawFolds(g) {
 }
 
 // a texture with its mirror images beside and below it: tiles with no seams
-const mirrors = new Map();
+// (weak: an image let go, a new detail's, takes its mirror with it)
+const mirrors = new WeakMap();
 function mirrorTile(im) {
   if (mirrors.has(im)) return mirrors.get(im);
   const w = im.naturalWidth, h = im.naturalHeight, c = document.createElement("canvas"); c.width = w * 2; c.height = h * 2;
@@ -608,8 +749,6 @@ function tinted(im, color, variant = 0, cap = 600) {
   return c;
 }
 
-// A stain at a point: a splatter from the look's stains, tinted (blood,
-// soot) or as drawn, multiplied in
 // A small texture drawn large, crisp (Luke, 2026-10-06: the blood prints
 // soft at their own size; the sources are small): enlarged smoothly, then its
 // edge sharpened (its alpha through a narrow ramp), so a print reads clean
@@ -635,8 +774,10 @@ function crispen(im, px) {
   per.set(cap, c);
   return c;
 }
+// A stain at a point: a splatter from the look's stains, tinted (blood,
+// soot) or as drawn, multiplied in
 function stain(g, tex, x, y, w, rot, alpha, color = null, { crisp = false } = {}) {
-  const im0 = img(tex); if (!im0) return;
+  const im0 = img(tex, () => reachOf(tex, x, y, w)); if (!im0) return;
   // (a blood stain drawn far past its own size is sharpened too: Luke
   // 2026-10-06, the big splats soft; two looks of each, to keep memory low)
   const iw0 = Math.max(im0.naturalWidth || im0.width, im0.naturalHeight || im0.height);
@@ -742,7 +883,9 @@ function scrapImage(s) {
     // world coordinates, mapped into the paper's frame
     g.setTransform(q, 0, 0, q, (P.w / 2 + pad) * q, (P.h / 2 + pad) * q);
     g.rotate(-P.rot); g.translate(-P.cx, -P.cy);
-    scrapFace(g, s);
+    // (its bright strokes' layers held for their light pass over the grime)
+    const hold = new Map();
+    scrapFace(g, s, hold);
     // the grime, clipped to what is drawn
     const mask = document.createElement("canvas"); mask.width = c.width; mask.height = c.height;
     mask.getContext("2d").drawImage(c, 0, 0);
@@ -759,7 +902,7 @@ function scrapImage(s) {
         const C = L.clip.pts; g.moveTo(C[0], C[1]); for (let i = 2; i < C.length; i += 2) g.lineTo(C[i], C[i + 1]); g.closePath();
         g.clip("evenodd");
       }
-      for (const st of bright) brush(g, { ...st, w: Math.min(st.w, markMax(look)) }, look.ink.marker[st.c] ?? look.ink.marker[0] ?? 0xa39a86, rng(`cmark:${s.key}:${st.id}`), { atop: true, over: true });
+      for (const st of bright) brush(g, { ...st, w: Math.min(st.w, markMax(look)) }, look.ink.marker[st.c] ?? look.ink.marker[0] ?? 0xa39a86, `cmark:${s.key}:${st.id}`, { atop: true, over: true, hold });
       g.restore();
     }
     clipArt(g, s);
@@ -808,7 +951,7 @@ function extras(g, s, layer) {
 // a clipping's torn paper rim round its art, either side (board px; Luke,
 // 2026-10-03: the jagged rim kept, but thin)
 const CLIP_RIM = 4;
-function scrapFace(g, s) {
+function scrapFace(g, s, hold = null) {
   const L = s.layout, P = L.paper;
   const ink = cssColor(inkAt(L.depth, L.ink ?? look.ink.text));
   const G = look.grime.scraps / 100;
@@ -822,7 +965,7 @@ function scrapFace(g, s) {
   // the marker on it, only on its paper, under its grime (Luke, 2026-10-03)
   if (L.strokes?.length) {
     g.save(); g.globalCompositeOperation = "source-atop";
-    for (const st of L.strokes) brush(g, { ...st, w: Math.min(st.w, markMax(look)) }, look.ink.marker[st.c] ?? look.ink.marker[0] ?? 0xa39a86, rng(`cmark:${s.key}:${st.id}`), { atop: true });
+    for (const st of L.strokes) brush(g, { ...st, w: Math.min(st.w, markMax(look)) }, look.ink.marker[st.c] ?? look.ink.marker[0] ?? 0xa39a86, `cmark:${s.key}:${st.id}`, { atop: true, hold });
     g.restore();
   }
   if (L.clip) {
@@ -901,15 +1044,6 @@ function ropeTex(im, H) {
   ropeCache.set(key, c); return c;
 }
 
-// A rope texture laid along a line (PIXI: SimpleRope with a repeating
-// texture, one mesh). Translucent strings are drawn whole into a layer and
-// faded together, so the segments' overlaps don't bead.
-// A string: the straight middle of one of Luke's string drawings, a seamless
-// strip repeated along the curve from pin to pin (from a point along it set
-// by the string's seed, so neighbours don't repeat in step), scaled so its
-// string is `thick` board px wide (PIXI: a SimpleRope with a repeating
-// texture). Translucent strings are drawn whole into a layer and faded
-// together, so the segments' overlaps don't bead.
 // A rope drawing in another colour (Luke, 2026-10-03: any string in any
 // colour): its light and shade kept, its hue the colour's; made once
 const ropeTints = new Map();
@@ -935,6 +1069,12 @@ function tintedRope(im, color) {
   ropeTints.set(key, c);
   return c;
 }
+// A string: the straight middle of one of Luke's string drawings, a seamless
+// strip repeated along the curve from pin to pin (from a point along it set
+// by the string's seed, so neighbours don't repeat in step), scaled so its
+// string is `thick` board px wide (PIXI: a SimpleRope with a repeating
+// texture). Translucent strings are drawn whole into a layer and faded
+// together, so the segments' overlaps don't bead.
 function drawRope(g, pts, texId, thick, alpha, seed = "", color = null) {
   if (alpha < 1) {
     const L = layerCanvas(g); const lg = L.getContext("2d");
@@ -971,12 +1111,18 @@ const ropeFor = (kind, seed) => {
   return pickFrom(have.length ? have : R.texs, seed);
 };
 
-// a scratch canvas the size of the one being drawn on
-const layers = new WeakMap();
+// a scratch canvas the size of the one being drawn on, one per size (Luke,
+// 2026-10-21: one per tile kept a tile's memory for every tile a faded string
+// ever crossed); used and done with at once, so shared
+const layers = new Map();
 function layerCanvas(g) {
-  let L = layers.get(g.canvas);
-  if (!L) { L = document.createElement("canvas"); layers.set(g.canvas, L); }
-  if (L.width !== g.canvas.width || L.height !== g.canvas.height) { L.width = g.canvas.width; L.height = g.canvas.height; }
+  const key = `${g.canvas.width}x${g.canvas.height}`;
+  let L = layers.get(key);
+  if (!L) {
+    L = document.createElement("canvas"); L.width = g.canvas.width; L.height = g.canvas.height;
+    layers.set(key, L);
+    if (layers.size > 4) layers.delete(layers.keys().next().value);
+  }
   return L;
 }
 
@@ -1018,7 +1164,6 @@ function onTag(T, p, pad = 0) {
 
 function drawLink(g, l) {
   if (l.collapsed) return;
-  const R = look.ropes[l.kind] ?? look.ropes.path;
   const ghost = l.look === "ghost";
   // see-through only when the players can't see it (the GM's ghost)
   const alpha = ghost ? 0.35 : 1;
@@ -1114,9 +1259,8 @@ function markState() {
   const out = new Map();
   for (const [layer, strokes] of Object.entries(view?.marks ?? {})) {
     for (const [id, m] of Object.entries(strokes)) {
-      let h = m.pts.length;
-      for (let i = 0; i < m.pts.length; i++) h = (h * 31 + m.pts[i] * (i + 1)) % 1000003;
-      out.set(`${layer}:${id}`, { sig: `${m.c}|${m.w}|${m.o}|${m.b}|${h}`, box: markBox(m) });
+      // (its points' hash kept with them: Luke, 2026-10-21)
+      out.set(`${layer}:${id}`, { sig: `${m.c}|${m.w}|${m.o}|${m.b}|${pointsHash(m.pts)}`, box: markBox(m) });
     }
   }
   for (const s of view?.scraps ?? []) {
@@ -1259,12 +1403,107 @@ const meets = (a, b) => a.x1 >= b.x0 && a.x0 <= b.x1 && a.y1 >= b.y0 && a.y0 <= 
 const BRIGHTS = [{ soak: 0.85, lay: 0.38 }, { soak: 0.3, lay: 0.78 }, { soak: 0.06, lay: 0.98 }];
 // `over`: a bright stroke's light pass over the grime
 const OVER = 0.42;
-function brush(g, m, c0, r, { atop = false, over = false, layerOnly = false } = {}) {
+// The brush's layers, kept (Luke, 2026-10-21: mission critical before live
+// sessions; every paint built every stroke's layer anew, 95% of a fill): a
+// stroke's layer, or the part of it a paint needs, kept by the stroke itself
+// (its points, paint, width, brightness, and seed) and the scale it was
+// painted at, the most recently used within a memory budget (StrokeLayerCache;
+// larger on a device with more memory). Only the part that shows is built: a
+// tile or a part of the sheet painted again builds the stroke's layer where
+// it covers them, on the whole layer's own pixel grid with a margin for the
+// resampling, never the whole of a stroke that wanders across the board. The
+// pixels are the same either way.
+const LAYER_BYTES = Math.min(192, Math.max(48, (globalThis.navigator?.deviceMemory ?? 8) * 24)) * 2 ** 20;
+const layerCache = new StrokeLayerCache(LAYER_BYTES);
+// (layer px round the part a paint needs, the part's edges on an 8 px grid:
+// the resampling's reach, and its mipmaps' blocks kept in step)
+const LAYER_MARGIN = 8;
+const snap8 = (v) => Math.floor(v / 8) * 8;
+// a run of points' extent (board px), kept per array
+const pointBoxes = new WeakMap();
+function pointsBox(P) {
+  let b = pointBoxes.get(P);
+  if (b && b.n === P.length) return b;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < P.length / 2; i++) { x0 = Math.min(x0, P[2 * i]); x1 = Math.max(x1, P[2 * i]); y0 = Math.min(y0, P[2 * i + 1]); y1 = Math.max(y1, P[2 * i + 1]); }
+  b = { n: P.length, x0, y0, x1, y1 };
+  pointBoxes.set(P, b);
+  return b;
+}
+// `seed`: its brush's random seed. `area` (board px): only what lies in it is
+// drawn (a part of the sheet, a tile: the caller clips to it). `keep`: its
+// layer kept for the next paint (a stroke laid down; never one being drawn
+// or moved). `hold`: a map keeping a bright stroke's layer for its light pass.
+function brush(g, m, c0, seed, { atop = false, over = false, layerOnly = false, area = null, keep = false, hold = null } = {}) {
   const P = m.pts, n = P.length / 2;
   if (n < 2) return;
   const o = m.o ?? 0.85;
   const B = BRIGHTS[Math.max(0, Math.min(BRIGHTS.length - 1, m.b ?? 1))];
   const c = brushColor(c0, m.b ?? 1);
+  // its own layer, the size of the stroke where it is drawn
+  const box = pointsBox(P), pad = m.w + 4;
+  const x0 = box.x0 - pad, y0 = box.y0 - pad, x1 = box.x1 + pad, y1 = box.y1 + pad;
+  const T = typeof g.getTransform === "function" ? g.getTransform() : null;
+  const k = Math.min(T ? Math.hypot(T.a, T.b) || 1 : 1, 4096 / Math.max(1, x1 - x0), 4096 / Math.max(1, y1 - y0));
+  const W = Math.max(1, Math.ceil((x1 - x0) * k)), H = Math.max(1, Math.ceil((y1 - y0) * k));
+  // (board px per layer px)
+  const sx = (x1 - x0) / W, sy = (y1 - y0) / H;
+  // the part of its layer this paint needs (layer px): all of it, or where it
+  // meets the area
+  let i0 = 0, j0 = 0, i1 = W, j1 = H;
+  if (area && !layerOnly) {
+    i0 = Math.max(0, snap8(Math.floor((area.x0 - x0) / sx) - LAYER_MARGIN));
+    j0 = Math.max(0, snap8(Math.floor((area.y0 - y0) / sy) - LAYER_MARGIN));
+    i1 = Math.min(W, snap8(Math.ceil((area.x1 - x0) / sx) + LAYER_MARGIN + 7));
+    j1 = Math.min(H, snap8(Math.ceil((area.y1 - y0) / sy) + LAYER_MARGIN + 7));
+    // (none of it in the area: nothing of it shows)
+    if (i1 <= i0 || j1 <= j0) return;
+  }
+  const key = keep || hold ? `${seed}|${c}|${m.w}|${n}|${pointsHash(P)}|${k}` : null;
+  const held = over && hold ? hold.get(key) : null;
+  let part = held && held.i0 <= i0 && held.j0 <= j0 && held.i1 >= i1 && held.j1 >= j1 ? held : null;
+  if (!part && keep) part = layerCache.get(key, i0, j0, i1, j1);
+  if (!part) {
+    part = brushLayer(m, c, seed, k, x0, y0, i0, j0, i1, j1);
+    if (keep) layerCache.put(key, part);
+  }
+  if (hold && !over && (m.b ?? 1) >= BRIGHTS.length - 1) hold.set(key, part);
+  const lay = part.canvas;
+  // (the layer alone, for a host's preview: it composes it as below)
+  // (a bright stroke's light pass over the grime too: `over`)
+  if (layerOnly) return { canvas: lay, x0, y0, x1, y1, soak: o * B.soak, lay: o * B.lay, over: (m.b ?? 1) >= BRIGHTS.length - 1 ? o * OVER : 0 };
+  // (the whole layer, as it always was drawn; a part of it, where that part lies)
+  const whole = part.i0 === 0 && part.j0 === 0 && part.i1 === W && part.j1 === H;
+  const put = () => {
+    if (whole) g.drawImage(lay, x0, y0, x1 - x0, y1 - y0);
+    else g.drawImage(lay, 0, 0, lay.width, lay.height, x0 + part.i0 * sx, y0 + part.j0 * sy, (part.i1 - part.i0) * sx, (part.j1 - part.j0) * sy);
+  };
+  // into the paper: soaked in, then a little of its colour back over it
+  g.save();
+  g.imageSmoothingQuality = "high";
+  // (Luke, 2026-10-03: lighter, its colour kept, on the sheet and on a card
+  // alike; a little soaked in, the rest laid on; how much of each by its
+  // brightness)
+  if (over) {
+    g.globalCompositeOperation = atop ? "source-atop" : "source-over";
+    g.globalAlpha = o * OVER;
+    put();
+    g.restore();
+    return;
+  }
+  g.globalCompositeOperation = atop ? "source-atop" : "multiply";
+  g.globalAlpha = o * B.soak;
+  put();
+  g.globalCompositeOperation = atop ? "source-atop" : "source-over";
+  g.globalAlpha = o * B.lay;
+  put();
+  g.restore();
+}
+// A stroke's painted layer, or the part i0..i1 x j0..j1 of it (layer px, at k
+// layer px per board px, the layer's corner at board x0, y0): the brush's own
+// drawing, the same pixels wherever the part is cut
+function brushLayer(m, c, seed, k, x0, y0, i0, j0, i1, j1) {
+  const P = m.pts, n = P.length / 2, r = rng(seed);
   const L = new Float32Array(n), nx = new Float32Array(n), ny = new Float32Array(n);
   for (let i = 1; i < n; i++) L[i] = L[i - 1] + Math.hypot(P[2 * i] - P[2 * i - 2], P[2 * i + 1] - P[2 * i - 1]);
   for (let i = 0; i < n; i++) {
@@ -1281,16 +1520,10 @@ function brush(g, m, c0, r, { atop = false, over = false, layerOnly = false } = 
   };
   // (ragged: a slow waver and a fine tearing of the edge)
   const edge = (i, k) => 1 + 0.08 * Math.sin(L[i] * 0.19 + ph[2 + k]) + 0.07 * Math.sin(L[i] * 0.83 + ph[3 + k] * 2) + 0.05 * Math.sin(L[i] * 2.3 + ph[4 - k]);
-  // its own layer, the size of the stroke where it is drawn
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (let i = 0; i < n; i++) { x0 = Math.min(x0, P[2 * i]); x1 = Math.max(x1, P[2 * i]); y0 = Math.min(y0, P[2 * i + 1]); y1 = Math.max(y1, P[2 * i + 1]); }
-  const pad = m.w + 4; x0 -= pad; y0 -= pad; x1 += pad; y1 += pad;
-  const T = typeof g.getTransform === "function" ? g.getTransform() : null;
-  const k = Math.min(T ? Math.hypot(T.a, T.b) || 1 : 1, 4096 / Math.max(1, x1 - x0), 4096 / Math.max(1, y1 - y0));
   const lay = document.createElement("canvas");
-  lay.width = Math.max(1, Math.ceil((x1 - x0) * k)); lay.height = Math.max(1, Math.ceil((y1 - y0) * k));
+  lay.width = i1 - i0; lay.height = j1 - j0;
   const x = lay.getContext("2d");
-  x.setTransform(k, 0, 0, k, -x0 * k, -y0 * k);
+  x.setTransform(k, 0, 0, k, -x0 * k - i0, -y0 * k - j0);
   x.lineCap = "round"; x.lineJoin = "round";
   const outline = () => {
     x.beginPath();
@@ -1328,30 +1561,7 @@ function brush(g, m, c0, r, { atop = false, over = false, layerOnly = false } = 
     line(x, pts); x.stroke();
   }
   x.setLineDash([]);
-
-  // (the layer alone, for a host's preview: it composes it as below)
-  // (a bright stroke's light pass over the grime too: `over`)
-  if (layerOnly) return { canvas: lay, x0, y0, x1, y1, soak: o * B.soak, lay: o * B.lay, over: (m.b ?? 1) >= BRIGHTS.length - 1 ? o * OVER : 0 };
-  // into the paper: soaked in, then a little of its colour back over it
-  g.save();
-  g.imageSmoothingQuality = "high";
-  // (Luke, 2026-10-03: lighter, its colour kept, on the sheet and on a card
-  // alike; a little soaked in, the rest laid on; how much of each by its
-  // brightness)
-  if (over) {
-    g.globalCompositeOperation = atop ? "source-atop" : "source-over";
-    g.globalAlpha = o * OVER;
-    g.drawImage(lay, x0, y0, x1 - x0, y1 - y0);
-    g.restore();
-    return;
-  }
-  g.globalCompositeOperation = atop ? "source-atop" : "multiply";
-  g.globalAlpha = o * B.soak;
-  g.drawImage(lay, x0, y0, x1 - x0, y1 - y0);
-  g.globalCompositeOperation = atop ? "source-atop" : "source-over";
-  g.globalAlpha = o * B.lay;
-  g.drawImage(lay, x0, y0, x1 - x0, y1 - y0);
-  g.restore();
+  return { canvas: lay, i0, j0, i1, j1 };
 }
 
 // The pages pasted on the sheet: each drawn lifted a little and sewn to the
@@ -1367,7 +1577,7 @@ function drawPages(g, area = null) {
     const w = d.w, h = d.w * ar, rot = d.r * Math.PI / 180;
     const reach = Math.hypot(w, h) / 2 + 40;
     if (area && !meets({ x0: d.x - reach, y0: d.y - reach, x1: d.x + reach, y1: d.y + reach }, area)) continue;
-    const im = img(d.tex);
+    const im = img(d.tex, () => around(d.x, d.y, reach));
     if (!im) continue;
     // (Luke, 2026-10-06: browned, quieted, and darkened toward the sheet,
     // their edges soaked in: lying in the sheet, never over the board)
@@ -1482,7 +1692,9 @@ function writingBox(s) {
   writingBoxes.set(s.layout, b);
   return b;
 }
-function drawInk(g, area = null, { over = false } = {}) {
+// (`area`: the part being painted, the canvas clipped to it; each stroke's
+// layer is kept for the next paint, and only its part in the area is built)
+function drawInk(g, area = null, { over = false, hold = null } = {}) {
   const pal = look.ink.marker;
   for (const strokes of Object.values(view?.marks ?? {})) {
     for (const [id, m0] of Object.entries(strokes)) {
@@ -1491,7 +1703,7 @@ function drawInk(g, area = null, { over = false } = {}) {
       const c = pal[m0.c] ?? pal[0] ?? 0xa39a86;
       // (never wider than three strings, however it was drawn)
       const m = { ...m0, w: Math.min(m0.w, markMax(look)) };
-      brush(g, m, c, rng(`mark:${id}:${m.pts.length}`), { over });
+      brush(g, m, c, `mark:${id}:${m.pts.length}`, { over, area, keep: true, hold });
     }
   }
 }
@@ -1555,19 +1767,26 @@ return {
     if (s.view) view = s.view; if (s.geo) geo = s.geo;
   },
   // a marker stroke as the brush draws it (the tools' marks: one being moved)
-  drawStroke(g, m, seed = "") { brush(g, { ...m, w: Math.min(m.w, markMax(look)) }, look.ink.marker[m.c] ?? look.ink.marker[0] ?? 0xa39a86, rng(`mark:${seed}`)); },
+  drawStroke(g, m, seed = "") { brush(g, { ...m, w: Math.min(m.w, markMax(look)) }, look.ink.marker[m.c] ?? look.ink.marker[0] ?? 0xa39a86, `mark:${seed}`); },
   // a stroke's own painted layer and how it is laid down (a host's preview
   // composes it the same way: soaked in by multiply, then laid over), and the
   // darkening the sheet's grime gives it once it is down (Luke, 2026-10-06:
   // the preview as dark as the drawing will be)
   strokeLayer(m, scale, seed = "") {
     const g = { getTransform: () => new DOMMatrix([scale, 0, 0, scale, 0, 0]) };
-    return brush(g, { ...m, w: Math.min(m.w, markMax(look)) }, look.ink.marker[m.c] ?? look.ink.marker[0] ?? 0xa39a86, rng(`mark:${seed}`), { layerOnly: true });
+    return brush(g, { ...m, w: Math.min(m.w, markMax(look)) }, look.ink.marker[m.c] ?? look.ink.marker[0] ?? 0xa39a86, `mark:${seed}`, { layerOnly: true });
   },
   get grimeVeil() { return GRIME_VEIL; },
   drawTable, drawSheet, drawBackground, bakeBackground, sharpenBackground, sharpenContinue, drawPatch, paintSheet, markState, markChanges, drawForeground,
   // (the bake and patch let go: a picture painted, or the board left)
   dropBake() { bake = null; patch = null; nextPatch = null; },
+  // (the strokes' kept layers let go: the board left; and what they hold)
+  dropLayers() { layerCache.clear(); },
+  get layers() { return { bytes: layerCache.bytes, pieces: layerCache.pieces.size, budget: layerCache.budget }; },
+  // what is drawn from here to unwatch() short of an image, and where
+  // (img: [{ id, box }]; a host paints those parts again when it comes)
+  watch() { watching = []; },
+  unwatch() { const w = watching ?? []; watching = null; return w; },
   resetMissing() { missing = false; }, drawLight, drawDecor, drawScrap, drawLink, drawPins, drawInk,
   tagOf, onTag, ropeFor, layerCanvas, poly, line, shrink, gradeFilter, graded,
   get missing() { return missing; },

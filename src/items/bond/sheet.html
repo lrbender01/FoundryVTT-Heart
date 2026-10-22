@@ -72,7 +72,7 @@
           {{#if editable}}<a data-action="edit-editor" aria-label="{{localize 'heart.bond.ui.edit-notes'}}"><span class="fas fa-edit clickable section-button"></span></a>{{/if}}
         </div>
         <div class="container-content">
-          {{editor system.notes target="system.notes" button=true editable=editable owner=owner engine="prosemirror"}}
+          {{editor (lookup @root.enriched "system.notes") target="system.notes" button=true editable=editable owner=owner engine="prosemirror"}}
         </div>
       </div>
     </div>

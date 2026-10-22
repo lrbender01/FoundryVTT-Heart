@@ -17,7 +17,7 @@
     {{/if}}
   </div>
   <div class="container-content">
-    {{editor content target=target button=true editable=editable owner=owner engine="prosemirror"}}
+    {{editor (lookup @root.enriched target) target=target button=true editable=editable owner=owner engine="prosemirror"}}
   </div>
 </div>
 {{/inline}}
@@ -160,7 +160,7 @@
                 <div class="profile-label">{{localize "heart.bond.ui.descriptions"}}</div>
                 <div class="profile-note-plain">{{actor.system.descriptors}}</div>
                 <div class="profile-label">{{localize "heart.bond.sheet.cost"}}</div>
-                <div class="profile-note-plain">{{{heartTerms actor.system.cost}}}</div>
+                <div class="profile-note-plain">{{{heartTermsText actor.system.cost}}}</div>
               </div>
               {{/if}}
             </div>

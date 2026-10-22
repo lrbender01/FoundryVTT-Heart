@@ -18,10 +18,7 @@ export default {
                     return p.value >= p.max;
                 }
 
-                if (name === 'effects') {
-                    return actor.items.reduce((o, item) => o.concat(item.transferredEffects), []);
-                }
-
+                // (the dead ActiveEffect branch went 2026-10-21)
                 if (Object.prototype.hasOwnProperty.call(PARTY_API, name)) return PARTY_API[name];
             }
         });

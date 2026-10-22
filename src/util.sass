@@ -33,7 +33,31 @@ $mark-on: var(--heart-mark-on)
 // The character header sits on the dark header texture in BOTH schemes, so
 // its text, borders and field wells are fixed rather than themed.
 $header-fg: var(--heart-header-fg)
-$header-field-bg: rgba(0, 0, 0, 0.35)
+$header-field-bg: var(--heart-header-field-bg)
+
+// Fixed roles (2026-10-21, Luke): the same in both schemes, values in
+// theme.sass. $ink and $paper are black and white as channels, and the
+// $*-rgb roles the reds as channels, for an alpha: rgba(util.$ink, 0.55).
+$ink: var(--heart-ink)
+$paper: var(--heart-paper)
+// the dark halo behind text over art
+$halo: var(--heart-halo)
+// the art viewer's stage, its white chrome, and dim captions (also the art
+// band's labels)
+$art-stage: var(--heart-art-stage)
+$art-fg: var(--heart-art-fg)
+$art-dim: var(--heart-art-dim)
+// the title bar's Art and Glass buttons
+$title-btn-on: var(--heart-title-btn-on)
+$title-btn-off: var(--heart-title-btn-off)
+// the glass (common/glass.sass)
+$glass-tint: var(--heart-glass-tint)
+$glass-base: var(--heart-glass-base)
+$glass-window: var(--heart-glass-window)
+$glass-title: var(--heart-glass-title)
+$red-deep-rgb: var(--heart-red-deep-rgb)
+$red-mid-rgb: var(--heart-red-mid-rgb)
+$red-bright-rgb: var(--heart-red-bright-rgb)
 
 // ============================================================================
 // SCOPE (2026-09-30, Luke): Heart's styling applies only to Heart's own
@@ -100,6 +124,13 @@ $fs-secondary: 15px
 $fs-chip: 19px
 // Mosherif set to sit level with Alegreya at the chip / body size
 $fs-chip-mosherif: 23px
+// Small fixed text that sits outside the five styles (2026-10-21, Luke: the
+// literal sizes named, values unchanged): captions and labels over art, the
+// "!" badges, a hover caption ($fs-caption); a knack label and the art
+// viewer's caption line ($fs-small); the "Game Paused" words ($fs-pause)
+$fs-caption: 12px
+$fs-small: 13px
+$fs-pause: 24px
 
 $track-label: 0.06em
 $track-display: 0.03em

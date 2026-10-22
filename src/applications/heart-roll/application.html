@@ -49,13 +49,26 @@
     {{/if}}
   </section>
 
-  {{#if hasHelpers}}
+  {{#if helpers.length}}
   <section>
-    <div class="roll-label">{{localizeHeart "helper" "label-multipler"}} <span class="why">{{localizeHeart "roll-prompt" "helpers-why"}}</span></div>
+    <div class="roll-label">{{localizeHeart "helper" "label-multiple"}} <span class="why">{{localizeHeart "roll-prompt" "helpers-why"}}</span></div>
     <div class="roll-chips">
       {{#each helpers as |h|}}<button type="button" class="roll-chip {{#if h.on}}on{{/if}} {{#if h.blocked}}blocked{{/if}} {{#if h.override}}override{{/if}}" data-k="helper" data-v="{{h.id}}" data-tooltip="{{h.tip}}">{{h.name}}</button>{{/each}}
     </div>
     <p class="roll-hint">{{localizeHeart "helper" "hint"}}{{#if isGM}} {{localizeHeart "roll-prompt" "gm-override"}}{{/if}}</p>
+  </section>
+  {{/if}}
+
+  {{!-- Companions (2026-10-21): only through an ability that gives
+       assistance; a ticked one shows its trigger so the table can judge --}}
+  {{#if companions.length}}
+  <section>
+    <div class="roll-label">{{localizeHeart "roll-prompt" "companions"}} <span class="why">{{localizeHeart "roll-prompt" "companions-why"}}</span></div>
+    <div class="roll-chips">
+      {{#each companions as |h|}}<button type="button" class="roll-chip {{#if h.on}}on{{/if}} {{#if h.blocked}}blocked{{/if}} {{#if h.override}}override{{/if}}" data-k="helper" data-v="{{h.id}}" data-tooltip="{{h.tip}}">{{h.name}}</button>{{/each}}
+    </div>
+    {{#each companionTriggers as |c|}}<p class="roll-hint"><b>{{c.name}}</b>{{#if c.ability}} ({{c.ability}}){{/if}}: {{c.trigger}}</p>{{/each}}
+    <p class="roll-hint">{{localizeHeart "roll-prompt" "companions-hint"}}</p>
   </section>
   {{/if}}
 

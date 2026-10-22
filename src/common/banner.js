@@ -15,7 +15,7 @@
 // The sheet's own getData / activateListeners call super, so the mixin's
 // run first.
 import { artOf, showArt, showImage } from './art';
-import { artShown, toggleArt } from './art-toggle';
+import { artShown, artToggleButton, markArtButton } from './art-toggle';
 
 export const BannerSheet = (Base) => class extends Base {
     _art() {
@@ -25,10 +25,6 @@ export const BannerSheet = (Base) => class extends Base {
     // the one art switch for this user (common/art-toggle.js, 2026-10-02)
     _artHidden() {
         return !artShown();
-    }
-
-    async _toggleArt() {
-        await toggleArt();
     }
 
     _showPlayers() {
@@ -47,12 +43,8 @@ export const BannerSheet = (Base) => class extends Base {
                 icon: 'fas fa-eye',
                 onclick: () => this._showPlayers(),
             });
-            buttons.unshift({
-                label: game.i18n.localize('heart.art.toggle'),
-                class: 'heart-art-toggle',
-                icon: 'fas fa-image',
-                onclick: () => this._toggleArt(),
-            });
+            // (the one Art button, common/art-toggle.js, since 2026-10-21)
+            buttons.unshift(artToggleButton());
         }
         return buttons;
     }
@@ -61,7 +53,7 @@ export const BannerSheet = (Base) => class extends Base {
     // refreshed after every render (as on the item sheets)
     async _render(...args) {
         await super._render(...args);
-        this.element?.find('.window-header .heart-art-toggle').toggleClass('art-off', this._artHidden());
+        markArtButton(this);
     }
 
     getData(...args) {

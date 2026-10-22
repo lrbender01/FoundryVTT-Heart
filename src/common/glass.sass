@@ -34,10 +34,11 @@ $windows: '.window-app:is(.heart-window, .heart-art-viewer):not(.heart-board-dia
 $g: ':root:not([data-heart-scheme="light"]) body.heart-glass #{$windows}'
 
 // the window's charcoal under the ground (the mock's page under its 35% sheet colour)
-$base: rgb(21 18 18)
+$base: rgb(util.$glass-base)
 
-// (colours as rgba: the charcoal tint 12 12 14, red-mid 154 20 20, red-deep
-// 92 10 10, red-bright 239 90 77)
+// (colours as channels, named in theme.sass since 2026-10-21: the charcoal
+// tint util.$glass-tint, the reds util.$red-*-rgb, white util.$paper, black
+// util.$ink)
 
 // what counts as a card or a row
 $cards: ':is(.item.preview, .skill-row, .domain-row, .member-open, .board-note, .party-chip, .bond-fallout, .core-trait)'
@@ -45,22 +46,22 @@ $cards: ':is(.item.preview, .skill-row, .domain-row, .member-open, .board-note, 
 $head-boxes: ':is(.header-col.identity-container, .header-col.class-calling-container, .header-col.roll-buttons-container, .header-box)'
 
 // one layer of glass, and n layers of it (set by glass.js applyGlassPass;
-// the fallbacks are the default 25%)
-$layer: var(--heart-glass-section, 0.25)
+// the fallbacks are the default 80%)
+$layer: var(--heart-glass-section, 0.8)
 
 // The ground on every Heart window, glass or not (2026-10-02, Luke): the
 // texture at 30% over the window's charcoal, solid. A 70% charcoal veil over
 // the texture does it in one background, which stays put while the sheet
 // scrolls over it. Without the content module, plain charcoal as before.
 :root:not([data-heart-scheme="light"]) .window-app.heart-window:not(.heart-board-dialog) .window-content
-    background: linear-gradient(rgb(26 24 24 / 0.7), rgb(26 24 24 / 0.7)), var(--heart-glass-ground, none) center / cover no-repeat, rgb(26 24 24)
+    background: linear-gradient(rgba(util.$glass-window, 0.7), rgba(util.$glass-window, 0.7)), var(--heart-glass-ground, none) center / cover no-repeat, rgb(util.$glass-window)
 
 #{$g}
     // every surface one layer of glass: sections, rows, chips, fields (a row
     // in a section is two layers deep, a chip on it three, by stacking)
-    --heart-surface: rgba(12, 12, 14, #{$layer})
-    --heart-sunken: rgba(12, 12, 14, #{$layer})
-    --heart-bg: rgba(12, 12, 14, #{$layer})
+    --heart-surface: rgba(util.$glass-tint, #{$layer})
+    --heart-sunken: rgba(util.$glass-tint, #{$layer})
+    --heart-bg: rgba(util.$glass-tint, #{$layer})
 
     // The window is the outer pane and the one frost (2026-10-02, Luke: the
     // scene through the sheet). The ground is a layer of its own here, as
@@ -79,13 +80,13 @@ $layer: var(--heart-glass-section, 0.25)
         z-index: 0
         border-radius: inherit
         pointer-events: none
-        background: linear-gradient(rgb(21 18 18 / 0.7), rgb(21 18 18 / 0.7)), var(--heart-glass-ground, none) center / cover no-repeat, $base
+        background: linear-gradient(rgba(util.$glass-base, 0.7), rgba(util.$glass-base, 0.7)), var(--heart-glass-ground, none) center / cover no-repeat, $base
         opacity: calc(1 - var(--heart-glass-clear, 0))
 
     > .window-header
         position: relative
         z-index: 1
-        background: rgb(14 13 13)
+        background: rgb(util.$glass-title)
 
     > .window-resizable-handle
         z-index: 2
@@ -98,53 +99,53 @@ $layer: var(--heart-glass-section, 0.25)
     // sections: one layer, with a light rim and a shadow; they brighten and
     // glow a little under the pointer
     .character-tab-container
-        border-color: rgba(154, 20, 20, 0.7)
-        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.225), inset 0 0 0 1px rgb(255 255 255 / 0.035), 0 10px 28px rgb(0 0 0 / 0.5)
+        border-color: rgba(util.$red-mid-rgb, 0.7)
+        box-shadow: inset 0 1px 0 rgba(util.$paper, 0.225), inset 0 0 0 1px rgba(util.$paper, 0.035), 0 10px 28px rgba(util.$ink, 0.5)
         transition: background-color 0.25s, border-color 0.25s, box-shadow 0.25s
 
         // only the innermost thing under the pointer reacts (2026-10-03,
         // Luke): a section stays still while a row or card in it is hovered
         &:hover:not(:has(#{$cards}:hover))
-            background-color: rgba(12, 12, 14, calc(#{$layer} + 0.07))
-            border-color: rgba(154, 20, 20, 0.88)
-            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.315), inset 0 0 0 1px rgb(255 255 255 / 0.065), 0 10px 28px rgb(0 0 0 / 0.5), 0 0 13px rgba(239, 90, 77, 0.1)
+            background-color: rgba(util.$glass-tint, calc(#{$layer} + 0.07))
+            border-color: rgba(util.$red-mid-rgb, 0.88)
+            box-shadow: inset 0 1px 0 rgba(util.$paper, 0.315), inset 0 0 0 1px rgba(util.$paper, 0.065), 0 10px 28px rgba(util.$ink, 0.5), 0 0 13px rgba(util.$red-bright-rgb, 0.1)
 
         // the title on a pill of seven layers, solid enough that the
         // section's edge never runs through the title
         > .container-title
-            background: rgba(12, 12, 14, var(--heart-glass-pill, 0.867))
-            border: 1px solid rgba(154, 20, 20, 0.7)
+            background: rgba(util.$glass-tint, var(--heart-glass-pill, 1))
+            border: 1px solid rgba(util.$red-mid-rgb, 0.7)
             border-radius: 999px
             padding: 0 0.75rem
-            box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.2)
+            box-shadow: inset 0 1px 0 rgba(util.$paper, 0.2)
 
     // cards and rows: one more layer, a faint rim; under the pointer
     // brighter, a red outline, lifted a pixel
     #{$cards}
-        border-color: rgb(255 255 255 / 0.11)
-        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.11)
+        border-color: rgba(util.$paper, 0.11)
+        box-shadow: inset 0 1px 0 rgba(util.$paper, 0.11)
         transition: background-color 0.18s, border-color 0.18s, box-shadow 0.18s, transform 0.18s
 
         // (and a row holding rows, a major ability's options, stays still
         // while one of those is hovered)
         &:hover:not(:has(#{$cards}:hover))
-            background-color: rgba(12, 12, 14, calc(#{$layer} + 0.1))
-            border-color: rgba(239, 90, 77, 0.57)
+            background-color: rgba(util.$glass-tint, calc(#{$layer} + 0.1))
+            border-color: rgba(util.$red-bright-rgb, 0.57)
             transform: translateY(-1px)
 
     // buttons and chips glow red under the pointer
     :is(button, .chip-toggle > span, .beat-chip, .lock-chip):hover
-        box-shadow: 0 0 7px rgba(239, 90, 77, 0.27)
+        box-shadow: 0 0 7px rgba(util.$red-bright-rgb, 0.27)
 
     // the header's boxes over the art: three layers, a light rim
     #{$head-boxes}
-        background-color: rgba(12, 12, 14, var(--heart-glass-head, 0.578))
+        background-color: rgba(util.$glass-tint, var(--heart-glass-head, 0.992))
         backdrop-filter: none
-        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.175)
+        box-shadow: inset 0 1px 0 rgba(util.$paper, 0.175)
 
     // the tab strip: red glass, six layers
     .character-nav-tabs
-        background-color: rgba(92, 10, 10, var(--heart-glass-strip, 0.822))
+        background-color: rgba(util.$red-deep-rgb, var(--heart-glass-strip, 1))
 
 // Chat cards (2026-10-02, Luke: "chat cards get the glass treatment too"):
 // every message, since every one wears Heart's colours
@@ -160,9 +161,9 @@ $layer: var(--heart-glass-section, 0.25)
 $chat: ':root:not([data-heart-scheme="light"]) body.heart-glass .chat-message'
 
 #{$chat}
-    --heart-surface: rgba(12, 12, 14, #{$layer})
-    --heart-sunken: rgba(12, 12, 14, #{$layer})
-    --heart-bg: rgba(12, 12, 14, #{$layer})
+    --heart-surface: rgba(util.$glass-tint, #{$layer})
+    --heart-sunken: rgba(util.$glass-tint, #{$layer})
+    --heart-bg: rgba(util.$glass-tint, #{$layer})
     position: relative
     isolation: isolate
     background: none
@@ -176,14 +177,14 @@ $chat: ':root:not([data-heart-scheme="light"]) body.heart-glass .chat-message'
         pointer-events: none
 
     &::before
-        background: linear-gradient(rgb(21 18 18 / 0.7), rgb(21 18 18 / 0.7)), var(--heart-glass-ground, none) center / cover no-repeat, $base
+        background: linear-gradient(rgba(util.$glass-base, 0.7), rgba(util.$glass-base, 0.7)), var(--heart-glass-ground, none) center / cover no-repeat, $base
         opacity: calc(1 - var(--heart-glass-clear, 0))
 
     &::after
-        background: linear-gradient(rgba(12, 12, 14, #{$layer}), rgba(12, 12, 14, #{$layer}))
+        background: linear-gradient(rgba(util.$glass-tint, #{$layer}), rgba(util.$glass-tint, #{$layer}))
 
     &:is(.whisper, .blind)::after
-        background: linear-gradient(rgba(12, 12, 14, #{$layer}), rgba(12, 12, 14, #{$layer})), linear-gradient(rgba(12, 12, 14, #{$layer}), rgba(12, 12, 14, #{$layer}))
+        background: linear-gradient(rgba(util.$glass-tint, #{$layer}), rgba(util.$glass-tint, #{$layer})), linear-gradient(rgba(util.$glass-tint, #{$layer}), rgba(util.$glass-tint, #{$layer}))
 
 :root:not([data-heart-scheme="light"]) body.heart-glass #chat-notifications .chat-message
     backdrop-filter: var(--heart-glass-pass, none)
@@ -191,7 +192,17 @@ $chat: ':root:not([data-heart-scheme="light"]) body.heart-glass .chat-message'
 // The title bar's Glass button: grey while glass is off, white while on (the
 // switch is a body class, so every open window's button follows at once)
 .window-header .heart-glass-toggle
-    color: #808080
+    color: util.$title-btn-off
 
 body.heart-glass .window-header .heart-glass-toggle
-    color: #fff
+    color: util.$title-btn-on
+
+// The title bar's Art button (common/art-toggle.js): white while art shows,
+// grey when this user switched it off (art-off, set after each render). Here
+// beside the Glass button since 2026-10-21; it was in the character sheet's
+// stylesheet though every window that shows art has it.
+.window-header .heart-art-toggle
+    color: util.$title-btn-on
+
+    &.art-off
+        color: util.$title-btn-off

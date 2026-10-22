@@ -1,10 +1,13 @@
 import sheetHTML from './sheet.html';
 import './adversary.sass';
-import HeartActorSheet from '../base/sheet';
+import HeartActorSheet, { LIMITED_SHEET } from '../base/sheet';
 import template from './template.json';
 import { activatePanelSheet, panelSheetDefaults, toChips } from '../../common/panel-sheet';
 import { BannerSheet } from '../../common/banner';
 import { resistanceOf } from './resistance';
+import { richFieldsOf } from '../../common/rich-text';
+import { activeData } from '../drop-active';
+import { bySort } from '../proxy-lists';
 
 // Difficulty levels for the header chip. The book's full difficulty text
 // (often a condition, e.g. Ghost) stays in system.difficulty and shows as a
@@ -26,19 +29,24 @@ export default class AdversarySheet extends BannerSheet(HeartActorSheet) {
         this._editing = false;
     }
 
+    // dropped items land switched on (a folder arrives as a list:
+    // actors/drop-active.js)
     async _onDropItemCreate(itemData) {
-        if(this.actor.type === 'adversary') {
+        return super._onDropItemCreate(this.actor.type === 'adversary' ? activeData(itemData) : itemData);
+    }
 
-            itemData.system.active = true;
-        }
-
-        return super._onDropItemCreate(itemData);
+    // rich text the sheet draws (common/rich-text.js); a Limited viewer's
+    // sheet draws the description alone, and GM Notes go to the GM only
+    // (common/gm-notes.js, 2026-10-21)
+    _richFields() {
+        if (this.limitedView) return richFieldsOf(this.actor, ['system.description']);
+        return richFieldsOf(this.actor, ['system.descriptors', 'system.special', 'system.motivation', 'system.description', 'system.notes']);
     }
 
     static get type() { return Object.keys(template.Actor)[0]; }
 
     get template() {
-        return sheetHTML.path;
+        return this.limitedView ? LIMITED_SHEET : sheetHTML.path;
     }
 
     get img() {
@@ -64,7 +72,7 @@ export default class AdversarySheet extends BannerSheet(HeartActorSheet) {
         data.difficultyNote = difficulty && difficulty.toLowerCase() !== level.toLowerCase() ? difficulty : '';
 
         data.domainChips = toChips(system.domains);
-        data.inactiveItems = this.actor.items.filter(i => i.system.active !== undefined && !i.system.active);
+        data.inactiveItems = bySort(this.actor.items.filter(i => i.system.active !== undefined && !i.system.active));
         return data;
     }
 

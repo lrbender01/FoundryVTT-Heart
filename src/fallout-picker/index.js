@@ -6,33 +6,41 @@ import { openFalloutPicker } from './picker';
 import { askGM } from '../common/relay';
 import './picker.sass';
 
-// Chat cards: GM-only controls are removed for everyone else, and the Pick
-// Fallout button opens the picker for its target (an actor or a bond item)
-Hooks.on('renderChatMessage', (message, html) => {
-    if (!game.user.isGM) {
-        html.find('[data-gm-only]').remove();
-        html.find('.ledger-acts').filter((i, el) => !el.children.length).remove();
+// Chat cards' Pick Fallout button opens the picker for its target (an actor
+// or a bond item). Bound by delegation on the chat log and every chat
+// popout, like the roll cards' buttons (Luke, 2026-10-21, R1): a fallout
+// card's markup is redrawn by HeartChatMessage.getHTML after the
+// renderChatMessage hook has run (Foundry 12.343 calls the hook inside
+// ChatMessage#getHTML), so a handler bound there was lost with the old
+// markup. The GM-only strip happens at the end of getHTML for the same
+// reason (button.js stripGmOnly).
+export async function onPickFallout(ev) {
+    ev.preventDefault();
+    if (!game.user.isGM) return;
+    const button = ev.currentTarget;
+    const { target, severity, resistance } = button.dataset;
+    const doc = await fromUuid(target);
+    if (!doc) {
+        ui.notifications.warn(game.i18n.localize('heart.bond.no-target'));
         return;
     }
-    html.find('[data-action=pick-fallout]').on('click', async ev => {
-        ev.preventDefault();
-        const { target, severity, resistance } = ev.currentTarget.dataset;
-        const doc = await fromUuid(target);
-        if (!doc) {
-            ui.notifications.warn(game.i18n.localize('heart.bond.no-target'));
-            return;
-        }
-        // on a fallout card, the pick is recorded on the message so its Clear
-        // button clears the picked Fallout's resistance (Luke, 2026-10-21;
-        // the GM's own call runs through the relay queue like every card write)
-        const onCard = ev.currentTarget.closest('.fallout-roll');
-        const onPicked = onCard
-            ? (pick) => askGM('record-fallout-pick', { messageId: message.id, pick })
-            : undefined;
-        await openFalloutPicker({ target: doc, severity, resistance: resistance || undefined, onPicked });
-    });
-});
+    // on a fallout card, the pick is recorded on the message so its Clear
+    // button clears the picked Fallout's resistance (Luke, 2026-10-21;
+    // the GM's own call runs through the relay queue like every card write)
+    const messageId = button.closest('[data-message-id]')?.dataset?.messageId;
+    const onCard = messageId && button.closest('.fallout-roll');
+    const onPicked = onCard
+        ? (pick) => askGM('record-fallout-pick', { messageId, pick })
+        : undefined;
+    await openFalloutPicker({ target: doc, severity, resistance: resistance || undefined, onPicked });
+}
+
+export function activateListeners(html) {
+    html.on('click', '[data-action=pick-fallout]', onPickFallout);
+}
 
 export function initialise() {
     game.heart.fallout = { pick: openFalloutPicker };
+    Hooks.on('renderChatLog', (app, html) => activateListeners(html));
+    Hooks.on('renderChatPopout', (app, html) => activateListeners(html));
 }

@@ -14,3 +14,16 @@ export function compareVersions(a, b) {
     }
     return 0;
 }
+
+// The startup changelog (Luke, 2026-10-21): the heart.versions entries,
+// newest first. English only, so read from English: Foundry's fallback
+// (game.i18n._fallback) when another language is active, else the active
+// translations. Reading the active language alone threw for es and it
+// (no versions there) and showed pt's older list. Never throws.
+export function startupVersions(translations, fallback) {
+    const of = (t) => t?.heart?.versions;
+    const found = [of(fallback), of(translations)].find(v => v && typeof v === 'object' && Object.keys(v).length);
+    return Object.values(found ?? {})
+        .filter(v => v && typeof v === 'object')
+        .sort((a, b) => compareVersions(b.version, a.version));
+}

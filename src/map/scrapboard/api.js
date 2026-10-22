@@ -1,5 +1,5 @@
-// The scrapboard map's document half (2026-10-02, monorepo
-// docs/plans/heart-map.md): which scenes are scrapboard scenes, and the GM's
+// The scrapboard map's document half (2026-10-02; the fork's CLAUDE.md "The
+// Heart map"): which scenes are scrapboard scenes, and the GM's
 // edits to a scene's board (flags.heart.board: the same JSON the Heart Map
 // Board mock edits, so a board round-trips between the two). Every write here
 // is the GM's: players' writes come through the relay (notes.js), which runs
@@ -11,11 +11,11 @@
 // a player's edits come back to them from the GM's client, and their undo goes
 // through it again (notes.js board.history). The GM's client also keeps
 // rolling copies of each board (backups.js).
-import { customKey, removalOf, labelPatch, tidyBoard, newStringPatch, diffBoard, recordUpdate, updateRoots, binPatch, unbinPatch, pxPerInch, seasonMarks } from './model.js';
+import { customKey, keysTaken, labelPatch, tidyBoard, newStringPatch, diffBoard, recordUpdate, updateRoots, binPatch, unbinPatch, takeOffPatch, pxPerInch, seasonMarks } from './model.js';
 import { loadBoardLook } from './look.js';
-import { askGM } from '../../common/relay.js';
+import { relay, RelayTimeout } from '../../common/relay.js';
 import { keepBackup } from './backups.js';
-import { boardFromText, boardFileName, renamedCards } from './boardfile.js';
+import { boardFromText, boardFileName, renamedCards, renamedBinned } from './boardfile.js';
 
 export const BOARD_FLAG = 'board';
 const PATH = `flags.heart.${BOARD_FLAG}`;
@@ -63,8 +63,17 @@ export function pushEdit(scene, rec) {
     if (st.undo.length > UNDO_MAX) st.undo.shift();
     st.redo = [];
 }
-export const canUndo = (scene) => Boolean(scene && stacks.get(scene.id)?.undo.length);
-export const canRedo = (scene) => Boolean(scene && stacks.get(scene.id)?.redo.length);
+
+// One board write at a time on this client, per scene (Luke, 2026-10-21: the
+// GM's own edits and the relay's ran side by side, so a write's "before"
+// could miss one landing in between, and its undo would take that one back
+// too; an import's two steps could have a player's note land in between)
+const writing = new Map();
+function oneWrite(scene, fn) {
+    const run = (writing.get(scene.id) ?? Promise.resolve()).then(fn, fn);
+    writing.set(scene.id, run.catch(() => null));
+    return run;
+}
 
 export const undo = (scene) => step(scene, 'undo');
 export const redo = (scene) => step(scene, 'redo');
@@ -79,31 +88,65 @@ async function step(scene, dir) {
     const side = dir === 'undo' ? 'before' : 'after';
     let ok = false;
     if (game.user.isGM) {
-        const data = recordUpdate(boardOf(scene), rec, side, PATH);
-        if (Object.keys(data).length) await scene.update(data, { heartBoard: true });
+        await oneWrite(scene, async () => {
+            const data = recordUpdate(boardOf(scene), rec, side, PATH);
+            if (Object.keys(data).length) await scene.update(data, { heartBoard: true });
+        });
         ok = true;
         keepBackup(scene, boardOf(scene));
-    } else ok = Boolean(await askGM('board.history', { sceneId: scene.id, record: rec, side }));
+    } else ok = await askHistory(scene, rec, side);
+    // (records the GM's client no longer knows: every one kept here is from
+    // before its reload, so they all go, said once; Luke, 2026-10-21)
+    if (ok === 'forgotten') {
+        st.undo = [];
+        st.redo = [];
+        return false;
+    }
     // (refused, it is let go: it can't be done)
     if (ok) st[dir === 'undo' ? 'redo' : 'undo'].push(rec);
     return ok;
 }
 
+// A player's undo or redo through the GM's client (notes.js board.history):
+// true when done, 'forgotten' when the GM's client no longer knows the record
+// (it reloaded since: Luke, 2026-10-21, "Undo doesn't need to survive
+// reloading"; said as a note, not a refusal), else false (said as askGM says)
+const HISTORY_SAYS = { 'not-allowed': 'heart.relay.not-allowed', missing: 'heart.relay.missing', 'needs-gm': 'heart.relay.needs-gm' };
+async function askHistory(scene, rec, side) {
+    let res;
+    try {
+        res = await relay('board.history', { sceneId: scene.id, record: rec, side });
+    } catch (err) {
+        console.error('heart | board.history failed', err);
+        ui.notifications.warn(game.i18n.localize(err instanceof RelayTimeout ? 'heart.relay.no-answer' : 'heart.relay.failed'));
+        return false;
+    }
+    if (res?.status === 'done') return true;
+    if (res?.status === 'forgotten') {
+        ui.notifications.info(game.i18n.localize('heart.board.undo-forgotten'));
+        return 'forgotten';
+    }
+    ui.notifications.warn(game.i18n.localize(HISTORY_SAYS[res?.status] ?? 'heart.relay.failed'));
+    return false;
+}
+
 // A board write. It is kept as this user's edit, or (`sink`, the relay's)
 // handed back to the player who asked for it; the GM's client keeps a copy of
 // the board now and then (`force`: now, as before cards come off)
-async function update(scene, data, { sink = null, record = true, force = false } = {}) {
-    const roots = updateRoots(data, PATH);
-    const before = foundry.utils.deepClone(boardOf(scene));
-    if (force) await keepBackup(scene, before, { force: true, why: 'removed' });
-    const out = await scene.update(data, { heartBoard: true });
-    if (record) {
-        const rec = diffBoard(before, boardOf(scene), roots);
-        if (sink) sink.push(rec);
-        else pushEdit(scene, rec);
-    }
-    keepBackup(scene, boardOf(scene));
-    return out;
+function update(scene, data, { sink = null, record = true, force = false } = {}) {
+    return oneWrite(scene, async () => {
+        const roots = updateRoots(data, PATH);
+        const before = foundry.utils.deepClone(boardOf(scene));
+        if (force) await keepBackup(scene, before, { force: true, why: 'removed' });
+        const out = await scene.update(data, { heartBoard: true });
+        if (record) {
+            const rec = diffBoard(before, boardOf(scene), roots);
+            if (sink) sink.push(rec);
+            else pushEdit(scene, rec);
+        }
+        keepBackup(scene, boardOf(scene));
+        return out;
+    });
 }
 export { update as writeBoard };
 
@@ -114,17 +157,6 @@ export { update as writeBoard };
 export async function setScrap(scene, key, patch, opts = {}) {
     if (!gmOnly() || !scene || !key) return;
     return update(scene, { [`${PATH}.scraps.${key}`]: patch }, opts);
-}
-
-// Several scraps at once ({ key: patch }: a selection moved or resized)
-export async function setScraps(scene, patches, opts = {}) {
-    if (!gmOnly() || !scene) return;
-    const data = {};
-    for (const [key, patch] of Object.entries(patches ?? {})) {
-        if (!boardOf(scene).scraps?.[key]) continue;
-        for (const [k, v] of Object.entries(patch)) data[`${PATH}.scraps.${key}.${k}`] = v;
-    }
-    if (Object.keys(data).length) return update(scene, data, opts);
 }
 
 // An edit from the shared controls (controls.js patch: scraps' fields, one
@@ -184,6 +216,9 @@ export function patchData(scene, patch) {
     // (the bin: a card taken off, or put back)
     for (const [k, e] of Object.entries(patch?.bin ?? {})) {
         if (e === null) { if (board.bin?.[k]) data[`${PATH}.bin.-=${k}`] = null; }
+        // (an entry there already is replaced, never merged into: Luke,
+        // 2026-10-21, a place taken off twice mixed the two cards' pieces)
+        else if (board.bin?.[k]) Object.assign(data, recordUpdate(board, { ops: [{ path: ['bin', k], b: board.bin[k], a: e }] }, 'after', PATH));
         else data[`${PATH}.bin.${k}`] = e;
     }
     return data;
@@ -234,28 +269,9 @@ export async function clearAllBrushes(scene) {
     if (Object.keys(data).length) return update(scene, data, { force: true });
 }
 
-export async function clearMarks(scene, layer = null) {
-    if (!gmOnly() || !scene) return;
-    if (layer) return update(scene, { [`${PATH}.marks.-=${layer}`]: null });
-    return update(scene, { [`${PATH}.-=marks`]: null });
-}
-
-// a scrap's field removed (an override back to its default)
-export async function unsetScrap(scene, key, field) {
-    if (!gmOnly() || !scene || !key) return;
-    return update(scene, { [`${PATH}.scraps.${key}.-=${field}`]: null });
-}
-
 export async function setLink(scene, id, patch) {
     if (!gmOnly() || !scene || !id) return;
     return update(scene, { [`${PATH}.links.${id}`]: patch });
-}
-
-export async function unsetLink(scene, id, fields) {
-    if (!gmOnly() || !scene || !id) return;
-    const data = {};
-    for (const f of [].concat(fields)) data[`${PATH}.links.${id}.-=${f}`] = null;
-    return update(scene, data);
 }
 
 // A new scrap: a book landmark (lib: its library key), a landmark of the
@@ -263,7 +279,7 @@ export async function unsetLink(scene, id, fields) {
 export async function addScrap(scene, data) {
     if (!gmOnly() || !scene) return null;
     const scraps = boardOf(scene).scraps ?? {};
-    const key = data.lib && !scraps[data.lib] ? data.lib : customKey(data.type === 'note' ? 'n' : data.type === 'scrawl' ? 'w' : 'c', scraps);
+    const key = data.lib && !scraps[data.lib] ? data.lib : customKey(data.type === 'note' ? 'n' : data.type === 'scrawl' ? 'w' : 'c', keysTaken(boardOf(scene)));
     // (a card may come with a doodle of its owner's: Luke 2026-10-06)
     const doodle = data.type === 'scrawl' || data.tag || data.marks ? {} : seasonMarks(`${scene.id}:${key}`, { by: data.author ?? game.user.id, type: data.type ?? 'landmark' });
     await update(scene, { [`${PATH}.scraps.${key}`]: { state: 'known', ...data, ...(Object.keys(doodle).length ? { marks: doodle } : {}), x: Math.round(data.x), y: Math.round(data.y) } });
@@ -296,11 +312,16 @@ export async function followRename(actor) {
     for (const scene of game.scenes ?? []) {
         if (!isBoardScene(scene)) continue;
         const patches = renamedCards(boardOf(scene), actor.uuid, actor.name);
-        if (Object.keys(patches).length) await setScraps(scene, patches);
+        // (and its cards in the bin, so one put back has its name now: Luke,
+        // 2026-10-21)
+        const binned = renamedBinned(boardOf(scene), actor.uuid, actor.name);
+        const data = {};
+        for (const [key, p] of Object.entries(patches)) data[`${PATH}.scraps.${key}.name`] = p.name;
+        for (const key of binned) data[`${PATH}.bin.${key}.scrap.name`] = actor.name;
+        if (Object.keys(data).length) await update(scene, data);
     }
 }
 
-// (each end a scrap's key, or a loose point on the board: aPt, bPt)
 // (each end a scrap's key, a loose point, or a pin of the board's own: aPin, bPin)
 export async function addLink(scene, { a = null, b = null, aPt = null, bPt = null, aAt = null, bAt = null, aPin = null, bPin = null, kind = 'delve', label = '', state = 'known' }, opts = {}) {
     if (!gmOnly() || !scene || !(a || aPt || aPin) || !(b || bPt || bPin) || (a && a === b)) return null;
@@ -345,22 +366,16 @@ export async function emptyBin(scene) {
 }
 
 // Things taken off the board at once, with what depends on them (model.js
-// removalOf): cards (their pins, and every string tied to them), the board's
-// pins (every string they hold; joints they hold let go), and strings
+// takeOffPatch): cards into the bin, never gone (their pins, and every string
+// tied to them), the board's pins (every string they hold; joints they hold
+// let go), and strings. One write, so one edit to undo (Luke, 2026-10-21:
+// cards and pins taken off together took two Ctrl+Z to come back).
 export async function removeMany(scene, what = {}, opts = {}) {
     if (!gmOnly() || !scene) return;
-    // (cards go to the bin, never gone; Luke 2026-10-06)
-    if (what.scraps?.length) {
-        await binCards(scene, what.scraps, opts);
-        what = { ...what, scraps: [] };
-    }
-    const r = removalOf(boardOf(scene), what);
-    const data = {};
-    for (const k of r.scraps) data[`${PATH}.scraps.-=${k}`] = null;
-    for (const id of r.links) data[`${PATH}.links.-=${id}`] = null;
-    for (const id of r.pins) data[`${PATH}.pins.-=${id}`] = null;
-    for (const [id, p] of Object.entries(r.edits)) for (const [k, v] of Object.entries(p)) data[`${PATH}.links.${id}.${k}`] = v;
-    if (Object.keys(data).length) return update(scene, data, opts);
+    const patch = takeOffPatch(boardOf(scene), what, { at: Date.now(), by: opts.by ?? game.user.id });
+    if (!patch) return;
+    const data = patchData(scene, patch);
+    if (Object.keys(data).length) return update(scene, data, { ...opts, force: opts.force || Object.keys(patch.scraps).length > 0 });
 }
 
 // What the model needs to lay a board out here: the look, a texture's size,
@@ -382,8 +397,10 @@ async function layoutTools() {
 export async function labelString(scene, id, text, opts = {}) {
     if (!gmOnly() || !scene || !text) return;
     const { look, size, measure } = await layoutTools();
-    const patch = labelPatch(boardOf(scene), id, text, look, size, measure);
-    if (patch) return applyBoardPatch(scene, patch, opts);
+    // (a player's own string's name: theirs, `author`)
+    const { author = null, ...o } = opts;
+    const patch = labelPatch(boardOf(scene), id, text, look, size, measure, { author });
+    if (patch) return applyBoardPatch(scene, patch, o);
 }
 
 // An older board made whole, once (model.js tidyBoard: name tags made notes,
@@ -440,17 +457,22 @@ export function exportBoard(scene) {
 
 // Replace the whole board (an import, an earlier board, or the backup
 // restored): one edit of the GM's, undone like any other
-export async function replaceBoard(scene, board, { record = true, backup = false } = {}) {
-    const clean = boardParts(board);
-    const before = foundry.utils.deepClone(boardOf(scene));
-    await keepBackup(scene, before, { force: true, why: 'replaced' });
-    // (a nested object update merges; the board is cleared first so it is replaced)
-    const data = Object.fromEntries([...BOARD_PARTS, 'bin', 'pinsEd'].map((k) => [`${PATH}.-=${k}`, null]));
-    if (backup) data[BACKUP_PATH] = before;
-    await scene.update(data, { heartBoard: true });
-    const out = await scene.update({ [PATH]: clean }, { heartBoard: true });
-    if (record) pushEdit(scene, diffBoard(before, boardOf(scene)));
-    return out;
+export function replaceBoard(scene, board, { record = true, backup = false } = {}) {
+    // (a copy: the backup restored is the scene's own data, which the first
+    // update below writes over; Luke, 2026-10-21)
+    const clean = foundry.utils.deepClone(boardParts(board));
+    return oneWrite(scene, async () => {
+        const before = foundry.utils.deepClone(boardOf(scene));
+        await keepBackup(scene, before, { force: true, why: 'replaced' });
+        // (a nested object update merges; the board is cleared first so it is replaced)
+        // (the backup too: written over, it merged with the one before it)
+        const data = Object.fromEntries([...BOARD_PARTS, 'bin', 'pinsEd'].map((k) => [`${PATH}.-=${k}`, null]));
+        if (backup) data['flags.heart.-=boardBackup'] = null;
+        await scene.update(data, { heartBoard: true });
+        const out = await scene.update({ [PATH]: clean, ...(backup ? { [BACKUP_PATH]: before } : {}) }, { heartBoard: true });
+        if (record) pushEdit(scene, diffBoard(before, boardOf(scene)));
+        return out;
+    });
 }
 
 // A board pasted from the mock, another scene's export, or a downloaded file

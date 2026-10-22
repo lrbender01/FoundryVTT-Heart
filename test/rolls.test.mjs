@@ -197,12 +197,26 @@ describe("StressRoll.takeStress: Provisions", () => {
     expect(p.system.provisions.value).toBe(3);
   });
 
-  it("no party: a warning and nothing applied", async () => {
+  // 2026-10-21 (R9): takeStress runs on the GM's client inside the relay, so
+  // it never notifies; the take-stress handler answers 'no-party' instead
+  it("no party: nothing applied, and no notification on the GM's screen", async () => {
     character("vess");
     const roll = StressRoll._build({ character: "vess", resistance: "provisions" });
     await roll.evaluate();
     expect(await roll.takeStress()).toEqual([]);
-    expect(ui.notifications.warn).toHaveBeenCalledWith("heart.party.no-party");
+    expect(ui.notifications.warn).not.toHaveBeenCalled();
+  });
+
+  it("marked only when the track really took it", async () => {
+    const p = party({ value: 2 });
+    // the track's writer finds no party (gone between the two reads)
+    game.actors.delete("party");
+    const roll = StressRoll._build({ character: "party", resistance: "provisions" });
+    queueDice(3);
+    await roll.evaluate();
+    const [a] = await roll.takeStress();
+    expect(a).toMatchObject({ amount: 3, marked: false });
+    expect(p.update).not.toHaveBeenCalled();
   });
 
   it("a client that does not own the party marks nothing", async () => {
@@ -345,6 +359,78 @@ describe("FalloutRoll._build: a character or the party", () => {
     expect(FalloutRoll._build({ resistance: "provisions" }).notRolled).toBe(true);
     game.heart.party.system.provisions.value = 19;
     expect(FalloutRoll._build({ resistance: "provisions" }).notRolled).toBe(false);
+  });
+});
+
+// Luke, 2026-10-21 (R8): "Fallout can be rolled by GM and character's
+// owners but GM always PICKS the resulting fallout if it happens"
+describe("who may roll a Fallout check", () => {
+  it("the GM or the character's player; anyone else is told and nothing rolls", async () => {
+    character("vess", { owners: ["p1"], resistances: { blood: { value: 4 } } });
+    setUsers([p1, p2, gm], { self: p2 });
+    expect(await FalloutRoll.build({ character: "vess" })).toBeNull();
+    expect(ui.notifications.warn).toHaveBeenCalledWith("heart.relay.fallout-not-yours{name=Vess}");
+    setUsers([p1, p2, gm], { self: p1 });
+    expect(await FalloutRoll.build({ character: "vess" })).toBeInstanceOf(FalloutRoll);
+    setUsers([p1, p2, gm], { self: gm });
+    expect(await FalloutRoll.build({ character: "vess" })).toBeInstanceOf(FalloutRoll);
+  });
+
+  it("a Provisions check: the party's owners", async () => {
+    character("vess", { owners: ["p2"] });
+    party({ value: 6, owners: ["p1"] });
+    setUsers([p1, p2, gm], { self: p2 });
+    expect(await FalloutRoll.build({ character: "vess", resistance: "provisions" })).toBeNull();
+    setUsers([p1, p2, gm], { self: p1 });
+    expect((await FalloutRoll.build({ character: "vess", resistance: "provisions" })).options.party).toBe(true);
+  });
+
+  it("a stress card draws each fallout button only for those who may roll it", async () => {
+    character("vess", { owners: ["p1"], resistances: { blood: { value: 6 } } });
+    character("kettle", { owners: ["p2"], resistances: { blood: { value: 3 } } });
+    const roll = StressRoll._build({ character: "vess", resistance: "blood", die_size: "d6" });
+    queueDice(4);
+    await roll.evaluate();
+    roll.options.applied = [
+      { id: "vess", name: "Vess", amount: 3, protection: 0 },
+      { id: "kettle", name: "Kettle", amount: 2, protection: 0 },
+    ];
+    const ids = async (self) => {
+      setUsers([p1, p2, gm], { self });
+      return rendered(await roll.render({ showFalloutRollButton: true })).data.falloutFor.map((a) => a.id);
+    };
+    expect(await ids(p1)).toEqual(["vess"]);
+    expect(await ids(p2)).toEqual(["kettle"]);
+    expect(await ids(gm)).toEqual(["vess", "kettle"]);
+  });
+});
+
+// Luke, 2026-10-21 (R17): stress stops at the track's last box, and the
+// card prints the track's own size
+describe("a track's size", () => {
+  it("takeStress never marks past the track's max; the amount still counts", async () => {
+    const vess = character("vess", { resistances: { blood: { value: 8, max: 10 }, mind: { value: 2, max: 12 } } });
+    const roll = StressRoll._build({ character: "vess", resistance: "blood", die_size: "d6" });
+    queueDice(5);
+    await roll.evaluate();
+    const [a] = await roll.takeStress();
+    expect(vess.system.resistances.blood.value).toBe(10);
+    expect(a.amount).toBe(5);
+    const big = StressRoll._build({ character: "vess", resistance: "mind", die_size: "d12" });
+    queueDice(11);
+    await big.evaluate();
+    await big.takeStress();
+    expect(vess.system.resistances.mind.value).toBe(12);
+  });
+
+  it("the card's track line reads the track's own max", async () => {
+    character("vess", { resistances: { blood: { value: 6, max: 12 } } });
+    const roll = StressRoll._build({ character: "vess", resistance: "blood", die_size: "d6" });
+    queueDice(3);
+    await roll.evaluate();
+    roll.options.applied = [{ id: "vess", name: "Vess", amount: 3, protection: 0 }];
+    const data = rendered(await roll.render()).data;
+    expect(data.applied[0].value).toBe("+3 · heart.card.track{value=6,max=12}");
   });
 });
 

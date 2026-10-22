@@ -6,10 +6,6 @@
 
 const running = new Set();
 
-export function isRunning(key) {
-    return running.has(key);
-}
-
 export async function oneAtATime(key, button, fn) {
     if (running.has(key)) return undefined;
     running.add(key);

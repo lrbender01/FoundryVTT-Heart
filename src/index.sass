@@ -264,7 +264,7 @@
 // and Heart's compendium windows (Foundry ids them "compendium-<pack id>");
 // the sidebar and other compendiums keep Foundry's look.
 :where(.heart-window, .heart, .chat-message, [id^="compendium-heart."], [id^="compendium-fvtt-heart-content."]) img:is([src*="systems/heart/assets/icons/"], [src*="modules/fvtt-heart-content/assets/icons/"])
-    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.9))
+    filter: drop-shadow(0 0 1px rgba(util.$ink, 0.9)) drop-shadow(0 0 1px rgba(util.$ink, 0.9))
 
 // an icon and its word never split across lines (Heart windows, previews,
 // and chat only, 2026-10-02)

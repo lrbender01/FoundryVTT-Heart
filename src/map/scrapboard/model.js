@@ -18,8 +18,9 @@
 // (sprites, polygons, masks, text). Change the map here, then rebuild the
 // mock (node build.mjs there) so the two stay in lockstep. Two documents:
 //   look   the style and the art library: the content module's
-//          heart-map.json (v3), from the mock's "Look and library" export
-//   board  what is pinned where: a scene's flags.heart.map in Foundry, the
+//          assets/art/map/heart-board.json (v3), from the mock's
+//          `node build.mjs --export`
+//   board  what is pinned where: a scene's flags.heart.board in Foundry, the
 //          mock's "Board" export
 // Texture and art references are ids: 'tx/<folder>__<name>' (the texture
 // set, assets/art/map/textures in Foundry) and 'art/<kind>__<name>' (the
@@ -46,7 +47,7 @@ export const LOOK_VERSION = 3;
 const num = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const pick = (v, list, d) => (list.includes(v) ? v : d);
-// a palette: up to six colours (the defaults if none read)
+// a palette: up to MAX_INKS colours (the defaults if none read)
 const MAX_INKS = 16;
 const inks = (list, d) => {
     const out = (Array.isArray(list) ? list : []).map((c) => color(c, null)).filter((c) => c !== null).slice(0, MAX_INKS);
@@ -1181,7 +1182,6 @@ export function scrapLayout(scrap, look, size, measure, libEntry = null) {
     out.hull = place([-PW / 2, -PH / 2, PW / 2, -PH / 2, PW / 2, PH / 2, -PW / 2, PH / 2], pc.x, pc.y, rot);
 
     const handPx = tagged ? tagPx : Math.round((isNote ? notePx : unit * 0.15 * fk) * (parts.text?.s ?? 1));
-    const lineH = handPx * 0.95;
     // (its writing's wrap width: its own, set by its handle's box)
     const textW = tagged ? W : parts.text?.w ? parts.text.w * W : W * 0.86;
     // (its writing's box shaped by hand, Luke 2026-10-02: a height too, and
@@ -1535,23 +1535,6 @@ export function pointAlong(pts, dist) {
     return { x: pts[0] ?? 0, y: pts[1] ?? 0, ux: 1, uy: 0 };
 }
 
-export function dashes(pts, dash = 16, gap = 12) {
-    const total = pathLength(pts);
-    const out = [];
-    for (let d = 0; d < total; d += dash + gap) {
-        const seg = [];
-        const end = Math.min(total, d + dash);
-        for (let s = d; s < end; s += 5) {
-            const q = pointAlong(pts, s);
-            seg.push(q.x, q.y);
-        }
-        const q = pointAlong(pts, end);
-        seg.push(q.x, q.y);
-        if (seg.length >= 4) out.push(seg);
-    }
-    return out;
-}
-
 /* -------------------------------------------- */
 /*  What a viewer sees                          */
 /* -------------------------------------------- */
@@ -1887,11 +1870,27 @@ export function revealOf(s, dir = 1) {
     return s.state === 'hidden' ? 'known' : 'hidden';
 }
 
+// What a Reveal press writes (controls.js press; one copy for both hosts,
+// Luke 2026-10-21): the card's, pin's, or string's new state, and a string's
+// joined strings, name tags, and threads with it. Null for anything else.
+export function revealPatch(a) {
+    const state = { state: a?.to };
+    if (a?.scrap) return { scraps: { [a.scrap.key]: state } };
+    if (a?.pin) return { pins: { [a.pin.id]: state } };
+    if (!a?.link) return null;
+    return {
+        link: [a.link.id, state],
+        links: Object.fromEntries((a.also?.links ?? []).map((id) => [id, { ...state }])),
+        scraps: Object.fromEntries((a.also?.scraps ?? []).map((k) => [k, { ...state }])),
+    };
+}
+
 // A name tag's paper (a ticket stub)
 export const TAG_PAPER = 'tx/paper__strip__paper_ticket_stub_rose_strip';
 
-// A string's pulls with one span split in two (a joint put in)
-function splitPulls(pulls, span) {
+// A string's pulls with one span split in two (a joint put in): the spans
+// either side keep theirs
+export function splitPulls(pulls, span) {
     const out = [];
     (pulls ?? []).forEach((p, k) => {
         if (k < span) out[k] = p;
@@ -1964,8 +1963,10 @@ export function applyPatch(board, patch) {
 
 // A name for a string: a pin put into it (partway along, or `at`), a name
 // tag (a note) by it, and a thread from the pin to the tag, all ordinary
-// pieces from then on. Returns the patch, or null.
-export function labelPatch(raw, id, label, look, size, measure, { at = null, tag = null } = {}) {
+// pieces from then on. Returns the patch, or null. (`author`: a player naming
+// their own string, Luke 2026-10-21: the tag, its thread, and its pins are
+// theirs too, so their undo and their edits reach them.)
+export function labelPatch(raw, id, label, look, size, measure, { at = null, tag = null, author = null } = {}) {
     const view = boardView(look, normalizeBoard(raw), 'gm', size, measure);
     const l = view.links.find((x) => x.id === id);
     const rl = raw.links?.[id];
@@ -1978,9 +1979,10 @@ export function labelPatch(raw, id, label, look, size, measure, { at = null, tag
     const fam = look.pools.ends?.[l.kind]?.length ? look.pools.ends[l.kind] : look.pools.pins;
     const joints = [...(rl.joints ?? [])];
     joints.splice(ji, 0, { pin: pinId });
-    const noteKey = customKey('t', raw.scraps ?? {});
+    const noteKey = customKey('t', keysTaken(raw));
     const T = tag ?? { x: mid.x + 20, y: mid.y + 70 };
-    const note = { type: 'note', tag: true, text: label, x: Math.round(T.x), y: Math.round(T.y), state: rl.state === 'hidden' ? 'hidden' : 'known' };
+    const by = author ? { author } : {};
+    const note = { type: 'note', tag: true, text: label, x: Math.round(T.x), y: Math.round(T.y), state: rl.state === 'hidden' ? 'hidden' : 'known', ...by };
     if (T.r !== undefined && T.r !== null) note.r = T.r;
     const threadId = customKey('l', { ...(raw.links ?? {}), [id]: 1 });
     const tagPin = customKey('pin', { ...(raw.pins ?? {}), [pinId]: 1 });
@@ -1989,13 +1991,13 @@ export function labelPatch(raw, id, label, look, size, measure, { at = null, tag
     const sz = l.pinS ? { s: l.pinS } : {};
     return {
         pins: {
-            [pinId]: { tex, ...sz, x: Math.round(mid.x), y: Math.round(mid.y) },
+            [pinId]: { tex, ...sz, x: Math.round(mid.x), y: Math.round(mid.y), ...by },
             // (the thread's far pin, through the top of the tag)
-            [tagPin]: { tex, ...sz, on: noteKey, at: { u: 0, v: -0.42 } },
+            [tagPin]: { tex, ...sz, on: noteKey, at: { u: 0, v: -0.42 }, ...by },
         },
         links: { [id]: { joints, pulls: splitPulls(rl.pulls, span) } },
         newScraps: { [noteKey]: note },
-        newLinks: { [threadId]: { kind: rl.kind ?? 'delve', state: rl.state ?? 'known', aPin: pinId, bPin: tagPin } },
+        newLinks: { [threadId]: { kind: rl.kind ?? 'delve', state: rl.state ?? 'known', aPin: pinId, bPin: tagPin, ...by } },
     };
 }
 
@@ -2179,6 +2181,11 @@ export function customKey(prefix, existing = {}) {
     while (existing[`${prefix}${i}`]) i++;
     return `${prefix}${i}`;
 }
+
+// The keys a new card may not take: the board's cards and the bin's (Luke,
+// 2026-10-21: a card binned under a key a new card then took was lost when
+// that one was binned too, the older going to make room)
+export const keysTaken = (raw) => ({ ...(raw?.bin ?? {}), ...(raw?.scraps ?? {}) });
 
 /* -------------------------------------------- */
 /*  The brush's doodles (Luke, 2026-10-06)      */
@@ -2390,8 +2397,19 @@ const BOARD_KEYS = ['scraps', 'links', 'pins', 'marks', 'bits', 'decor', 'bin'];
 const isPlain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const copy = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
 const sameJSON = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-const getAt = (o, path) => path.reduce((v, k) => (v && typeof v === 'object' ? v[k] : undefined), o);
+// (a key no board holds, never followed: Luke, 2026-10-21, a record sent
+// through the relay with a path through __proto__ wrote onto every object on
+// the GM's client)
+const UNSAFE = new Set(['__proto__', 'constructor', 'prototype']);
+export const safePath = (path) => Array.isArray(path) && path.length > 0 && path.every((k) => typeof k === 'string' && k !== '' && !UNSAFE.has(k));
+const getAt = (o, path) => path.reduce((v, k) => (v && typeof v === 'object' && Object.hasOwn(v, k) ? v[k] : undefined), o);
+// (the collections whose items are whole things: a record's op inside one
+// that is gone since, a card someone took off, is let go, never a blank one
+// made: Luke, 2026-10-21)
+const ITEMS = new Set(['scraps', 'links', 'pins', 'bits', 'bin']);
 function setAt(o, path, has, v) {
+    if (!safePath(path)) return;
+    if (path.length > 2 && ITEMS.has(path[0]) && !isPlain(o?.[path[0]]?.[path[1]])) return;
     let at = o;
     for (const k of path.slice(0, -1)) {
         if (!isPlain(at[k])) {
@@ -2406,7 +2424,7 @@ function setAt(o, path, has, v) {
 }
 
 function diffInto(ops, path, a, b) {
-    if (sameJSON(a, b)) return;
+    if (!safePath(path) || sameJSON(a, b)) return;
     if (isPlain(a) && isPlain(b)) {
         for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) diffInto(ops, [...path, k], a[k], b[k]);
         return;
@@ -2498,17 +2516,84 @@ export function binPatch(raw, keys, { at = Date.now(), by = null } = {}) {
             placed.add(id);
         }
     }
-    // (the oldest let go past BIN_MAX)
-    const all = Object.entries(raw.bin ?? {}).sort((x, y) => (x[1]?.at ?? 0) - (y[1]?.at ?? 0));
+    // (other strings run through its pins lose those joints: each card keeps
+    // the string's joints and pulls as they were, so putting it back puts them
+    // back, unbinPatch; Luke, 2026-10-21)
+    for (const id of Object.keys(r.edits)) {
+        const l = raw.links?.[id];
+        for (const j of l?.joints ?? []) {
+            const k = j?.pin ? owner(j.pin) : null;
+            if (k) (bin[k].joints ??= {})[id] = { was: copy(l.joints), pulls: copy(l.pulls ?? []) };
+        }
+    }
+    // (the oldest let go past BIN_MAX; a card already in the bin under a key
+    // going in now is replaced, never let go in place of the new one: Luke,
+    // 2026-10-21, a full bin dropped the card just taken off)
+    const all = Object.entries(raw.bin ?? {}).filter(([k]) => !bin[k]).sort((x, y) => (x[1]?.at ?? 0) - (y[1]?.at ?? 0));
     const over = all.length + r.scraps.length - BIN_MAX;
     for (let i = 0; i < over; i++) bin[all[i][0]] = null;
-    // (a card already in the bin under its key: the older one goes)
     return {
         scraps: Object.fromEntries(r.scraps.map((k) => [k, null])),
         pins: Object.fromEntries(r.pins.map((id) => [id, null])),
         links: { ...Object.fromEntries(r.links.map((id) => [id, null])), ...r.edits },
         bin,
     };
+}
+
+// Things taken off the board at once, as one patch (Luke, 2026-10-21: one
+// copy for both hosts, one edit to undo): cards into the bin with their pins
+// and strings (binPatch), then the pins and strings asked for, with what
+// depends on them (removalOf: a pin's strings; joints it held let go). Null
+// when nothing goes.
+export function takeOffPatch(raw, { scraps = [], pins = [], links = [] } = {}, { at = Date.now(), by = null } = {}) {
+    const binned = scraps.length ? binPatch(raw, scraps, { at, by }) : null;
+    const after = binned ? applyPatch(copy(raw), binned) : raw;
+    const r = removalOf(after, { pins, links });
+    const out = {
+        scraps: { ...(binned?.scraps ?? {}) },
+        pins: { ...(binned?.pins ?? {}), ...Object.fromEntries(r.pins.map((id) => [id, null])) },
+        links: { ...(binned?.links ?? {}), ...r.edits, ...Object.fromEntries(r.links.map((id) => [id, null])) },
+        ...(binned ? { bin: binned.bin } : {}),
+    };
+    return Object.keys(out.scraps).length + Object.keys(out.pins).length + Object.keys(out.links).length ? out : null;
+}
+
+// A doodle laid down (Luke, 2026-10-06; one copy for both hosts, 2026-10-21):
+// on the card under it (its own strokes, in its frame) or on the sheet in the
+// layer of whoever placed it (`me`), in the brush's paint, brightness, width,
+// and opacity (`brush`: { size, c, w, b, o }). Returns the patch.
+export function doodlePatch(raw, view, a, brush, look, me) {
+    const strokes = doodleBoard(a.kind, a.seed ?? `${a.kind}:${Date.now()}`, { x: a.at.x, y: a.at.y, size: brush.size, c: brush.c, w: Math.min(brush.w, markMax(look)), b: brush.b, o: brush.o });
+    const card = a.on ? view?.scraps?.find((x) => x.key === a.on) ?? null : null;
+    const have = { ...((card ? raw?.scraps?.[card.key]?.marks : raw?.marks?.[me]) ?? {}) };
+    const marks = {};
+    for (const st of strokes) {
+        const id = customKey('m', have);
+        have[id] = 1;
+        marks[id] = card ? { ...strokeToCard(st, card, look), by: me } : st;
+    }
+    return card ? { scraps: { [card.key]: { marks } } } : { marks: { [me]: marks } };
+}
+
+// The brush's stroke through `pts` (board px), in its paint, width (never
+// past markMax), opacity, and brightness (`brush`: { c, w, o, b }): the
+// stroke being drawn and the one laid down alike
+export const brushStroke = (brush, look, pts) => ({ c: brush?.c ?? 0, w: Math.min(brush?.w ?? 8, markMax(look)), o: brush?.o ?? 0.85, b: brush?.b ?? 1, pts });
+
+// A brush stroke laid down (Luke, 2026-10-03; one copy for both hosts,
+// 2026-10-21): begun on a card (a.on), the card's own, in its frame, by
+// whoever drew it (`me`); else on the sheet in their layer. Returns
+// { on, stroke, patch }: `on` the card it went on (null: the sheet), `stroke`
+// as written (what a player sends the GM).
+export function strokePatch(raw, view, a, brush, look, me) {
+    const st = brushStroke(brush, look, a.pts);
+    const card = a.on ? view?.scraps?.find((x) => x.key === a.on) ?? null : null;
+    const onCard = card ? strokeToCard(st, card, look) : null;
+    if (onCard) {
+        const stroke = { ...onCard, by: me };
+        return { on: card.key, stroke, patch: { scraps: { [card.key]: { marks: { [customKey('m', raw?.scraps?.[card.key]?.marks ?? {})]: stroke } } } } };
+    }
+    return { on: null, stroke: st, patch: { marks: { [me]: { [customKey('m', raw?.marks?.[me] ?? {})]: st } } } };
 }
 
 // The patch putting a binned card back, with its pins and the strings whose
@@ -2520,7 +2605,7 @@ export function unbinPatch(raw, key) {
     const scraps = { ...(raw.scraps ?? {}) };
     const pinsNow = { ...(raw.pins ?? {}) };
     const linksNow = { ...(raw.links ?? {}) };
-    const k = scraps[key] ? customKey(e.scrap.type === 'note' ? 'n' : e.scrap.type === 'scrawl' ? 'w' : 'c', scraps) : key;
+    const k = scraps[key] ? customKey(e.scrap.type === 'note' ? 'n' : e.scrap.type === 'scrawl' ? 'w' : 'c', keysTaken(raw)) : key;
     const pinId = {};
     const newPins = {};
     for (const [id, p] of Object.entries(e.pins ?? {})) {
@@ -2530,14 +2615,72 @@ export function unbinPatch(raw, key) {
     }
     const there = (end, pin) => (pin ? Boolean(pinId[pin] || pinsNow[pin]) : end ? end === key || Boolean(scraps[end]) : true);
     const newLinks = {};
+    const bin = { [key]: null };
+    const fix = (v) => (v === key ? k : v);
+    const pin = (v) => (v ? pinId[v] ?? v : v);
+    // (a string to a card still in the bin waits in that card's entry, its
+    // ends here as they are now: Luke, 2026-10-21, two cards binned together
+    // lost the string between them when one came back first)
+    const holder = (l) => Object.keys(raw.bin ?? {}).find((ok) => ok !== key && raw.bin[ok]?.scrap && ([l.a, l.b].includes(ok) || [l.aPin, l.bPin].some((p) => p && raw.bin[ok].pins?.[p])));
     for (const [id, l] of Object.entries(e.links ?? {})) {
-        if (!there(l.a, l.aPin) || !there(l.b, l.bPin)) continue;
+        const moved = { ...l, a: fix(l.a ?? null), b: fix(l.b ?? null), aPin: pin(l.aPin ?? null), bPin: pin(l.bPin ?? null), joints: (l.joints ?? []).map((j) => (j?.pin ? { pin: pin(j.pin) } : j)) };
+        if (!there(l.a, l.aPin) || !there(l.b, l.bPin)) {
+            const ok = holder(l);
+            if (ok) {
+                const o = (bin[ok] ??= copy(raw.bin[ok]));
+                o.links = { ...(o.links ?? {}), [id]: moved };
+            }
+            continue;
+        }
         const nid = linksNow[id] ? customKey('l', { ...linksNow, ...newLinks }) : id;
-        const fix = (v) => (v === key ? k : v);
-        const pin = (v) => (v ? pinId[v] ?? v : v);
-        newLinks[nid] = { ...l, a: fix(l.a ?? null), b: fix(l.b ?? null), aPin: pin(l.aPin ?? null), bPin: pin(l.bPin ?? null), joints: (l.joints ?? []).filter((j) => !j?.pin || pinId[j.pin] || pinsNow[j.pin]).map((j) => (j?.pin ? { pin: pin(j.pin) } : j)) };
+        newLinks[nid] = { ...moved, joints: moved.joints.filter((j) => !j?.pin || newPins[j.pin] || pinsNow[j.pin]) };
     }
-    return { newScraps: { [k]: copy(e.scrap) }, pins: newPins, newLinks, bin: { [key]: null } };
+    // (the joints other strings ran through its pins, put back in those
+    // strings where they still are, on the board or waiting in another card's
+    // entry: Luke, 2026-10-21)
+    const links = {};
+    const mine = (pid) => Boolean(e.pins?.[pid]);
+    for (const [id, kept] of Object.entries(e.joints ?? {})) {
+        if (linksNow[id]) {
+            const back = rejoin(linksNow[id], kept, mine, pin);
+            if (back) links[id] = back;
+            continue;
+        }
+        const ok = Object.keys(raw.bin ?? {}).find((o) => o !== key && (bin[o] ?? raw.bin[o])?.links?.[id]);
+        if (!ok) continue;
+        const o = (bin[ok] ??= copy(raw.bin[ok]));
+        const back = rejoin(o.links[id], kept, mine, pin);
+        if (back) o.links = { ...o.links, [id]: { ...o.links[id], ...back } };
+    }
+    return { newScraps: { [k]: copy(e.scrap) }, pins: newPins, newLinks, bin, ...(Object.keys(links).length ? { links } : {}) };
+}
+
+// A string's joints through a card's pins put back (unbinPatch): `kept` is
+// { was, pulls }, its joints and pulls when the card came off; `mine` says
+// whether a pin is the card's, `mapPin` its id now. Each joint goes back
+// after the joint it followed (else at its old place), unless the string
+// already runs through that pin; the pulls come back only when the string is
+// whole as it was. Returns { joints, pulls }, or null when nothing changes.
+function rejoin(l, kept, mine, mapPin) {
+    const was = Array.isArray(kept?.was) ? kept.was : [];
+    const as = (j) => (j?.pin && mine(j.pin) ? { ...j, pin: mapPin(j.pin) } : j);
+    const out = [...(l?.joints ?? [])];
+    let any = false;
+    was.forEach((j, i) => {
+        if (!j?.pin || !mine(j.pin) || out.some((x) => x?.pin === mapPin(j.pin))) return;
+        let at = Math.min(i, out.length);
+        for (let p = i - 1; p >= 0; p--) {
+            const n = out.findIndex((x) => sameJSON(x, as(was[p])));
+            if (n >= 0) {
+                at = n + 1;
+                break;
+            }
+        }
+        out.splice(at, 0, as(j));
+        any = true;
+    });
+    if (!any) return null;
+    return { joints: out, pulls: sameJSON(out, was.map(as)) ? copy(kept.pulls ?? []) : [] };
 }
 
 // What the bin holds, newest first: [{ key, at, by, type, name }]

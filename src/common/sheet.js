@@ -1,6 +1,7 @@
-import sheetHTML from './sheet.html';
 import { heartProseMirrorPlugins } from './editor';
 import { glassToggleButton } from './glass';
+import { enrichFields } from './rich-text';
+import { gmSafeFields, mayReadGmNotes } from './gm-notes';
 
 export default function HeartSheetMixin(baseClass) {
     return class extends baseClass {
@@ -40,9 +41,20 @@ export default function HeartSheetMixin(baseClass) {
             return heartProseMirrorPlugins(this, name, options);
         }
 
-        get template() {
-            return sheetHTML.path;
+        // Rich text this sheet draws, enriched before the template runs
+        // (common/rich-text.js; Luke, 2026-10-21): [{ key, html, doc }]
+        _richFields(data) {
+            return [];
         }
+
+        // (GM Notes only for the GM, 2026-10-21: common/gm-notes.js)
+        async _renderInner(data, ...args) {
+            data.enriched = await enrichFields(gmSafeFields(this._richFields(data), game.user));
+            return super._renderInner(data, ...args);
+        }
+
+        // (the default template, common/sheet.html, went 2026-10-21, Luke:
+        // every Heart sheet names its own)
 
         get default_img() {
             return CONST.DEFAULT_TOKEN;
@@ -55,7 +67,7 @@ export default function HeartSheetMixin(baseClass) {
         get title() {
             const key = 'heart.' + super.title;
             const resp = game.i18n.localize(key);
-            if (resp == key) {
+            if (resp === key) {
                 return super.title;
             } else {
                 return resp;
@@ -73,6 +85,9 @@ export default function HeartSheetMixin(baseClass) {
             const own = (data.actor ?? data.item)?.img;
             data.displayImg = (own && own !== this.default_img) ? own : this.img;
             if (!data.actor && !data.item) data.img = this.img;
+            // the templates draw GM Notes panels only when this is set
+            // (common/gm-notes.js, 2026-10-21)
+            data.showGmNotes = mayReadGmNotes(game.user);
             return data;
         }
     };

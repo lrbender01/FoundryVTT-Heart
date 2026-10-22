@@ -9,6 +9,6 @@
     {{/if}}
   </div>
   <div class="container-content">
-    {{editor (localizeHeart system.description) target="system.description" button=true editable=editable owner=owner engine="prosemirror"}}
+    {{editor (lookup @root.enriched "system.description") target="system.description" button=true editable=editable owner=owner engine="prosemirror"}}
   </div>
 </div>

@@ -16,7 +16,7 @@ import {
   SECTION_ANCHORS,
 } from "../src/actors/party/decor.js";
 
-// the tool's export shape (docs/plans/heart-party-art.md)
+// the tool's export shape (the Heart Party Sheet Art tool; CHANGELOG.md)
 const EXPORT = {
   banner: { on: true, img: "delvers_camp_around_fire_cut", z: 100, x: 50, y: 57 },
   decor: [

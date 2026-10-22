@@ -29,20 +29,8 @@ export default class extends HeartItemSheet {
         return data.img;
     }
 
-    //FIXME:? This is required to open equipment that is a child of a class/calling from the player sheet.
-    // It maybe should be using get id() from the ItemSheetFactory instead?
-    get id() {
-      return `${this.constructor.name}-${this.document.uuid.replace(/[\.@]/g, "-")}`;
-    }
-
-    get resistanceTypes() {
-      return this.system.resistances;
-    }
-
-    getData() {
-      const data = super.getData();
-      return data;
-    }
+    // (get id() is HeartItemSheet's since 2026-10-21; the unused
+    // resistanceTypes getter and empty getData went)
 
     activateListeners(html) {
         super.activateListeners(html);
@@ -56,33 +44,8 @@ export default class extends HeartItemSheet {
           const next = current.includes(value) ? current.filter(r => r !== value) : [...current, value];
           this.item.update({ 'system.resistances': next });
         });
-
-        html.find('.ordered-checkable-box:not(.checked)').click(ev => {
-          ev.preventDefault();
-          const element = ev.currentTarget;
-          const parent = element.parentElement;
-          const target = parent.dataset.target;
-          const value = parent.dataset.value;
-
-          let currentResistances = foundry.utils.getProperty(this.item, target)
-          currentResistances.push(value)
-          let data = {}
-          data[target] = currentResistances
-          this.item.update(data)
-        });
-
-        html.find('.ordered-checkable-box.checked').click(ev => {
-            ev.preventDefault();
-            const element = ev.currentTarget;
-            const parent = element.parentElement;
-            const target = parent.dataset.target;
-            const value = parent.dataset.value;
-
-            let newResistances = foundry.utils.getProperty(this.item, target).filter(e => e !== value)
-            let data = {}
-            data[target] = newResistances
-            this.item.update(data)
-        });
+        // (the upstream .ordered-checkable-box handlers went 2026-10-21: no
+        // equipment template has boxes)
 
     }
 

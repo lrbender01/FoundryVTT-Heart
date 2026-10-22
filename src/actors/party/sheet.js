@@ -18,6 +18,7 @@ import { loadPartyArt, partyArt, partyBanner } from './art';
 import { partyArtUrl, ANCHORS, SECTION_ANCHORS } from './decor';
 import { boardNotes, noteRemoval } from './board';
 import { openPartyNote } from './note-window';
+import { artToggleButton } from '../../common/art-toggle';
 
 // Party sheet (2026-09-30): the world's one party actor (party.js). Header:
 // portrait, name and quartermaster, the shared Provisions track with its
@@ -29,7 +30,7 @@ import { openPartyNote } from './note-window';
 // call posts its own chat card); the sheet only writes the name, img, notes
 // and the member list (system.members, actor ids).
 //
-// Art (2026-10-02, docs/plans/heart-party-art.md): the banner sheets' look
+// Art (2026-10-02; the plan's decisions are in CHANGELOG.md): the banner sheets' look
 // (common/banner.js) with the content module's party-art.json as its art
 // (art.js), plus that file's decorations, laid out and drawn by the shared
 // decoration code (common/decor.js, common/decor-dom.js). The title bar's
@@ -90,18 +91,25 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
         return Boolean(art?.banner || art?.decor?.length);
     }
 
-    // the Art button whenever there is party art (banner or decorations);
-    // no Show players
+    // The title bar (one method since 2026-10-21, Luke: a second
+    // _getHeaderButtons further down replaced this one, so the party sheet
+    // had Show players and no Art button for decoration-only art): no Show
+    // players; the GM's Reset, out of the way of the Provisions actions and
+    // named for what it does (2026-09-30, Luke); then the Art button
+    // whenever there is party art (banner or decorations)
     _getHeaderButtons() {
         const buttons = super._getHeaderButtons().filter(b => b.class !== 'heart-art-share');
+        if (game.user.isGM) {
+            buttons.unshift({
+                label: loc('heart.party-sheet.reset'),
+                class: 'heart-party-reset',
+                icon: 'fas fa-skull',
+                onclick: () => this._confirmReset(),
+            });
+        }
         if (!this._art() && this._hasPartyArt()) {
             const reset = buttons.findIndex(b => b.class === 'heart-party-reset');
-            buttons.splice(reset + 1, 0, {
-                label: loc('heart.art.toggle'),
-                class: 'heart-art-toggle',
-                icon: 'fas fa-image',
-                onclick: () => this._toggleArt(),
-            });
+            buttons.splice(reset + 1, 0, artToggleButton());
         }
         return buttons;
     }
@@ -224,21 +232,6 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
         return data;
     }
 
-    // Reset sits in the window's title bar, GM only (2026-09-30, Luke): out
-    // of the way of the Provisions actions, and named for what it does
-    _getHeaderButtons() {
-        const buttons = super._getHeaderButtons();
-        if (game.user.isGM) {
-            buttons.unshift({
-                label: loc('heart.party-sheet.reset'),
-                class: 'heart-party-reset',
-                icon: 'fas fa-skull',
-                onclick: () => this._confirmReset(),
-            });
-        }
-        return buttons;
-    }
-
     // header buttons take no tooltip, so it is added to the drawn frame
     // (a Foundry tooltip like every Heart one, 2026-09-30, Luke)
     async _renderOuter() {
@@ -253,7 +246,8 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
             content: `<p>${esc(loc('heart.party-sheet.reset-confirm', { name: this.actor.name }))}</p>`,
             options: heartDialogOptions(),
         });
-        if (ok) this.actor.proxy.reset();
+        // (awaited, 2026-10-21: a failure was an unhandled rejection)
+        if (ok) await this.actor.proxy.reset();
     }
 
     // ------------------------------------------------------------ members
@@ -420,7 +414,7 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
             return oneAtATime(`party:${action}`, ev.currentTarget, () => fn(ev));
         });
 
-        click('party-quartermaster-clear', () => api.setQuartermaster(null));
+        click('party-quartermaster-clear', () => api.setQuartermaster(null)?.catch?.(err => console.error('heart | clear quartermaster', err)));
         act('volunteer-quartermaster', ev => api.volunteerQuartermaster(ev.currentTarget.dataset.memberId));
         act('resign-quartermaster', ev => api.resignQuartermaster(ev.currentTarget.dataset.memberId));
         // the warning badge leads the GM to the picker
@@ -429,7 +423,8 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
         });
         html.find('[data-control=quartermaster]').on('change', ev => {
             ev.stopPropagation();
-            api.setQuartermaster(ev.currentTarget.value || null);
+            // (a failure is logged, 2026-10-21: it floated unhandled)
+            api.setQuartermaster(ev.currentTarget.value || null)?.catch?.(err => console.error('heart | set quartermaster', err));
         });
 
         act('party-upkeep', () => api.upkeep());
@@ -468,7 +463,7 @@ export default class PartySheet extends BannerSheet(HeartActorSheet) {
             ev.stopPropagation();
             const id = ev.currentTarget.closest('[data-member-id]').dataset.memberId;
             if (!PartySheet.canManage(game.actors.get(id))) return;
-            this._setMembers(this.memberIds().filter(m => m !== id));
+            return this._setMembers(this.memberIds().filter(m => m !== id)).catch(err => console.error('heart | remove member', err));
         });
         click('add-member', () => this._chooseMember());
     }

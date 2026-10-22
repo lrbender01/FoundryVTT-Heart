@@ -67,7 +67,7 @@ form.heart.item-sheet
 
             // the name and type line stay legible over the art
             .item-ident
-                text-shadow: 0 0 3px #000, 0 0 8px #000
+                text-shadow: 0 0 3px util.$halo, 0 0 8px util.$halo
 
             // the art itself is the button, as on the character sheet's
             // banner: hovered it eases in a little, a click opens the whole
@@ -105,7 +105,7 @@ form.heart.item-sheet
         height: $icon
         border-radius: 8px
         border: 2px solid util.$header-fg
-        background: #000
+        background: util.$art-stage
         object-fit: cover
         box-sizing: border-box
         cursor: pointer
@@ -319,7 +319,7 @@ form.heart.item-sheet
         min-height: 2em
 
     // rows inside item sheets use the compact character-sheet spacing
-    .item-list, .tab-item-list
+    .tab-item-list
         font-size: util.$fs-body
 
         .item.preview
@@ -442,7 +442,7 @@ form.heart.item-sheet
 
         // while an answer is being edited, give the editor room to write
         li.editing .answer
-            .editor-content, .ProseMirror, .tox-tinymce, .tox-edit-area
+            .editor-content, .ProseMirror
                 min-height: 12em !important
 
         .answer-placeholder

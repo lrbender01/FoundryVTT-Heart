@@ -1,3 +1,5 @@
+@use '../util'
+
 // Book art crops (2026-10-01, common/art.js). The canvas fills its parent;
 // the art is sized from the canvas with container query units: --W is the
 // width that just covers the canvas, times the zoom, and the art's centre
@@ -49,7 +51,7 @@ body.heart-art-off .item.preview.has-art > .row-art
 .heart-art-viewer
     .window-content
         padding: 0
-        background: #000
+        background: util.$art-stage
         overflow: hidden
 
     .art-viewer
@@ -94,8 +96,8 @@ body.heart-art-off .item.preview.has-art > .row-art
         width: 38px
         height: 64px
         font-size: 20px
-        color: #fff
-        background: rgba(0, 0, 0, 0.45)
+        color: util.$art-fg
+        background: rgba(util.$ink, 0.45)
         opacity: 0.6
         transition: opacity 0.12s
 
@@ -121,8 +123,8 @@ body.heart-art-off .item.preview.has-art > .row-art
         align-items: center
         gap: 12px
         padding: 0 12px
-        color: #c4c4c4
-        font-size: 13px
+        color: util.$art-dim
+        font-size: util.$fs-small
 
     .art-count
         font-variant-numeric: lining-nums tabular-nums
@@ -132,15 +134,15 @@ body.heart-art-off .item.preview.has-art > .row-art
 
     .art-pick
         padding: 3px 10px 2px
-        border: 1px solid #c4c4c4
+        border: 1px solid util.$art-dim
         border-radius: 5px
-        color: #fff
+        color: util.$art-fg
         white-space: nowrap
 
         &[data-action]:hover
-            border-color: #fff
+            border-color: util.$art-fg
             text-shadow: none
 
         &.on
             border-color: transparent
-            color: #808080
+            color: util.$title-btn-off

@@ -1,6 +1,6 @@
 import applicationHTML from './application.html';
 import HeartApplication from '../base/application';
-import { partyMembers } from '../../actors/party/view';
+import { helperPool } from '../../actors/party/view';
 import { normalizeStakes, hasStakes } from '../../rolls/stress-roll/rules';
 
 // Prepare Roll Request (GM): pick a difficulty, who rolls, the skills and
@@ -27,13 +27,9 @@ export default class PrepareRollRequestApplication extends HeartApplication {
 
     getData() {
         const data = super.getData();
-        // the party's members when there is a party with members, else every
-        // character
-        const party = game.heart.party;
-        const members = party ? partyMembers(party) : [];
-        const people = (members.length ? members : game.actors.filter(a => a.type === 'character'))
-            .map(a => ({ id: a.id, name: a.name }))
-            .sort((a, b) => a.name.localeCompare(b.name));
+        // the party's members first, the same list the roll prompt offers
+        // as helpers (actors/party/view.js helperPool; Luke, 2026-10-21, R27)
+        const people = helperPool().map(a => ({ id: a.id, name: a.name }));
         const labels = (list, kind) => Object.fromEntries(list.map(k => [k, game.i18n.localize(`heart.${kind}.${k}`)]));
         return foundry.utils.mergeObject(data, {
             characters: people,
@@ -67,23 +63,31 @@ export default class PrepareRollRequestApplication extends HeartApplication {
                 passive: data.get('stake-passive'),
             }, game.heart.stress_targets ?? []);
 
-            CONFIG.ChatMessage.documentClass.create({
-                speaker: { alias: game.user.name },
-                flags: {
-                    heart: {
-                        ["roll-request"]: {
-                            difficulty: data.get('difficulty'),
-                            characters,
-                            skills: data.getAll('skill'),
-                            domains: data.getAll('domain'),
-                            validHelpers: data.getAll('helper'),
-                            ...(hasStakes(stakes) ? { stakes } : {}),
+            // waited for, so a failure is reported, not left unhandled
+            // (2026-10-21, R24); the window stays open to try again
+            try {
+                await CONFIG.ChatMessage.documentClass.create({
+                    speaker: { alias: game.user.name },
+                    flags: {
+                        heart: {
+                            ["roll-request"]: {
+                                difficulty: data.get('difficulty'),
+                                characters,
+                                skills: data.getAll('skill'),
+                                domains: data.getAll('domain'),
+                                validHelpers: data.getAll('helper'),
+                                ...(hasStakes(stakes) ? { stakes } : {}),
+                            }
                         }
                     }
-                }
-            });
+                });
+            } catch (err) {
+                console.error('heart | the roll request could not be posted', err);
+                ui.notifications.error(game.i18n.localize('heart.relay.failed'));
+                return;
+            }
 
-            this.close();
+            await this.close();
         });
     }
 }

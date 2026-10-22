@@ -1,5 +1,5 @@
-// The scrapboard map's look in Foundry (2026-10-02, monorepo
-// docs/plans/heart-map.md): fvtt-heart-content ships it as
+// The scrapboard map's look in Foundry (2026-10-02; the fork's CLAUDE.md "The
+// Heart map"): fvtt-heart-content ships it as
 // assets/art/map/heart-board.json, exported from the Heart Map Board mock
 // (the primary map editor; the look is edited there only). Read once and
 // kept: the look (normalized by model.js), the landmark library, the pools,

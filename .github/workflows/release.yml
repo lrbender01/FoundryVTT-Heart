@@ -8,25 +8,32 @@ on:
         required: true
         type: string
         default: 0.X.Y
+# Matches today's build (2026-10-21): the same steps as build-all (which
+# copies LICENSE and static/ itself, and has no packs step since 2026-09-30),
+# with the manifest stamped with the requested version instead of the one
+# hardcoded in build-all.
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
       - run: npm ci
+      - run: npm test
+      - run: npm run empty-dist
       - run: npm run build-prod
-      - run: npm run build-manifest -- ${{ inputs.version}}
-      - run: npm run build-packs
+      - run: npm run build-manifest -- ${{ inputs.version }}
       - run: npm run build-template
-      - name: Copy static files
-        run: cp -r LICENSE ./static/* ./dist
+      - run: npm run copy-static
       - name: Zip files
         working-directory: ./dist
         run: zip -r ./heart.zip ./*
       - name: Create Release
         uses: ncipollo/release-action@v1
-        with: 
+        with:
           artifacts: "./dist/system.json,./dist/heart.zip"
           tag: ${{ inputs.version }}

@@ -6,6 +6,9 @@ import { activatePanelSheet, panelSheetDefaults } from '../../common/panel-sheet
 import { RESISTANCES } from '../../bonds/rules';
 import { abilityItemFrom } from '../../bonds/bonds';
 import { BannerSheet } from '../../common/banner';
+import { richFieldsOf } from '../../common/rich-text';
+import { companionPage } from './page';
+import { bySort } from '../proxy-lists';
 
 // Companion sheet (2026-10-01; pared down the same day, Luke's calls): one
 // actor for hirelings and animals, which the book gives the same rules (W&M
@@ -57,7 +60,9 @@ export default class HirelingSheet extends BannerSheet(HeartActorSheet) {
         // the book page on its tooltip
         const role = actor.getFlag('heart', 'role');
         data.role = role && role !== actor.name ? role : '';
-        const page = actor.flags?.['fvtt-heart-content']?.page;
+        // the printed page, as every citation a reader sees (Luke,
+        // 2026-10-21: it showed the PDF page, W72 for the Cook's W68)
+        const page = companionPage(actor.flags?.['fvtt-heart-content']);
         data.companionTip = [loc('heart.bond.ui.companion-tip'), page ? loc('heart.bond.ui.page-tip', { page }) : ''].filter(Boolean).join('\n');
         data.employers = (actor.proxy?.employers ?? []).map(c => ({
             id: c.id, name: c.name, tip: loc('heart.bond.ui.open-target', { name: c.name }),
@@ -70,15 +75,22 @@ export default class HirelingSheet extends BannerSheet(HeartActorSheet) {
             tip: loc(`heart.tip.resistance.${key}`),
         }));
         data.total = data.tracks.reduce((sum, t) => sum + t.value, 0);
-        data.abilities = actor.itemTypes.ability ?? [];
-        data.equipment = actor.itemTypes.equipment ?? [];
-        data.resources = actor.itemTypes.resource ?? [];
+        // (in their sort order, so a dragged row stays where it is dropped;
+        // S5, 2026-10-21)
+        data.abilities = bySort(actor.itemTypes.ability);
+        data.equipment = bySort(actor.itemTypes.equipment);
+        data.resources = bySort(actor.itemTypes.resource);
         // Fallout taken (switched on, not resolved) first; the book's menu
         // (switched off) under it
-        const fallouts = actor.itemTypes.fallout ?? [];
+        const fallouts = bySort(actor.itemTypes.fallout);
         data.taken = fallouts.filter(f => f.system?.active);
         data.menu = fallouts.filter(f => !f.system?.active);
         return data;
+    }
+
+    // rich text the sheet draws (common/rich-text.js)
+    _richFields() {
+        return richFieldsOf(this.actor, ['system.description', 'system.examples', 'system.notes']);
     }
 
     activateListeners(html) {

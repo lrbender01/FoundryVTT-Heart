@@ -11,28 +11,7 @@ export default class HeartApplication extends FormApplication {
     return "base";
   }
 
-  static async build(data, msg) {
-    try {
-      const valueData = Object.entries(data).reduce((map, [key, build]) => {
-        map[key] = build.value[0];
-        return map;
-      }, {});
-
-      await this._roll(valueData, msg);
-    } catch (err) {
-      return new this(
-        {},
-        {
-          heart: data,
-          msg,
-        }
-      ).render(true);
-    }
-  }
-
-  static async _roll(data) {
-    ui.notifications.error(`_roll has not been defined for ${this.formType}`);
-  }
+  // (build and _roll went 2026-10-21: nothing called them)
 
   get title() {
     if (this.constructor.formType !== "base") {
@@ -43,6 +22,11 @@ export default class HeartApplication extends FormApplication {
       return super.title;
     }
   }
+
+  // A form submitted by the browser (Enter in a field) reaches Foundry's
+  // _onSubmit, whose own _updateObject throws "must implement" (Luke,
+  // 2026-10-21). Forms that save override this.
+  async _updateObject() {}
 
   activateListeners(html) {
     html.find("button").click((ev) => {

@@ -1,0 +1,39 @@
+{{!--
+  The cut-down sheet a Limited viewer sees (Luke, 2026-10-21): an adversary,
+  landmark, or delve shown to a player at Limited gives its name, picture
+  (and art banner, where it has one), and public description only, never
+  its GM Notes, rules, tracks, or gear. Who sees it: common/gm-notes.js
+  showsLimitedSheet. Same chrome as the full panel sheets.
+--}}
+<div>
+<form class="heart sheet actor {{actor.type}} panel-sheet limited-sheet {{cssClass}}" autocomplete="off">
+
+  <div class="character-head{{#if art}} has-art{{/if}}">
+  {{#if art}}{{{heartArt actor "banner"}}}{{/if}}
+
+  <div class="character-header">
+    <div class="header-col portrait">
+      <img class="profile" src="{{displayImg}}" alt="{{actor.name}}" />
+    </div>
+
+    <div class="header-col header-box identity-box">
+      <label class="header-label">{{localizeHeart actor.type "name"}}</label>
+      <input class="header-input" value="{{actor.name}}" readonly />
+    </div>
+  </div>
+  </div>
+
+  <nav class="character-nav-tabs static-strip" aria-hidden="true"></nav>
+
+  <section class="tab-content">
+    <div class="panel-lore">
+      <div class="character-tab-container editor-panel description-container">
+        <div class="container-title"><span class="title-glyph">{{{heartGlyph "section" "notes"}}}</span>{{localizeHeart actor.type "description"}}</div>
+        <div class="container-content">
+          {{editor (lookup @root.enriched "system.description") target="system.description" button=false editable=false owner=false engine="prosemirror"}}
+        </div>
+      </div>
+    </div>
+  </section>
+</form>
+</div>

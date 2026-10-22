@@ -1,23 +1,5 @@
-@use '../../util'
-
-// Helpers from the upstream sheet. The delve and landmark stylesheets define
-// the same rules, so they are kept here unchanged for them. Scoped to Heart
-// (util.$in-heart, same specificity) 2026-09-30: they were global. (Their
-// unused .sticky helper was removed 2026-10-02.)
-#{util.$in-heart} .section
-    padding: 0.5em
-
-#{util.$in-heart} .item-list
-    &> *
-        padding: 0.5em
-        margin: 0.5em 0
-        border: 1px solid util.$line
-        background: util.$sunken
-        border-radius: 5px
-
-#{util.$in-heart} a[disabled]
-    opacity: 0.5
-    pointer-events: none
-
-// The adversary sheet's styles live in src/common/panel-sheet.sass, shared
-// with the landmark and delve sheets (2026-09-29).
+// The adversary sheet's styles live in src/common/panel-sheet.sass, shared with
+// the other panel sheets (2026-09-29). The upstream helpers that were copied
+// into this file and two others (.section, a[disabled]; .item-list, which no
+// element has) went 2026-10-21; one copy of the used ones is in
+// panel-sheet.sass.

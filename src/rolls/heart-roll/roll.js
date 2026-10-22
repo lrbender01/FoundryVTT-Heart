@@ -2,7 +2,7 @@ import './roll.sass';
 
 import chatTemplateHTML from './roll.html';
 import tooltipTemplateHTML from './tooltip.html';
-import { buildPool, poolFormula } from './pool';
+import { buildPool, poolFormula, DIFFICULTY_CUT } from './pool';
 import { showDice, diceRow } from '../dice';
 import { glyphFor } from '../../common/icons';
 import { emphasizeTerms } from '../../common/terms';
@@ -12,19 +12,12 @@ import { mayRunStress, messageOf } from '../card-actions';
 import { normalizeStakes, hasStakes, stakesText } from '../stress-roll/rules';
 // The result tables and lookups live in results.js, free of webpack-only
 // imports, so the rules tests can load them (2026-09-30, Luke)
-import { normal_results, difficult_results, stress_results, heartResult, markPool } from './results';
+import { stress_results, heartResult, markPool } from './results';
 
-const difficulty_reductions = {
-    standard: 0,
-    risky: 1,
-    dangerous: 2,
-    impossible: Infinity,
-}
-
+// the difficulties are pool.js's (2026-10-21, R20: a second copy of the cuts
+// lived here, and game.heart.results had no reader)
 export function initialise() {
-    const results = {...normal_results, ...difficult_results};
-    game.heart.difficulties = Object.keys(difficulty_reductions);
-    game.heart.results = Object.keys(results);
+    game.heart.difficulties = Object.keys(DIFFICULTY_CUT);
     game.heart.stress_results = stress_results;
 }
 
@@ -204,7 +197,7 @@ export default class HeartRoll extends Roll {
                     result: roll.result,
                     helpers: roll.options.helpers ?? [],
                     stakes: roll.options.stakes,
-                }, msg);
+                });
                 if (!stressRoll) return;
 
                 await stressRoll.evaluate();

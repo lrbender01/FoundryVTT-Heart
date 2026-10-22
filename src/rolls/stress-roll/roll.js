@@ -15,11 +15,11 @@ import { glyphFor } from '../../common/icons';
 // the resistance is prefilled with this user's last choice, the die is D4.
 // The arithmetic (die steps, doubling, Protection) lives in rules.js, free of
 // webpack-only imports, so the rules tests can load it (2026-09-30, Luke).
-import { stressDie, stressFormula, afterProtection, stressStatus, stressPreview, normalizeStakes } from './rules';
+import { stressDie, stressFormula, afterProtection, stressStatus, stressPreview, normalizeStakes, trackMax, markedValue } from './rules';
 import { applyProvisions } from '../../actors/party/party';
 import { askGM } from '../../common/relay';
 import { oneAtATime } from '../../common/busy';
-import { mayRunStress, messageOf } from '../card-actions';
+import { mayRunStress, mayRollFallout, messageOf } from '../card-actions';
 
 export default class StressRoll extends Roll {
     static get CHAT_TEMPLATE() { return chatTemplateHTML.path; }
@@ -90,7 +90,9 @@ export default class StressRoll extends Roll {
             const buildData = { result, die_size, character, resistance, ignoreProtection, helpers, passive };
             const finish = (more = {}) => {
                 foundry.utils.mergeObject(buildData, more);
-                game.user.setFlag('heart', 'lastStakes', { resistance: buildData.resistance, die_size: buildData.die_size });
+                // not waited for, but never an unhandled rejection (2026-10-21)
+                Promise.resolve(game.user.setFlag('heart', 'lastStakes', { resistance: buildData.resistance, die_size: buildData.die_size }))
+                    .catch(err => console.error('heart | could not keep the last stakes', err));
                 resolve(this._build(buildData, data, options));
             };
 
@@ -137,8 +139,10 @@ export default class StressRoll extends Roll {
             const res = actor?.system?.resistances?.[resistance];
             if (!res) continue;
             const { protection, amount } = afterProtection(total, res.protection, this.options.ignoreProtection);
+            // never past the track's last box (Luke, 2026-10-21, R17); the
+            // amount taken still decides fallout
             if (amount > 0 && actor.isOwner) {
-                await actor.update({ [`system.resistances.${resistance}.value`]: (Number(res.value) || 0) + amount });
+                await actor.update({ [`system.resistances.${resistance}.value`]: markedValue(res.value, amount, trackMax(res)) });
             }
             applied.push({ id, name: actor.name, amount, protection, marked: amount > 0 && actor.isOwner });
         }
@@ -150,18 +154,21 @@ export default class StressRoll extends Roll {
     // stress lands ONCE on the party actor however many helpers there were,
     // less the quartermaster's Supplies protection. The applied entry names
     // the party, so the card's fallout button rolls against Provisions.
+    // Runs inside a relay handler on the GM's client, so it never notifies
+    // (Luke, 2026-10-21: the no-party warning landed on the GM's screen);
+    // take-stress answers 'no-party' before it gets here.
     async _takePartyStress(total) {
         const party = game.heart.party;
         if (!party) {
-            ui.notifications.warn(game.i18n.localize('heart.party.no-party'));
             this.options.applied = [];
             return [];
         }
         const p = party.proxy.provisions;
         const { protection, amount } = afterProtection(total, p.protection, this.options.ignoreProtection);
-        // from the track's value at this moment (we are in the GM's queue)
-        const marked = amount > 0 && party.isOwner;
-        if (marked) await applyProvisions({ mode: 'add', amount });
+        // from the track's value at this moment (we are in the GM's queue);
+        // marked only when the track really took it (2026-10-21)
+        const marked = amount > 0 && party.isOwner
+            && (await applyProvisions({ mode: 'add', amount }))?.status === 'done';
         const applied = [{ id: party.id, name: party.name, amount, protection, marked, shared: true }];
         this.options.applied = applied;
         return applied;
@@ -223,7 +230,7 @@ export default class StressRoll extends Roll {
                 if (p) track = loc('heart.card.track', { value: p.value, max: p.max });
             } else {
                 const r = doc?.system?.resistances?.[opts.resistance];
-                if (r) track = loc('heart.card.track', { value: Number(r.value) || 0, max: 10 });
+                if (r) track = loc('heart.card.track', { value: Number(r.value) || 0, max: trackMax(r) });
             }
             const protection = a.protection
                 ? loc(a.shared ? 'heart.card.qm-protection' : 'heart.card.protection', { protection: a.protection })
@@ -248,9 +255,12 @@ export default class StressRoll extends Roll {
                 return { ...a, value };
             });
 
-        // fallout per character who took stress (none if Protection stopped it)
+        // fallout per character who took stress (none if Protection stopped
+        // it); drawn per client, only for those who may roll it: the GM and
+        // that character's player (Luke, 2026-10-21, R8)
         const falloutFor = isPrivate || !showFalloutRollButton ? []
-            : applied.filter(a => a.amount > 0 && !(chatOptions.falloutDone ?? []).includes(a.id));
+            : applied.filter(a => a.amount > 0 && !(chatOptions.falloutDone ?? []).includes(a.id)
+                && mayRollFallout(game.user, game.actors.get(a.id)));
         falloutFor.forEach(a => {
             a.button = a.shared ? loc('heart.card.party-fallout')
                 : falloutFor.length === 1 ? loc('heart.rolls.fallout-roll.action')
@@ -324,6 +334,12 @@ export default class StressRoll extends Roll {
             if (!stressRoll) return;
             const character = ev.currentTarget.dataset.character || stressRoll.options.character;
             return oneAtATime(`${msg.id}:fallout:${character}`, ev.currentTarget, async () => {
+                // the GM or the character's player only (R8, 2026-10-21)
+                const who = game.actors.get(character);
+                if (!mayRollFallout(game.user, who)) {
+                    ui.notifications.warn(game.i18n.format('heart.relay.fallout-not-yours', { name: who?.name ?? '' }));
+                    return;
+                }
                 if (!(await askGM('claim-fallout', { messageId: msg.id, character }))) return;
                 let falloutRoll = null;
                 try {

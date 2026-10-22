@@ -20,6 +20,9 @@ import { SheetDecor } from '../../common/decor-dom';
 import { artShown, artToggleButton, markArtButton } from '../../common/art-toggle';
 import { CHARACTER_ANCHORS, CHARACTER_SECTIONS, characterArt, characterArtUrl, loadCharacterArt } from './decor';
 import { characterSize } from '../../common/window-sizes';
+import { bindTrack } from '../../common/tracks';
+import { oneAtATime } from '../../common/busy';
+import { localizeHeart } from '../../common/localize';
 
 class HeartTabs {
     constructor({ navSelector, contentSelector, initial, sheet }) {
@@ -29,23 +32,12 @@ class HeartTabs {
         this.sheet = sheet;
     }
 
-    async _render(force = false, options = {}) {
-        // Preserve tab state across renders
-        if (this.heartTabs) {
-            this._savedActiveTab = this.heartTabs.activeTab;
-        }
-        await super._render(force, options);
-    }
-
     init() {
         // Attach click event handlers using jQuery
         this.navItems.each((index, nav) => {
             $(nav).on("click", (event) => {
-                console.log("nav clicked", nav);
                 event.preventDefault();
-                const tab = $(nav).data("tab");
-                this._activeTab = tab;
-                this.showTab(tab);
+                this.showTab($(nav).data("tab"));
             });
         });
         this.showTab(this.activeTab);
@@ -153,27 +145,35 @@ export default class CharacterSheet extends HeartActorSheet {
         return super.close(...args);
     }
 
-    // workaround for nested-children uuids not dragging properly
-    async _onDragStart(event) {
-        const target = event.currentTarget;
+    // (Dragging a row: the actor base sheet's _onDragStart since 2026-10-21,
+    // S5; it skips the tab links and a class's or calling's children, as
+    // this sheet's own copy did.)
 
-        // prevent drag and drop of embedded items from callings or classes
-        if (target.dataset.documentId && target.dataset.documentId.includes("@")) {
-            console.warn("target contains @");
-            return;
-        }
-
-        const uuid = target.dataset.itemId;
-        const document = await fromUuid(uuid);
-        const dragData = document.toDragData();
-        event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+    // A character's lists keep their order in flags (reorder.js: a row
+    // dropped on a row), so a drop elsewhere on its own sheet changes
+    // nothing; the base sheet's item sort would only write unseen values
+    async _onSortItem() {
+        return;
     }
 
+    // A folder of items arrives as a list (Foundry's _onDropFolder): each
+    // runs the rules below, one at a time, since a class waits for the old
+    // one to go (Luke, 2026-10-21: a folder dropped nothing)
     async _onDropItemCreate(itemData) {
+        if (!Array.isArray(itemData)) return this._onDropOneItem(itemData);
+        const created = [];
+        for (const data of itemData) {
+            const result = await this._onDropOneItem(data);
+            if (result) created.push(...[result].flat());
+        }
+        return created;
+    }
+
+    async _onDropOneItem(itemData) {
         if (this.actor.type === 'character') {
 
             // Validate itemData to ensure it has the required structure
-            if (!itemData.name || !itemData.type || !itemData.system) {
+            if (!itemData?.name || !itemData.type || !itemData.system) {
                 console.error("Invalid item data detected. Skipping creation.", itemData);
                 return;
             }
@@ -181,10 +181,10 @@ export default class CharacterSheet extends HeartActorSheet {
             // Prevent duplication of items embedded in class or calling
             // This is not really a good way to do this, but it works for now
             if (
-                (itemData.type == "equipment" ||
-                    itemData.type == "resource" ||
-                    itemData.type == "ability" ||
-                    itemData.type == "beat"
+                (itemData.type === "equipment" ||
+                    itemData.type === "resource" ||
+                    itemData.type === "ability" ||
+                    itemData.type === "beat"
                 )
                 &&
                 (
@@ -251,7 +251,10 @@ export default class CharacterSheet extends HeartActorSheet {
         const callingItem = this.actor.proxy.calling;
         const classItem = this.actor.proxy.class;
         const ancestryItem = this.actor.proxy.ancestry;
-        data.editable = this.actor.isOwner || game.user.isGM;
+        // Foundry's own rule (Luke, 2026-10-21): an owner, and not a locked
+        // compendium's copy (it was owner-or-GM, and the Notes editor was
+        // built editable for every viewer)
+        data.editable = this.isEditable;
         data.user = game.user;
         data.pronouns = this.actor.system.pronouns || "";
         data.ancestry = this.actor.system.ancestry || "";
@@ -383,6 +386,19 @@ export default class CharacterSheet extends HeartActorSheet {
         return data;
     }
 
+    // Rich text the sheet draws (common/rich-text.js): the Notes, and the
+    // calling's and ancestry's answers on the Biography tab, each enriched
+    // against its own item (Luke, 2026-10-21)
+    _richFields(data) {
+        const answers = (prefix, item) => Object.entries(item?.system?.questions ?? {})
+            .map(([id, q]) => ({ key: `${prefix}.${id}`, html: q?.answer ?? '', doc: item }));
+        return [
+            { key: 'system.notes', html: this.actor.system.notes ?? '', doc: this.actor },
+            ...answers('calling', data.callingItem),
+            ...answers('ancestry', data.ancestryItem),
+        ];
+    }
+
     // Dropping the party actor on this sheet makes the character a member
     // (the other way: drop the character on the party sheet). Any other
     // actor is a bond (2026-10-01): the GM grants it, a player's drop asks
@@ -412,10 +428,15 @@ export default class CharacterSheet extends HeartActorSheet {
         const actor = this.actor;
         const bondOf = (el) => actor.items.get(el.closest('[data-bond-id]')?.dataset.bondId);
         const api = () => game.heart.bonds;
-        const on = (action, fn) => html.find(`.bonds-container [data-action="${action}"]`).on('click', async ev => {
+        // one click at a time per bond and action (Luke, 2026-10-21: a
+        // double-click ran two Fallout Checks or opened two Visit dialogs;
+        // common/busy.js)
+        const on = (action, fn) => html.find(`.bonds-container [data-action="${action}"]`).on('click', ev => {
             ev.preventDefault();
             ev.stopPropagation();
-            await fn(ev.currentTarget, bondOf(ev.currentTarget));
+            const el = ev.currentTarget;
+            const bond = bondOf(el);
+            return oneAtATime(`bond:${bond?.id ?? actor.id}:${action}`, el, () => fn(el, bond));
         });
         const ids = (bond) => ({ characterId: actor.id, bondId: bond.id });
 
@@ -460,17 +481,14 @@ export default class CharacterSheet extends HeartActorSheet {
             const roll = await game.heart.rolls.FalloutRoll.build({ character: target.id });
             if (roll) await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: target }) });
         });
-        // the GM sets a person bond's pool by its marks: click to mark up to a
-        // box, the last marked again to clear it
-        html.find('.bonds-container [data-bond-pool] .ordered-checkable-box').on('click', async ev => {
-            ev.preventDefault();
-            if (!game.user.isGM) return;
-            const bond = bondOf(ev.currentTarget);
-            if (!bond) return;
-            const index = Number(ev.currentTarget.dataset.index) || 0;
-            const value = Number(bond.system.stress?.value) || 0;
-            const next = ev.currentTarget.classList.contains('checked') && index + 1 === value ? index : index + 1;
-            await api().setBondStress({ ...ids(bond), value: next });
+        // the GM sets a person bond's pool by its marks (common/tracks.js)
+        bindTrack(html, '.bonds-container [data-bond-pool] .ordered-checkable-box', {
+            editable: game.user.isGM,
+            read: (box) => {
+                const bond = bondOf(box);
+                return bond ? Number(bond.system.stress?.value) || 0 : null;
+            },
+            write: (box, value) => api().setBondStress({ ...ids(bondOf(box)), value }),
         });
         // the GM resolves a person bond's Fallout: kept, struck, as history
         on('resolve-bond-fallout', async (el) => {
@@ -595,49 +613,17 @@ export default class CharacterSheet extends HeartActorSheet {
         });
         this.heartTabs.bind(html);
 
-        // Tracks whose box group names its field (data-target). A bond's pool
+        // Tracks whose box group names its field (data-target), for those
+        // who may edit this character (common/tracks.js). A bond's pool
         // marks have their own handler (_activateBondListeners) and no
         // target; they used to fire this too, sending update({undefined: n})
         // on every GM click (2026-10-02)
-        html.find('.ordered-checkable-box:not(.checked):not(.readonly)').click(ev => {
-            const element = ev.currentTarget;
-            const target = element.parentElement?.dataset.target;
-            if (!target) return;
-            ev.preventDefault();
-            const index = parseInt(element.dataset.index);
-
-            const data = {};
-            data[target] = index + 1;
-            this.actor.update(data);
+        const targetOf = (box) => box.parentElement?.dataset.target;
+        bindTrack(html, '.ordered-checkable-box:not(.readonly)', {
+            editable: this.isEditable,
+            read: (box) => targetOf(box) ? Number(foundry.utils.getProperty(this.actor, targetOf(box))) || 0 : null,
+            write: (box, value) => this.actor.update({ [targetOf(box)]: value }),
         });
-
-        html.find('.ordered-checkable-box.checked:not(.readonly)').click(ev => {
-            const element = ev.currentTarget;
-            const target = element.parentElement?.dataset.target;
-            if (!target) return;
-            ev.preventDefault();
-            const index = parseInt(element.dataset.index);
-
-            const data = {};
-            if (index + 1 === foundry.utils.getProperty(this.actor, target)) {
-                data[target] = index;
-            } else {
-                data[target] = index + 1;
-            }
-            this.actor.update(data);
-        });
-
-        html.find('.resistance-input').change(ev => {
-            ev.preventDefault();
-            const element = ev.currentTarget;
-            const parent = element.parentElement;
-            const target = parent.dataset.target;
-
-            const data = {};
-            data[target] = parseInt(element.value);
-            this.actor.update(data);
-
-        })
 
         html.find('[data-action=edit]').click(async ev => {
             ev.preventDefault();
@@ -646,12 +632,12 @@ export default class CharacterSheet extends HeartActorSheet {
 
             const type = target.data('type'); // returns "skills"
 
-            if (type == "skills") {
+            if (type === "skills") {
                 new game.heart.applications.SkillsManagementApplication(this.actor).render(true);
                 return;
             }
 
-            if (type == "domains") {
+            if (type === "domains") {
                 new game.heart.applications.DomainsManagementApplication(this.actor).render(true);
                 return;
             }
@@ -683,32 +669,18 @@ export default class CharacterSheet extends HeartActorSheet {
             new game.heart.applications.CharacterOptionsApplication(this.actor, type).render(true);
         });
 
-        html.find('[data-action=prepare-request-roll]').click(ev => {
-            new game.heart.applications.PrepareRollRequestApplication({}).render(true);
-        });
+        // (prepare-request-roll, .pronouns-input, .ancestry-input, and
+        // .resistance-input went 2026-10-21: no element had them)
 
         html.find('[data-action=fallout-roll]').click(async ev => {
             const roll = await game.heart.rolls.FalloutRoll.build({
                 character: this.actor.id
             });
+            if (!roll) return;
 
             roll.toMessage({
                 speaker: { actor: this.actor.id }
             });
-        });
-
-        html.find('.pronouns-input').change(ev => {
-            ev.preventDefault();
-            const newPronouns = ev.currentTarget.value;
-            // Update the actor data (adjust the data path as needed)
-            this.actor.update({ 'system.pronouns': newPronouns });
-        });
-
-        html.find('.ancestry-input').change(ev => {
-            ev.preventDefault();
-            const newAncestry = ev.currentTarget.value;
-            // Update the actor data (adjust the data path as needed)
-            this.actor.update({ 'system.ancestry': newAncestry });
         });
     }
 }

@@ -21,6 +21,10 @@
 
 export const RELAY_CHANNEL = 'system.heart';
 const TIMEOUT_MS = 15000;
+// (Luke, 2026-10-21: one handler that never settled stalled every later
+// request for the session) each handler gets a little less than the asking
+// client waits, then the queue moves on without it
+export const HANDLER_LIMIT_MS = 12000;
 
 const handlers = new Map();
 const pending = new Map();
@@ -37,12 +41,21 @@ export function registerRelayHandler(op, fn) {
     handlers.set(op, fn);
 }
 
+// A handler's answer, or a RelayTimeout once HANDLER_LIMIT_MS has passed
+function withinLimit(op, work) {
+    let timer;
+    const limit = new Promise((resolve, reject) => {
+        timer = setTimeout(() => reject(new RelayTimeout(op)), HANDLER_LIMIT_MS);
+    });
+    return Promise.race([work, limit]).finally(() => clearTimeout(timer));
+}
+
 // Run one handler in this client's queue: each waits for the one before it,
-// and a failure never blocks the next
+// and a failure (or a handler that never answers) never blocks the next
 export function runQueued(op, data, userId) {
     const fn = handlers.get(op);
     if (!fn) return Promise.reject(new Error(`heart | no relay handler "${op}"`));
-    const run = queue.then(() => fn(data ?? {}, userId));
+    const run = queue.then(() => withinLimit(op, Promise.resolve().then(() => fn(data ?? {}, userId))));
     queue = run.catch(() => null);
     return run;
 }
@@ -87,21 +100,34 @@ export async function askGM(op, data = {}) {
     return null;
 }
 
-export async function onRelayMessage(message) {
+// senderId: the user Foundry's server says sent the message (it passes the
+// sender's id as the listener's second argument, server sockets.mjs
+// handleCustomSocket in 12.343). Every handler's permission check rests on
+// who asked, so that id wins over the `from` the asking client wrote
+// (Luke, 2026-10-21: any client could write the GM's id into `from`).
+export async function onRelayMessage(message, senderId) {
     if (!message || typeof message !== 'object' || message.to !== game.user.id) return;
     if (message.kind === 'request') {
+        if (senderId && senderId !== message.from) {
+            console.warn(`heart | relay "${message.op}" refused: sent by ${senderId} in the name of ${message.from}`);
+            game.socket.emit(RELAY_CHANNEL, { kind: 'response', id: message.id, to: senderId, result: { status: 'not-allowed' }, error: null });
+            return;
+        }
+        const from = senderId ?? message.from;
         let result = null;
         let error = null;
         try {
-            result = await runQueued(message.op, message.data, message.from);
+            result = await runQueued(message.op, message.data, from);
         } catch (err) {
             console.error(`heart | relay "${message.op}" failed`, err);
             error = String(err?.message ?? err);
         }
-        game.socket.emit(RELAY_CHANNEL, { kind: 'response', id: message.id, to: message.from, result: result ?? null, error });
+        game.socket.emit(RELAY_CHANNEL, { kind: 'response', id: message.id, to: from, result: result ?? null, error });
         return;
     }
     if (message.kind === 'response') {
+        // only a GM's client answers requests
+        if (senderId && !game.users?.get(senderId)?.isGM) return;
         const waiting = pending.get(message.id);
         if (!waiting) return;
         clearTimeout(waiting.timer);

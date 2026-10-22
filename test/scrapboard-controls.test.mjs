@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { normalizeLook, normalizeBoard, boardView, removalOf, migrateLabels, revealOf, scrapLayout, tidyBoard } from "../src/map/scrapboard/model.js";
+import { normalizeLook, normalizeBoard, boardView, removalOf, migrateLabels, revealOf, scrapLayout, tidyBoard, revealPatch, strokePatch, brushStroke, markMax } from "../src/map/scrapboard/model.js";
 import { BoardControls, GRAB, applyPatch, mayMove, toolsFor } from "../src/map/scrapboard/controls.js";
 
 const SIZES = {
@@ -229,6 +229,28 @@ describe("round three (Luke, 2026-10-02): strings pulled and jointed, pins, the 
     applyPatch(box.raw, { pins: Object.fromEntries(r.pins.map((id) => [id, null])), links: r.edits });
     expect(box.raw.links.l1.joints).toEqual([]);
     expect(box.raw.pins?.[j.pin]).toBeUndefined();
+  });
+
+  it("a drag on a string with a pinned joint moves the joint's pin, and the string stays whole (Luke, 2026-10-22)", () => {
+    const { c, box } = live(GM, W);
+    const p = mid(c, "l1");
+    c.dragStart(p, { ctrl: true });
+    applyPatch(box.raw, c.dragMove({ x: p.x, y: p.y + 60 }));
+    c.dragEnd();
+    const [{ pin }] = box.raw.links.l1.joints;
+    const at = { ...box.raw.pins[pin] };
+    // a plain drag on the string itself, between its card and the joint
+    const l = c.host.view().links.find((x) => x.id === "l1");
+    const q = Math.floor(l.points.length / 8);
+    const grab = { x: l.points[2 * q], y: l.points[2 * q + 1] };
+    expect(c.dragStart(grab)).toBe("move");
+    applyPatch(box.raw, c.dragMove({ x: grab.x + 40, y: grab.y + 30 }));
+    // (the joint is still the pin, not a point the move made of it)
+    expect(box.raw.links.l1.joints).toEqual([{ pin }]);
+    expect(box.raw.pins[pin]).toMatchObject({ x: at.x + 40, y: at.y + 30 });
+    const after = c.host.view().links.find((x) => x.id === "l1");
+    expect(after.points.every(Number.isFinite)).toBe(true);
+    expect(after.joints).toHaveLength(1);
   });
 
   it("Alt+drag reshapes a span through the point it was dragged to", () => {
@@ -678,16 +700,15 @@ describe("layers (Luke, 2026-10-02)", () => {
 describe("the marker on cards, and its own Select (Luke, 2026-10-03)", () => {
   const live11 = (raw, user = GM) => {
     const box = { raw: structuredClone(raw) };
-    const c = new BoardControls({ look: () => look, view: () => boardView(look, normalizeBoard(box.raw), user.isGM ? "gm" : "player", size, measure), painter: () => ({ tagOf: () => null, onTag: () => false }), size, user: () => user, px: () => 1, raw: () => box.raw });
+    const c = new BoardControls({ look: () => look, view: () => boardView(look, normalizeBoard(box.raw), user.isGM ? "gm" : "player", size, measure), painter: () => ({ tagOf: () => null, onTag: () => false }), size, user: () => user, brush: () => ({ c: 2, w: 6, o: 0.8 }), px: () => 1, raw: () => box.raw });
     return { c, box };
   };
-  const draw = (c, box, pts, user = GM) => {
+  const draw = (c, box, pts) => {
     c.dragStart({ x: pts[0], y: pts[1] }, { tool: "mark" });
     for (let i = 2; i < pts.length; i += 2) c.dragMove({ x: pts[i], y: pts[i + 1] });
     const a = c.dragEnd();
-    const st = { c: 2, w: 6, o: 0.8, pts: a.pts };
-    if (a.on) applyPatch(box.raw, { scraps: { [a.patch.key]: { marks: { [a.patch.id]: { ...a.patch.stroke(st), by: user.id } } } } });
-    else applyPatch(box.raw, { marks: { [user.id]: { m1: st } } });
+    // (the controls' own patch, as both hosts write it: model.js strokePatch)
+    applyPatch(box.raw, a.patch);
     return a;
   };
 
@@ -900,5 +921,114 @@ describe("Shift+drag breaks a string (Luke, 2026-10-02)", () => {
     const farId = Object.keys(box.raw.links).find((k) => k !== "s");
     expect(box.raw.links[farId].bPin).toBe("b");
     expect(box.raw.pins[box.raw.links[farId].aPin]).toMatchObject({ x: 1600, y: 2300 });
+  });
+
+  // 2026-10-21: a joint's break dropped the near half's last pull, and a
+  // break mid-span shifted the far half's by one
+  const P = (t) => ({ t, u: 0.1, v: 0.2 });
+  it("at a joint, each half keeps its spans' pulls", () => {
+    const { c, box } = live9({ scraps: {}, pins: { a: pin(1000, 2000), j: pin(1500, 2100), b: pin(2000, 2000) }, links: { s: { aPin: "a", bPin: "b", joints: [{ pin: "j" }], pulls: [P(0.3), P(0.6)] } } });
+    expect(c.dragStart({ x: 1500, y: 2100 }, { shift: true })).toBe("break");
+    c.dragMove({ x: 1600, y: 2300 });
+    applyPatch(box.raw, c.dragEnd());
+    expect(box.raw.links.s.pulls).toEqual([P(0.3)]);
+    const farId = Object.keys(box.raw.links).find((k) => k !== "s");
+    // (the far half's one span starts at the pointer now: it hangs free)
+    expect(box.raw.links[farId].pulls).toEqual([null]);
+  });
+
+  it("mid-span, the far half keeps the pulls of the spans after the break", () => {
+    const { c, box } = live9({
+      scraps: {},
+      pins: { a: pin(1000, 2000), j1: pin(1400, 2000), j2: pin(1800, 2000), b: pin(2200, 2000) },
+      links: { s: { aPin: "a", bPin: "b", joints: [{ pin: "j1" }, { pin: "j2" }], pulls: [P(0.3), P(0.5), P(0.7)] } },
+    });
+    const l = c.host.view().links[0];
+    const sp = l.spans[0];
+    const i = Math.floor((sp.from + sp.to) / 2);
+    expect(c.dragStart({ x: l.points[2 * i], y: l.points[2 * i + 1] }, { shift: true })).toBe("break");
+    c.dragMove({ x: 1200, y: 2400 });
+    applyPatch(box.raw, c.dragEnd());
+    expect(box.raw.links.s.pulls).toEqual([]);
+    const farId = Object.keys(box.raw.links).find((k) => k !== "s");
+    expect(box.raw.links[farId].pulls).toEqual([null, P(0.5), P(0.7)]);
+  });
+});
+
+describe("the brush's selected strokes stay the brush's (2026-10-21)", () => {
+  it("a press on where their handle was, with Move, never throws", () => {
+    const raw = { scraps: {}, links: {}, marks: { gm: { m1: { c: 0, w: 4, pts: [100, 100, 300, 300] } } } };
+    const c = new BoardControls({ view: () => boardView(look, normalizeBoard(raw), "gm", size, measure), painter: () => ({ tagOf: () => null, onTag: () => false }), size, user: () => GM, px: () => 1, raw: () => raw });
+    c.markMode = "select";
+    c.markSel.add(JSON.stringify(["gm", "m1"]));
+    const b = c.bounds();
+    expect(b).toBeTruthy();
+    expect(() => c.dragStart(b.handle, { tool: "move" })).not.toThrow();
+    expect(c.drag?.kind).not.toBe("size");
+  });
+});
+
+describe("the brush stroke and Reveal: one patch for both hosts (M35, Luke 2026-10-21)", () => {
+  const BRUSH = { c: 3, w: 99, o: 0.5, b: 2 };
+  const live = (raw, user = GM) => {
+    const box = { raw: structuredClone(raw) };
+    const c = new BoardControls({ look: () => look, view: () => boardView(look, normalizeBoard(box.raw), user.isGM ? "gm" : "player", size, measure), painter: () => ({ tagOf: () => null, onTag: () => false }), size, user: () => user, brush: () => BRUSH, px: () => 1, raw: () => box.raw });
+    return { c, box };
+  };
+  const stroke = (c, pts) => {
+    c.dragStart({ x: pts[0], y: pts[1] }, { tool: "mark" });
+    for (let i = 2; i < pts.length; i += 2) c.dragMove({ x: pts[i], y: pts[i + 1] });
+    return c.dragEnd();
+  };
+
+  it("brushStroke: the brush's paint, opacity, and brightness, its width never past markMax", () => {
+    expect(brushStroke(BRUSH, look, [0, 0, 5, 5])).toEqual({ c: 3, w: markMax(look), o: 0.5, b: 2, pts: [0, 0, 5, 5] });
+    expect(brushStroke({ c: 1, w: 4, o: 1, b: 0 }, look, [1, 2, 3, 4]).w).toBe(4);
+  });
+
+  it("strokePatch: on the sheet in the drawer's layer under a new id; on a card, the card's, in its frame", () => {
+    const raw = { ...structuredClone(RAW), marks: { ana: { m1: { c: 0, w: 2, pts: [0, 0, 1, 1] } } } };
+    const view = boardView(look, normalizeBoard(raw), "gm", size, measure);
+    const sheet = strokePatch(raw, view, { pts: [2400, 2400, 2450, 2420] }, BRUSH, look, "ana");
+    expect(sheet.on).toBeNull();
+    expect(sheet.patch).toEqual({ marks: { ana: { m2: sheet.stroke } } });
+    expect(sheet.stroke).toMatchObject({ c: 3, o: 0.5, b: 2, pts: [2400, 2400, 2450, 2420] });
+    const card = strokePatch(raw, view, { pts: [300, 300, 320, 310], on: "grip" }, BRUSH, look, "ana");
+    expect(card.on).toBe("grip");
+    expect(card.stroke).toMatchObject({ by: "ana", c: 3, o: 0.5, b: 2 });
+    expect(card.patch).toEqual({ scraps: { grip: { marks: { m1: card.stroke } } } });
+    // (a card gone: the sheet's)
+    expect(strokePatch(raw, view, { pts: [1, 1, 2, 2], on: "nowhere" }, BRUSH, look, "ana").on).toBeNull();
+  });
+
+  it("the controls hand back the stroke's patch, in the brush the host holds", () => {
+    const { c, box } = live(RAW);
+    const sheet = stroke(c, [2400, 2400, 2450, 2420]);
+    expect(sheet).toMatchObject({ do: "mark", on: null, stroke: { c: 3, o: 0.5, b: 2 } });
+    applyPatch(box.raw, sheet.patch);
+    expect(box.raw.marks.gm.m1).toEqual(sheet.stroke);
+    const card = stroke(c, [300, 300, 320, 310, 340, 330]);
+    expect(card).toMatchObject({ do: "mark", on: "grip", stroke: { by: "gm", c: 3 } });
+    applyPatch(box.raw, card.patch);
+    expect(Object.values(box.raw.scraps.grip.marks)).toEqual([card.stroke]);
+  });
+
+  it("revealPatch: a card's, a pin's, or a string's state, with its joined strings and name tags", () => {
+    expect(revealPatch({ scrap: { key: "grip" }, to: "rumoured" })).toEqual({ scraps: { grip: { state: "rumoured" } } });
+    expect(revealPatch({ pin: { id: "p1" }, to: "hidden" })).toEqual({ pins: { p1: { state: "hidden" } } });
+    expect(revealPatch({ link: { id: "l1" }, to: "known", also: { links: ["l2"], scraps: ["t1"] } }))
+      .toEqual({ link: ["l1", { state: "known" }], links: { l2: { state: "known" } }, scraps: { t1: { state: "known" } } });
+    expect(revealPatch({ to: "known" })).toBeNull();
+  });
+
+  it("a Reveal press hands back its patch, and the patch does what the press says", () => {
+    const { c, box } = live({ ...structuredClone(RAW), scraps: { ...structuredClone(RAW.scraps), grip: { lib: "grip", x: 300, y: 300, r: 0, state: "hidden" } } });
+    const a = c.press("reveal", { x: 300, y: 300 });
+    expect(a).toMatchObject({ do: "reveal", to: "rumoured", patch: { scraps: { grip: { state: "rumoured" } } } });
+    applyPatch(box.raw, a.patch);
+    expect(box.raw.scraps.grip.state).toBe("rumoured");
+    const back = c.press("reveal", { x: 300, y: 300 }, { right: true });
+    applyPatch(box.raw, back.patch);
+    expect(box.raw.scraps.grip.state).toBe("hidden");
   });
 });

@@ -50,12 +50,13 @@ describe("the glass switch", () => {
   it("makes every piece the same glass, darker only by its layers", () => {
     expect(glassLayers(20)).toEqual({ section: 0.2, head: 0.488, strip: 0.738, pill: 0.79 });
     expect(glassLayers(0)).toEqual({ section: 0, head: 0, strip: 0, pill: 0 });
-    // more layers are never lighter, and the tint is held to 60%
+    // more layers are never lighter, and the tint is held to 90%
     const l = glassLayers(35);
     expect(l.section).toBeLessThan(l.head);
     expect(l.head).toBeLessThan(l.strip);
     expect(l.strip).toBeLessThan(l.pill);
-    expect(glassLayers(95).section).toBe(0.6);
+    expect(glassLayers(80).section).toBe(0.8);
+    expect(glassLayers(95).section).toBe(0.9);
   });
 
   it("grounds the glass in the content module's texture, or nothing without it", () => {

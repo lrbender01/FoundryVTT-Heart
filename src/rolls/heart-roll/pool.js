@@ -9,15 +9,24 @@
 //              helper who has the chosen skill or domain
 //   Tired      skills add no dice; Clouded: domains add no dice (App. A)
 //   Furious    cannot help another character (App. A)
-//   helpers    up to two (table ruling 10); the GM may override
+//   helpers    up to two (table ruling 10). buildPool adds a die for every
+//              helper it is given: the prompt (and a roll request's Roll as,
+//              requestHelpers below) decide who may help, and the GM may
+//              override there
+//   companions help only through an ability that gives assistance, adding
+//              one D10 like a character and counting toward the cap
+//              (Luke, 2026-10-21: W&M W66 assistance is the helper die;
+//              companions.js)
 //   difficulty Standard keeps the highest; Risky removes the highest die;
 //              Dangerous removes the two highest; Impossible does not roll
 //              (the action fails and stress is taken)
 //   fresh die  if difficulty would remove every die, roll ONE fresh d10 on
-//              the Difficult table (10 success at a cost, 2-9 failure,
-//              1 critical failure per ruling 3)
+//              the Difficult table (10 success at a cost, 1-9 failure;
+//              ruling 3 as changed 2026-09-30, results.js)
 
-export const DIFFICULTY_CUT = { standard: 0, risky: 1, dangerous: 2, impossible: Infinity };
+import { companionHelp, isCompanion } from './companions.js';
+
+export const DIFFICULTY_CUT ={ standard: 0, risky: 1, dangerous: 2, impossible: Infinity };
 export const HELPER_LIMIT = 2;
 
 // Fallouts are recognised by name: system-pack fallouts carry lang keys like
@@ -76,9 +85,29 @@ export function knackFor(actor, skill, domain) {
     return out;
 }
 
-// Can this character help with the chosen skill / domain?
+// A companion helper's notes, as text: a Compel check first (Despondent), an
+// ignored demand (Overambitious), several helped at once (Gleeman)
+export function companionNotes(companion, help = companionHelp(companion)) {
+    return help.notes.map(note => game.i18n.format(`heart.roll-prompt.companion-${note}`, { name: companion?.name ?? '' }));
+}
+
+// Can this character help with the chosen skill / domain? A companion has
+// neither, so it may help only through its assistance ability (Luke,
+// 2026-10-21); whether that applies to this roll is for people to judge,
+// so it never depends on the skill or domain picked. A companion's answer
+// also carries `trigger` (its ability text) and `notes`.
 export function helperEligibility(helper, skill, domain) {
     if (!helper) return { ok: false, reason: '' };
+    if (isCompanion(helper)) {
+        const help = companionHelp(helper);
+        const notes = companionNotes(helper, help);
+        if (help.why === 'furious') return { ok: false, reason: game.i18n.localize('heart.roll-prompt.helper-furious'), trigger: help.trigger, notes };
+        if (help.why) return { ok: false, reason: game.i18n.localize('heart.roll-prompt.companion-no-assistance'), trigger: '', notes };
+        const reason = help.ability
+            ? game.i18n.format('heart.roll-prompt.companion-assists', { ability: help.ability, trigger: help.trigger })
+            : game.i18n.format('heart.roll-prompt.companion-assists-notes', { trigger: help.trigger });
+        return { ok: true, reason, trigger: help.trigger, ability: help.ability, notes };
+    }
     if (falloutFlags(helper).furious) return { ok: false, reason: game.i18n.localize('heart.roll-prompt.helper-furious') };
     if (!skill && !domain) return { ok: false, reason: game.i18n.localize('heart.roll-prompt.helper-pick-first') };
     const has = [];
@@ -86,6 +115,32 @@ export function helperEligibility(helper, skill, domain) {
     if (domain && helper.system?.domains?.[domain]?.value) has.push(game.i18n.localize(`heart.domain.${domain}`));
     if (!has.length) return { ok: false, reason: game.i18n.localize('heart.roll-prompt.helper-lacks') };
     return { ok: true, reason: game.i18n.format('heart.roll-prompt.helper-has', { what: has.join(' + ') }) };
+}
+
+// The helpers a roll request's "Roll as" adds (Luke, 2026-10-21, R2: the
+// request card skipped every helper rule): the prompt's eligibility and
+// cap. A GM overrides, as in the prompt; for anyone else an ineligible or
+// extra helper is left out, with a note for the card saying why. The roller
+// and unknown actors are dropped silently, as buildPool drops them.
+export function requestHelpers(ids = [], { roller = null, skill = null, domain = null, isGM = false } = {}) {
+    const helpers = [];
+    const notes = [];
+    for (const id of new Set(ids ?? [])) {
+        if (!id || id === roller) continue;
+        const helper = game.actors.get(id);
+        if (!helper) continue;
+        if (isGM) {
+            helpers.push(id);
+            continue;
+        }
+        const e = helperEligibility(helper, skill, domain);
+        const reason = !e.ok ? e.reason
+            : helpers.length >= HELPER_LIMIT ? game.i18n.localize('heart.roll-prompt.helper-full') : '';
+        // the prompt's reason, inside the card's sentence
+        if (reason) notes.push(game.i18n.format('heart.card.helper-dropped', { name: helper.name, reason: String(reason).replace(/\.\s*$/, '') }));
+        else helpers.push(id);
+    }
+    return { helpers, notes };
 }
 
 // A flavor must not break Foundry's formula grammar ("[", "]") or trip
@@ -119,7 +174,10 @@ export function buildPool(actor, { skill = null, domain = null, mastery = false,
     if (mastery) dice.push({ kind: 'mastery', label: game.i18n.localize('heart.mastery.short') });
     for (const id of helpers ?? []) {
         const helper = game.actors.get(id);
-        if (helper && id !== actor?.id) dice.push({ kind: 'helper', label: helper.name, id });
+        if (!helper || id === actor?.id) continue;
+        dice.push({ kind: 'helper', label: helper.name, id });
+        // a companion's notes ride on the card for the GM (Luke, 2026-10-21)
+        if (isCompanion(helper)) notes.push(...companionNotes(helper));
     }
 
     const cut = DIFFICULTY_CUT[difficulty] ?? 0;

@@ -13,6 +13,7 @@ import CharacterSheet from "../src/actors/character/sheet.js";
 import PartySheet from "../src/actors/party/sheet.js";
 import HeartActorSheet from "../src/actors/base/sheet.js";
 import HeartItemSheet from "../src/items/base/sheet.js";
+import HeartApplication from "../src/applications/base/application.js";
 import characterProxies from "../src/actors/character/proxy.js";
 import partyProxies from "../src/actors/party/proxy.js";
 import { resetWorld, fakeActor, fakeItem, fakeUser, setUsers, FakeChatMessage } from "./helpers.mjs";
@@ -439,5 +440,62 @@ describe("drops on an item sheet", () => {
     expect(data.editable).toBe(true);
     asPlayer(p2);
     expect(new HeartItemSheet(lamp).getData().editable).toBe(false);
+  });
+});
+
+// Fixes from the sheets audit (2026-10-21)
+describe("audit fixes", () => {
+  it("a folder of items dropped on a character runs each through the rules (S8)", async () => {
+    const vess = character("vess", { owners: ["p1"] });
+    const sheet = new CharacterSheet(vess);
+    await sheet._onDropItemCreate([
+      { name: "Lamp", type: "equipment", system: {} },
+      { name: "Bead", type: "item", system: {} },
+    ]);
+    const created = vess.createEmbeddedDocuments.mock.calls.map((c) => c[1][0]);
+    expect(created.map((d) => [d.name, d.system.active])).toEqual([["Lamp", true], ["Bead", undefined]]);
+  });
+
+  it("dragging a tab label on the character sheet does nothing, and throws nothing (S6)", async () => {
+    const sheet = new CharacterSheet(character("vess", { owners: ["p1"] }));
+    const setData = vi.fn();
+    await sheet._onDragStart({ currentTarget: { dataset: { tab: "biography" } }, dataTransfer: { setData } });
+    expect(setData).not.toHaveBeenCalled();
+  });
+
+  it("a drag from an item sheet carries the row's uuid, whatever inner element it began on (S7)", async () => {
+    const vess = character("vess", { owners: ["p1"] });
+    const cls = fakeItem({ id: "cls", name: "Cleaver", type: "class", parent: vess, system: {} });
+    const sheet = new HeartItemSheet(cls);
+    const setData = vi.fn();
+    const row = { dataset: { documentId: "Actor.vess.Item.cls.@Item.feast", itemId: "Actor.vess.Item.cls.@Item.feast" } };
+    const icon = { dataset: {}, classList: { contains: () => false } };
+    await sheet._onDragStart({ currentTarget: row, target: icon, dataTransfer: { setData } });
+    expect(JSON.parse(setData.mock.calls[0][1])).toMatchObject({ type: "Item", uuid: row.dataset.documentId, parentItemId: "cls" });
+  });
+
+  it("the party sheet's title bar: the GM's Reset, no Show players, Art for decoration-only art (T26)", () => {
+    const original = ActorSheet.prototype._getHeaderButtons;
+    ActorSheet.prototype._getHeaderButtons = () => [{ class: "close" }];
+    try {
+      asGM();
+      const sheet = new PartySheet(party({ members: [] }));
+      sheet._art = () => null;
+      sheet._hasPartyArt = () => true;
+      expect(sheet._getHeaderButtons().map((b) => b.class)).toEqual(["heart-party-reset", "heart-art-toggle", "heart-glass-toggle", "close"]);
+      // a banner: the banner sheets' own Art button, and their Show players is dropped
+      sheet._art = () => ({ src: "banner.webp" });
+      const withBanner = sheet._getHeaderButtons().map((b) => b.class);
+      expect(withBanner).not.toContain("heart-art-share");
+      expect(withBanner.filter((c) => c === "heart-art-toggle")).toHaveLength(1);
+      asPlayer(p1);
+      expect(sheet._getHeaderButtons().map((b) => b.class)).not.toContain("heart-party-reset");
+    } finally {
+      ActorSheet.prototype._getHeaderButtons = original;
+    }
+  });
+
+  it("a requirement or management form submitted by Enter has an _updateObject (S18)", async () => {
+    await expect(new HeartApplication({}, {})._updateObject()).resolves.toBeUndefined();
   });
 });

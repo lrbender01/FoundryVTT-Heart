@@ -77,20 +77,8 @@ export default class extends HeartItemSheet {
             ev.preventDefault();
             createCustomBeat({ calling: this.item, level: ev.currentTarget.dataset.level || 'minor' });
         });
-
-        html.find('[data-action=add-question]').click(ev => {
-            const id = foundry.utils.randomID();
-            this.item.update({[`system.questions.${id}`]: {
-                question: '',
-                answer: ''
-            }});
-        });
-
-        html.find('[data-action=delete-question]').click(ev => {
-            const target = $(ev.currentTarget);
-            const id = target.closest ('[data-id]').data('id');
-            this.item.update({[`system.questions.-=${id}`]: null});
-        });
+        // (add-question and delete-question went 2026-10-21: the calling
+        // template has neither; a calling's questions are the book's)
     }
 
     // (what may be dropped here: common/drops.js, checked by the base sheet)

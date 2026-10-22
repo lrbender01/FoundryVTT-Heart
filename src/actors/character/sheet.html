@@ -1,8 +1,11 @@
 {{#*inline "characterTabItemList"}}
+{{!-- The GM gets Delete on a class's or calling's rows too (Luke,
+     2026-10-21, S14): @root, since inside #each the context is the item and
+     user.isGM read nothing --}}
 <div class="tab-item-list">
   {{#each list as |item|}}
   {{> (join "/" "heart:items" type "preview.html") item=item dataPath="???" hideInactive=../hideInactive
-  showActivate=../showActivate playable=../playable showDelete=(or (not item.isChild) user.isGM )}}
+  showActivate=../showActivate playable=../playable showDelete=(or (not item.isChild) @root.user.isGM)}}
   {{/each}}
 </div>
 {{/inline}}
@@ -427,17 +430,15 @@
               {{/if}}
             </div>
             <div class="container-content">
-              {{editor actor.system.notes target="system.notes" button=true editable=true owner=true engine="prosemirror"}}
+              {{editor (lookup @root.enriched "system.notes") target="system.notes" button=true editable=editable owner=owner engine="prosemirror"}}
             </div>
           </div>
 
           <!-- Calling: description + answerable questions (order: notes, calling, ancestry, class) -->
           <div class="character-tab-container questions-container" data-anchor="calling">
             <!-- Check if there are any items of type "calling" -->
-            {{#if (some actor.items "type calling")}}
-            <!-- Iterate over actor items -->
-            {{#each actor.items as |item|}}
-            {{#if (eq item.type "calling")}}
+            {{#if callingItem}}
+            {{#with callingItem as |item|}}
             <div data-item-id="{{item.uuid}}" data-document-id="{{item.uuid}}">
               <div class="heart sheet base Item calling {{cssClass}} editable">
                 <div class="container-title">
@@ -463,10 +464,10 @@
                   {{#each item.system.questions as |question id|}}
                   <div class="question editable">
                     {{#if question.answer}}
-                    <strong>{{{heartTerms (localizeHeart question.question)}}}</strong>
-                    {{editor question.answer button=false editable=false engine="prosemirror"}}
+                    <strong>{{{heartTermsText (localizeHeart question.question)}}}</strong>
+                    {{editor (lookup @root.enriched (join "." "calling" id)) button=false editable=false engine="prosemirror"}}
                     {{else}}
-                    <strong>{{{heartTerms (localizeHeart question.question)}}}</strong>
+                    <strong>{{{heartTermsText (localizeHeart question.question)}}}</strong>
                     <div class="answer-prompt">
                       {{localizeHeart "calling" "questions" "sheet-prompt"}}
                     </div>
@@ -476,8 +477,7 @@
                 </div>
               </div>
             </div>
-            {{/if}}
-            {{/each}}
+            {{/with}}
             {{else}}
             <!-- Show this only if no item of type "calling" exists -->
             <div class="container-title">
@@ -521,14 +521,14 @@
                     {{#each ancestryItem.system.questions as |question id|}}
                     <div class="question editable" data-id="{{id}}">
                       <div class="question-line">
-                        <strong>{{#if question.question}}{{{heartTerms (localizeHeart question.question)}}}{{else}}{{localizeHeart "ancestry" "questions" "unwritten"}}{{/if}}</strong>
+                        <strong>{{#if question.question}}{{{heartTermsText (localizeHeart question.question)}}}{{else}}{{localizeHeart "ancestry" "questions" "unwritten"}}{{/if}}</strong>
                         {{#if ../ancestryItem.isOwner}}<span class="question-tools">
                           <a class="question-tool" data-action="open-questions" aria-label="{{localizeHeart 'item-sheet' 'answer'}}"><span class="fas fa-edit"></span></a>
                           <a class="question-tool" data-action="delete-question" aria-label="{{localizeHeart 'ancestry' 'questions' 'delete'}}"><span class="fas fa-trash"></span></a>
                         </span>{{/if}}
                       </div>
                       {{#if question.answer}}
-                      {{editor question.answer button=false editable=false engine="prosemirror"}}
+                      {{editor (lookup @root.enriched (join "." "ancestry" id)) button=false editable=false engine="prosemirror"}}
                       {{else}}
                       <div class="answer-prompt">
                         {{localizeHeart "ancestry" "questions" "sheet-prompt"}}

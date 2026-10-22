@@ -3,7 +3,7 @@
 // its severity (HCB p. 78; table ruling 12).
 
 import { describe, it, expect } from "vitest";
-import { candidate, dedupe, matches, sortCandidates, falloutData, SEVERITIES } from "../src/fallout-picker/candidates.js";
+import { candidate, dedupe, matches, sortCandidates, falloutData, SEVERITIES, restrictionAllows, restrictionHolders, holderItems } from "../src/fallout-picker/candidates.js";
 
 const entry = (name, type, resistance, o = {}) => ({
   name,
@@ -47,6 +47,19 @@ describe("dedupe and sortCandidates", () => {
     const out = sortCandidates(dedupe(list));
     expect(out.map((c) => [c.name, c.origin])).toEqual([["Lost", "own"], ["Dead", "world"]]);
   });
+  // 2026-10-21 (C12): the core "Blinded" and Ways and Means' Illicit Magic
+  // "Blinded" are both Major Blood; one of them never showed
+  it("two different pack entries with one name are two Fallouts", () => {
+    const core = candidate(entry("Blinded", "major", "blood", { uuid: "Compendium.core.Item.b", source: "HCB p. 84" }), "book");
+    const illicit = candidate(entry("Blinded", "major", "blood", { uuid: "Compendium.wm.Item.b", source: "W&M p. W42" }), "book");
+    expect(dedupe([core, illicit])).toHaveLength(2);
+    // the same entry found twice is still one
+    expect(dedupe([core, { ...core }])).toHaveLength(1);
+    // a world copy of one of them is that one, not the other
+    const copy = candidate(entry("Blinded", "major", "blood", { uuid: "Item.w", source: "W&M p. W42" }), "world");
+    expect(dedupe([core, illicit, copy]).map((c) => c.uuid)).toEqual(["Compendium.core.Item.b", "Compendium.wm.Item.b"]);
+  });
+
   it("the target's own first, then alphabetical", () => {
     const list = ["Zeal", "Anger"].map((n) => candidate(entry(n, "minor", "mind"), "book"));
     list.push(candidate(entry("Theirs", "minor", "bond"), "own"));
@@ -76,5 +89,37 @@ describe("class and calling Fallouts stay with their owners (Luke, 2026-10-21)",
     expect(restrictionAllows(r, [])).toBe(false);
     expect(restrictionAllows(r, [{ type: "calling", name: "Witness" }])).toBe(false);
     expect(restrictionAllows(r, [{ type: "class", name: "witness" }])).toBe(true);
+  });
+});
+
+// Luke, 2026-10-21 (C13): a companion's employers hold restricted Fallouts,
+// so a Demagogue's follower who is a companion is offered the Demagogue's
+// Bond Fallouts
+describe("who holds a target's restricted Fallouts", () => {
+  const items = (...list) => list.map(([type, name]) => ({ type, name }));
+  const demagogue = { documentName: "Actor", type: "character", items: items(["calling", "Demagogue"], ["class", "Cleaver"]) };
+  const witch = { documentName: "Actor", type: "character", items: items(["calling", "Adventure"]) };
+  const SHAKEN = { type: "calling", name: "Demagogue" };
+
+  it("a character itself; a person bond's holder", () => {
+    expect(restrictionHolders(demagogue)).toEqual([demagogue]);
+    expect(restrictionHolders({ documentName: "Item", type: "bond", parent: witch })).toEqual([witch]);
+  });
+
+  it("a companion: its employers", () => {
+    const follower = { documentName: "Actor", type: "hireling", items: [], proxy: { employers: [witch, demagogue] } };
+    expect(restrictionHolders(follower)).toEqual([witch, demagogue]);
+    expect(restrictionAllows(SHAKEN, holderItems(follower))).toBe(true);
+    const loner = { documentName: "Actor", type: "hireling", items: [], proxy: { employers: [witch] } };
+    expect(restrictionAllows(SHAKEN, holderItems(loner))).toBe(false);
+    expect(holderItems({ documentName: "Actor", type: "hireling", items: [] })).toEqual([]);
+  });
+
+  it("nobody for the party or anything else", () => {
+    expect(restrictionHolders({ documentName: "Actor", type: "party", items: items(["calling", "Demagogue"]) })).toEqual([]);
+    expect(restrictionHolders(undefined)).toEqual([]);
+    expect(restrictionAllows(SHAKEN, holderItems({ documentName: "Actor", type: "party" }))).toBe(false);
+    // an unrestricted Fallout is offered to everyone
+    expect(restrictionAllows(undefined, [])).toBe(true);
   });
 });

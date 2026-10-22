@@ -1,18 +1,17 @@
 // The party actor and the Provisions house rule (2026-09-30).
 //
 // Provisions is ONE track for the whole world, kept on a singleton Actor of
-// type `party` (reference/heart-rules/provisions.md; plan in the monorepo at
-// docs/plans/heart-provisions.md). An actor rather than a world setting
-// because players must be able to mark it from their own stress cards:
-// world settings are GM-write only, and the party actor is created with
-// every player as owner, so the stress card's ordinary actor.update works.
+// type `party` (the rule: the monorepo's reference/heart-rules/provisions.md;
+// the design: the fork's CLAUDE.md, "Party actor and Provisions", and the
+// CHANGELOG). An actor rather than a world setting because players must be
+// able to mark it from their own stress cards: world settings are GM-write
+// only, and the party actor is created with every player as owner.
 //
 // Guarded singleton: the first active GM creates it on ready; a second party
 // actor is refused; deleting it is refused (use reset() instead).
 //
-// Everything here is behaviour. The layout of the party sheet, the character
-// sheet's Provisions track and the prompt / card wording belong to the UI;
-// sheet.html in this folder is a placeholder.
+// Everything here is behaviour; the party sheet (sheet.js, view.js) and the
+// card wording belong to the UI.
 
 import {
     PROVISIONS_MAX,
@@ -28,6 +27,7 @@ import { glyphFor } from '../../common/icons';
 import { ledgerCard } from '../../common/ledger';
 import { askGM } from '../../common/relay';
 import { oneAtATime } from '../../common/busy';
+import { trackMax } from '../../rolls/stress-roll/rules';
 
 export const PARTY_TYPE = 'party';
 export const PARTY_IMG = 'systems/heart/assets/icons/resistances/provisions.svg';
@@ -68,8 +68,11 @@ export function provisionsOf(party) {
 export async function applyProvisions({ mode, amount } = {}, userId) {
     const party = getParty();
     if (!party) return { status: 'no-party' };
+    // no userId: an internal call (StressRoll._takePartyStress, already in a
+    // checked handler). An id that names no user is refused, not waved
+    // through (Luke, 2026-10-21, R14).
     const user = game.users?.get(userId);
-    if (user && !party.testUserPermission(user, 'OWNER')) return { status: 'not-allowed' };
+    if (userId !== undefined && !(user && party.testUserPermission(user, 'OWNER'))) return { status: 'not-allowed' };
     const { value: before, max } = provisionsOf(party);
     const after = provisionsChange(before, max, { mode, amount });
     if (after !== before) await party.update({ 'system.provisions.value': after });
@@ -220,7 +223,7 @@ export async function restock({ payerId, die = 'd4' } = {}) {
     let relief;
     try {
         relief = restockRelief(die);
-    } catch (e) {
+    } catch {
         ui.notifications.warn(loc('heart.party.restock-die'));
         return null;
     }
@@ -253,7 +256,8 @@ export async function restock({ payerId, die = 'd4' } = {}) {
     const payValue = [
         loc('heart.card.pays-amount', { amount: paid?.amount ?? 0 }),
         paid?.protection ? `(${loc('heart.card.protection', { protection: paid.protection })})` : '',
-        supplies ? `· ${loc('heart.card.track', { value: Number(supplies.value) || 0, max: 10 })}` : '',
+        // (the track's own size, not ten: R17, 2026-10-21)
+        supplies ? `· ${loc('heart.card.track', { value: Number(supplies.value) || 0, max: trackMax(supplies) })}` : '',
     ].filter(Boolean).join(' ');
     const falloutButton = (paid?.amount ?? 0) > 0
         ? `<button type="button" data-action="ledger-fallout" data-claim="fallout-${esc(payer.id)}" data-character="${esc(payer.id)}" data-resistance="supplies" data-tooltip="heart.term.fallout">${esc(loc('heart.card.fallout-for', { name: payer.name }))}</button>`
@@ -340,7 +344,7 @@ export async function resignQuartermaster(actorId) {
 }
 
 // Clear the track (what a Provisions fallout does, or a rest in Derelictus)
-export async function clearProvisions({ source } = {}) {
+export async function clearProvisions({ source: _source } = {}) {
     const party = requireParty();
     if (!party || !requireOwner(party)) return null;
     // no chat notice (2026-09-30 review: the one-line cards are gone; the
@@ -421,8 +425,10 @@ export function registerPartyHooks() {
     Hooks.on('renderChatMessage', (message, html) => {
         const claimed = message.getFlag('heart', 'claimed') ?? {};
         const keyOf = (el) => el.dataset.claim || `fallout-${el.dataset.character}`;
+        // gone once claimed, and drawn only for the GM and that character's
+        // player, who alone may roll it (Luke, 2026-10-21, R8)
         html.find('[data-action=ledger-fallout]').each((i, el) => {
-            if (claimed[keyOf(el)]) el.remove();
+            if (claimed[keyOf(el)] || !game.actors.get(el.dataset.character)?.isOwner) el.remove();
         });
         html.find('.ledger-acts').each((i, el) => {
             if (!el.querySelector('button, a')) el.remove();
@@ -439,9 +445,17 @@ export function registerPartyHooks() {
                     return;
                 }
                 if (!(await askGM('claim-card-button', { messageId: message.id, key }))) return;
-                const roll = await game.heart.rolls.FalloutRoll.build({ character, resistance });
-                if (!roll) return;
-                await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }) });
+                // the button comes back when no fallout card was posted
+                // (Luke, 2026-10-21, R13: a failed roll kept the claim)
+                let posted = false;
+                try {
+                    const roll = await game.heart.rolls.FalloutRoll.build({ character, resistance });
+                    if (!roll) return;
+                    await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }) });
+                    posted = true;
+                } finally {
+                    if (!posted) await askGM('release-card-button', { messageId: message.id, key });
+                }
             });
         });
     });

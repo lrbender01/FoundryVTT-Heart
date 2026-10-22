@@ -1,6 +1,7 @@
 import './panel-sheet.sass';
 import { highlightRendered } from './terms';
 import { shareOfCharacter } from './window-sizes';
+import { bindTrack } from './tracks';
 
 // Shared behaviour for the "panel" actor sheets - adversary, landmark, delve
 // (2026-09-29). They share the character sheet's chrome (torn header, tab
@@ -58,14 +59,12 @@ export function activatePanelSheet(sheet, html) {
         showTab(sheet, html, ev.currentTarget.dataset.tab);
     });
 
-    html.find('[data-actor-track] > .ordered-checkable-box').click(ev => {
-        ev.preventDefault();
-        const element = ev.currentTarget;
-        const index = parseInt(element.dataset.index);
-        const target = element.parentElement.dataset.target;
-        const current = Number(foundry.utils.getProperty(actor, target)) || 0;
-        const marked = element.classList.contains('checked');
-        actor.update({ [target]: marked && index + 1 === current ? index : index + 1 });
+    // (only for those who may edit it, 2026-10-21: common/tracks.js)
+    const targetOf = (box) => box.parentElement.dataset.target;
+    bindTrack(html, '[data-actor-track] > .ordered-checkable-box', {
+        editable: sheet.isEditable,
+        read: (box) => Number(foundry.utils.getProperty(actor, targetOf(box))) || 0,
+        write: (box, value) => actor.update({ [targetOf(box)]: value }),
     });
 
     // Native .click() because jQuery .trigger() skips the default on <a>
@@ -87,6 +86,8 @@ export function activatePanelSheet(sheet, html) {
         const { die, flavor } = ev.currentTarget.dataset;
         if (!die) return;
         const roll = await new Roll(`1${die}`).evaluate();
-        roll.toMessage({ flavor: flavor ?? '', speaker: ChatMessage.getSpeaker({ actor }) });
+        // escaped (Luke, 2026-10-21): the flavor carries a landmark's name,
+        // and the chat card draws the flavor as HTML
+        roll.toMessage({ flavor: Handlebars.escapeExpression(flavor ?? ''), speaker: ChatMessage.getSpeaker({ actor }) });
     });
 }

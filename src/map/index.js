@@ -1,4 +1,5 @@
-// The Heart map (2026-10-02, monorepo docs/plans/heart-map.md): the
+// The Heart map (2026-10-02; the fork's CLAUDE.md "The Heart map", the
+// CHANGELOG, and the monorepo's HEART.md): the
 // scrapboard. Picked up by the './**/index.js' module glob in src/index.js,
 // which calls initialise() at init. A scrapboard scene (flags.heart.board)
 // shows the party's ledger: one enormous folded sheet with the delvers'
@@ -41,13 +42,15 @@ function onDrop(_canvas, data) {
         const { look } = await loadBoardLook();
         const at = layer()?.renderer.toMap({ x: data.x, y: data.y }) ?? { x: data.x, y: data.y };
         const source = doc._stats?.compendiumSource ?? doc.flags?.core?.sourceId;
-        const key = Object.keys(look.library).find((k) => [doc.uuid, source].includes(look.library[k].uuid));
+        // (a library entry with no uuid never matches a landmark with no
+        // source: Luke, 2026-10-21)
+        const key = Object.keys(look.library).find((k) => look.library[k]?.uuid && [doc.uuid, source].includes(look.library[k].uuid));
         const scraps = boardOf(scene).scraps ?? {};
         const placed = key ? (scraps[key] ? key : null) : Object.keys(scraps).find((k) => scraps[k]?.uuid === doc.uuid);
         if (placed) return setScrap(scene, placed, { x: Math.round(at.x), y: Math.round(at.y) });
         await addScrap(scene, key ? { type: 'landmark', lib: key, x: at.x, y: at.y, state: 'hidden' } : { type: 'landmark', uuid: doc.uuid, name: doc.name, x: at.x, y: at.y, state: 'hidden' });
         ui.notifications.info(loc('heart.board.placed', { name: doc.name }));
-    })();
+    })().catch((err) => console.error('heart | the landmark could not be placed', err));
     return false;
 }
 
@@ -124,7 +127,9 @@ function registerHooks() {
 
     // every board scene made whole once the world is up (the GM's client)
     Hooks.once('ready', async () => {
-        if (!game.user.isGM) return;
+        // (the active GM's alone: two GMs tidied every board twice; Luke,
+        // 2026-10-21)
+        if (!game.user.isGM || (game.users.activeGM && game.users.activeGM.id !== game.user.id)) return;
         for (const scene of game.scenes) if (isBoardScene(scene)) await tidyBoardScene(scene).catch((err) => console.warn('heart | a board could not be tidied', scene.name, err));
     });
 
@@ -181,7 +186,15 @@ function registerHooks() {
             condition: (li) => game.user.isGM && isBoardScene(sceneOf(li)) && !isPlayersBoard(sceneOf(li)),
             callback: async (li) => {
                 const answer = await playersBoardDialog();
-                if (answer) await sceneOf(li).update({ 'flags.heart.boardOwners': answer.owners, 'ownership.default': answer.owners === 'all' ? CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER : sceneOf(li).ownership.default });
+                if (!answer) return;
+                // (its owners may view it, as a new players' board's may:
+                // Luke, 2026-10-21, chosen players were never given the scene)
+                const { OBSERVER } = CONST.DOCUMENT_OWNERSHIP_LEVELS;
+                const scene = sceneOf(li);
+                const see = answer.owners === 'all'
+                    ? { 'ownership.default': Math.max(OBSERVER, scene.ownership.default ?? 0) }
+                    : Object.fromEntries(answer.owners.map((id) => [`ownership.${id}`, Math.max(OBSERVER, scene.ownership[id] ?? 0)]));
+                await scene.update({ 'flags.heart.boardOwners': answer.owners, ...see });
             },
         }, {
             name: 'heart.board.players-unmake',

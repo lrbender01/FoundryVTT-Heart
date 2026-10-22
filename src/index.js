@@ -1,7 +1,7 @@
 import templates from './**/*.@(html|handlebars|hbs)';
 import './index.sass';
 import './common/sheet.sass';
-import { emphasizeTerms, registerJournalTerms } from './common/terms';
+import { emphasizeTerms, emphasizeTermsText, registerJournalTerms } from './common/terms';
 import { registerIconHelpers, adoptPackIcons, DEFAULT_IMGS } from './common/icons';
 import { registerArtHelpers, registerArtViewer } from './common/art';
 import { registerRowArt } from './common/row-art';
@@ -12,7 +12,8 @@ import { heartDialogOptions } from './common/dialog';
 import { registerHeartTooltips } from './common/tooltip';
 import { registerRelay } from './common/relay';
 import { ART_SETTING, applyArtClass, carryOldArtSetting, redrawArtWindows } from './common/art-toggle';
-import { compareVersions } from './common/versions';
+import { startupVersions } from './common/versions';
+import { localizeHeart } from './common/localize';
 import { GLASS_SETTING, SEE_THROUGH_SETTING, BLUR_SETTING, TINT_SETTING, applyGlassClass, applyGlassGround, applyGlassPass } from './common/glass';
 import { isRepeatable } from './items/ability/repeat';
 import { registerGrantCleanup } from './items/trinkets';
@@ -106,9 +107,9 @@ function registerSettings() {
       hint: 'heart.settings.glassSeeThrough.hint',
       scope: 'client',
       config: true,
-      // 60: Luke's pick after tuning in Foundry (2026-10-02; 40 read as
-      // nearly solid, then 70 and 80 were tried)
-      default: 60,
+      // 25: Luke's pick after living with the glass (2026-10-21; 60 from
+      // the first tuning, 2026-10-02, let too much through)
+      default: 25,
       type: Number,
       range: { min: 0, max: 90, step: 5 },
       onChange: applyGlassPass,
@@ -131,10 +132,12 @@ function registerSettings() {
       hint: 'heart.settings.glassTint.hint',
       scope: 'client',
       config: true,
-      // 25: Luke's pick after tuning in Foundry (2026-10-02; 20 first)
-      default: 25,
+      // 80: Luke's pick after living with the glass (2026-10-22; 25 from
+      // the first tuning, then 60), and the range opened to 90 so it can go
+      // darker
+      default: 80,
       type: Number,
-      range: { min: 0, max: 60, step: 5 },
+      range: { min: 0, max: 90, step: 5 },
       onChange: applyGlassPass,
     });
     applyGlassClass();
@@ -234,16 +237,13 @@ function initialise() {
         return [...items, ...array].join(separator);
     });
 
-    Handlebars.registerHelper('concat', function (a, b) {
-        return a + b;
-    });
+    // (concat and not went 2026-10-21, Luke: Foundry core registers both,
+    // and Heart's two-part concat replaced core's for every template in the
+    // world; titlecase, randomID, notification, getHeartResistances,
+    // ownsAnyActors, and some went too: no template used them)
 
     Handlebars.registerHelper('undef', function (a) {
         return a === undefined;
-    });
-
-    Handlebars.registerHelper('titlecase', function (a) {
-        return a[0].toUpperCase() + a.slice(1);
     });
 
     Handlebars.registerHelper('includes', function (array, item, options) {
@@ -254,37 +254,12 @@ function initialise() {
         return array.includes(item);
     });
 
-    Handlebars.registerHelper('randomID', function () {
-        return foundry.utils.randomID();
-    });
-
+    // loose number equality, as == was: 1 and "1" match, null only null
+    // (written out for eqeqeq, 2026-10-21)
     Handlebars.registerHelper('numEq', function (a, b) {
-        return a == b;
-    });
-
-    Handlebars.registerHelper('not', function (a) {
-        return !Boolean(a);
-    });
-
-    Handlebars.registerHelper("some", function (array, condition) {
-        console.debug("some helper called with:", { array, condition });
-    
-        if (typeof condition !== "string") {
-            console.warn("Invalid condition passed to 'some' helper:", condition);
-            return false;
-        }
-    
-        return array.some(item => {
-            const [key, value] = condition.split(" ");
-            return item[key] === value;
-        });
-    });
-
-    Handlebars.registerHelper('notification', function (target, targetName, options) {
-        const fa = Boolean(target) ? 'check' : 'times';
-        let type = options.hash.optional ? 'optional' : 'required';
-        const title = game.i18n.localize(`heart.notification:${type}`);
-        return `<span class="fas fa-${fa}-circle" data-notification="${type}" data-target="${targetName}" data-tooltip="${title}" data-type="${options.hash.type}"></span>`;
+        if (a === null || a === undefined || b === null || b === undefined) return (a ?? null) === (b ?? null);
+        if (typeof a === typeof b) return a === b;
+        return Number(a) === Number(b);
     });
 
     Handlebars.registerHelper('getActor', function (id) {
@@ -295,29 +270,7 @@ function initialise() {
       return ["kill", "mend"].includes(itemType);
     });
 
-    Handlebars.registerHelper('getHeartResistances', function () {
-      return game.heart.resistances;
-    });
-
-    function localizeHeart(...args) {
-        let options = {};
-        if (typeof args[args.length - 1] === "object") {
-            options = args.splice(-1, 1)[0];
-        }
-    
-        const key = args.join('.');
-        const value = `heart.${key}`;
-        const response = game.i18n.localize(value);
-
-        // Only a string is a translation (2026-10-02): a key that names a
-        // whole lang section ("trinket", "fallout") came back as an object
-        // and turned names into "[object Object]". A miss returns the text
-        // unchanged: literal names (every content pack since 2026-09-30)
-        // are not keys.
-        if (typeof response !== 'string' || response === value) return key;
-        return response;
-    }
-
+    // (common/localize.js; still a window global for code that reads it so)
     window.localizeHeart = localizeHeart;
 
     Handlebars.registerHelper('localizeHeart', localizeHeart);
@@ -340,6 +293,11 @@ function initialise() {
     Handlebars.registerHelper('heartTerms', function (html, options) {
         return emphasizeTerms(html, { abilityRefs: Boolean(options?.hash?.refs) });
     });
+    // {{{heartTermsText text}}}: the same for plain text a player typed,
+    // escaped first (Luke, 2026-10-21: typed markup ran as HTML)
+    Handlebars.registerHelper('heartTermsText', function (text, options) {
+        return emphasizeTermsText(text, { abilityRefs: Boolean(options?.hash?.refs) });
+    });
 
     // {{{heartGlyph kind id}}} / {{{heartIcon img}}} (common/icons.js)
     registerIconHelpers();
@@ -350,17 +308,6 @@ function initialise() {
     // gear row art lifts and opens the gallery on a click, in any window
     // (common/row-art.js, 2026-10-02)
     registerRowArt();
-
-    Handlebars.registerHelper('ownsAnyActors', function (ids) {
-        for (let id of ids) {
-            const actor = game.actors.get(id);
-            if (!actor) continue;
-
-            if (actor.isOwner) return true;
-        }
-
-        return false;
-    });
 }
 
 Hooks.once('init', initialise);
@@ -378,13 +325,25 @@ Hooks.once('ready', function () {
     migrateAdversaryLore();
     // characters' stored total Stress put right where it is out of step (GM)
     correctTotalStress();
-    new Promise(async function () {
+    showStartupNotice();
+});
+
+// The startup notice (Luke, 2026-10-21): a plain async function with its own
+// catch. It ran inside new Promise(async ...), which turned any error into an
+// unhandled rejection with no context, and it read the changelog from the
+// active language alone: es and it have none, so it threw for those users and
+// the notice never opened (pt's stopped at an older version). The changelog
+// is English only, so it comes from English, the fallback every language has
+// (common/versions.js startupVersions).
+async function showStartupNotice() {
+    try {
         if (game.settings.get('heart', 'showStartupMessage')) {
+            const versions = startupVersions(game.i18n.translations, game.i18n._fallback);
             let d = new Dialog({
                 title: game.i18n.format("heart.dialog.title(VERSION)", { VERSION: game.system.version }),
                 // newest first, by number (as text "v0.10" sorted below
                 // "v0.8", so the current version was never first, 2026-10-03)
-                content: await renderTemplate('heart:templates/startup.html', { versions: Object.values(game.i18n.translations.heart.versions).sort((a, b) => compareVersions(b.version, a.version)), version: game.system.version }),
+                content: await renderTemplate('heart:templates/startup.html', { versions, version: game.system.version }),
                 buttons: {
                     close: {
                         icon: '<i class="fas fa-times"></i>',
@@ -415,8 +374,10 @@ Hooks.once('ready', function () {
             }, heartDialogOptions({ classes: ['heart-startup'] })); // a Heart window: themed, chip buttons (common/dialog.js)
             d.render(true);
         }
-    });
-});
+    } catch (err) {
+        console.error('heart | startup notice', err);
+    }
+}
 
 
 

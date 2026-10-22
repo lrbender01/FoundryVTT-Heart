@@ -2,7 +2,7 @@
 // Heart Map Board mock runs (its pins, junctions, tags, scraps, and strings),
 // on a board view (model.js boardView) and the painter (paint.js: a tag's
 // place). Points are board px; `tol` is board px (the pointer's reach).
-import { hitTest } from './model.js';
+import { hitTest, uvOn } from './model.js';
 
 const near = (pt, p, tol) => p && Math.hypot(pt.x - p.x, pt.y - p.y) < Math.max(tol, (p.w ?? 30) * 0.55);
 
@@ -57,18 +57,8 @@ function onBit(b, pt) {
 
 // A point as a place on a scrap: { u, v } against its text box, kept on the
 // paper itself (where its pins and string ends are stored)
-export function onPaper(scrap, pt) {
-    const B = scrap.layout.box ?? scrap.layout.paper;
-    const Pp = scrap.layout.paper;
-    const c = Math.cos(-B.rot);
-    const sn = Math.sin(-B.rot);
-    const loc = (x, y) => ({ x: (x - B.cx) * c - (y - B.cy) * sn, y: (x - B.cx) * sn + (y - B.cy) * c });
-    const q = loc(pt.x, pt.y);
-    const pc = loc(Pp.cx, Pp.cy);
-    const lx = Math.max(pc.x - Pp.w / 2, Math.min(pc.x + Pp.w / 2, q.x));
-    const ly = Math.max(pc.y - Pp.h / 2, Math.min(pc.y + Pp.h / 2, q.y));
-    return { u: +(lx / B.w).toFixed(3), v: +(ly / B.h).toFixed(3) };
-}
+// (the model's uvOn, on a scrap of the view)
+export const onPaper = (scrap, pt) => uvOn(scrap.layout, pt);
 
 // A point as a place on a tag ({ u, v } against the tag, kept on it)
 export function onTagAt(T, pt) {

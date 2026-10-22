@@ -8,12 +8,17 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
 
 ## [Unreleased]
 
+### Security
+
+- **GM Notes are the GM's alone (2026-10-21, Luke, sheets audit S3).** Adversary, landmark, and delve GM Notes, secret blocks included, are drawn and enriched only for the GM, never for an Observer or even a player who owns one (`common/gm-notes.js`, `test/gm-notes.test.mjs`). A Limited viewer of those types gets a cut-down sheet: name, picture, art banner, and public description (`actors/base/limited.html`). Foundry v12 still sends every actor's data to every client, so the notes stay readable from a browser console; no system code can change that.
+
 ### Removed
 
 - **The v2 Heart map (2026-10-02).** `src/map/`'s model, layout, api, render, layer, and dialogs (and `test/map-model.test.mjs`), replaced by the scrapboard. A v2 map scene (`flags.heart.map`) becomes a scrapboard scene the first time the GM views it: its placed landmarks become scraps and its links strings, rescaled to the new sheet. `game.heart.map` is now `game.heart.board`.
 
 ### Added
 
+- **Companions as helpers (2026-10-21, Luke's ruling: W&M W66 assistance is the core helper die).** The roll prompt has a Companions row: the roller's bonded companions, those the roller's players own, and the rest of the party's. A companion may help only through an ability (or a quirk the GM wrote in its notes) that gives assistance; the prompt shows that trigger text and a person decides whether it applies. It adds one D10, counts toward the two helpers, and takes the same Stress with its own fallout check through the ordinary stress card. Furious ones can't help; Despondent (a Compel check first), Overambitious, and a Gleeman-style "all other characters" helper (Stress once, from the worst result) are notes on the prompt and the card (`rolls/heart-roll/companions.js`, `test/companion-helpers.test.mjs`).
 - **The Heart map for a campaign (2026-10-21, Luke).**
   - **New place (File, the GM's):** a name, an optional picture (Foundry's file picker), hidden or known, and its card at the middle of the view or where the GM clicks next; it makes a landmark actor in a "Heart Map places" folder (`api.js` `newPlace`). A place's cards follow its actor's renames (an undoable edit, `followRename`), a place the library has no art for shows its actor's picture as its clipping (`render.js`), and a card whose actor was deleted says so when opened.
   - **Download the board (.json)** (File): the board as a file named for the scene and the day (`downloadBoard`, `boardfile.js`); Import loads such a file as well as a paste, and an import now keeps the board's loose pieces, bin, and pins' tidy mark.
@@ -38,6 +43,87 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
   - **Fixed: a haunt's service rolled the haunt's own die.** It now asks what pays (a chip for each of your characters' resources, or another payment) and rolls that die, capped at the haunt's (HCB pp. 81 and 140; `items/haunt/rules.js` and `service.js`, tested). The card says what paid; spending the resource stays by hand.
   - **Fixed: one keepsake roll and no pick.** Ancestries now draw two keepsakes and callings one trinket, each rolled or picked from the table (Roll / Pick buttons; `items/trinket-rules.js`, tested; older single rolls count as one draw).
   - **Fixed: Roll Stress marked the stress in the same click.** Rolling and taking are separate steps everywhere (Luke: "there must be separate roll and mark steps"): an action roll's Roll Stress only rolls (the button says Roll Stress, not "Take stress"), and a rolled Provisions mark (Upkeep, a die mark) only posts its card. Nothing is marked until the GM or the roller's player presses the card's Take Stress, so Defiant, a guard, or a redirect can be applied by hand in between. The card reads "Rolled, not taken yet" with what each would take now, then "Taken" with what was marked; still one writer, once (`attach-stress` no longer marks; `stress-roll/rules.js` `stressStatus`, `stressPreview`, tested). A fixed Provisions amount and a restock's payment still mark at once.
+  - **Code audit fixes: rolls, the relay, and chat cards** (monorepo `docs/plans/heart-code-audit/rolls-relay.md`; each tested):
+    - Fixed: a fallout card's Pick Fallout showed to players and did nothing for the GM (getHTML redraws the card after Foundry's `renderChatMessage` hook); GM-only controls are now stripped at the end of `getHTML` and the button is bound by delegation on the chat log and popouts (R1).
+    - Fixed: a roll request's Roll as added every ticked helper; for a player it now applies the prompt's eligibility and two-helper cap, noting each helper left out on the card (a GM overrides, as in the prompt; R2).
+    - Fixed: Alt+click never stepped an item's D6 down to a D4, and the card said "stepped" when the die had not moved; item rolls use the one dice ladder (`stepUp`, `itemRollDie`) and store only what the card reads of the item (R4, R21, R25).
+    - Fixed: the relay trusted the sender id a client wrote into its request; the GM's client now uses the id Foundry's server passes and refuses a mismatch, and takes answers only from a GM (R5).
+    - Fixed: `apply-stress` marked any roll for anyone; it now takes only a stress roll on a stress track, from the party's owners for Provisions or the GM or the character's player otherwise, drops helpers the asker may not run, and ignores an arriving `applied` (R6).
+    - Fixed: `attach-stress` kept the client's roller, helpers, and result; they now come from the card's own Heart roll, and a result that costs no stress is refused (R7).
+    - Fixed: anyone could reopen a rolled fallout button, claim one for a character the card never marked, or attach any JSON as its fallout roll (which broke the card for everyone); claims keep their claimant, only a marked character can be claimed, only a claimed FalloutRoll for the roller or the party attaches, and a malformed chained roll reads as none (R8).
+    - Fixed: Take Stress on a Provisions card with no party warned on the GM's screen and settled the card with nothing marked; it now answers "no party" and leaves the card, and a party mark counts only when the track took it (R9).
+    - Fixed: a fallout card's Clear trusted the click's character and party; the card's own fallout roll decides, and a card with no fallout roll or no fallout clears nothing (R10).
+    - Fixed: a double-click on a roll request's Roll as rolled twice, and on a bond request's Add bond could add the bond twice (`oneAtATime`; R12).
+    - Fixed: a restock's payer fallout button was lost when the roll failed; it is released again (`release-card-button`; R13).
+    - Fixed: `applyProvisions` let an unknown user id through as if it were an internal call (R14).
+    - Fixed: a fallout roll for a deleted actor or with no party threw; it warns and rolls nothing (R15).
+    - Fixed: one relay handler that never answered stalled every later request; each now has 12 seconds (R16).
+    - Changed: a fallout check is rolled by the GM or the character's player only (Luke, R8); anyone else is told so, the stress and restock cards draw each fallout button only for them, and the relay refuses other claims. Picking the Fallout stays the GM's. A chained roll that cannot be drawn is left off its card instead of breaking it (`renderChained`).
+    - Changed: stress stops at the track's last box (Luke, R17); the stress and restock cards print the track's own size (`trackMax`, `markedValue`). The amount rolled, before the cap, still decides the fallout check.
+    - Changed: one helper list for the roll prompt and the roll request (Luke, R27): the party's members, and the companions bonded to the roller or a party member, no one else (Luke, 2026-10-22: a companion only the roller's player owns is no longer offered). A world with no party members yet falls back to the characters with a player, else every character (`helperPool`, `companionCandidates`).
+    - Changed: a companion's employers hold restricted Fallouts (Luke, content audit C13), so a Demagogue's Bond Fallouts are offered for a follower who is a companion (`restrictionHolders`).
+    - Fixed: the Fallout picker showed one of two different Fallouts that share a name, severity, and resistance (the core and Illicit Magic "Blinded"); two pack entries now dedupe only when they are the same entry (content audit C12).
+    - Fixed: stale comments and dead code in the area: deleted plan pointers, the pool header's Difficult table and helper lines, unused setters, `isRunning`, the unused fallout character prompt, `game.heart.results` and `fallout_results`, a second copy of the difficulty cuts, and two floating promises (R18, R19, R20, R23, R24).
+  - **Code audit fixes: sheets, items, applications, and the lang files** (monorepo `docs/plans/heart-code-audit/sheets-items.md`; tested where the rule is pure):
+    - Fixed: text a player typed (a companion's Cost, an ancestry question) ran as HTML on every client that drew the sheet; it is escaped before the game terms are highlighted (`heartTermsText`; S1).
+    - Fixed: an item roll's chat flavor carried the item's name unescaped; the flavor is gone (the card already names the item), and a landmark die roll's flavor is escaped (S2).
+    - Fixed: the Choose window sorted Ways and Means options by pack order, not by page (`character-options/order.js`; S4, content audit C10).
+    - Fixed: dragging a tab label on the character sheet threw (S6).
+    - Fixed: a drag from an item sheet's row carried no uuid when it began on the icon or name, and missed v12 content links (S7).
+    - Fixed: a folder of items dropped on a character, adversary, delve, or landmark threw or dropped nothing (`actors/drop-active.js`; S8).
+    - Fixed: tracks, marks, and a haunt's upgrade and services answered a viewer's click with Foundry's permission error; they are wired only for those who may edit, through one track rule (`common/tracks.js`; S9, S32).
+    - Fixed: a row's view, roll, and switch buttons threw when its item was gone, and the item sheet's drew itself twice (S10).
+    - Fixed: the startup notice threw for Spanish and Italian users (and showed Portuguese users an older changelog), and its errors were swallowed; it reads the English changelog and logs a failure (`startupVersions`; S11, T27).
+    - Fixed: Heart's two-part `concat` helper replaced Foundry core's for every template in the world (S12).
+    - Fixed: every connected GM adopted the pack icons at once; only the active GM does (S13).
+    - Fixed: the character's Notes editor was built editable for every viewer and ignored a locked compendium (S15).
+    - Fixed: rich text on the sheets (notes, descriptions, answers) was never enriched, so @UUID links showed as text and secret blocks showed to everyone who could open the sheet (`common/rich-text.js`; S16).
+    - Fixed: Enter in a requirement or skills / domains window threw (S18).
+    - Fixed: a class's equipment-group edits changed the item's own array and sent two unawaited writes (S19).
+    - Fixed: a companion's tooltip named the PDF page (W72 for the Cook) instead of the printed one (W68) (`actors/hireling/page.js`; content audit C11).
+    - Fixed: the party sheet's title bar: a second `_getHeaderButtons` replaced the first, so the GM saw Show players and decoration-only party art had no Art button (T26, rolls audit R11).
+    - Fixed: a double-click on a bond row's buttons ran the action twice, the character sheet's Fallout button used a cancelled roll, and the party sheet left three promises floating (rolls audit R12, R15, R24).
+    - Fixed: the typo key `heart.helper.label-multipler` is `heart.helper.label-multiple`, in every language.
+    - Fixed: dragging a row on an adversary, delve, landmark, or companion sheet made a copy; it sorts now, and their lists follow the sort order (`toDragData`, the base `_onSortItem`; S5).
+    - Fixed: the GM never got Delete on a class's or calling's rows on the character sheet (S14).
+    - Changed: "New ..." items are named by the type's label, "New Equipment" (`newItemName`; S17).
+    - Removed: the never-shown `heart.versions.*.notes` changelog keys (`en.json`, `pt.json`).
+    - Fixed: a haunt's Upgrade set a die outside the dice list to D4, and cleared the upgrade track even when every service was already D12; an unknown die now stays, and an Upgrade that moves nothing writes nothing and says so (`hauntStep`; Luke, 2026-10-22, S20).
+    - Removed: dead code: the ActiveEffect chain (`items/class/proxy.js`, `heart_effects`, the proxies' `effects`), unused handlers and Handlebars helpers, `common/sheet.html`, `actors/base/sheet.html`, `templates/apps/compendium.html`, `character-options/popout.js` and its test, dead CSS, unread actor template fields (stored data stays), and 72 unused lang keys (S21 to S27).
+    - Changed: one copy of each repeated piece: the actors' item lists (`actors/proxy-lists.js`), the skills and domains windows (`applications/base/traits.js`), the haunt steps (`stepServices`), equipment choices (`choiceKey`), the item window id, the Art button, and the warning badge (S28 to S33). Every literal colour and text size outside `theme.sass` / `util.sass` is a named role with the same value (S34, S35); no em dashes in comments, no per-sheet console logs, no deprecated global `flattenObject` (S36, S37).
+    - Added: `test/lang.test.mjs` (every key the code names exists, no dotted-key collisions, translations keep their placeholders) and `test/sheet-helpers.test.mjs` (S39, S42).
+  - **Code audit fixes: the Heart map** (monorepo `docs/plans/heart-code-audit/map.md`; tested where the rule is pure):
+    - Fixed: a player's crafted undo naming a whole collection could empty the board past the bin; such records are refused (M1).
+    - Fixed: an undo record with a path through `__proto__` wrote onto every object on the GM's client; unsafe paths are never followed (M2).
+    - Fixed: a new card could take a binned card's key, and binning it then mixed or lost the older card; new keys skip the bin, a bin entry is replaced rather than merged, and a full bin no longer drops the card going in (M3).
+    - Fixed: undoing a move of a card taken off since made a blank card (M4).
+    - Fixed: a player could not undo their first stroke on a place (M5).
+    - Fixed: a player's name for their own string (its tag, thread, and pins) was not theirs to undo or edit (M6).
+    - Fixed: a players' board owner could not undo moving tape or a web (M7).
+    - Fixed: a string between two cards taken off together was lost when one was put back first (M8).
+    - Fixed: a string run through a pin in a card taken off lost that joint for good; putting the card back now runs the string through it again (its pulls too when the string is as it was), on the board or in a string waiting in the bin (M9).
+    - Fixed: with Move, a press where the brush's selected strokes had their handle threw; putting the brush down lets the strokes go (M10).
+    - Fixed: breaking a string dropped or shifted its pulls (M11).
+    - Fixed: making a board a players' board for chosen players never let them see it (M12).
+    - Fixed: cards and pins taken off together took two Ctrl+Z; one write, one undo, one copy for Foundry and the editor (`takeOffPatch`; M13).
+    - Fixed: Import and Restore could merge the backup into the one before it (M14).
+    - Fixed: the GM's own board writes ran beside the relay's, so an undo could take back another's edit; one write at a time per scene (M15).
+    - Fixed: a pin first drawn from its preview stayed blurred (M16).
+    - Fixed: at light detail two ropes of one thickness drew as one, and coloured strings shared a tint (M17).
+    - Fixed: File, Reload the look never repainted the sheet (M18).
+    - Fixed: a picture of the board could be saved with images missing, and an image that failed to load held every picture round (M19, M20).
+    - Fixed: repaints noted a missing image again each time, and a finer tile's sheet was stretched by up to a pixel (M21, M22).
+    - Fixed: faded strings kept a scratch canvas per tile, and old images' mirrors outlived a detail change (M23, M24).
+    - Fixed: the stroke preview's textures, the reticle's timer, the caption, a pending New place click, and a pending wheel write outlived the scene (M25, M26).
+    - Fixed: a player moving their own note with their own pin or string lost the note's move (M27).
+    - Fixed: a renamed place's cards in the bin kept the old name (M28).
+    - Fixed: every GM tidied every board on load, and a library place without a uuid could match a dropped landmark (M29, M30).
+    - Fixed: a player's undo or redo was taken as sent, so a changed record could set what the dialogs restrict; the GM's client now takes back only the records it handed that player this session. After the GM's client reloads, a player's older edits can't be undone, and they are told so once (M31).
+    - Fixed: a player's note could be put on any board scene by its id, at any point; it now needs a board they can see (active, Limited or more, or the one they were pulled to) and a point on the sheet (their own client keeps a click just off the edge on it) (M32).
+    - Changed: the brush stroke and Reveal's write are one copy for Foundry and the editor (`model.js` `strokePatch`, `revealPatch`, `brushStroke`; the controls hand both hosts the patch) (M35).
+    - Fixed (Luke, 2026-10-22): dragging a string with a joint pinned in by Ctrl+click sent the string to the board's top-left corner; the move treated the joint's pin as a point. The joint's pin now moves with the string (unless it is stuck in a card) and stays a pin (`controls.js` `#moveStart`).
+    - Removed: dead code and stale comments (pointers to the deleted map plan among them); the doodle's patch is one copy for both hosts (`doodlePatch`; M34 to M36).
+    - Added: `test/scrapboard-relay.test.mjs` (the api's writes and undo, the relay's board handlers) and tests for the bin, history paths, doodles, name tags, and breaks.
   - **Request Roll carries the stakes:** the GM may set the resistance at risk, the stress die (D4 to D12), and passive, each optional ("Roller chooses" by default). The request card and the roll's card show them, and Roll Stress's picker starts from them, still editable (`normalizeStakes`, `stakesText`, tested).
   - **An adversary's Resistance counts down:** the sheet reads what is left ("3 / 5 left"; the boxes stay the Stress marked), and the tooltip agrees. `system.resistanceBar = { value: left, max }` is kept in step with the marks for a token bar (`actors/adversary/resistance*.js`, tested; older adversaries corrected once on the GM's client); editing that bar on a token moves the marks. The delve already counted down.
 - **A new intro, and an up-to-date welcome (2026-10-03, Luke).** The startup window was years stale: an intro naming a "Prepare Rollout Request" macro and hand-made classes, and a changelog that stopped at v0.8.7. Now it is a short notice: welcome, a link that opens the intro in its own window, and the changelog with this version's entry (`heart.versions.0_10_5_pr94`). The changelog is sorted by number, newest first and open on the current version (as text "v0.10" sorted below "v0.8"; `common/versions.js`, tested). Its buttons are the right way round: Close is the outline (still the Enter key), Don't Show This Again the filled red. The intro (`applications/intro`, `HeartIntroApplication`) has three pages: where things are (players and GMs), then the rules in two pages (rolling; stress and fallout), in the system's own words. It turns with page tabs, Previous, and Next, and anyone can reopen it from Configure Settings > Open the Intro.
@@ -255,6 +341,8 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
 
 ### Changed
 
+- **Glass defaults (2026-10-21, Luke's picks after living with the glass).** See-Through 25 (was 60), Blur 6, Tint 80 (was 25), and the Tint slider runs to 90 (was 60) so the glass can go nearly black (`glassLayers` `TINT_MAX`, tested). A user who already moved a slider keeps their own value.
+- **The Heart map paints a campaign's board fast (2026-10-21, Luke: mission critical before live sessions).** Rendering only: no stored point, stroke, or format changes, and nothing looks different (pixel-compared in the editor). The painter keeps each brush stroke's painted layer (`paint.js` `StrokeLayerCache`: keyed by the stroke's points hash, paint, width, brightness, seed, and scale; least recently used first out, within a memory budget) and builds only the part of a stroke a tile or a repainted part needs. A bright stroke's light pass reuses its layer. A tile's sheet paints a band at a time within the frame budget (`render.js`; `sheetBands`), and an image that comes repaints only the parts it was drawn short in (`watch` / `unwatch`, `arrivalAreas`). Change checks hash runs of points instead of writing them out (`pointsHash`, kept per stroke).
 - **The paused screen (2026-10-02, Luke's picks in the Heart Pause Screen mock).** Applies only in Heart worlds (`src/pause/`).
   - **The icon:** an ouroboros replaces Foundry's spinning clockwork: game-icons.net, credited, tinted mid red at 75%, one turn every 15 seconds, with the soft halo. It is still at reduced motion.
   - **The band:** none. Foundry's dark band image is gone; a red strip was tried first, and Luke removed it.

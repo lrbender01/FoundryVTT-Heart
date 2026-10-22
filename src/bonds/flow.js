@@ -13,6 +13,7 @@ import { glyphFor } from '../common/icons';
 import { canAddBond } from './rules';
 import { addBond, hire, bondsOf, HIRELING_TYPE } from './bonds';
 import { hireDialog } from './dialogs';
+import { oneAtATime } from '../common/busy';
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const esc = (text) => Handlebars.escapeExpression(String(text ?? ''));
@@ -92,20 +93,30 @@ export function registerBondRequests() {
             buttons.closest('.ledger-acts').remove();
             return;
         }
-        buttons.on('click', async ev => {
+        buttons.on('click', ev => {
             ev.preventDefault();
-            const character = game.actors.get(request.characterId);
-            const actor = await fromUuid(request.actorUuid);
-            if (ev.currentTarget.dataset.action === 'bond-request-decline') {
-                await settle(message, 'heart.bond.request.declined', { name: character?.name ?? '' });
-                return;
-            }
-            if (!character || !actor) {
-                ui.notifications.warn(loc('heart.bond.no-target'));
-                return;
-            }
-            const bond = await grantBond(character, actor);
-            if (bond) await settle(message, 'heart.bond.request.added', { bond: bond.name, name: character.name });
+            return answerBondRequest(message, request, ev.currentTarget);
         });
+    });
+}
+
+// One answer per card at a time (Luke, 2026-10-21, R12: both clicks of a
+// double-click passed the "already bonded" check, so a person bond could be
+// added twice); a card already settled is left alone
+export function answerBondRequest(message, request, button) {
+    return oneAtATime(`${message.id}:bond-request`, button, async () => {
+        if (message.getFlag('heart', 'bondRequest')?.settled) return;
+        const character = game.actors.get(request.characterId);
+        const actor = await fromUuid(request.actorUuid);
+        if (button.dataset.action === 'bond-request-decline') {
+            await settle(message, 'heart.bond.request.declined', { name: character?.name ?? '' });
+            return;
+        }
+        if (!character || !actor) {
+            ui.notifications.warn(loc('heart.bond.no-target'));
+            return;
+        }
+        const bond = await grantBond(character, actor);
+        if (bond) await settle(message, 'heart.bond.request.added', { bond: bond.name, name: character.name });
     });
 }

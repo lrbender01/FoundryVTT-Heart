@@ -1,6 +1,7 @@
 import { orderByFlag } from './reorder';
 import { bondsOf } from '../../bonds/bonds';
 import { sumStress } from './total-stress';
+import { activeOf } from '../proxy-lists';
 
 export default {
     'character': function Character(actor) {
@@ -27,12 +28,6 @@ export default {
                 if (name === 'isQuartermaster') {
                     const party = game.heart?.party;
                     return Boolean(party && party.system.quartermaster === actor.id);
-                }
-
-                if (name === 'pronouns') {
-                    // (was actor.find, which threw; nothing reads it today)
-                    const pronouns = actor.items.find(x => x.type === 'pronouns');
-                    return pronouns;
                 }
 
                 if (name === 'ancestry') {
@@ -86,43 +81,13 @@ export default {
                     return orderByFlag(actor, abilities, 'abilityOrder');
                 }
 
-                if (name === 'effects') {
-                    return actor.items.reduce((o, item) => {
-                        return o.concat(item.transferredEffects);
-                    }, []);
-                }
-
+                // the class's own first, then the character's (proxy-lists.js;
+                // the dead ActiveEffect branch and pronouns went 2026-10-21)
                 if (name === 'resources') {
-                    function isActiveResource(resource) {
-                        const isActive = resource.system.active ?? true;
-                        const isComplete = resource.system.complete ?? false;
-                        return resource.type === "resource" && isActive && !isComplete;
-                    }
-                    const class_ = actor.proxy.class;
-                    const resources = [];
-                    if (class_ !== undefined) {
-                        resources.push(...class_.children.filter(isActiveResource))
-                    }
-                    resources.push(...actor.items.filter(isActiveResource));
-                    return orderByFlag(actor, resources, 'resourceOrder');
+                    return orderByFlag(actor, activeOf(actor, 'resource', { from: actor.proxy.class }), 'resourceOrder');
                 }
 
-                if (name === 'equipment') {
-                    function isActiveEquipment(equipment) {
-                        const isActive = equipment.system.active ?? true;
-                        const isComplete = equipment.system.complete ?? false;
-                        return equipment.type === "equipment" && isActive && !isComplete;
-                    }
-                    const equipment = [];
-
-                    const class_ = actor.proxy.class;
-                    if (class_ !== undefined) {
-                        equipment.push(...class_.children.filter(isActiveEquipment))
-                    }
-
-                    equipment.push(...actor.items.filter(isActiveEquipment));
-                    return equipment;
-                }
+                if (name === 'equipment') return activeOf(actor, 'equipment', { from: actor.proxy.class });
 
             }
         });

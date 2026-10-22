@@ -6,64 +6,47 @@ import { heartDialogOptions } from '../../common/dialog';
 import { pickFalloutButton } from '../../fallout-picker/button';
 import { askGM } from '../../common/relay';
 import { oneAtATime } from '../../common/busy';
-import { messageOf } from '../card-actions';
-import { partyFalloutResult, isPastRolling, PARTY_FALLOUT_RESULTS } from '../../actors/party/rules';
+import { messageOf, mayRollFallout } from '../card-actions';
+import { partyFalloutResult, isPastRolling } from '../../actors/party/rules';
 // The character thresholds live in results.js, free of webpack-only imports,
 // so the rules tests can load them (2026-09-30, Luke)
 import { characterFalloutResult, clearScope } from './results';
 
-export function initialise() {
-    // critical-fallout is rolled only for the party's Provisions (house rule,
-    // 2026-09-30); a character's own check never rolls it
-    game.heart.fallout_results = [...PARTY_FALLOUT_RESULTS];
-}
-
 export default class FalloutRoll extends Roll {
     static get CHAT_TEMPLATE() { return chatTemplateHTML.path; }
 
-    static get requirements() {
-        const characters = game.actors.filter(x => x.type === 'character');
-        return {
-            character: {
-                label: game.i18n.localize(`heart.character.label-single`),
-                options: characters.reduce((map, char) => {
-                    map[char.id] = char.name
-                    return map;
-                }, {})
-            }, 
-        }
-    }
-
     // resistance: the stress that triggered it, so Minor fallout can clear
-    // that track without asking (2026-09-30)
-    static build({character, resistance}={}, data={}, options={}) {
-        return new Promise((resolve, reject) => {
-            const requirements = this.requirements;
-        
-            if(character !== undefined) delete requirements.character;
-
-            const buildData = {character, resistance};
-            if(Object.keys(requirements).length > 0) {
-                game.heart.applications.RequirementApplication.build({
-                    requirements,
-                    callback: moreData => {
-                        foundry.utils.mergeObject(buildData, moreData)
-                        resolve(this._build(buildData, data, options));
-                    },
-                    type: 'prepare-fallout-roll',
-                });
-            } else {
-                return resolve(this._build(buildData, data, options));
-            }
-        })
+    // that track without asking (2026-09-30). Resolves with the roll, or null
+    // when there is nobody to roll for. Every caller names the character
+    // (Luke, 2026-10-21: the unused character prompt is gone, R20).
+    //
+    // Who may roll it (Luke, 2026-10-21, R8: "Fallout can be rolled by GM and
+    // character's owners but GM always PICKS the resulting fallout if it
+    // happens"): the GM, or a player who owns the character (the party: its
+    // owners). Anyone else is told so and nothing is rolled. Picking the
+    // Fallout stays the GM's (the card's GM-only Pick Fallout).
+    static async build({character, resistance}={}, data={}, options={}) {
+        const target = game.actors.get(character);
+        const doc = resistance === 'provisions' ? (game.heart.party ?? target) : target;
+        if (doc && !mayRollFallout(game.user, doc)) {
+            ui.notifications?.warn(game.i18n.format('heart.relay.fallout-not-yours', { name: doc.name ?? '' }));
+            return null;
+        }
+        return this._build({ character, resistance }, data, options);
     }
 
+    // null, with a warning, when the actor or the party is gone (2026-10-21,
+    // R15: it threw a TypeError instead)
     static _build({character, resistance}, data={}, options={}) {
         const doc = game.actors.get(character);
         // Provisions: the check is against the party's track, with the house
         // rule's thresholds (13+: Major is Critical; at the max: no roll)
         if (resistance === 'provisions' || doc?.type === 'party') {
             const party = doc?.type === 'party' ? doc : game.heart.party;
+            if (!party?.proxy) {
+                ui.notifications?.warn(game.i18n.localize('heart.party.no-party'));
+                return null;
+            }
             const p = party.proxy.provisions;
             options.party = true;
             options.totalStress = p.value;
@@ -71,6 +54,10 @@ export default class FalloutRoll extends Roll {
             options.character = party.id;
             options.resistance = 'provisions';
             return new this('1d12', data, options);
+        }
+        if (!doc?.proxy) {
+            ui.notifications?.warn(game.i18n.localize('heart.relay.missing'));
+            return null;
         }
         const actor = doc.proxy;
         options.totalStress = actor.totalStress;

@@ -2,7 +2,7 @@
 // track's arithmetic (actors/party/rules.js), the party's derived data
 // (provisionsOf), and the track display (provisionsView) (2026-09-30, Luke).
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   PROVISIONS_MAX,
   CRITICAL_FROM,
@@ -18,7 +18,7 @@ import {
   relievedValue,
 } from "../src/actors/party/rules.js";
 import { provisionsOf, canVolunteer, canResign } from "../src/actors/party/party.js";
-import { provisionsView, partyMembers } from "../src/actors/party/view.js";
+import { provisionsView, partyMembers, helperPool } from "../src/actors/party/view.js";
 import { makeActor, makeFallout, addActors } from "./helpers.mjs";
 
 describe("the track", () => {
@@ -245,6 +245,35 @@ describe("partyMembers", () => {
     );
     const members = partyMembers({ system: { members: ["z", "gone", "m", "a"] } });
     expect(members.map((m) => m.name)).toEqual(["Ash", "Zell"]);
+  });
+});
+
+// Luke, 2026-10-21 (R27): the roll prompt and the roll request offer the
+// same helpers, the party's members first
+describe("helperPool: who a roll may name as helpers", () => {
+  const played = (a, has = true) => Object.assign(a, { hasPlayerOwner: has });
+  beforeEach(() => {
+    addActors(
+      played(makeActor({ id: "z", name: "Zell" })),
+      played(makeActor({ id: "a", name: "Ash" })),
+      played(makeActor({ id: "n", name: "Npc" }), false),
+      makeActor({ id: "m", name: "Mox", type: "adversary" }),
+    );
+  });
+
+  it("the party's members when it has any", () => {
+    expect(helperPool({ system: { members: ["z", "n"] } }).map((a) => a.id)).toEqual(["n", "z"]);
+  });
+
+  it("else the characters with a player, alphabetically", () => {
+    expect(helperPool({ system: { members: [] } }).map((a) => a.id)).toEqual(["a", "z"]);
+    expect(helperPool(undefined).map((a) => a.id)).toEqual(["a", "z"]);
+  });
+
+  it("else every character", () => {
+    game.actors.clear();
+    addActors(played(makeActor({ id: "n", name: "Npc" }), false), played(makeActor({ id: "b", name: "Bel" }), false));
+    expect(helperPool(null).map((a) => a.id)).toEqual(["b", "n"]);
   });
 });
 

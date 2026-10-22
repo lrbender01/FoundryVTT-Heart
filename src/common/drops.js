@@ -35,3 +35,24 @@ export function actorDropRefusal(actorType, itemType) {
     if (itemType === 'haunt' && actorType !== 'landmark') return 'haunt';
     return null;
 }
+
+// Dragging a row (Luke, 2026-10-21, S5): an actor sheet's rows carry their
+// item's uuid in data-item-id. What a row's drag hands over: the item's uuid
+// for one of the actor's own items, null for a row with no item (a tab
+// link) or a class's or calling's child ("@" in its uuid), which only its
+// parent's sheet moves.
+export function draggableRowUuid(uuid) {
+    const value = String(uuid ?? '');
+    return value && !value.includes('@') ? value : null;
+}
+
+// The embedded item id in a row's uuid ("Actor.a.Item.b" -> "b"; a bare id
+// stays itself), or null for a child or anything else, so a sort among the
+// rows finds the actor's own items (Foundry's sort reads ids, not uuids)
+export function rowItemId(uuid) {
+    const value = draggableRowUuid(uuid);
+    if (!value) return null;
+    const parts = value.split('.');
+    if (parts.length === 1) return value;
+    return parts[parts.length - 2] === 'Item' ? parts[parts.length - 1] : null;
+}

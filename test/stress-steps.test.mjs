@@ -17,6 +17,8 @@ import {
   normalizeStakes,
   hasStakes,
   stakesText,
+  trackMax,
+  markedValue,
 } from "../src/rolls/stress-roll/rules.js";
 import characterProxies from "../src/actors/character/proxy.js";
 import partyProxies from "../src/actors/party/proxy.js";
@@ -239,5 +241,23 @@ describe("a Heart roll from a request keeps and shows the stakes", () => {
   it("nothing set: no stakes in the options", () => {
     expect(HeartRoll._build({ character: "vess", skill: "kill", stakes: {} }).options.stakes).toBeUndefined();
     expect(HeartRoll._build({ character: "vess", skill: "kill" }).options.stakes).toBeUndefined();
+  });
+});
+
+// Luke, 2026-10-21 (R17): one cap rule for characters and companions
+describe("trackMax and markedValue", () => {
+  it("a track's own max, else the book's ten boxes", () => {
+    expect(trackMax({ max: 12 })).toBe(12);
+    expect(trackMax({ max: 0 })).toBe(10);
+    expect(trackMax({})).toBe(10);
+    expect(trackMax(undefined)).toBe(10);
+  });
+
+  it("marks up to the last box, never lowers a track already past it", () => {
+    expect(markedValue(8, 5, 10)).toBe(10);
+    expect(markedValue(2, 3, 10)).toBe(5);
+    expect(markedValue("4", "2", 10)).toBe(6);
+    expect(markedValue(12, 3, 10)).toBe(12);
+    expect(markedValue(3, -2, 10)).toBe(3);
   });
 });

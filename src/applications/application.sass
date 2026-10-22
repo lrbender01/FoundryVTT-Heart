@@ -34,7 +34,7 @@
         align-items: center
         justify-content: center
 
-// Skills + Domains management popups — shared shell since structure is identical.
+// Skills + Domains management popups: shared shell since structure is identical.
 // Added in Phase 2A.3 (2026-06-12). Row + knack-input styling is hoisted to
 // global rules below (.skill-row / .domain-row / .knack-input) so the same
 // styling drives the Skills & Domains tab on the character sheet (Phase 2A.4).
@@ -86,7 +86,7 @@
         button
             margin: 0
 
-// Shared row styling for EDIT contexts — used by management popups (grid-2
+// Shared row styling for EDIT contexts: used by management popups (grid-2
 // cells) AND by the Skills & Domains tab (subcolumn grid cells). Each row is
 // a flex container for checkbox + label inside its grid cell.
 // Distinct class from .skill-row / .domain-row (which the Character tab uses
@@ -114,7 +114,7 @@
         flex: 1 1 auto
         min-width: 0
 
-// Knack inputs — both textarea (multi-line wrap) and legacy text input.
+// Knack inputs: both textarea (multi-line wrap) and legacy text input.
 // `.knack-input` class on the element drives the styling regardless of tag.
 #{util.$in-heart} textarea.knack-input,
 #{util.$in-heart} input[type="text"].knack-input

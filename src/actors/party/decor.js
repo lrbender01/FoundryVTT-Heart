@@ -1,4 +1,4 @@
-// Party sheet decorations (2026-10-02, docs/plans/heart-party-art.md): the
+// Party sheet decorations (2026-10-02; the plan is in CHANGELOG.md): the
 // party sheet's boxes and art folder for the shared decoration maths
 // (common/decor.js), which the export of Luke's Heart Party Sheet Art tool
 // (docs/mocks/party-art/) runs through. Tested in test/party-decor.test.mjs;

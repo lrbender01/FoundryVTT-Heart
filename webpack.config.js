@@ -70,18 +70,7 @@ module.exports = (env, argv) => {
                   },
             ],
         },
-        devServer: {
-            contentBase: distPath,
-            hot: true,
-            proxy: {
-                target: 'http://localhost:30000',
-                context: function (path) {
-                    return !path.match(/^\/sockjs/);
-                },
-                ws: true
-            },
-            publicPath: publicPath,
-            writeToDisk: true
-        },
+        // (upstream's devServer block, in webpack-dev-server 3 options the
+        // installed v4 rejects, was removed 2026-10-21: nothing ran it)
     }
 };

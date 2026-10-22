@@ -26,18 +26,6 @@ class HeartItem extends Item {
         return this.parentItem !== null;
     }
 
-    get heart_effects() {
-        if (this.proxy !== undefined && this.proxy.effects !== undefined) {
-            const effects = new Collection(super.effects.entries());
-            this.proxy.effects.forEach(effect => {
-                effects.set(effect.id, effect);
-            });
-            return effects;
-        } else {
-            return super.effects;
-        }
-    }
-
     get uuid() {
         if (!this.isChild) {
             return super.uuid;
@@ -54,7 +42,7 @@ class HeartItem extends Item {
             if (game.model.Item[this.type].children !== undefined) {
                 return new Collection();
             } else {
-                return
+                return undefined;
             }
         }
 
@@ -158,7 +146,7 @@ class HeartItem extends Item {
             update[child.id] = childData;
         });
 
-        return this.update(flattenObject({
+        return this.update(foundry.utils.flattenObject({
             'system.children': update
         }), {
             render: true
@@ -275,37 +263,24 @@ function ItemSheetFactory(data) {
         get img() {
             return safe_data.img;
         }
-
-        /** @inheritdoc */
-        get id() {
-            return `${this.constructor.name}-${this.document.uuid.replace(/[\.@]/g, "-")}`;
-        }
+        // (get id() is HeartItemSheet's since 2026-10-21)
     };
     return CustomHeartItemSheet;
 }
 
 export function initialise() {
-    console.log('heart | Assigning new Item documentClass');
-    
     CONFIG.Item.documentClass = HeartItem;
-    console.log('heart | Registering item sheets');
 
     Items.unregisterSheet('core', ItemSheet);
     sheetModules.forEach((module) => {
 
         const data = module.data;
-        let Sheet;
-        if (module.default !== undefined) {
-            Sheet = module.default;
-        } else if (data.sheet instanceof ItemSheet) {
-            Sheet = data.sheet
-        } else {
-            Sheet = ItemSheetFactory(data);
-        }
+        // (a data.sheet branch that compared a class with instanceof never
+        // ran; it went 2026-10-21)
+        const Sheet = module.default ?? ItemSheetFactory(data);
 
         const type = Sheet.type;
 
-        console.log(`heart | -- Registering ${type} sheet`);
         if (game.heart.items === undefined) {
             game.heart.items = {}
         }

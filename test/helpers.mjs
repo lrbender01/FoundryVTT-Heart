@@ -620,6 +620,10 @@ class FakeDocumentSheet {
     return false;
   }
   _restoreScrollPositions() {}
+  // the data the template would be drawn with (Foundry renders it here)
+  async _renderInner(data) {
+    return data;
+  }
   _configureProseMirrorPlugins() {
     return {};
   }

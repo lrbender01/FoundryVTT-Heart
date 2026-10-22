@@ -1,5 +1,5 @@
-// The scrapboard map's table tools (2026-10-02, monorepo
-// docs/plans/heart-map.md): a canvas layer with its own scene controls, on a
+// The scrapboard map's table tools (2026-10-02; the fork's CLAUDE.md "The
+// Heart map"): a canvas layer with its own scene controls, on a
 // scrapboard scene only (activated as soon as such a scene is viewed). What
 // each click, Ctrl+click, box, drag, wheel, and double-click does is the
 // shared controls' (controls.js: the same copy the Heart Map Board editor
@@ -31,11 +31,11 @@
 import { ScrapboardRenderer } from './render.js';
 import { pinThumb } from './paint.js';
 import { reloadBoardLook } from './look.js';
-import { markMax, doodleBoard, strokeToCard, customKey, brushColor, DOODLE_KINDS, DOODLE_SIZE, noteFields } from './model.js';
+import { markMax, brushStroke, doodleBoard, doodlePatch, brushColor, DOODLE_KINDS, DOODLE_SIZE, noteFields } from './model.js';
 import { BoardControls, toolsFor, applyPatch, LOCK_MS } from './controls.js';
 import {
-    isBoardScene, boardOf, ownsBoard, setScrap, setLink, unsetLink, addLink, addPin, addScrap, addMark, removeMarks, clearAllBrushes,
-    removeScrap, removeLink, removeMany, applyBoardPatch, labelString, addString, undo, redo, exportBoard, importBoard, restoreBackup, hasBackup,
+    isBoardScene, boardOf, ownsBoard, addPin, addScrap, removeMarks, clearAllBrushes,
+    removeLink, removeMany, applyBoardPatch, labelString, addString, undo, redo, exportBoard, importBoard, restoreBackup, hasBackup,
     newPlace, downloadBoard,
 } from './api.js';
 import {
@@ -117,6 +117,8 @@ export class ScrapboardLayer extends InteractionLayer {
         painter: () => this.renderer.painter,
         size: (id) => this.renderer.size(id),
         user: () => this.user,
+        // (the brush in hand, for the stroke the controls lay down)
+        brush: () => this.brush,
         px: () => 1 / Math.max(0.02, this.renderer.scale * (canvas.stage?.scale.x ?? 1)),
         // (the reticle's captions in this language: heart.board.caption.*)
         say: (id) => (game.i18n.has(`heart.board.caption.${id}`) ? loc(`heart.board.caption.${id}`) : null),
@@ -141,6 +143,11 @@ export class ScrapboardLayer extends InteractionLayer {
     }
 
     // who the controls act for: the GM in Player view is a player
+    // the brush in hand: its paint, width, opacity, and brightness
+    get brush() {
+        return { c: this.markInk, w: this.markWidth, o: this.markOpacity, b: this.markBright };
+    }
+
     get user() {
         const u = game.user;
         if (u.isGM && this.preview) return { id: u.id, isGM: false, owner: false };
@@ -167,11 +174,21 @@ export class ScrapboardLayer extends InteractionLayer {
 
     async _tearDown(options) {
         this.renderer.clear();
+        // (the stroke preview's textures and the reticle's timer let go with
+        // the scene, and a place waiting for its click forgotten: Luke,
+        // 2026-10-21)
+        const held = new Set(this.#strokeSprites.map((sp) => sp?.texture).filter((t) => t && t !== PIXI.Texture.EMPTY && t.baseTexture));
+        for (const sp of this.#strokeSprites) if (sp && !sp.destroyed) sp.texture = PIXI.Texture.EMPTY;
+        for (const t of held) t.destroy(true);
+        clearTimeout(this.#lockTimer);
+        this.#placing = null;
+        this.#wheelPatch = null;
         this.#overlay = null;
         this.#strokeSprites = [];
         this.#strokeMask = null;
         this.controls.clear();
         this.#palette(false);
+        this.#caption(null);
         return super._tearDown(options);
     }
 
@@ -384,32 +401,10 @@ export class ScrapboardLayer extends InteractionLayer {
     // opacity; strokes of whoever placed it
     #doodle(a) {
         const r = this.renderer;
-        const look = r.look;
-        if (!look) return;
-        const strokes = doodleBoard(a.kind, a.seed ?? `${a.kind}:${Date.now()}`, { x: a.at.x, y: a.at.y, size: this.doodleSize, c: this.markInk, w: Math.min(this.markWidth, markMax(look)), b: this.markBright, o: this.markOpacity });
-        const raw = boardOf(canvas.scene);
-        const me = game.user.id;
-        const patch = { marks: {}, scraps: {} };
-        const card = a.on ? r.view?.scraps.find((x) => x.key === a.on) : null;
-        if (card) {
-            const have = { ...(raw.scraps?.[card.key]?.marks ?? {}) };
-            const marks = {};
-            for (const st of strokes) {
-                const id = customKey('m', have);
-                have[id] = 1;
-                marks[id] = { ...strokeToCard(st, card, look), by: me };
-            }
-            patch.scraps[card.key] = { marks };
-        } else {
-            const have = { ...(raw.marks?.[me] ?? {}) };
-            const marks = {};
-            for (const st of strokes) {
-                const id = customKey('m', have);
-                have[id] = 1;
-                marks[id] = st;
-            }
-            patch.marks[me] = marks;
-        }
+        if (!r.look) return;
+        // (model.js doodlePatch: the editor's own copy too)
+        const brush = { size: this.doodleSize, c: this.markInk, w: this.markWidth, b: this.markBright, o: this.markOpacity };
+        const patch = doodlePatch(boardOf(canvas.scene), r.view, a, brush, r.look, game.user.id);
         if (game.user.isGM && !this.preview) return applyBoardPatch(canvas.scene, patch);
         return boardEdit(canvas.scene, { remark: patch });
     }
@@ -603,7 +598,7 @@ export class ScrapboardLayer extends InteractionLayer {
             for (const sp of sps) sp.visible = false;
             return;
         }
-        const st = { c: this.markInk, w: Math.min(this.markWidth, markMax(r.look)), o: this.markOpacity, b: this.markBright, pts };
+        const st = brushStroke(this.brush, r.look, pts);
         const k = Math.min(3, r.scale * canvas.stage.scale.x * (window.devicePixelRatio || 1));
         let L = null;
         try {
@@ -690,14 +685,9 @@ export class ScrapboardLayer extends InteractionLayer {
             case 'refuse':
                 return ui.notifications.info(loc('heart.board.reveal-place-first'));
             case 'reveal':
-                if (a.scrap) return setScrap(scene, a.scrap.key, { state: a.to });
-                if (a.pin) return applyBoardPatch(scene, { pins: { [a.pin.id]: { state: a.to } } });
-                // (a string's name tag and its thread come with it)
-                return applyBoardPatch(scene, {
-                    link: [a.link.id, { state: a.to }],
-                    links: Object.fromEntries((a.also?.links ?? []).map((id) => [id, { state: a.to }])),
-                    scraps: Object.fromEntries((a.also?.scraps ?? []).map((k) => [k, { state: a.to }])),
-                });
+                // (the shared controls' patch, model.js revealPatch: a
+                // string's name tag and its thread come with it)
+                return a.patch ? applyBoardPatch(scene, a.patch) : null;
             case 'remove':
                 this.controls.clear();
                 return gm ? removeMany(scene, a.what) : boardEdit(scene, { remove: a.what });
@@ -712,7 +702,6 @@ export class ScrapboardLayer extends InteractionLayer {
                 // (Luke, 2026-10-06: a new string never asks; double-click it to
                 // name it or change its kind)
                 const answer = { kind: player ? 'path' : a.kind ?? this.#lastKind, label: '', color: a.color ?? (player ? this.#lastColor : null), state: a.state ?? null };
-                if (!answer) return this.drawMarks();
                 if (player) this.#lastColor = answer.color ?? 0;
                 else this.#lastKind = answer.kind;
                 // (a shared pin is made first, then the string, then its name:
@@ -759,17 +748,12 @@ export class ScrapboardLayer extends InteractionLayer {
             }
             case 'patch':
                 return this.#write(a.patch);
-            case 'mark': {
-                const stroke = { c: this.markInk, w: Math.min(this.markWidth, markMax(this.renderer.look)), o: this.markOpacity, b: this.markBright, pts: a.pts };
+            case 'mark':
                 this.drawMarks();
-                // (begun on a card: the card's, in its own frame)
-                if (a.on && a.patch) {
-                    const st = { ...a.patch.stroke(stroke), by: game.user.id };
-                    if (game.user.isGM) return applyBoardPatch(scene, { scraps: { [a.patch.key]: { marks: { [a.patch.id]: st } } } });
-                    return boardEdit(scene, { mark: { ...st, on: a.patch.key } });
-                }
-                return game.user.isGM ? addMark(scene, game.user.id, stroke) : boardEdit(scene, { mark: stroke });
-            }
+                // (begun on a card: the card's, in its own frame; the patch is
+                // the shared controls', model.js strokePatch, Luke 2026-10-21)
+                if (game.user.isGM) return applyBoardPatch(scene, a.patch);
+                return boardEdit(scene, { mark: a.on ? { ...a.stroke, on: a.on } : a.stroke });
             case 'unmark':
                 this.drawMarks();
                 return game.user.isGM ? removeMarks(scene, a.strokes) : boardEdit(scene, { unmark: a.strokes });
@@ -938,6 +922,9 @@ export class ScrapboardLayer extends InteractionLayer {
     _onMouseWheel(event) {
         const patch = this.controls.wheel(event.delta ?? event.deltaY, { ctrl: Boolean(event.ctrlKey || event.metaKey), shift: Boolean(event.shiftKey) });
         if (!patch) return;
+        // (never written to another scene viewed by the time the wheel rests,
+        // whose cards may share its keys: Luke, 2026-10-21)
+        this.#wheelScene = canvas.scene;
         this.#wheelPatch = { scraps: { ...(this.#wheelPatch?.scraps ?? {}) } };
         for (const [k, p] of Object.entries(patch.scraps)) this.#wheelPatch.scraps[k] = { ...(this.#wheelPatch.scraps[k] ?? {}), ...p };
         this.#show(this.#wheelPatch);
@@ -945,10 +932,11 @@ export class ScrapboardLayer extends InteractionLayer {
     }
 
     #wheelPatch = null;
+    #wheelScene = null;
     #wheelWrite = foundry.utils.debounce(async () => {
         const patch = this.#wheelPatch;
         this.#wheelPatch = null;
-        if (!patch) return;
+        if (!patch || this.#wheelScene !== canvas.scene) return;
         await this.#live;
         return this.#write(patch);
     }, 350);
@@ -961,12 +949,15 @@ export class ScrapboardLayer extends InteractionLayer {
         // (strokes moved: through the relay's own check, for anyone)
         if (patch.marks || Object.values(patch.scraps ?? {}).some((p) => p.marks)) return boardEdit(scene, { remark: { marks: patch.marks ?? {}, scraps: patch.scraps ?? {} } });
         // (a player's own strings and pins: checked there too)
-        if (!this.user.owner && (patch.link || Object.keys(patch.links ?? {}).length || Object.keys(patch.newLinks ?? {}).length || Object.keys(patch.pins ?? {}).length)) {
-            return boardEdit(scene, { ownPatch: { link: patch.link, links: patch.links ?? {}, newLinks: patch.newLinks ?? {}, pins: patch.pins ?? {} } });
-        }
         if (this.user.owner) return boardEdit(scene, { patch });
+        // (their own notes moved with their own strings and pins: both,
+        // Luke 2026-10-21; the cards' move was dropped)
         const moves = Object.fromEntries(Object.entries(patch.scraps ?? {}).filter(([, p]) => Number.isFinite(p.x)).map(([k, p]) => [k, { x: p.x, y: p.y }]));
-        if (Object.keys(moves).length) return playerMove(scene, moves);
+        const own = patch.link || Object.keys(patch.links ?? {}).length || Object.keys(patch.newLinks ?? {}).length || Object.keys(patch.pins ?? {}).length;
+        const asks = [];
+        if (own) asks.push(boardEdit(scene, { ownPatch: { link: patch.link, links: patch.links ?? {}, newLinks: patch.newLinks ?? {}, pins: patch.pins ?? {} } }));
+        if (Object.keys(moves).length) asks.push(playerMove(scene, moves));
+        return Promise.all(asks);
     }
 
     // Repaint the board as an edit under way would leave it: one repaint at
@@ -1029,6 +1020,12 @@ export class ScrapboardLayer extends InteractionLayer {
         const on = Boolean(this.active && this.isBoard && game.activeTool === 'mark');
         this.#doodles(on && this.doodlesOpen);
         if (!on || !this.doodlesOpen) this.controls.doodle = null;
+        // (the strokes selected are the brush's: put down, it lets them go,
+        // so their handles never show for Move; Luke, 2026-10-21)
+        if (!on && this.controls.markSel.size) {
+            this.controls.markSel.clear();
+            this.drawMarks();
+        }
         // (the drawing alone is the brush's: it ends when the brush is put
         // down, Luke 2026-10-06)
         if (!on && this.renderer.marksOnly) {

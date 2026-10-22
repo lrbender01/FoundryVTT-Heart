@@ -7,13 +7,14 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { initialise } from "../src/chat-messages/index.js";
+import { initialise, rollFromRequest, renderChained } from "../src/chat-messages/index.js";
 import StressRoll from "../src/rolls/stress-roll/roll.js";
 import FalloutRoll from "../src/rolls/fallout-roll/roll.js";
 import HeartRoll from "../src/rolls/heart-roll/roll.js";
 import { registerCardActions } from "../src/rolls/card-actions.js";
+import { requestHelpers } from "../src/rolls/heart-roll/pool.js";
 import characterProxies from "../src/actors/character/proxy.js";
-import { resetWorld, fakeActor, fakeUser, fakeItem, setUsers, fakeMessage, queueDice } from "./helpers.mjs";
+import { resetWorld, fakeActor, fakeUser, fakeItem, setUsers, queueDice, FakeChatMessage } from "./helpers.mjs";
 
 const RES = ["blood", "mind", "echo", "fortune", "supplies"];
 
@@ -89,6 +90,144 @@ describe("the rolls a card carries", () => {
   it("a GM roll request is recognised by its flag", () => {
     expect(new HeartChatMessage({ flags: { heart: { "roll-request": {} } } }).isRollRequest).toBe(true);
     expect(new HeartChatMessage({}).isRollRequest).toBe(false);
+  });
+});
+
+// 2026-10-21 (R8): a chained flag naming no roll class broke the card
+describe("a malformed chained roll", () => {
+  it("reads as no roll instead of throwing", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const bad = new HeartChatMessage({ rolls: [{}], flags: { heart: { "fallout-roll": { total: 7 }, "stress-roll": { class: "Nope" } } } });
+    expect(bad.falloutRoll).toBeUndefined();
+    expect(bad.stressRoll).toBeUndefined();
+    expect(bad.showClearStressButton).toBe(false);
+    const broken = new HeartChatMessage({ rolls: [{}], flags: { heart: { "fallout-roll": { class: "FalloutRoll", options: null } } } });
+    FalloutRoll.fromData = () => {
+      throw new Error("bad data");
+    };
+    expect(broken.falloutRoll).toBeUndefined();
+    delete FalloutRoll.fromData;
+  });
+});
+
+// 2026-10-21 (R1): Foundry 12.343 fires renderChatMessage inside
+// ChatMessage#getHTML, and HeartChatMessage.getHTML redraws the roll after
+// it, so the GM-only strip must come after the redraw
+describe("GM-only controls on a redrawn roll card", () => {
+  const gm = fakeUser({ id: "gm", isGM: true });
+  const p1 = fakeUser({ id: "p1" });
+
+  // a jQuery stand-in that logs what is done to which selector, in order
+  function recorder(log, sel = "card") {
+    const set = {
+      length: 1,
+      find: (s) => recorder(log, s),
+      html: () => (log.push(["html", sel]), set),
+      remove: () => (log.push(["remove", sel]), set),
+      append: () => (log.push(["append", sel]), set),
+      filter: () => set,
+      slice: () => set,
+      addClass: () => set,
+      children: () => set,
+    };
+    return set;
+  }
+
+  async function drawn(self) {
+    setUsers([gm, p1], { self });
+    vess({ blood: 5 });
+    const log = [];
+    FakeChatMessage.prototype.getHTML = async () => (log.push(["hooks ran"]), recorder(log));
+    globalThis.$ = () => recorder(log, "new content");
+    const roll = FalloutRoll._build({ character: "vess", resistance: "blood" });
+    queueDice(2);
+    await roll.evaluate();
+    const msg = new HeartChatMessage({ rolls: [roll] });
+    msg.isRoll = true;
+    msg.isContentVisible = true;
+    await msg.getHTML();
+    delete FakeChatMessage.prototype.getHTML;
+    delete globalThis.$;
+    return log;
+  }
+
+  it("a player's copy loses [data-gm-only] after the fallout block is redrawn", async () => {
+    const log = await drawn(p1);
+    const redraw = log.findIndex(([op, sel]) => op === "html" && sel === ".dice-roll");
+    const strip = log.findIndex(([op, sel]) => op === "remove" && sel === "[data-gm-only]");
+    expect(redraw).toBeGreaterThan(0);
+    expect(strip).toBeGreaterThan(redraw);
+  });
+
+  it("the GM's copy keeps them", async () => {
+    const log = await drawn(gm);
+    expect(log.some(([op, sel]) => op === "remove" && sel === "[data-gm-only]")).toBe(false);
+  });
+});
+
+// 2026-10-21 (R2): the request card skipped every helper rule
+describe("a roll request's Roll as: the prompt's helper rules", () => {
+  const gm = fakeUser({ id: "gm", isGM: true });
+  const p1 = fakeUser({ id: "p1" });
+  const delver = (id, { skills = { delve: { value: true } }, fallouts = [] } = {}) =>
+    fakeActor({
+      id,
+      name: id,
+      owners: ["p1"],
+      system: { skills, domains: {}, resistances: {} },
+      items: fallouts.map((name) => ({ name, type: "fallout", system: { complete: false } })),
+    });
+
+  beforeEach(() => {
+    delver("vess");
+    delver("kettle");
+    delver("furi", { fallouts: ["Furious"] });
+    delver("lax", { skills: {} });
+    delver("ash");
+    delver("rex");
+  });
+
+  const ticked = ["kettle", "furi", "lax", "ash", "rex", "vess"];
+
+  it("a player: only eligible helpers, two at most, each dropped one noted", () => {
+    const { helpers, notes } = requestHelpers(ticked, { roller: "vess", skill: "delve", isGM: false });
+    expect(helpers).toEqual(["kettle", "ash"]);
+    expect(notes).toEqual([
+      "heart.card.helper-dropped{name=furi,reason=heart.roll-prompt.helper-furious}",
+      "heart.card.helper-dropped{name=lax,reason=heart.roll-prompt.helper-lacks}",
+      "heart.card.helper-dropped{name=rex,reason=heart.roll-prompt.helper-full}",
+    ]);
+  });
+
+  it("a GM overrides, as in the prompt (the roller is never a helper)", () => {
+    expect(requestHelpers(ticked, { roller: "vess", skill: "delve", isGM: true })).toEqual({
+      helpers: ["kettle", "furi", "lax", "ash", "rex"],
+      notes: [],
+    });
+  });
+
+  it("the card's roll carries the filtered helpers and the notes", async () => {
+    setUsers([gm, p1], { self: p1 });
+    game.heart = { ...game.heart, stress_targets: [] };
+    const form = { difficulty: ["standard"], skill: ["delve"], helper: ticked };
+    const NodeFormData = globalThis.FormData;
+    globalThis.FormData = class {
+      constructor(f) {
+        this.f = f;
+      }
+      get(k) {
+        return this.f[k]?.[0] ?? null;
+      }
+      getAll(k) {
+        return this.f[k] ?? [];
+      }
+    };
+    const button = { closest: () => ({ get: () => form }) };
+    const roll = await rollFromRequest(button, "vess", "m1");
+    expect(roll.options.helpers).toEqual(["kettle", "ash"]);
+    expect(roll.options.notes).toContain("heart.card.helper-dropped{name=rex,reason=heart.roll-prompt.helper-full}");
+    expect(FakeChatMessage.create).toHaveBeenCalledTimes(1);
+    globalThis.FormData = NodeFormData;
   });
 });
 
@@ -187,7 +326,10 @@ describe("a fallout card's Clear button (FalloutRoll.clearStress)", () => {
     const roll = FalloutRoll._build({ character: "vess", resistance: "mind" });
     queueDice(d12);
     await roll.evaluate();
-    const msg = fakeMessage({ rolls: [roll] });
+    // a real card class: the GM's side reads who and what from the card's
+    // own fallout roll (2026-10-21, R10)
+    const msg = new HeartChatMessage({ rolls: [roll] });
+    game.messages.set(msg.id, msg);
     return { actor, roll, msg };
   }
 
@@ -219,5 +361,17 @@ describe("a fallout card's Clear button (FalloutRoll.clearStress)", () => {
     expect(Dialog.opened).toHaveLength(0);
     expect(ui.notifications.warn).toHaveBeenCalledWith("heart.party.not-owner{name=Vess}");
     expect(actor.update).not.toHaveBeenCalled();
+  });
+});
+
+// Luke, 2026-10-21 (R8): one bad chained roll never blanks a card
+describe("a chained roll that cannot be drawn", () => {
+  it("leaves its block out instead of breaking the card", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const bad = { render: async () => { throw new TypeError("no options"); } };
+    expect(await renderChained(bad, {})).toBe("");
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+    expect(await renderChained({ render: async (o) => `<p>${o.x}</p>` }, { x: 1 })).toBe("<p>1</p>");
   });
 });

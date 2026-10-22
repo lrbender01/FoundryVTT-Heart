@@ -3,7 +3,6 @@ import HeartSheetMixin from '../../common/sheet';
 import './preview.sass';
 import './item-sheet.sass';
 import { highlightRendered } from '../../common/terms';
-import { iconFor } from '../../common/icons';
 import { heartDialogOptions } from '../../common/dialog';
 import { learnedTimes } from '../ability/repeat';
 import { activateBeatListeners } from '../beat/actions';
@@ -11,7 +10,8 @@ import { activateTrinketListeners } from '../trinkets';
 import { artOf, piecesOf, gearPieces, showGallery, startAt, startAtSrc } from '../../common/art';
 import { canHoldChild } from '../../common/drops';
 import { scaledWidth } from '../../common/window-sizes';
-import { artShown, toggleArt } from '../../common/art-toggle';
+import { artShown, artToggleButton, markArtButton } from '../../common/art-toggle';
+import { localizeHeart, newItemName } from '../../common/localize';
 
 let measureContext;
 // the item types that carry book art (fvtt-heart-content, 2026-10-01; gear
@@ -74,10 +74,6 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         return !artShown();
     }
 
-    async _toggleArt() {
-        await toggleArt();
-    }
-
     // The sheet's gallery: the item's pieces, then the art of the gear it
     // holds (a class's starting equipment); at the picture `src` (a clicked
     // row's art, common/row-art.js), else at the item's own piece
@@ -86,24 +82,38 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
         showGallery(pieces, { title: localizeHeart(this.item.name), start: src ? startAtSrc(pieces, src) : startAt(pieces, this.item) });
     }
 
+    // (the one Art button, common/art-toggle.js, since 2026-10-21)
     _getHeaderButtons() {
         const buttons = super._getHeaderButtons();
-        if (this._hasArt()) {
-            buttons.unshift({
-                label: game.i18n.localize('heart.art.toggle'),
-                class: 'heart-art-toggle',
-                icon: 'fas fa-image',
-                onclick: () => this._toggleArt(),
-            });
-        }
+        if (this._hasArt()) buttons.unshift(artToggleButton());
         return buttons;
     }
 
     // the title bar is drawn once, so the Art button's white / grey look
-    // (character.sass) is refreshed after every render
+    // (common/glass.sass) is refreshed after every render
     async _render(...args) {
         await super._render(...args);
-        this.element?.find('.window-header .heart-art-toggle').toggleClass('art-off', this._artHidden());
+        markArtButton(this);
+    }
+
+    // One window per document, nested children included: their uuids carry
+    // "." and "@", which a window id cannot (one copy since 2026-10-21; it
+    // was in three sheets)
+    get id() {
+        return `${this.constructor.name}-${this.document.uuid.replace(/[.@]/g, "-")}`;
+    }
+
+    // Rich text the sheet draws (common/rich-text.js; Luke, 2026-10-21):
+    // the description, a bond's notes, and question answers
+    _richFields() {
+        const item = this.item;
+        const sys = item.system ?? {};
+        const fields = [{ key: 'system.description', html: localizeHeart(sys.description ?? ''), doc: item }];
+        if (typeof sys.notes === 'string') fields.push({ key: 'system.notes', html: sys.notes, doc: item });
+        for (const [id, q] of Object.entries(sys.questions ?? {})) {
+            fields.push({ key: `system.questions.${id}.answer`, html: q?.answer ?? '', doc: item });
+        }
+        return fields;
     }
 
     get default_img() {
@@ -228,10 +238,9 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
             ev.preventDefault();
             const roll = game.heart.rolls.ItemRoll.build({ item: this.item }, {}, { stepIncrease: ev.shiftKey && !ev.altKey, stepDecrease: ev.altKey && !ev.shiftKey });
             await roll.evaluate();
-            roll.toMessage({
-                flavor: `${iconFor(this.item.img)}${localizeHeart(this.item.name)} (<span class="item-type">${this.item.type}</span>)`,
-                speaker: ChatMessage.getSpeaker({ actor: this.item.actor })
-            });
+            // no flavor (Luke, 2026-10-21): the card names the item, escaped,
+            // and a flavor built from the name ran any markup typed into it
+            roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this.item.actor }) });
         });
 
         // Pencil in a panel title opens that panel's editor (native click:
@@ -256,7 +265,8 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
             const type = target.data('type');
             let itemData = target.data('data') || {};
 
-            const data = { documentName, type: type, name: game.i18n.format('heart.new-item', { type }), system: itemData };
+            // ("New Equipment", the type's label: S17, 2026-10-21)
+            const data = { documentName, type: type, name: newItemName(type), system: itemData };
             // open the new child's sheet to name and fill it (addChildren
             // gives the data its id); it is already listed in its section
             this.item.addChildren([data]).then(() => this.item.children?.get(data._id)?.sheet.render(true));
@@ -266,7 +276,7 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
             const target = $(ev.currentTarget);
             const uuid = target.closest('[data-item-id]').data('itemId');
             const item = await fromUuid(uuid);
-            item.sheet.render(true);
+            item?.sheet.render(true);
         });
 
         html.find('[data-item-id] [data-action=delete]').click(async ev => {
@@ -277,37 +287,18 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
             await item.deleteDialog(heartDialogOptions());
         });
 
-        html.find('[data-item-id] [data-action=activate]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
+        // Switch a row's item on or off, or finish it; a row whose item is
+        // gone does nothing. The update re-renders this sheet itself (Luke,
+        // 2026-10-21: these threw on a missing item and rendered twice)
+        const setField = (action, changes) => html.find(`[data-item-id] [data-action=${action}]`).click(async ev => {
+            const uuid = $(ev.currentTarget).closest('[data-item-id]').data('itemId');
             const item = await fromUuid(uuid);
-            await item.update({ 'system.active': true });
-            this.render(true);
+            await item?.update(changes);
         });
-
-        html.find('[data-item-id] [data-action=deactivate]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            await item.update({ 'system.active': false });
-            this.render(true);
-        });
-
-        html.find('[data-item-id] [data-action=complete]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            await item.update({ 'system.complete': true });
-            this.render(true);
-        });
-
-        html.find('[data-item-id] [data-action=uncomplete]').click(async ev => {
-            const target = $(ev.currentTarget);
-            const uuid = target.closest('[data-item-id]').data('itemId');
-            const item = await fromUuid(uuid);
-            await item.update({ 'system.complete': false });
-            this.render(true);
-        });
+        setField('activate', { 'system.active': true });
+        setField('deactivate', { 'system.active': false });
+        setField('complete', { 'system.complete': true });
+        setField('uncomplete', { 'system.complete': false });
     }
 
     getData() {
@@ -418,11 +409,13 @@ export default class HeartItemSheet extends HeartSheetMixin(ItemSheet) {
 
     async _onDragStart(event) {
         const li = event.currentTarget;
-        if (event.target.classList.contains("entity-link")) return;
+        // (the row carries the uuid, not the element the pointer started
+        // on; and v12 links are content-link: Luke, 2026-10-21)
+        if (event.target.classList.contains("content-link")) return;
 
         const dragData = {
             parentItemId: this.item.id,
-            uuid: event.target.dataset.documentId,
+            uuid: li.dataset.documentId,
             type: "Item"
         };
 

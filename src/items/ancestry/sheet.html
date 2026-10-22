@@ -26,7 +26,7 @@
                 {{#if (and question.custom ../editable)}}
                 <input class="question-input" type="text" name="system.questions.{{id}}.question" value="{{question.question}}" placeholder="{{localizeHeart 'ancestry' 'questions' 'placeholder'}}" />
                 {{else}}
-                <span class="question-text">{{{heartTerms (localizeHeart question.question)}}}</span>
+                <span class="question-text">{{{heartTermsText (localizeHeart question.question)}}}</span>
                 {{/if}}
                 <span class="question-tools">
                   {{#if (and ../item.isOwned ../editable)}}<a class="question-tool" data-action="edit-answer" aria-label="{{localizeHeart 'item-sheet' 'answer'}}"><span class="fas fa-edit"></span></a>{{/if}}
@@ -37,9 +37,9 @@
               <div class="answer">
                 {{#unless question.answer}}<div class="answer-placeholder">{{localizeHeart "item-sheet" "no-answer"}}</div>{{/unless}}
                 {{#if ../editable}}
-                {{editor question.answer target=(join "." "system.questions" id "answer") button=true editable=../editable owner=../owner engine="prosemirror"}}
+                {{editor (lookup @root.enriched (join "." "system.questions" id "answer")) target=(join "." "system.questions" id "answer") button=true editable=../editable owner=../owner engine="prosemirror"}}
                 {{else}}
-                {{{question.answer}}}
+                {{{lookup @root.enriched (join "." "system.questions" id "answer")}}}
                 {{/if}}
               </div>
               {{/if}}

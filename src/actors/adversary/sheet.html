@@ -26,7 +26,7 @@
     {{/if}}
   </div>
   <div class="container-content">
-    {{editor content target=target button=true editable=editable owner=owner engine="prosemirror"}}
+    {{editor (lookup @root.enriched target) target=target button=true editable=editable owner=owner engine="prosemirror"}}
   </div>
 </div>
 {{/inline}}
@@ -157,7 +157,10 @@
       <!-- ===== LORE (same page) ===== -->
       <div class="panel-lore">
         {{> editorPanel panelClass="description-container" glyph="notes" title=(localizeHeart "adversary" "description") content=actor.system.description target="system.description"}}
-        {{> editorPanel panelClass="gm-notes-container" glyph="notes" title=(localizeHeart "adversary" "gm-notes") content=actor.system.notes target="system.notes"}}
+        {{!-- GM Notes: the GM's alone (Luke, 2026-10-21; common/gm-notes.js) --}}
+        {{#if showGmNotes}}
+        {{> editorPanel panelClass="gm-notes-container" glyph="notes" title=(localizeHeart "adversary" "gm-notes") target="system.notes"}}
+        {{/if}}
       </div>
     </section>
   </section>

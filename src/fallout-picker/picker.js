@@ -12,7 +12,7 @@
 
 import { heartDialogOptions } from '../common/dialog';
 import { glyphFor } from '../common/icons';
-import { candidate, dedupe, matches, sortCandidates, falloutData, SEVERITIES, restrictionAllows } from './candidates';
+import { candidate, dedupe, matches, sortCandidates, falloutData, SEVERITIES, restrictionAllows, holderItems } from './candidates';
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const esc = (text) => Handlebars.escapeExpression(String(text ?? ''));
@@ -25,10 +25,10 @@ const isCompanion = (target) => target?.documentName === 'Actor' && target.type 
 // Every Fallout the picker can offer this target
 async function gather(target) {
     const list = [];
-    // (the character whose class and calling decide which restricted Fallouts
-    // show: the target, or a bond's holder; none for the party or a companion)
-    const holder = isBondItem(target) ? target.parent : target?.documentName === 'Actor' && target.type === 'character' ? target : null;
-    const owned = holder ? holder.items.map((i) => ({ type: i.type, name: i.name })) : [];
+    // (the characters whose class and calling decide which restricted
+    // Fallouts show: the target, a bond's holder, or a companion's employers
+    // since 2026-10-21, C13; none for the party: candidates.js)
+    const owned = holderItems(target);
     // a companion's own book Fallouts not yet taken
     if (isCompanion(target)) {
         for (const item of target.items) {
