@@ -1,12 +1,12 @@
-# fvtt-heart-system — Personal Fork of Heart: The City Beneath
+# fvtt-heart-system: Personal Fork of Heart: The City Beneath
 
-**Status:** this doc is current to 2026-10-21. What changed and when: [CHANGELOG.md](CHANGELOG.md). The window-by-window review: the monorepo's `docs/plans/heart-ui-review.md`. The monorepo's `HEART.md` says which doc owns which fact.
+**Status:** this doc is current to 2026-10-22, the day Luke declared a soft feature freeze on Heart (finish, review, and fix what is built; new features wait). What changed and when: [CHANGELOG.md](CHANGELOG.md). The window-by-window review: the monorepo's `docs/plans/heart-ui-review.md`. The monorepo's `HEART.md` says which doc owns which fact.
 
 **Fork source:** https://github.com/hitcherland/FoundryVTT-Heart → https://github.com/lrbender01/FoundryVTT-Heart (personal fork)
 
 **System ID:** `heart` (never change; upstream hardcoded)
 
-**System version (our fork):** `0.10.5-pr94` — patch bump over upstream `0.10.4`, identifying the PR #94 cherry-pick.
+**System version (our fork):** `0.11.0` (2026-10-22), everything up to the soft feature freeze; changes and fixes after it are 0.11.1 and on. The first fork release was `0.10.5-pr94` (2026-06-12), a patch bump over upstream `0.10.4` identifying the PR #94 cherry-pick. **To release a version:** the version in the `build-all` script and `version` in `package.json` (and `package-lock.json`'s root), a `heart.versions.<x_y_z>` entry in `static/lang/en.json` (`version` "v<x.y.z>" exactly, since the startup window opens on `v${game.system.version}`, plus a few `changes` and `bug_fixes`), and the CHANGELOG's `[Unreleased]` cut into a dated section.
 
 **Foundry version:** v12. No DialogV2 / ApplicationV2 / v13 APIs.
 
@@ -34,18 +34,21 @@ The fork is upstream `0.10.4` plus PR #94 (Lavaeolous's character sheet redesign
 
 ## Build System
 
-Heart uses **webpack + sass** (the modern pure-JS sass, NOT node-sass — briefing was wrong about that). Source in `src/`; build outputs to `dist/`.
+Heart uses **webpack + sass** (the modern pure-JS sass, NOT node-sass; briefing was wrong about that). Source in `src/`; build outputs to `dist/`.
 
 ### Available scripts (`package.json`)
 
 | Script           | What it does                                                                                                                              |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `build-prod`     | `webpack --mode production`. Emits minified `dist/heart.js` + hash-named auxiliary assets (`xxxxxxxx.ttf` etc.). **Use this for builds.** |
+| `build-prod`     | `webpack --mode production`. Emits `dist/heart.js` (not minified: `minimize: false` in `webpack.config.js`, so stack traces stay readable) + hash-named auxiliary assets (`xxxxxxxx.ttf` etc.). **Use this for builds.** |
 | `build-code`     | `webpack --mode development`. Unminified dev bundle.                                                                                      |
 | `build-manifest` | `node dev-utils/build-manifest.js <version>`. Generates `dist/system.json` from `src/manifest.json` + `foundryvtt.config.js`.             |
 | `build-template` | `node dev-utils/build-template.js`. Merges all `src/**/template.json` into `dist/template.json`.                                          |
 | `build-all`      | **Full pipeline, cross-platform (2026-08-24).** empty-dist → build-prod → build-manifest (version hardcoded here; bump on release) → build-template → copy-static. Use this. (`build-packs` was removed 2026-09-30 with the content packs; see "No game text in the system".)  |
 | `build-local`    | Alias for `build-all` (kept for muscle memory). The old Unix-only version + the hardcoded-path `relink` script were removed 2026-08-24.    |
+| `empty-dist` / `copy-static` | The first and last steps of `build-all` (`dev-utils/empty-dist.js`, `dev-utils/copy-static.js`: LICENSE plus `static/` into `dist/`). |
+| `check:build`    | Compile-check only: `webpack --mode production --output-path node_modules/.cache/heart-build-check`, never into `dist/`. The monorepo root runs it as `npm run check:heart-build` (part of `npm run check`). |
+| `test` / `test:watch` | The rules tests (vitest; see "Tests").                                                                                              |
 
 **Note: there is NO `npm run build` script.** Old plan documents that said to run `npm run build` were wrong; that errors with "Missing script: build". Use `build-prod` for the webpack step.
 
@@ -82,7 +85,7 @@ A house rule (monorepo `reference/heart-rules/provisions.md`, the rule text this
 
 ### The Heart map (2026-10-02)
 
-The scrapboard: the party's ledger, a folded sheet with the journey pinned to it. Play starts from an empty board, built at the table; a small spoiler-free demo board for session zero (map Phase 8) waits for the feature freeze. The user guide is the map's in-Foundry Help window; what changed, round by round, is in the CHANGELOG. **The Heart Map Board mock (monorepo `docs/mocks/heart-map/`) is the primary map editor and the source of truth for how the map looks; Foundry is the frontend plus the table tools.** `src/map/scrapboard/model.js` (the board model) and `paint.js` (canvas 2D drawing) are the one copy both run: the mock's build inlines them (imports and `export` stripped), so keep them free of Foundry globals, and rebuild the mock (`node build.mjs` there) after changing them. `src/map/`:
+The scrapboard: the party's ledger, a folded sheet with the journey pinned to it. Play starts from an empty board, built at the table. Map Phase 8, a small spoiler-free demo board, is session-zero prep, not a new feature, and is not made yet. The user guide is the map's in-Foundry Help window; what changed, round by round, is in the CHANGELOG. **The Heart Map Board mock (monorepo `docs/mocks/heart-map/`) is the primary map editor and the source of truth for how the map looks; Foundry is the frontend plus the table tools.** `src/map/scrapboard/model.js` (the board model) and `paint.js` (canvas 2D drawing) are the one copy both run: the mock's build inlines them (imports and `export` stripped), so keep them free of Foundry globals, and rebuild the mock (`node build.mjs` there) after changing them. `src/map/`:
 - `scrapboard/model.js` (tested in `test/scrapboard-model.test.mjs`) and `scrapboard/paint.js` (`createPainter(env)`: `img`, `piece`, `measure`, `pxs` are all that differ between the two).
 - `scrapboard/render.js` takes the client setting `boardDetail` (`DETAIL`: bitmap scale, image cap, live repaint). `paint.js` caches graded images (WeakMap per image and filter) and each scrap's finished composite (its paper, clipping, writing, and grime), so keep per-frame work out of `drawScrap`; since 2026-10-21 it also keeps each brush stroke's painted layer (`StrokeLayerCache`), and render.js paints a tile's sheet a band at a time (`sheetBands`) and repaints only the parts an arriving image lies in (`arrivalAreas`).
 - `scrapboard/look.js` reads fvtt-heart-content's `assets/art/map/heart-board.json` (exported from the mock: `node build.mjs --export`) once.
@@ -104,7 +107,7 @@ The scrapboard: the party's ledger, a folded sheet with the journey pinned to it
 - `scrapboard/notes.js`: players' notes and their claimed hands (world setting `boardHands`), through the relay (`board.claimHand`, `board.addNote` for notes and writing, `board.editNote`, `board.moveOwn`; `mayMove` is the rule both sides check: the GM anything, a player only their own notes and writing); the board's dialogs.
 - `index.js` holds the hooks (redraw on `flags.heart`, the landmark drop, the Scenes sidebar button, the v2 map scene conversion). `game.heart.board` is the API. The handwriting faces are bundled in `src/fonts/hands/`.
 
-The map's colours are the book's ink and paper (a fixed art piece, like the header art), not theme roles. Compile-check map code with webpack `--output-path` into a scratch folder, never into `dist/` (`output.clean` wipes it, and Foundry may hold a lock on `dist/packs`).
+The map's colours are the book's ink and paper (a fixed art piece, like the header art), not theme roles. Compile-check map code with `npm run check:build` (webpack `--output-path` into `node_modules/.cache/`), never into `dist/` (`output.clean` wipes it, and Foundry may hold a lock on `dist/packs`). After a change to `model.js`, `hits.js`, `controls.js`, or `paint.js` (the four files the editor's `build.mjs` inlines), the monorepo's `npm run check:heart-map` rebuilds the editor and parse-checks it, and `npm run test:heart-map` runs its headless-Chrome suite (`docs/mocks/heart-map/tests/README.md`).
 
 ### Bonds, hirelings, and animals (2026-10-01)
 
@@ -116,7 +119,7 @@ The bond rules of HCB p. 102 and W&M W65-W67, split as Luke decided and pared do
 
 Writes that several clients could race on (stress taken twice from one card, two players marking Provisions at once) have ONE writer. `common/relay.js`: a client calls `askGM(op, data)` (or `relay`), which emits on `system.heart` (manifest `"socket": true`) to the active GM's client. That client runs the registered handler in a single queue and answers `{ status: 'done' | 'already' | 'not-allowed' | 'missing' | 'needs-gm' | 'no-party', ... }`; `askGM` reports any non-done status to the user and returns null. The GM's own calls, and every call when no GM is connected, run in the same queue locally.
 
-Rules for handlers: check "already done" and who asked (`userId`) inside the handler; never call `relay` from a handler (it would deadlock the queue); never show a notification (it would land on the GM's screen); answer plain JSON. Handlers live in `rolls/card-actions.js` (`registerCardActions`, the one registry, called from `rolls/index.js`): `provisions` (`applyProvisions`), `apply-stress`, `attach-stress`, `take-stress`, `claim-fallout` / `release-fallout` / `attach-fallout`, `clear-stress`, and `claim-card-button`. `StressRoll.takeStress` is only called from handlers. A click handler that writes wraps its work in `oneAtATime(key, button, fn)` (`common/busy.js`): the key is per card and action, so the chat log and a popout share it. Only the GM and the rolling character's owners see or press Roll Stress and Take Stress (`mayRunStress`). **Rolling and marking stress are separate steps** (2026-10-21, Luke): `attach-stress` only attaches the roll (the card reads "Rolled, not taken yet" with a preview per target), and `take-stress` marks it, once; between them a person applies Defiant, a guard, or a redirect by hand. Rolled Provisions marks wait the same way. A GM's Request Roll can carry the stakes (resistance, die, passive; `normalizeStakes`), which preselect the stress picker without forcing it. Tested in `test/relay.test.mjs` and `test/card-actions.test.mjs`.
+Rules for handlers: check "already done" and who asked (`userId`) inside the handler; never call `relay` from a handler (it would deadlock the queue); never show a notification (it would land on the GM's screen); answer plain JSON. The card and party handlers live in `rolls/card-actions.js` (`registerCardActions`, called from `rolls/index.js`): `provisions` (`applyProvisions`), `apply-stress`, `attach-stress`, `take-stress`, `claim-fallout` / `release-fallout` / `attach-fallout`, `record-fallout-pick`, `clear-stress`, and `claim-card-button` / `release-card-button`. The map's `board.*` handlers register in `map/scrapboard/notes.js` (see "The Heart map"). Each handler has 12 seconds (`HANDLER_LIMIT_MS`), and the GM's client trusts the sender id Foundry's server passes (`onRelayMessage`), refusing a request whose own `from` disagrees; answers count only from a GM. `StressRoll.takeStress` is only called from handlers. A click handler that writes wraps its work in `oneAtATime(key, button, fn)` (`common/busy.js`): the key is per card and action, so the chat log and a popout share it. Only the GM and the rolling character's owners see or press Roll Stress and Take Stress (`mayRunStress`). **Rolling and marking stress are separate steps** (2026-10-21, Luke): `attach-stress` only attaches the roll (the card reads "Rolled, not taken yet" with a preview per target), and `take-stress` marks it, once; between them a person applies Defiant, a guard, or a redirect by hand. Rolled Provisions marks wait the same way. A GM's Request Roll can carry the stakes (resistance, die, passive; `normalizeStakes`), which preselect the stress picker without forcing it. Tested in `test/relay.test.mjs` and `test/card-actions.test.mjs`.
 
 Drops: `common/drops.js` (tested in `test/drops.test.mjs`). An item sheet takes exactly the child types it shows (`ITEM_CHILD_TYPES`). An actor sheet refuses only clear mistakes (`actorDropRefusal`, in `HeartActorSheet._onDropItemCreate`, which every actor sheet's own drop reaches through `super`).
 
@@ -147,17 +150,30 @@ An opt-in look, one switch per user and off by default (client setting `heart.gl
 
 Adversary, landmark, and delve `system.notes` are GM Notes (`common/gm-notes.js` `GM_NOTE_FIELDS`; character, companion, bond, and party notes are player-facing). The sheet mixin drops them from a non-GM's data before enriching, owners included, and the templates gate the panel on `showGmNotes`; a non-GM below Observer gets `actors/base/limited.html` (name, picture, art banner, public description). **A new GM-facing field goes in `GM_NOTE_FIELDS`, and its panel inside `{{#if showGmNotes}}`** (`test/gm-notes.test.mjs` checks every `gm-notes-container` is gated). Foundry v12 sends every actor's data to every client, so this hides the notes from the UI, not from a console.
 
+### Rules and helpers landed 2026-10-21 (where they live)
+
+The pre-freeze round (the rulings and the code audit: monorepo `docs/history/heart-code-audit/`, archived; the tests and build audit is still open at `docs/plans/heart-code-audit/tests-build.md`). Each pure rule has its test file:
+
+- **Companions as helpers** (W&M W66 assistance is the core helper die): `rolls/heart-roll/companions.js` (`companionCandidates`: the roller's bonded companions, then those bonded to other party members; the trigger text is shown and a person decides), with the character helpers from `actors/party/view.js` `helperPool`, one list for the roll prompt and Request Roll. `test/companion-helpers.test.mjs`.
+- **Linked tokens:** `actors/token-defaults.js` links new character, party, and companion tokens to their actor and puts total Stress on a character's first bar; adversaries stay unlinked. `test/token-defaults.test.mjs`.
+- **Adversary Resistance counts down:** `actors/adversary/resistance.js` (pure) and `resistance-sync.js` keep `system.resistanceBar = { value: left, max }` in step for a token bar. `test/adversary-resistance.test.mjs`.
+- **Fallout Clear follows the pick:** `rolls/fallout-roll/results.js` `clearScope`. `test/fallout-clear.test.mjs`.
+- **Haunt services and upgrades:** `items/haunt/rules.js` (payment dice, `hauntStep`) and `service.js` (asks what pays). `test/haunt-service.test.mjs`.
+- **Keepsakes and trinkets** (two keepsakes, one trinket, roll or pick): `items/trinket-rules.js`, drawn by `items/trinkets.js`. `test/trinkets.test.mjs`.
+- **Shared sheet helpers:** `common/tracks.js` (every track's click rule, wired only for those who may edit), `common/rich-text.js` (sheets enrich rich text, secrets for owners only; a sheet lists its fields in `_richFields`), `actors/proxy-lists.js` (an actor's items in use), `actors/drop-active.js` (folder drops), and `applications/base/traits.js` (the skills and domains windows).
+
 ### No game text in the system (2026-09-30)
 
 The system ships **no book content**: the classes, callings, fallouts and tags packs, `pack-data/`, `dev-utils/build-packs.js` and the 1,266 `class.*` / `calling.*` / `fallout.<severity>.*` / `tag.<slug>.*` lang keys (92% of `en.json`; the same keys in `it.json` and `pt.json`) all moved to `fvtt-heart-content`, which now carries every book in one module with deterministic ids and literal strings. Reasons: the fork can be published without RRD's prose; the two random-id-per-build packs stopped orphaning world copies; one content taxonomy instead of two. The runtime never depended on the packs by id - pickers discover packs by item TYPE (`character-options`), the roll pool recognises fallouts by NAME (raw or localized), and `localizeHeart` returns raw strings on a lookup miss, so literal names render unchanged. `src/manifest.json` `recommends` the content module and declares no packs: upstream's inherited `macros` pack (static `macros.db`) was dropped 2026-10-21, every macro in it being on the sheets and sidebar buttons. Only UI keys remain in the lang files (`heart.fallout.level.*`, `heart.ability.type.*`, the `label-*` and `core-ability.*` keys). Translations of the game text in `it.json` / `pt.json` were dropped with it; the content module is English-only by design.
 
 ## Tests
 
-Rules tests (added 2026-09-30): vitest, node environment, about 872 tests (2026-10-21) that run in seconds without Foundry. Since 2026-10-02 `vitest.config.mjs` stubs `.html` / `.sass` imports, so document-touching modules (rolls, bonds, party, sheets, migrations) load too, against the fakes in `test/helpers.mjs` (`fakeActor`, `fakeMessage`, `FakeRoll`, `fakeHooks`, `resetWorld`).
+Rules tests (added 2026-09-30): vitest, node environment, 1098 tests in 61 files (2026-10-22) that run in seconds without Foundry. Since 2026-10-02 `vitest.config.mjs` stubs `.html` / `.sass` imports, so document-touching modules (rolls, bonds, party, sheets, migrations) load too, against the fakes in `test/helpers.mjs` (`fakeActor`, `fakeMessage`, `FakeRoll`, `fakeHooks`, `resetWorld`).
 
-- **Run:** `npm test` inside this folder (`npm run test:watch` to watch), or `npm run test:heart-system` from the monorepo root. Root `npm test` (and so the Husky pre-commit hook) chains it on after the workspaces. vitest is NOT a dependency of the fork: it resolves from the monorepo root's `node_modules` (npm puts every ancestor `node_modules/.bin` on the script PATH), so nothing is installed here.
+- **Run:** `npm test` inside this folder (`npm run test:watch` to watch), or `npm run test:heart-system` from the monorepo root. Root `npm test` (and so the Husky pre-commit hook) chains it on after the workspaces. vitest is a devDependency of the fork since 2026-10-22 (audit T12), so `npm ci` here installs it and the tests run outside the monorepo too.
+- **CI and lint:** the fork's GitHub workflows (`.github/workflows/check-build.yml` on every push, `release.yml` by hand with a version) run `npm ci`, `npm test`, and the `build-all` steps. ESLint over the fork runs from the monorepo root as `npm run lint:heart` (with the toolkit and content), never in the hook.
 - **Layout:** `vitest.config.mjs`; `test/setup.mjs` stubs only the Foundry globals the tested modules touch (`game.i18n` returns keys as themselves and `format` appends its data as `key{a=1}`, `game.actors` is a Map, `game.heart`, `Handlebars.escapeExpression`, `foundry.utils`, `ui.notifications`), reset before each test; `test/helpers.mjs` has fake actors and fallouts, a seeded PRNG, the highlighter's match helpers, and a copy of Foundry v12's pool keep / drop logic (`evaluatePool`).
-- **Covered:** Heart roll results (normal, Difficult, Impossible; which results offer stress), the pool (`pool.js`: dice, difficulty cuts, the fresh die, helpers, mastery, missing skill / domain notes, Tired / Clouded / Furious, party fallouts, hints, knacks), kept / removed dice on the card (`markPool`), stress (die steps, passive, critical doubling, Protection per character), the character fallout thresholds and `totalStress`, Provisions (`actors/party/rules.js`, `provisionsOf`, `provisionsView`, `partyMembers`), the term highlighter (`common/terms.js`, a table of phrases plus the sentence-start rule, markup, and ability references; assertions read the highlighted text and class, never the exact tag), `rollParts` / `diceRow`, repeatable abilities, class equipment choices, the two-beat limit, and seeded randomized checks (thousands of pools and Provisions marks). Later files add bonds (`bonds*.test.mjs`), the Fallout picker, item rules, the relay and card actions, drops, the party (members, note board, decorations, API), art (zoom, toggle, gallery), glass, the lang files (`lang.test.mjs`: keys the code names exist, no dotted-key collisions, translations keep their placeholders), the sheets' small helpers (`sheet-helpers.test.mjs`), the startup changelog's version order, the stored `totalStress`, migrations, sheets and chat helpers, and the map (`scrapboard-*.test.mjs`: model, hits, controls, paint, notes, history, brush, strings, sheet, cards, doodles). File names follow the area: `test/<area>.test.mjs`.
+- **Covered:** Heart roll results (normal, Difficult, Impossible; which results offer stress), the pool (`pool.js`: dice, difficulty cuts, the fresh die, helpers, mastery, missing skill / domain notes, Tired / Clouded / Furious, party fallouts, hints, knacks), kept / removed dice on the card (`markPool`), stress (die steps, passive, critical doubling, Protection per character), the character fallout thresholds and `totalStress`, Provisions (`actors/party/rules.js`, `provisionsOf`, `provisionsView`, `partyMembers`), the term highlighter (`common/terms.js`, a table of phrases plus the sentence-start rule, markup, and ability references; assertions read the highlighted text and class, never the exact tag), `rollParts` / `diceRow`, repeatable abilities, class equipment choices, the two-beat limit, and seeded randomized checks (thousands of pools and Provisions marks). Later files add bonds (`bonds*.test.mjs`), the Fallout picker, item rules, the relay and card actions, drops, the party (members, note board, decorations, API), art (zoom, toggle, gallery), glass, the lang files (`lang.test.mjs`: keys the code names exist, no dotted-key collisions, translations keep their placeholders), the sheets' small helpers (`sheet-helpers.test.mjs`), the startup changelog's version order, the stored `totalStress`, migrations, sheets and chat helpers, GM Notes (`gm-notes.test.mjs`), the 2026-10-21 rules (companion helpers, token defaults, adversary resistance, fallout Clear, haunt services, trinkets), and the map (`scrapboard-*.test.mjs`: model, hits, controls, paint, the stroke cache, notes, own cards, history, the relay's board handlers, brush, strings, sheet, cards, doodles, and the board file). File names follow the area: `test/<area>.test.mjs`.
 - **Extraction pattern:** a module that imports `.html` or `.sass` (webpack-only) cannot load in vitest. Keep the rule in a small pure module beside it and import it back, with no behaviour change: `rolls/heart-roll/results.js` (result tables, `heartResult`, `markPool`), `rolls/fallout-roll/results.js` (`characterFalloutResult`), `rolls/stress-roll/rules.js` (`stepDown`, `stressDie`, `stressFormula`, `afterProtection`), alongside the already-pure `actors/party/rules.js`. New rules go in modules like these; test files are `test/*.test.mjs`.
 - **A failing test that shows a real rules bug** is reported and left as `it.fails` with a comment, never fixed silently in the same change.
 
@@ -202,7 +218,7 @@ When editing source inside this submodule:
 The fork is **deliberately excluded** from the root `package.json` workspaces list (switched from `["packages/*"]` glob to explicit list on 2026-06-12 during Phase 0). Root devDependencies do not pollute the fork's isolated `node_modules`. Since 2026-09-30 root `npm test` does run the fork's rules tests, chained on after the workspaces (`npm run test:heart-system`); see "Tests" below.
 
 ```json
-// root package.json — fvtt-heart-system NOT in this list
+// root package.json: fvtt-heart-system NOT in this list
 "workspaces": [
   "packages/fvtt-swade-toolkit",
   "packages/fvtt-mothership-toolkit",
@@ -219,7 +235,7 @@ The fork is **deliberately excluded** from the root `package.json` workspaces li
 
 ### Symlink in Foundry
 
-The symlink target is the **`dist/` subdirectory**, NOT the package root. Webpack emits hash-named auxiliary assets at the dist root and `heart.js` references them via relative paths — linking the package root would break asset resolution.
+The symlink target is the **`dist/` subdirectory**, NOT the package root. Webpack emits hash-named auxiliary assets at the dist root and `heart.js` references them via relative paths; linking the package root would break asset resolution.
 
 Run from **elevated PowerShell** (Developer Mode alone is NOT sufficient for `New-Item -ItemType SymbolicLink` on Windows 10):
 
@@ -281,7 +297,7 @@ Closes known gaps from PR #94, plus quality-of-life improvements discovered duri
 1. ~~**Style the management popups**~~ Done (see Known Issues).
 2. ~~**Replace "Skills Temp" tab**~~ Done: labelled "Skills & Domains".
 3. ~~**Fix knack overflow**~~ Done: knack labels wrap.
-4. ~~**Complete i18n**~~ Done 2026-10-21: the rest of the hardcoded English (setting names and hints, adversary difficulty, domain placeholders, "New ...", the class effects) went to `heart.*` keys in `static/lang/en.json`. See the i18n working rule under Design language for the lint gap.
+4. ~~**Complete i18n**~~ Done 2026-10-21: the rest of the hardcoded English (setting names and hints, adversary difficulty, domain placeholders, "New ...", the class effects) went to `heart.*` keys in `static/lang/en.json`. See the i18n working rule under Design language for the checks.
 5. ~~**Add `totalStress` stored field**~~ Done 2026-10-21: `system.totalStress` is a stored `{ value, max }` on characters (template default max 50), so it can be a token bar. `actors/character/total-stress.js` is the pure rule (`STRESS_TRACKS`, `sumStress`; tested in `test/total-stress.test.mjs`); `total-stress-sync.js` adds the total to the same write as the tracks (`preCreateActor`, `preUpdateActor`), so nothing loops. `actor.proxy.totalStress` still sums the tracks live.
 
 ### From Phase 0 discoveries
@@ -306,7 +322,7 @@ Distilled from the character, adversary, landmark and delve sheets and applied s
   - **Mock first, then build:** a new or changed surface goes to Luke as an interactive mock with options before any template is written; he picks, then it is built. Ask him about any design decision not settled here.
   - **Read first:** this file, the monorepo's `docs/foundry-gotchas.md`, and the `gotcha-preflight` skill.
   - **Foundry v12, AppV1:** the `Dialog` v1 API only (`heartDialogOptions`).
-  - **i18n:** every string goes in `static/lang/en.json` as a flat `heart.*` key; never add a sub-key under a key that holds a string. The monorepo's `npm run lint:i18n` does not check this file, so a nesting collision here shows up only in Foundry.
+  - **i18n:** every string goes in `static/lang/en.json` as a flat `heart.*` key; never add a sub-key under a key that holds a string. Since 2026-10-21 two checks catch a nesting collision here: the monorepo's `npm run lint:i18n` (it walks `static/lang/` too, so the pre-commit hook runs it) and `test/lang.test.mjs` (which also checks that every key the code names exists).
   - **Writing:** no em dashes, and the Oxford comma, in UI strings and comments.
   - **Builds:** `npm run build-all` here, or `npm run build:heart` from the monorepo root with Foundry at the Setup screen. Never a partial build (webpack wipes `dist/`).
   - **Tests:** pure helpers go in a `rules.js` / `view.js` beside the code, with vitest tests (see Tests).
@@ -338,8 +354,8 @@ Distilled from the character, adversary, landmark and delve sheets and applied s
 
 ### Maintenance
 
-8. **Maintain CHANGELOG.md** — see [packages/fvtt-heart-system/CHANGELOG.md](CHANGELOG.md).
-9. **Track upstream patches** — quarterly review of `hitcherland/main` for any v12 fixes worth pulling. Realistic expectation: zero per year.
+8. **Maintain CHANGELOG.md**: see [packages/fvtt-heart-system/CHANGELOG.md](CHANGELOG.md).
+9. **Track upstream patches**: quarterly review of `hitcherland/main` for any v12 fixes worth pulling. Realistic expectation: zero per year.
 
 ---
 
@@ -348,21 +364,21 @@ Distilled from the character, adversary, landmark and delve sheets and applied s
 ### Key upstream references
 
 - **System manifest source:** `src/manifest.json` (merged with `foundryvtt.config.js` by `build-manifest` → `dist/system.json`)
-- **System config:** `foundryvtt.config.js` — owns the system ID, title, description, compatibility, author list. Edit here to change foundational metadata.
+- **System config:** `foundryvtt.config.js`: owns the system ID, title, description, compatibility, author list. Edit here to change foundational metadata.
 - **Character sheet:** `src/actors/character/sheet.html` + `sheet.js` + `character.sass` + `proxy.js` (`totalStress` summed live; the stored copy is `total-stress.js`)
 - **Character template:** `src/actors/character/template.json` (stored fields: ancestry and pronouns from PR #94, `totalStress` since 2026-10-21)
-- **Settings registry:** `src/index.js` (PR #94 added `showTotalStress`, `showStressInputBox`, `preSelectStressType`; the last two, and `showTextboxesBelowItems`, were removed 2026-09-30 as nothing read them)
-- **Rolls:** `src/rolls/` — `HeartRoll`, `StressRoll`, `FalloutRoll`, `ItemRoll`. Exposed as `game.heart.rolls.<Class>` after `ready`.
+- **Settings registry:** `src/index.js` (PR #94 added `showTotalStress`, `showStressInputBox`, `preSelectStressType`; the last two, and `showTextboxesBelowItems`, were removed 2026-09-30 as nothing read them). The map's settings register beside their code: `boardHands` and `boardDetail` in `map/scrapboard/notes.js`, `boardToolbar` and `boardToolbarDir` in `rail.js`; its keybindings in `map/index.js`; the Open the Intro menu in `applications/intro/application.js`.
+- **Rolls:** `src/rolls/`: `HeartRoll`, `StressRoll`, `FalloutRoll`, `ItemRoll`. Exposed as `game.heart.rolls.<Class>` after `ready`.
 - **Chat messages:** `src/chat-messages/index.js` (PR #94 fixed rolltable compendium resolution here)
 - **Items:** `src/items/`: 12 item types (ability, ancestry, beat, bond, calling, class, equipment, fallout, haunt, item, resource, tag), plus `base/` (the shared templates and item sheet chrome, not a type)
 - **Pack data:** none since 2026-09-30 - all game content is authored in `packages/fvtt-heart-content/content/`
 
 ### Build pipeline files (`dev-utils/`)
 
-- `build-manifest.js` — Generates `dist/system.json`
-- `build-template.js` — Merges actor/item templates
-- `templates-loader.js` — Webpack loader for `.html`/`.handlebars` templates
-- `common.js` — `mergeDeep` helper used by `build-template.js`
+- `build-manifest.js`: Generates `dist/system.json`
+- `build-template.js`: Merges actor/item templates
+- `templates-loader.js`: Webpack loader for `.html`/`.handlebars` templates
+- `common.js`: `mergeDeep` helper used by `build-template.js`
 
 ---
 
@@ -383,8 +399,26 @@ Distilled from the character, adversary, landmark and delve sheets and applied s
 - ~~**Nested `<form>` in the Biography calling block**~~ Resolved 2026-09-29: converted to a `<div>` during the sheet density pass.
 - **`build-template` "key already defined" warnings** - `dev-utils/common.js` `mergeDeep` warns on every shared key (each template file adds under the same top-level `Item`/`Actor`), so the log is a wall of false positives. A real collision would be a repeated TYPE name. Harmless; tighten the warning to type-level if it ever hides something.
 - **Sheet header geometry** - header/nav heights, overlap and row sizes are SASS variables at the top of `src/actors/character/character.sass` (2026-09-29). They are coupled to `static/assets/ui/header_nav.svg`, whose torn edge sits at ~87-91% of strip height; change them together.
-- **`sheet.html` uses CRLF line endings** - scripted edits must match `\r\n` (or regex) or they silently miss.
-- ~~**CLAUDE.md in this directory is untracked**~~ Resolved: it is staged in the fork's own repo (it IS the fork's architecture doc); Luke commits it.
+- **Some templates use CRLF line endings** - scripted edits must match `\r\n` (or regex) or they silently miss. As of 2026-10-22 the character `sheet.html` is LF, but about ten templates are still CRLF (`templates/startup.html`, `applications/base/application.html`, several `items/*/sheet.html` and `preview.html`, `rolls/heart-roll/tooltip.html`); the fork has no `.gitattributes`.
+- ~~**CLAUDE.md in this directory is untracked**~~ Resolved: it is tracked in the fork's own repo (it IS the fork's architecture doc).
+
+### Open from the 2026-10-21 code audit
+
+The audits are archived in monorepo `docs/history/heart-code-audit/`; these are what they left open:
+
+- **R21, in part:** the party sheet's `MARK_DICE` (`actors/party/sheet.js`) and `game.heart.die_sizes` (`src/index.js`) still keep their own die lists; the item roll and `bonds/bonds.js` share the one ladder. (`rolls-relay.md` R21)
+- **R26:** any party update, each note-board edit included, still redraws every open character sheet; redraw only when `system.provisions`, `system.quartermaster`, `system.members`, or `name` changes. (`rolls-relay.md` R26)
+- **R28, last item:** `fallout-picker/picker.js` `apply()` is untested (its four branches: a bond item, a companion's own Fallout, a pack entry copied, a written one). (`rolls-relay.md` R28)
+- **S40:** the nested-children document model (`items/index.js` `HeartItem`) has no tests; a fake `Item` base class would let node test it. (`sheets-items.md` S40)
+- **S41:** the document hooks in `index.js` (class portrait, ancestry sync, class delete resets, `translateKeyName`) are untested; extract the decisions into a pure `actors/character/identity-sync.js` and test those. (`sheets-items.md` S41)
+
+### Parked until after session zero (2026-10-22)
+
+Unbuilt freeze lines (monorepo `docs/plans/heart-freeze-decisions.md`). Luke: "I don't want to FORGET about them... but now is not the time." Reactivation: after session zero, Luke's call.
+
+- **S7, Combine Fallouts button:** two Minors into a Major, two Majors into a Critical (the "Combine offer" idea below is its picker form).
+- **S9, a ledger card for the landmark's Stress die:** it still posts Foundry's plain card (UI review F15).
+- **M8, map GM notes hidden from the start:** new GM notes are visible to players at once.
 
 ### Deferred ideas: fallout from the roll card
 
@@ -396,10 +430,10 @@ The Fallout picker shipped with the bonds work (2026-10-01); three ideas from it
 
 ### No plans for
 
-- **v13 migration** — upstream is on v13; v12 fork stays on v12. Decided 2026-05-22 (project-wide); revisit only on explicit decision.
+- **v13 migration**: upstream is on v13; v12 fork stays on v12. Decided 2026-05-22 (project-wide); revisit only on explicit decision.
 - **More socket use than the GM relay** - the relay (2026-10-02) exists only to make racing writes single-writer; ordinary syncing stays Foundry's document sync.
-- **Complete system redesign** — toolkit works within upstream constraints.
-- **Publishing the fork** — Tier 4 in [docs/publishing.md](../../docs/publishing.md). Requires (1) RRD third-party creator license verification, (2) attribution to hitcherland + Lavaeolous, (3) explicit "not officially-blessed continuation" framing.
+- **Complete system redesign**: toolkit works within upstream constraints.
+- **Publishing the fork**: Tier 4 in [docs/publishing.md](../../docs/publishing.md). Requires (1) RRD third-party creator license verification, (2) attribution to hitcherland + Lavaeolous, (3) explicit "not officially-blessed continuation" framing.
 
 ---
 

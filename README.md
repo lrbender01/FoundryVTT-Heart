@@ -14,7 +14,8 @@ A personal Foundry VTT v12 fork of [hitcherland/FoundryVTT-Heart](https://github
 - Rolls with the rules worked out: the dice pool, difficulty, helpers, stress after the roll, Protection, and fallout checks, with racing writes handled by one GM-side relay.
 - A party actor with a shared Provisions track (a house rule), a note board, and companions; bonds, hirelings, and animals; a Fallout picker.
 - The Heart map: a scrapboard scene the party builds at the table, with strings, pins, notes, a brush, and per-user undo.
-- `system.totalStress` stored as `{ value, max }`, so it can be a token bar.
+- `system.totalStress` stored as `{ value, max }`, so it can be a token bar; new delver, party, and companion tokens linked to their actor.
+- GM Notes on adversaries, landmarks, and delves drawn only for the GM, and a cut-down sheet for Limited viewers.
 
 ## What it does not include
 
@@ -29,7 +30,7 @@ npm ci
 npm run build-all
 ```
 
-The built system is in `dist/`; link or copy `dist/` to Foundry's `Data/systems/heart`. Architecture, build details, and tests: [CLAUDE.md](CLAUDE.md). What changed: [CHANGELOG.md](CHANGELOG.md).
+The built system is in `dist/`; link or copy `dist/` to Foundry's `Data/systems/heart`. `npm test` runs the rules tests (vitest, no Foundry needed). Architecture, build details, and tests: [CLAUDE.md](CLAUDE.md). What changed: [CHANGELOG.md](CHANGELOG.md).
 
 ## Licence
 

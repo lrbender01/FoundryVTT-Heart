@@ -1,6 +1,6 @@
 /**
  * The Heart map's writes and the GM relay's board handlers (Luke,
- * 2026-10-21 code audit, monorepo docs/plans/heart-code-audit/map.md): every
+ * 2026-10-21 code audit, monorepo docs/history/heart-code-audit/map.md): every
  * board write through api.js update() is one edit to undo, kept as what it
  * changed; the relay's handlers (notes.js) check who asked, write with a
  * sink, and hand the asker back their own edit; a player's undo is checked

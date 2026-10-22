@@ -1,7 +1,7 @@
 // The items of one type an actor uses: switched on (or with no switch) and
 // not finished; with `from` (a character's class), that item's own children
 // first. One copy since 2026-10-21 (Luke; the same lines were in four actor
-// proxies). Tested in test/proxy-lists.test.mjs.
+// proxies). Tested in test/row-drag.test.mjs and test/sheet-helpers.test.mjs.
 // `sorted`: the actor's own items in their sort order (the panel sheets,
 // whose rows are sorted by dragging; S5, 2026-10-21).
 export function activeOf(actor, type, { from, sorted = false } = {}) {

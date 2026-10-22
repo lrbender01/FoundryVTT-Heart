@@ -1,12 +1,18 @@
 # Changelog
 
-All notable changes to this **personal fork** of `hitcherland/FoundryVTT-Heart` will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning extends upstream's scheme with a fork-identifying suffix (e.g. `0.10.5-pr94`).
+All notable changes to this **personal fork** of `hitcherland/FoundryVTT-Heart` will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning continues upstream's numbers. The first fork release carried a fork-identifying suffix (`0.10.5-pr94`); from `0.11.0` on, versions are plain numbers.
 
 **This is a personal v12 maintenance fork.** Upstream (`hitcherland/FoundryVTT-Heart`) is frozen at `0.10.4` (Sep 2024) on `main`; the maintainer pivoted to v13 development on the `new-magic` branch. This fork carries community contributions and bug fixes the upstream `main` will not receive.
 
 See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
 
 ## [Unreleased]
+
+## [0.11.0] - 2026-10-22
+
+Everything from 2026-08-25 to the 2026-10-22 soft feature freeze, released as one version (the manifest's version had stayed `0.10.5-pr94` through all of it). Later changes and fixes go in 0.11.1 and on. The startup window's summary of this release is the `heart.versions.0_11_0` entry in `static/lang/en.json`.
+
+Newest first. The first group of headings (Security to Fixed) covers 2026-09-30 to 2026-10-22; the older batches below it (2026-08-25 to 2026-09-30) keep their own Added / Changed / Fixed headings. An entry describes the change as it landed; a later entry may supersede it. The monorepo plans some entries cite (`docs/plans/heart-map.md`, `heart-party-art.md`, `heart-provisions.md`, `heart-tooltips.md`, `heart-fallout-roll.md`) have since been removed; CLAUDE.md holds the current architecture.
 
 ### Security
 
@@ -18,7 +24,7 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
 
 ### Added
 
-- **Companions as helpers (2026-10-21, Luke's ruling: W&M W66 assistance is the core helper die).** The roll prompt has a Companions row: the roller's bonded companions, those the roller's players own, and the rest of the party's. A companion may help only through an ability (or a quirk the GM wrote in its notes) that gives assistance; the prompt shows that trigger text and a person decides whether it applies. It adds one D10, counts toward the two helpers, and takes the same Stress with its own fallout check through the ordinary stress card. Furious ones can't help; Despondent (a Compel check first), Overambitious, and a Gleeman-style "all other characters" helper (Stress once, from the worst result) are notes on the prompt and the card (`rolls/heart-roll/companions.js`, `test/companion-helpers.test.mjs`).
+- **Companions as helpers (2026-10-21, Luke's ruling: W&M W66 assistance is the core helper die).** The roll prompt has a Companions row: the roller's bonded companions, then those bonded to the rest of the party (since 2026-10-22, a companion only the roller's player owns is not offered; see the R27 entry below). A companion may help only through an ability (or a quirk the GM wrote in its notes) that gives assistance; the prompt shows that trigger text and a person decides whether it applies. It adds one D10, counts toward the two helpers, and takes the same Stress with its own fallout check through the ordinary stress card. Furious ones can't help; Despondent (a Compel check first), Overambitious, and a Gleeman-style "all other characters" helper (Stress once, from the worst result) are notes on the prompt and the card (`rolls/heart-roll/companions.js`, `test/companion-helpers.test.mjs`).
 - **The Heart map for a campaign (2026-10-21, Luke).**
   - **New place (File, the GM's):** a name, an optional picture (Foundry's file picker), hidden or known, and its card at the middle of the view or where the GM clicks next; it makes a landmark actor in a "Heart Map places" folder (`api.js` `newPlace`). A place's cards follow its actor's renames (an undoable edit, `followRename`), a place the library has no art for shows its actor's picture as its clipping (`render.js`), and a card whose actor was deleted says so when opened.
   - **Download the board (.json)** (File): the board as a file named for the scene and the day (`downloadBoard`, `boardfile.js`); Import loads such a file as well as a paste, and an import now keeps the board's loose pieces, bin, and pins' tidy mark.
@@ -43,7 +49,7 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
   - **Fixed: a haunt's service rolled the haunt's own die.** It now asks what pays (a chip for each of your characters' resources, or another payment) and rolls that die, capped at the haunt's (HCB pp. 81 and 140; `items/haunt/rules.js` and `service.js`, tested). The card says what paid; spending the resource stays by hand.
   - **Fixed: one keepsake roll and no pick.** Ancestries now draw two keepsakes and callings one trinket, each rolled or picked from the table (Roll / Pick buttons; `items/trinket-rules.js`, tested; older single rolls count as one draw).
   - **Fixed: Roll Stress marked the stress in the same click.** Rolling and taking are separate steps everywhere (Luke: "there must be separate roll and mark steps"): an action roll's Roll Stress only rolls (the button says Roll Stress, not "Take stress"), and a rolled Provisions mark (Upkeep, a die mark) only posts its card. Nothing is marked until the GM or the roller's player presses the card's Take Stress, so Defiant, a guard, or a redirect can be applied by hand in between. The card reads "Rolled, not taken yet" with what each would take now, then "Taken" with what was marked; still one writer, once (`attach-stress` no longer marks; `stress-roll/rules.js` `stressStatus`, `stressPreview`, tested). A fixed Provisions amount and a restock's payment still mark at once.
-  - **Code audit fixes: rolls, the relay, and chat cards** (monorepo `docs/plans/heart-code-audit/rolls-relay.md`; each tested):
+  - **Code audit fixes: rolls, the relay, and chat cards** (monorepo `docs/history/heart-code-audit/rolls-relay.md`; each tested):
     - Fixed: a fallout card's Pick Fallout showed to players and did nothing for the GM (getHTML redraws the card after Foundry's `renderChatMessage` hook); GM-only controls are now stripped at the end of `getHTML` and the button is bound by delegation on the chat log and popouts (R1).
     - Fixed: a roll request's Roll as added every ticked helper; for a player it now applies the prompt's eligibility and two-helper cap, noting each helper left out on the card (a GM overrides, as in the prompt; R2).
     - Fixed: Alt+click never stepped an item's D6 down to a D4, and the card said "stepped" when the die had not moved; item rolls use the one dice ladder (`stepUp`, `itemRollDie`) and store only what the card reads of the item (R4, R21, R25).
@@ -64,7 +70,7 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
     - Changed: a companion's employers hold restricted Fallouts (Luke, content audit C13), so a Demagogue's Bond Fallouts are offered for a follower who is a companion (`restrictionHolders`).
     - Fixed: the Fallout picker showed one of two different Fallouts that share a name, severity, and resistance (the core and Illicit Magic "Blinded"); two pack entries now dedupe only when they are the same entry (content audit C12).
     - Fixed: stale comments and dead code in the area: deleted plan pointers, the pool header's Difficult table and helper lines, unused setters, `isRunning`, the unused fallout character prompt, `game.heart.results` and `fallout_results`, a second copy of the difficulty cuts, and two floating promises (R18, R19, R20, R23, R24).
-  - **Code audit fixes: sheets, items, applications, and the lang files** (monorepo `docs/plans/heart-code-audit/sheets-items.md`; tested where the rule is pure):
+  - **Code audit fixes: sheets, items, applications, and the lang files** (monorepo `docs/history/heart-code-audit/sheets-items.md`; tested where the rule is pure):
     - Fixed: text a player typed (a companion's Cost, an ancestry question) ran as HTML on every client that drew the sheet; it is escaped before the game terms are highlighted (`heartTermsText`; S1).
     - Fixed: an item roll's chat flavor carried the item's name unescaped; the flavor is gone (the card already names the item), and a landmark die roll's flavor is escaped (S2).
     - Fixed: the Choose window sorted Ways and Means options by pack order, not by page (`character-options/order.js`; S4, content audit C10).
@@ -92,7 +98,7 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
     - Removed: dead code: the ActiveEffect chain (`items/class/proxy.js`, `heart_effects`, the proxies' `effects`), unused handlers and Handlebars helpers, `common/sheet.html`, `actors/base/sheet.html`, `templates/apps/compendium.html`, `character-options/popout.js` and its test, dead CSS, unread actor template fields (stored data stays), and 72 unused lang keys (S21 to S27).
     - Changed: one copy of each repeated piece: the actors' item lists (`actors/proxy-lists.js`), the skills and domains windows (`applications/base/traits.js`), the haunt steps (`stepServices`), equipment choices (`choiceKey`), the item window id, the Art button, and the warning badge (S28 to S33). Every literal colour and text size outside `theme.sass` / `util.sass` is a named role with the same value (S34, S35); no em dashes in comments, no per-sheet console logs, no deprecated global `flattenObject` (S36, S37).
     - Added: `test/lang.test.mjs` (every key the code names exists, no dotted-key collisions, translations keep their placeholders) and `test/sheet-helpers.test.mjs` (S39, S42).
-  - **Code audit fixes: the Heart map** (monorepo `docs/plans/heart-code-audit/map.md`; tested where the rule is pure):
+  - **Code audit fixes: the Heart map** (monorepo `docs/history/heart-code-audit/map.md`; tested where the rule is pure):
     - Fixed: a player's crafted undo naming a whole collection could empty the board past the bin; such records are refused (M1).
     - Fixed: an undo record with a path through `__proto__` wrote onto every object on the GM's client; unsafe paths are never followed (M2).
     - Fixed: a new card could take a binned card's key, and binning it then mixed or lost the older card; new keys skip the bin, a bin entry is replaced rather than merged, and a full bin no longer drops the card going in (M3).
