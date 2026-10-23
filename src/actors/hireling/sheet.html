@@ -83,9 +83,9 @@
                   <span class="resistance-protection" data-tooltip="heart.term.protection">{{localizeHeart "character" "protection-heading"}}</span>
                 </div>
                 {{#each tracks as |t|}}
-                <div class="resistance-row" data-resistance="{{t.key}}">
+                <div class="resistance-row stress-row" data-resistance="{{t.key}}">
                   <span class="resistance-name clickable" data-action="stress-roll" data-resistance="{{t.key}}" data-tooltip="{{t.tip}}">{{{heartGlyph "resistance" t.key}}}{{localizeHeart "resistance" t.key}}</span>
-                  <span class="resistance-stress red" data-actor-track data-target="system.resistances.{{t.key}}.value">{{{ordered-checkable t.value 10}}}</span>
+                  <span class="resistance-stress stress-track red" data-actor-track data-target="system.resistances.{{t.key}}.value">{{{stress-track t.value t.max}}}</span>
                   <span class="resistance-protection protection" data-actor-track data-target="system.resistances.{{t.key}}.protection">{{{ordered-checkable t.protection 5}}}</span>
                 </div>
                 {{/each}}

@@ -32,10 +32,14 @@ describe("sumStress and totalStressOf", () => {
     expect(sumStress({ ...tracks([1, 1, 1, 1, 1]), provisions: { value: 9 } })).toBe(5);
   });
 
-  it("treats missing tracks as empty, ten long", () => {
-    expect(totalStressOf({})).toEqual({ value: 0, max: 50 });
-    expect(totalStressOf(undefined)).toEqual({ value: 0, max: 50 });
-    expect(totalStressOf({ blood: { value: 2, max: 12 } })).toEqual({ value: 2, max: 52 });
+  it("treats missing tracks as empty, twelve long (Luke, 2026-10-23)", () => {
+    expect(totalStressOf({})).toEqual({ value: 0, max: 60 });
+    expect(totalStressOf(undefined)).toEqual({ value: 0, max: 60 });
+    expect(totalStressOf({ blood: { value: 2, max: 10 } })).toEqual({ value: 2, max: 58 });
+  });
+
+  it("twelve-box tracks: max 60, and the value is the plain sum, never capped", () => {
+    expect(totalStressOf(tracks([15, 12, 0, 3, 0], 12))).toEqual({ value: 30, max: 60 });
   });
 });
 
@@ -89,6 +93,13 @@ describe("the hooks", () => {
     const changes = { system: { resistances: { blood: { value: 5 } } } };
     expect(hooks.call("preUpdateActor", actor, changes, {}, "gm")).toBe(true);
     expect(changes.system.totalStress).toEqual({ value: 5, max: 50 });
+  });
+
+  it("the twelve-box migration's write carries the new total (max 60)", () => {
+    const actor = fakeActor({ id: "vess", system: { resistances: tracks([2]), totalStress: { value: 2, max: 50 } } });
+    const changes = { system: { resistances: Object.fromEntries(STRESS_TRACKS.map((r) => [r, { max: 12 }])) } };
+    hooks.call("preUpdateActor", actor, changes, {}, "gm");
+    expect(changes.system.totalStress).toEqual({ value: 2, max: 60 });
   });
 
   it("leaves other updates, and other actor types, alone", () => {

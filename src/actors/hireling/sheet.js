@@ -71,6 +71,9 @@ export default class HirelingSheet extends BannerSheet(HeartActorSheet) {
         data.tracks = RESISTANCES.map(key => ({
             key,
             value: Number(system.resistances?.[key]?.value) || 0,
+            // (twelve boxes, Luke, 2026-10-23; the stress-track helper
+            // reads trackMax)
+            max: system.resistances?.[key]?.max,
             protection: Number(system.resistances?.[key]?.protection) || 0,
             tip: loc(`heart.tip.resistance.${key}`),
         }));

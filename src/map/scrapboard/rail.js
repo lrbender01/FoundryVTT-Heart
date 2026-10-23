@@ -94,7 +94,7 @@ export function syncRail() {
     if (file.length) {
         html += `<span class="file">${button('data-file', FA.file, loc('heart.board.tool.file'), menuOpen)}${menuOpen ? `<span class="menu">${file.map((b) => `<button type="button" data-button="${b.name}">${icon(b.icon)}<span>${esc(b.title)}</span></button>`).join('')}</span>` : ''}</span>`;
     }
-    html += `${extra.get('help') ? button('data-button="help"', extra.get('help').icon, extra.get('help').title) : ''}${button('data-turn', FA.turn, loc(dir === 'vertical' ? 'heart.board.toolbar-across' : 'heart.board.toolbar-down'))}`;
+    html += `${extra.get('help') ? button('data-button="help"', extra.get('help').icon, extra.get('help').title) : ''}${button('data-turn', FA.turn, loc('heart.board.toolbar-turn'))}`;
     el.innerHTML = html;
 }
 

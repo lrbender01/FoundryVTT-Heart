@@ -28,6 +28,9 @@ const esc = (s) => Handlebars.escapeExpression(String(s ?? ''));
 const hex = (c) => `#${(Number(c) >>> 0).toString(16).padStart(6, '0').slice(-6)}`;
 export const HANDS = Object.keys(HAND_SCALE);
 const MAX_TEXT = 300;
+// the largest a player may size their own note or writing (its `s`), so one
+// can't be blown up over the whole board
+const MAX_SIZE = 8;
 // the brightnesses, dim to bright (model.js BRIGHT_MIX)
 const BRIGHTS = ['dim', 'as-is', 'bright'];
 
@@ -77,7 +80,9 @@ export function askBoard({ title, content, yes, no, width = 400 }) {
                 yes: { label: yes, callback: () => resolve(true) },
                 no: { label: no, callback: () => resolve(false) },
             },
-            default: 'yes',
+            // (Enter leaves things be: the safe answer is the default; Luke
+            // 2026-10-23, the board safety audit)
+            default: 'no',
             close: () => resolve(false),
         }, heartDialogOptions({ classes: ['heart-board-dialog'], width })).render(true);
     });
@@ -380,7 +385,8 @@ async function asked(scene, op, data) {
     return res;
 }
 
-// A player moves their own notes and writing ({ key: { x, y } })
+// A player moves, sizes, and turns their own notes and writing
+// ({ key: { x, y, s, r } }, each field optional)
 export async function playerMove(scene, moves) {
     if (!Object.keys(moves ?? {}).length) return;
     return asked(scene, 'board.moveOwn', { sceneId: scene.id, moves });
@@ -641,7 +647,8 @@ export function registerBoardRelay() {
         await writeBoard(scene, { [`flags.heart.board.scraps.p${i}`]: data }, { sink });
         return { status: 'done', key: `p${i}`, undo: handOut(userId, scene.id, mergeRecords(sink)) };
     });
-    // a player moves their own notes and writing (an owner any), nothing else
+    // a player moves, sizes, and turns their own notes and writing (an owner
+    // any), nothing else (sizes and turns: Luke, 2026-10-23)
     registerRelayHandler('board.moveOwn', async ({ sceneId, moves }, userId) => {
         if (!game.user.isGM) return { status: 'needs-gm' };
         const scene = game.scenes.get(sceneId);
@@ -650,12 +657,23 @@ export function registerBoardRelay() {
         const who = user ? { id: userId, isGM: user.isGM, owner: ownsBoard(scene, userId) } : null;
         const scraps = boardOf(scene).scraps ?? {};
         const data = {};
-        for (const [key, at] of Object.entries(moves ?? {})) {
+        const at = (key, f) => `flags.heart.board.scraps.${key}.${f}`;
+        for (const [key, m] of Object.entries(moves ?? {})) {
             const s = scraps[key];
             if (!s || !who || !mayMove(s, who)) return { status: 'not-allowed' };
-            if (!Number.isFinite(at?.x) || !Number.isFinite(at?.y)) return { status: 'not-allowed' };
-            data[`flags.heart.board.scraps.${key}.x`] = Math.round(at.x);
-            data[`flags.heart.board.scraps.${key}.y`] = Math.round(at.y);
+            const has = (f) => m?.[f] !== undefined;
+            // (a move is both x and y; a size a positive number no larger
+            // than MAX_SIZE; a turn any number of degrees)
+            if (!has('x') && !has('y') && !has('s') && !has('r')) return { status: 'not-allowed' };
+            if ((has('x') || has('y')) && (!Number.isFinite(m.x) || !Number.isFinite(m.y))) return { status: 'not-allowed' };
+            if (has('s') && !(Number.isFinite(m.s) && m.s > 0 && m.s <= MAX_SIZE)) return { status: 'not-allowed' };
+            if (has('r') && !Number.isFinite(m.r)) return { status: 'not-allowed' };
+            if (has('x')) {
+                data[at(key, 'x')] = Math.round(m.x);
+                data[at(key, 'y')] = Math.round(m.y);
+            }
+            if (has('s')) data[at(key, 's')] = Number(m.s.toPrecision(4));
+            if (has('r')) data[at(key, 'r')] = Math.round(m.r);
         }
         const sink = [];
         if (Object.keys(data).length) await writeBoard(scene, data, { sink });

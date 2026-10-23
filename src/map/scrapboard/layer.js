@@ -54,6 +54,9 @@ const LAST_PIN = 'heart.board.lastPin';
 // where this client left the brush's palette (Luke, 2026-10-06: dragged
 // anywhere, never closed)
 const PALETTE_AT = 'heart.board.paletteAt';
+// what the layer offers Foundry as its hovered object while the selection
+// takes the wheel: truthy, with a document that has no elevation
+const WHEEL_TARGET = Object.freeze({ document: Object.freeze({ schema: Object.freeze({ has: () => false }) }) });
 // The palette kept in the window, at x, y (px)
 function placePalette(el, x, y) {
     const r = el.getBoundingClientRect();
@@ -142,6 +145,17 @@ export class ScrapboardLayer extends InteractionLayer {
         return isBoardScene(canvas.scene);
     }
 
+    // off a board the Token layer takes this layer's place: the layer is on
+    // every scene, its control only on boards, and Foundry draws the next
+    // scene with the layer last in hand. Activated where it has no control,
+    // Foundry's controls threw mid-draw and the canvas never finished loading
+    // (board, other scene, board: "You cannot switch Scenes until resources
+    // finish loading"; Luke, 2026-10-23)
+    activate(options) {
+        if (!this.isBoard) return canvas.tokens?.activate() ?? this;
+        return super.activate(options);
+    }
+
     // who the controls act for: the GM in Player view is a player
     // the brush in hand: its paint, width, opacity, and brightness
     get brush() {
@@ -158,9 +172,12 @@ export class ScrapboardLayer extends InteractionLayer {
         return game.user.isGM && !this.preview ? 'gm' : 'player';
     }
 
-    // Foundry's wheel target: the selection
+    // Foundry's wheel target: the selection. A stand-in placeable, not
+    // `true`: Foundry's hover fade reads activeLayer.hover.document.schema on
+    // every mouse move, and `true` threw there while anything was selected
+    // (thousands of "reading 'schema'" errors; Luke, 2026-10-23)
     get hover() {
-        return this.controls.wantsWheel({ ctrl: true }) ? true : null;
+        return this.controls.wantsWheel({ ctrl: true }) ? WHEEL_TARGET : null;
     }
 
     async _draw(options) {
@@ -952,7 +969,9 @@ export class ScrapboardLayer extends InteractionLayer {
         if (this.user.owner) return boardEdit(scene, { patch });
         // (their own notes moved with their own strings and pins: both,
         // Luke 2026-10-21; the cards' move was dropped)
-        const moves = Object.fromEntries(Object.entries(patch.scraps ?? {}).filter(([, p]) => Number.isFinite(p.x)).map(([k, p]) => [k, { x: p.x, y: p.y }]));
+        // (and sized and turned: Luke 2026-10-23)
+        const shape = (p) => Object.fromEntries(['x', 'y', 's', 'r'].filter((f) => Number.isFinite(p[f])).map((f) => [f, p[f]]));
+        const moves = Object.fromEntries(Object.entries(patch.scraps ?? {}).map(([k, p]) => [k, shape(p)]).filter(([, m]) => Object.keys(m).length));
         const own = patch.link || Object.keys(patch.links ?? {}).length || Object.keys(patch.newLinks ?? {}).length || Object.keys(patch.pins ?? {}).length;
         const asks = [];
         if (own) asks.push(boardEdit(scene, { ownPatch: { link: patch.link, links: patch.links ?? {}, newLinks: patch.newLinks ?? {}, pins: patch.pins ?? {} } }));
@@ -1204,19 +1223,31 @@ function helpDialog(user, tools, buttons) {
         const theirs = name === 'file' ? !has.has('bin') : !editor;
         return loc(theirs && game.i18n.has(mine) ? mine : `heart.board.help.${name}`);
     };
-    const row = (icon, title, body) => `<div class="heart-board-help-row"><i class="${icon}"></i><div><b>${esc(title)}</b><p>${esc(body)}</p></div></div>`;
+    // (each row shows the icon of the button it explains, both where two
+    // buttons share it: Luke, 2026-10-23)
+    const row = (icons, title, body) => `<div class="heart-board-help-row"><span class="icons">${[].concat(icons).map((i) => `<i class="${i}"></i>`).join('')}</span><div><b>${esc(title)}</b><p>${esc(body)}</p></div></div>`;
     const brush = tools.some((t) => t.name === 'mark');
+    // (a player's File holds only the picture: a camera on Foundry's toolbar)
+    const fileMine = !has.has('bin');
+    let rail = true;
+    try {
+        rail = game.settings.get('heart', 'boardToolbar') !== 'foundry';
+    } catch {
+        rail = true;
+    }
     const topics = [
-        ['undo', 'fa-solid fa-rotate-left', 'heart.board.help.undo-title', has.has('undo')],
+        ['undo', ['fa-solid fa-rotate-left', 'fa-solid fa-rotate-right'], 'heart.board.help.undo-title', has.has('undo')],
         ['delete', 'fa-solid fa-delete-left', 'heart.board.help.delete-title', true],
         ['preview', 'fa-solid fa-user-secret', 'heart.board.tool.preview', has.has('preview')],
         ['theirs', 'fa-solid fa-user-pen', 'heart.board.tool.theirs', has.has('theirs')],
-        ['file', 'fa-solid fa-folder-open', 'heart.board.tool.file', true],
+        ['file', fileMine ? ['fa-solid fa-folder-open', 'fa-solid fa-camera'] : 'fa-solid fa-folder-open', fileMine ? 'heart.board.tool.snapshot' : 'heart.board.tool.file', true],
         ['alone', 'fa-solid fa-toggle-on', 'heart.board.mark-alone', brush],
-        ['doodles', 'fa-solid fa-shapes', 'heart.board.doodles', brush],
+        ['doodles', 'fa-solid fa-toggle-on', 'heart.board.doodles', brush],
+        ['turn', 'fa-solid fa-arrows-rotate', 'heart.board.toolbar-turn', rail],
         ['keys', 'fa-solid fa-keyboard', 'heart.board.help.keys-title', true],
     ].filter((t) => t[3]);
-    const content = `<div class="heart-board-help"><h3>${esc(loc('heart.board.help.tools-head'))}</h3>${tools.map((t) => row(t.icon, t.title, text(t.name))).join('')}
+    const intro = editor ? '' : `<p class="intro">${esc(loc('heart.board.help.intro-player'))}</p>`;
+    const content = `<div class="heart-board-help">${intro}<h3>${esc(loc('heart.board.help.tools-head'))}</h3>${tools.map((t) => row(t.icon, t.title, text(t.name))).join('')}
         <h3>${esc(loc('heart.board.help.more-head'))}</h3>${topics.map(([name, icon, title]) => row(icon, loc(title), text(name))).join('')}</div>`;
     new Dialog({ title: loc('heart.board.help.title'), content, buttons: { close: { label: loc('Close') } }, default: 'close' }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 600 })).render(true);
 }
@@ -1231,7 +1262,10 @@ export function boardTools() {
     const user = layer?.user ?? { id: game.user.id, isGM: gm };
     // (a players' board's owners have the GM's names for the tools they share)
     const tool = (name, extra = {}) => ({ name, icon: ICONS[name] ?? extra.icon, title: loc(`heart.board.tool.${user.isGM || user.owner ? name : `${name}-player`}`), ...extra });
-    const button = (name, icon, onClick) => tool(name, { icon, button: true, onClick });
+    // (a button's name is the same for everyone: a player's Undo and Redo
+    // had looked for player names that don't exist, and showed no tooltip;
+    // Luke, 2026-10-23)
+    const button = (name, icon, onClick) => ({ name, icon, title: loc(`heart.board.tool.${name}`), button: true, onClick });
     const preview = { name: 'preview', icon: 'fa-solid fa-user-secret', title: loc('heart.board.tool.preview'), toggle: true, active: Boolean(layer?.preview), onClick: (on) => layer?.setPreview(on) };
     const tools = toolsFor(user).map((t) => tool(t));
     // the players' strings alone (Luke, 2026-10-06), this screen's

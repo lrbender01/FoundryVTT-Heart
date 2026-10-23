@@ -124,8 +124,9 @@ describe("players", () => {
     c.dragMove({ x: 3000, y: 3000 });
     c.dragEnd();
     expect([...c.selection]).toEqual(["mine"]);
-    expect(c.wheel(1, { ctrl: true })).toBeNull();
-    expect(c.marks().handle).toBeNull();
+    // (and size and turn them: Luke, 2026-10-23)
+    expect(c.wheel(1, { ctrl: true })).toEqual({ scraps: { mine: { r: 5 } } });
+    expect(c.marks().handle).not.toBeNull();
   });
 
   it("add notes and writing, and edit only their own", () => {

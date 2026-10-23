@@ -20,6 +20,9 @@ import { registerGrantCleanup } from './items/trinkets';
 import { clearedTraits, coreTraitsOf } from './actors/character/traits';
 import { registerTotalStressSync, correctTotalStress } from './actors/character/total-stress-sync';
 import { registerTokenDefaults } from './actors/token-defaults';
+import { registerTrackLength, migrateTrackLength } from './actors/track-length';
+import { stressTrackHtml } from './common/tracks';
+import { trackMax, trackOverflow } from './rolls/stress-roll/rules';
 
 import modules from './**/index.js';
 
@@ -231,6 +234,14 @@ function initialise() {
         return output;
     });
 
+    // A resistance track: its own length (twelve boxes; rules.js trackMax)
+    // and "+N" for stress past the last box (Luke, 2026-10-23)
+    Handlebars.registerHelper('stress-track', function (value, max) {
+        const over = trackOverflow(value, max);
+        const tip = over ? Handlebars.escapeExpression(game.i18n.format('heart.track.over-tip', { over })) : '';
+        return stressTrackHtml(value, trackMax({ max }), tip);
+    });
+
     Handlebars.registerHelper('join', function (separator, ...items) {
         const options = items.pop();
         const array = options.hash.array || [];
@@ -323,8 +334,9 @@ Hooks.once('ready', function () {
     removeRetiredBondActors();
     // older adversaries' lore out of GM Notes, once per world (GM)
     migrateAdversaryLore();
+    // tracks still at ten grow to twelve (GM; Luke, 2026-10-23), then
     // characters' stored total Stress put right where it is out of step (GM)
-    correctTotalStress();
+    migrateTrackLength().then(correctTotalStress);
     showStartupNotice();
 });
 
@@ -446,6 +458,9 @@ Hooks.on('createItem', async function(item, options, userId) {
 // granted (items/trinkets.js)
 registerGrantCleanup();
 
+// Twelve-box tracks for actors made from older data (actors/track-length.js,
+// Luke, 2026-10-23); before the total, so the total counts twelve
+registerTrackLength();
 // A character's stored total Stress follows its five tracks, for token bars
 // (actors/character/total-stress-sync.js, 2026-10-21)
 registerTotalStressSync();

@@ -524,6 +524,9 @@ body.heart-board-rail-on #tools-panel-heartBoard
     max-height: 70vh
     overflow-y: auto
 
+    .intro
+        margin: 0
+
     h3
         @include util.text-section
         color: util.$text
@@ -532,13 +535,19 @@ body.heart-board-rail-on #tools-panel-heartBoard
 
 .heart-board-help-row
     display: grid
-    grid-template-columns: 28px 1fr
+    grid-template-columns: 44px 1fr
     gap: 10px
     align-items: start
 
+    // (one icon, or two side by side where two buttons share a row)
+    .icons
+        display: flex
+        justify-content: center
+        gap: 4px
+        margin-top: 3px
+
     i
         font-size: 18px
-        margin-top: 3px
         text-align: center
 
     p

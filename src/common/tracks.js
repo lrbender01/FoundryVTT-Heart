@@ -27,3 +27,21 @@ export function bindTrack(html, selector, { editable = true, read, write }) {
         return write(box, nextMark(current, index, box.classList.contains('checked')));
     });
 }
+
+// A stress track's boxes (Luke, 2026-10-23: twelve boxes, never capped):
+// `max` ordered-checkable boxes marked up to the value, then a "+N" after
+// the last box for stress past it (a doubled roll can add up to 24). The
+// +N is no box, so a click never lands on it; a click on a box still sets
+// the value to that box, which is the user's own choice. overTip: the +N's
+// tooltip, already escaped. Pure (the {{{stress-track}}} helper's body).
+export function stressTrackHtml(value, max, overTip = '') {
+    const v = Math.max(0, Number(value) || 0);
+    const n = Math.max(0, Math.floor(Number(max) || 0));
+    let out = '';
+    for (let i = 0; i < n; i++) {
+        out += `<a data-index="${i}" class="ordered-checkable-box${i < v ? ' checked' : ''}"></a>`;
+    }
+    const over = v - n;
+    if (over > 0) out += `<span class="track-over"${overTip ? ` data-tooltip="${overTip}"` : ''}>+${over}</span>`;
+    return out;
+}

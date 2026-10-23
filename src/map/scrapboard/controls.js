@@ -304,6 +304,17 @@ export class BoardControls {
         return out.map((p) => ({ x: p.x, y: p.y, on: false }));
     }
 
+    // Who sizes and turns what is selected (the corner handles and the
+    // wheel): an editor anything; a player only cards, and only when every
+    // card selected is theirs to move, their own notes and writing (Luke,
+    // 2026-10-23)
+    #mayShape() {
+        if (this.editor) return true;
+        if (this.#target()?.type !== 'cards') return false;
+        const sel = this.selected();
+        return sel.length > 0 && sel.every((s) => this.may(s));
+    }
+
     // the card whose pieces show their handles: the one selected, or the one
     // a selected piece belongs to
     #partsCard() {
@@ -396,12 +407,12 @@ export class BoardControls {
     }
 
     onHandle(pt) {
-        const b = this.editor ? this.bounds() : null;
+        const b = this.#mayShape() ? this.bounds() : null;
         return this.#near(pt, b?.handle);
     }
 
     onRotor(pt) {
-        const b = this.editor ? this.bounds() : null;
+        const b = this.#mayShape() ? this.bounds() : null;
         return this.#near(pt, b?.rotor);
     }
 
@@ -554,8 +565,8 @@ export class BoardControls {
             strings: [...strings].filter((id) => id !== this.link).map((id) => view?.links.find((l) => l.id === id)?.points).filter(Boolean),
             // (each a small orange dot where the grab dot would be)
             pins: (view?.pins ?? []).filter((p) => this.pins.has(p.id)).map((p) => ({ x: p.x, y: p.y })),
-            handle: (this.editor || (this.markMode === 'select' && this.markSel.size)) && b ? b.handle : null,
-            rotor: (this.editor || (this.markMode === 'select' && this.markSel.size)) && b ? b.rotor : null,
+            handle: (this.#mayShape() || (this.markMode === 'select' && this.markSel.size)) && b ? b.handle : null,
+            rotor: (this.#mayShape() || (this.markMode === 'select' && this.markSel.size)) && b ? b.rotor : null,
             box: box ? { x0: Math.min(box.start.x, box.to.x), y0: Math.min(box.start.y, box.to.y), x1: Math.max(box.start.x, box.to.x), y1: Math.max(box.start.y, box.to.y) } : null,
             from: this.from?.key ? view?.scraps.find((s) => s.key === this.from.key)?.layout.hull ?? null : null,
             fromPt,
@@ -1964,10 +1975,10 @@ export class BoardControls {
     /*  The wheel                                   */
     /* -------------------------------------------- */
 
-    // Whether the wheel turns or sizes (an editor, over a selection, with
-    // Ctrl or Shift); otherwise it zooms
+    // Whether the wheel turns or sizes (an editor, or a player over their own
+    // notes and writing, with Ctrl or Shift); otherwise it zooms
     wantsWheel({ ctrl = false, shift = false } = {}) {
-        return this.editor && Boolean(this.#target()) && (ctrl || shift);
+        return this.#mayShape() && Boolean(this.#target()) && (ctrl || shift);
     }
 
     // A selected pin smoothed away (Luke, 2026-10-03: Enter): a joint of one

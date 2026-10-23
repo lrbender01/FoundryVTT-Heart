@@ -281,7 +281,7 @@ describe("StressRoll.render: what the card shows to whom", () => {
       { id: "kettle", name: "Kettle", amount: 0, protection: 5 },
     ];
     const data = await card({ applied });
-    expect(data.applied[0].value).toBe("+3 (heart.card.protection{protection=1}) · heart.card.track{value=6,max=10}");
+    expect(data.applied[0].value).toBe("+3 (heart.card.protection{protection=1}) · heart.card.track{value=6,max=12}");
     expect(data.applied[1].value).toBe("heart.card.stopped{protection=5}");
     expect(data.total).toBe(4);
   });
@@ -405,22 +405,23 @@ describe("who may roll a Fallout check", () => {
   });
 });
 
-// Luke, 2026-10-21 (R17): stress stops at the track's last box, and the
-// card prints the track's own size
+// Luke, 2026-10-23: stress is never capped (the R17 cap of 2026-10-21 is
+// reversed), and the card prints the track's own size, or how far past it
 describe("a track's size", () => {
-  it("takeStress never marks past the track's max; the amount still counts", async () => {
-    const vess = character("vess", { resistances: { blood: { value: 8, max: 10 }, mind: { value: 2, max: 12 } } });
+  it("takeStress marks every point, past the last box too", async () => {
+    const vess = character("vess", { resistances: { blood: { value: 10, max: 12 }, mind: { value: 2, max: 12 } } });
     const roll = StressRoll._build({ character: "vess", resistance: "blood", die_size: "d6" });
     queueDice(5);
     await roll.evaluate();
     const [a] = await roll.takeStress();
-    expect(vess.system.resistances.blood.value).toBe(10);
+    // a character at 10 Blood taking 5: 15, nothing lost
+    expect(vess.system.resistances.blood.value).toBe(15);
     expect(a.amount).toBe(5);
     const big = StressRoll._build({ character: "vess", resistance: "mind", die_size: "d12" });
     queueDice(11);
     await big.evaluate();
     await big.takeStress();
-    expect(vess.system.resistances.mind.value).toBe(12);
+    expect(vess.system.resistances.mind.value).toBe(13);
   });
 
   it("the card's track line reads the track's own max", async () => {
@@ -431,6 +432,19 @@ describe("a track's size", () => {
     roll.options.applied = [{ id: "vess", name: "Vess", amount: 3, protection: 0 }];
     const data = rendered(await roll.render()).data;
     expect(data.applied[0].value).toBe("+3 · heart.card.track{value=6,max=12}");
+  });
+
+  it("past the last box, the card says how far", async () => {
+    character("vess", { resistances: { blood: { value: 15, max: 12 } } });
+    const roll = StressRoll._build({ character: "vess", resistance: "blood", die_size: "d6" });
+    queueDice(5);
+    await roll.evaluate();
+    roll.options.applied = [{ id: "vess", name: "Vess", amount: 5, protection: 0 }];
+    const data = rendered(await roll.render()).data;
+    expect(data.applied[0].value).toBe("+5 · heart.card.track-over{value=15,over=3,max=12}");
+    // and the fallout check is still offered
+    const offered = rendered(await roll.render({ showFalloutRollButton: true })).data;
+    expect(offered.falloutFor.map((a) => a.id)).toEqual(["vess"]);
   });
 });
 

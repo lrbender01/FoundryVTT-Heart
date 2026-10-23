@@ -30,6 +30,37 @@ const host = (user, raw = RAW) => ({ view: () => boardView(look, normalizeBoard(
 const GM = { id: "gm", isGM: true };
 const ANA = { id: "ana", isGM: false, owner: false };
 
+describe("a player sizes and turns their own notes and writing (Luke, 2026-10-23)", () => {
+  it("the corner handles and the wheel are theirs over their own notes", () => {
+    const c = new BoardControls(host(ANA));
+    c.selection.add("mine");
+    c.selection.add("scrawl");
+    expect(c.wantsWheel({ ctrl: true })).toBe(true);
+    const turn = c.wheel(1, { ctrl: true });
+    expect(Object.keys(turn.scraps).sort()).toEqual(["mine", "scrawl"]);
+    expect(Number.isFinite(turn.scraps.mine.r)).toBe(true);
+    expect(c.wheel(-1, { shift: true }).scraps.mine.s).toBeCloseTo(1.05, 2);
+    const b = c.bounds();
+    expect(c.onHandle(b.handle)).toBe(true);
+    expect(c.onRotor(b.rotor)).toBe(true);
+    expect(c.marks().handle).toEqual(b.handle);
+  });
+
+  it("never with anything else selected", () => {
+    const c = new BoardControls(host(ANA));
+    c.selection.add("mine");
+    c.selection.add("theirs");
+    expect(c.wantsWheel({ ctrl: true })).toBe(false);
+    expect(c.wheel(1, { ctrl: true })).toBeNull();
+    const b = c.bounds();
+    expect(c.onHandle(b.handle)).toBe(false);
+    expect(c.marks().handle).toBeNull();
+    c.clear();
+    c.selection.add("grip");
+    expect(c.wantsWheel({ shift: true })).toBe(false);
+  });
+});
+
 describe("a player takes their own notes and writing off", () => {
   it("Delete lists only the player's own selected notes and writing", () => {
     const c = new BoardControls(host(ANA));

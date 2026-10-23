@@ -382,14 +382,14 @@ export async function removeMany(scene, what = {}, opts = {}) {
 // and a text measure
 let measurer = null;
 async function layoutTools() {
-    const { look, textures } = await loadBoardLook();
+    const { look, textures, ok } = await loadBoardLook();
     const size = (id) => { const t = textures[id]; return t ? { w: t.w, h: t.h, safe: t.safe, cover: t.cover } : null; };
     measurer ??= document.createElement('canvas').getContext('2d');
     const measure = (text, px, font) => {
         measurer.font = `${px}px "${font}"`;
         return measurer.measureText(text).width;
     };
-    return { look, size, measure };
+    return { look, size, measure, ok };
 }
 
 // A name for a string: a pin in it, a name tag (a note), and a thread
@@ -408,7 +408,11 @@ export async function labelString(scene, id, text, opts = {}) {
 // them): the GM's client, when the world loads and when the scene is viewed
 export async function tidyBoardScene(scene) {
     if (!game.user.isGM || !isBoardScene(scene)) return;
-    const { look, size, measure } = await layoutTools();
+    const { look, size, measure, ok } = await layoutTools();
+    // (never on the default look: without the content module's look the tidy
+    // would resize the scene and re-lay pins by the wrong cards; Luke
+    // 2026-10-23, the board safety audit)
+    if (!ok) return;
     const { board, changed } = tidyBoard(boardOf(scene), look, size, measure);
     if (changed) await replaceBoard(scene, board, { record: false });
     // (once: an older board scene's tokens brought down to the board's size)

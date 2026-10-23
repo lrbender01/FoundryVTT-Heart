@@ -19,7 +19,12 @@ import {
   stakesText,
   trackMax,
   markedValue,
+  trackOverflow,
+  trackText,
+  trackLengthUpdate,
+  TRACK_MAX,
 } from "../src/rolls/stress-roll/rules.js";
+import { stressTrackHtml } from "../src/common/tracks.js";
 import characterProxies from "../src/actors/character/proxy.js";
 import partyProxies from "../src/actors/party/proxy.js";
 import { resetWorld, fakeActor, fakeUser, setUsers, queueDice, rendered, unescaped } from "./helpers.mjs";
@@ -244,20 +249,89 @@ describe("a Heart roll from a request keeps and shows the stakes", () => {
   });
 });
 
-// Luke, 2026-10-21 (R17): one cap rule for characters and companions
+// Luke, 2026-10-23: no cap (the R17 cap of 2026-10-21 is reversed) and
+// twelve-box tracks, for characters and companions alike
 describe("trackMax and markedValue", () => {
-  it("a track's own max, else the book's ten boxes", () => {
+  it("a track's own max, else twelve boxes", () => {
+    expect(TRACK_MAX).toBe(12);
     expect(trackMax({ max: 12 })).toBe(12);
-    expect(trackMax({ max: 0 })).toBe(10);
-    expect(trackMax({})).toBe(10);
-    expect(trackMax(undefined)).toBe(10);
+    expect(trackMax({ max: 10 })).toBe(10);
+    expect(trackMax({ max: 0 })).toBe(12);
+    expect(trackMax({})).toBe(12);
+    expect(trackMax(undefined)).toBe(12);
   });
 
-  it("marks up to the last box, never lowers a track already past it", () => {
-    expect(markedValue(8, 5, 10)).toBe(10);
-    expect(markedValue(2, 3, 10)).toBe(5);
-    expect(markedValue("4", "2", 10)).toBe(6);
-    expect(markedValue(12, 3, 10)).toBe(12);
-    expect(markedValue(3, -2, 10)).toBe(3);
+  it("marks every point, past the last box too; never lowers", () => {
+    expect(markedValue(8, 5)).toBe(13);
+    expect(markedValue(10, 5)).toBe(15);
+    expect(markedValue(2, 3)).toBe(5);
+    expect(markedValue("4", "2")).toBe(6);
+    expect(markedValue(12, 24)).toBe(36);
+    expect(markedValue(3, -2)).toBe(3);
+    expect(markedValue(undefined, 2)).toBe(2);
+  });
+});
+
+describe("stress past the last box", () => {
+  it("trackOverflow: how far past the track's max", () => {
+    expect(trackOverflow(15, 12)).toBe(3);
+    expect(trackOverflow(12, 12)).toBe(0);
+    expect(trackOverflow(7, 12)).toBe(0);
+    expect(trackOverflow(13, undefined)).toBe(1);
+    expect(trackOverflow("14", "12")).toBe(2);
+  });
+
+  it("trackText: 'of 12' on the track, 'past 12' beyond it", () => {
+    const loc = (k, d) => `${k}{${Object.entries(d).map(([a, b]) => `${a}=${b}`).join(",")}}`;
+    expect(trackText(7, 12, loc)).toBe("heart.card.track{value=7,max=12}");
+    expect(trackText(12, 12, loc)).toBe("heart.card.track{value=12,max=12}");
+    expect(trackText(15, 12, loc)).toBe("heart.card.track-over{value=15,over=3,max=12}");
+    expect(trackText("3", undefined, loc)).toBe("heart.card.track{value=3,max=12}");
+  });
+
+  it("stressTrackHtml: twelve boxes, marked to the value, +N after", () => {
+    const boxes = (html) => html.match(/ordered-checkable-box/g)?.length ?? 0;
+    const checked = (html) => html.match(/ordered-checkable-box checked/g)?.length ?? 0;
+    const seven = stressTrackHtml(7, 12);
+    expect(boxes(seven)).toBe(12);
+    expect(checked(seven)).toBe(7);
+    expect(seven).not.toContain("track-over");
+    const full = stressTrackHtml(12, 12);
+    expect(checked(full)).toBe(12);
+    expect(full).not.toContain("track-over");
+    // a character at 10 Blood takes 5: twelve full and +3, nothing lost
+    const over = stressTrackHtml(markedValue(10, 5), 12, "3 more");
+    expect(boxes(over)).toBe(12);
+    expect(checked(over)).toBe(12);
+    expect(over).toContain('<span class="track-over" data-tooltip="3 more">+3</span>');
+    // the boxes keep their indexes, and the +N is no box to click
+    expect(over).toContain('data-index="11"');
+    expect(over).not.toContain('data-index="12"');
+    expect(stressTrackHtml(0, 12)).not.toContain("checked");
+    expect(stressTrackHtml(14, 12)).toContain('<span class="track-over">+2</span>');
+  });
+});
+
+describe("trackLengthUpdate: ten-box tracks grow to twelve", () => {
+  const RES5 = ["blood", "mind", "echo", "fortune", "supplies"];
+  it("raises only a max of exactly 10", () => {
+    expect(
+      trackLengthUpdate(
+        { blood: { value: 3, max: 10 }, mind: { max: "10" }, echo: { max: 12 }, fortune: { max: 14 }, supplies: { max: 8 } },
+        RES5,
+      ),
+    ).toEqual({ "system.resistances.blood.max": 12, "system.resistances.mind.max": 12 });
+  });
+
+  it("nothing to do: null (so it can run on every load)", () => {
+    const twelve = Object.fromEntries(RES5.map((r) => [r, { value: 0, max: 12 }]));
+    expect(trackLengthUpdate(twelve, RES5)).toBeNull();
+    expect(trackLengthUpdate(undefined, RES5)).toBeNull();
+    expect(trackLengthUpdate({ provisions: { max: 10 } }, RES5)).toBeNull();
+  });
+
+  it("never touches a value, even one past the max", () => {
+    const update = trackLengthUpdate({ blood: { value: 15, max: 10 } }, RES5);
+    expect(update).toEqual({ "system.resistances.blood.max": 12 });
   });
 });

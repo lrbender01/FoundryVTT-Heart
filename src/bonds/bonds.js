@@ -85,7 +85,8 @@ export function bondState(bond) {
         // a companion's actor is gone (deleted)
         missing: companion && !target,
         total: companion ? trackStress(target?.system?.resistances) : poolStress(sys),
-        max: companion ? RESISTANCES.length * 10 : (Number(sys.stress?.max) || BOND_STRESS_MAX),
+        // (a companion's tracks, twelve boxes each since 2026-10-23)
+        max: companion ? RESISTANCES.reduce((sum, r) => sum + trackMax(target?.system?.resistances?.[r]), 0) : (Number(sys.stress?.max) || BOND_STRESS_MAX),
     };
 }
 
@@ -349,8 +350,8 @@ export async function markBondStress({ characterId, bondId, resistance = 'mind',
         const track = hireling.system.resistances?.[resistance] ?? {};
         const { amount: taken, protection } = afterProtection(rolled, track.protection, ignoreProtection);
         const before = Number(track.value) || 0;
-        // (the one cap rule, stress-roll/rules.js, 2026-10-21)
-        const after = markedValue(before, taken, trackMax(track));
+        // (marked in full, never capped: stress-roll/rules.js, Luke, 2026-10-23)
+        const after = markedValue(before, taken);
         await hireling.update({ [`system.resistances.${resistance}.value`]: after });
         line = { name: esc(hireling.name), value: esc(loc('heart.bond.card.track-protected', { resistance: loc(`heart.resistance.${resistance}`), from: before, to: after, protection })) };
     } else {

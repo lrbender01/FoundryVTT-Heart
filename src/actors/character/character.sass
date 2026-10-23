@@ -809,6 +809,42 @@ $row-shield: util.$mark-md + 2px
   &::after
     display: block
 
+// Twelve boxes in the room ten had (Luke, 2026-10-23: "we should include
+// longer tracks on the sheets in the same amount of available space"): the
+// small squares with the long-track gaps (util.sass), groups of five
+// (5, 5, 2), on the character's and the companion's five resistances
+.heart.sheet .resistance-stress.stress-track
+  gap: util.$mark-gap-long
+
+  .ordered-checkable-box
+    @include util.mark-size(util.$mark-sm)
+    margin-right: 0
+
+    &:nth-of-type(5n):not(:last-of-type)
+      margin-right: util.$mark-group-gap-long
+
+  // stress past the last box, "+3" (a doubled roll can run past twelve):
+  // marked, so bright red; not a box, so never clicked
+  .track-over
+    font-size: util.$fs-small
+    font-weight: bold
+    line-height: 1
+    color: util.$red-bright
+    margin-left: util.$mark-group-gap-long
+    white-space: nowrap
+
+// The shields stay exactly as tall as the squares beside them (the rule of
+// 2026-10-02 above), so on the resistance rows (and the Party row, whose
+// shields share their column) they shrink with the squares (2026-10-23)
+$long-shield: util.$mark-sm + 2px
+
+.heart.sheet .resistance-row .resistance-protection.protection .ordered-checkable-box
+  flex: $long-shield 0 0
+
+  &::after, &.checked::after
+    width: $long-shield
+    height: $long-shield
+
 // Skill / domain rows (2026-09-29 review): the name, then its knack on the
 // same line; no dice icons. The whole row is one click target that rolls.
 // A grid (not wrapping flex) so the knack always starts on the name's line;

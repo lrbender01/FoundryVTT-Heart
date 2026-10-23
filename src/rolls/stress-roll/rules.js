@@ -51,20 +51,52 @@ export function afterProtection(total, protection, ignoreProtection = false) {
     return { protection: p, amount: Math.max(0, total - p) };
 }
 
-// A resistance track's size (Luke, 2026-10-21, R17): its own max, else the
-// book's ten boxes (player-reference: a 10-box track)
-export const TRACK_MAX = 10;
+// A resistance track's size: its own max, else twelve boxes (Luke,
+// 2026-10-23: "I would think it would be 12"; the fallout check is a D12
+// against total Stress, so twelve marked always finds fallout). It was the
+// book's ten until then.
+export const TRACK_MAX = 12;
 export function trackMax(res) {
     const max = Number(res?.max);
     return max > 0 ? max : TRACK_MAX;
 }
 
-// A track after taking stress: capped at its last box (R17: a character's
-// track ran past ten while a companion's stopped; one rule for both). A
-// track already past its max (from before the cap) is never lowered.
-export function markedValue(value, amount, max) {
-    const now = Number(value) || 0;
-    return Math.max(now, Math.min(Number(max) || TRACK_MAX, now + Math.max(0, Number(amount) || 0)));
+// A track after taking stress: every point is marked, never capped (Luke,
+// 2026-10-23: "Full track rule dies right now"; the R17 cap of 2026-10-21
+// is gone, for characters and companions alike). Stress past the last box
+// is kept and shown as +N. A negative amount marks nothing.
+export function markedValue(value, amount) {
+    return (Number(value) || 0) + Math.max(0, Number(amount) || 0);
+}
+
+// Stress past a track's last box (shown as +N after it), 0 when none
+export function trackOverflow(value, max) {
+    return Math.max(0, (Number(value) || 0) - trackMax({ max }));
+}
+
+// A card's line for a track after stress (loc(key, data) localizes):
+// "7 of 12", or "15 (3 past 12)" once stress runs past the last box
+export function trackText(value, max, loc) {
+    const v = Number(value) || 0;
+    const m = trackMax({ max });
+    return v > m
+        ? loc('heart.card.track-over', { value: v, over: v - m, max: m })
+        : loc('heart.card.track', { value: v, max: m });
+}
+
+// The migration of 2026-10-23 (Luke): a track still at the book's ten
+// grows to twelve. Only a max of exactly 10 moves; nothing is lowered, and a
+// track already at 12 (or any other length) is left alone, so it can run on
+// every load. resistances: the actor's system.resistances. Returns the
+// update's keys ({ 'system.resistances.blood.max': 12, ... }) or null.
+export const OLD_TRACK_MAX = 10;
+export function trackLengthUpdate(resistances, tracks) {
+    const out = {};
+    for (const r of tracks) {
+        const res = resistances?.[r];
+        if (res && Number(res.max) === OLD_TRACK_MAX) out[`system.resistances.${r}.max`] = TRACK_MAX;
+    }
+    return Object.keys(out).length ? out : null;
 }
 
 // Where a stress roll stands (Luke, 2026-10-21: "there must be separate roll

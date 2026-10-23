@@ -18,7 +18,7 @@ import {
     isBoardScene, boardOf, createBoardScene, setBoardScene, setScrap, setLink, addScrap, addLink, removeScrap,
     removeLink, exportBoard, importBoard, restoreBackup, undo, redo, isPlayersBoard, ownersOf, tidyBoardScene, followRename, downloadBoard, newPlace,
 } from './scrapboard/api.js';
-import { registerBoardSettings, registerBoardRelay, handOf, playersBoardDialog } from './scrapboard/notes.js';
+import { registerBoardSettings, registerBoardRelay, handOf, playersBoardDialog, askBoard } from './scrapboard/notes.js';
 import { registerRailSettings, syncRail } from './scrapboard/rail.js';
 import { keepBackup } from './scrapboard/backups.js';
 
@@ -28,6 +28,14 @@ const kept = new Set();
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const layer = () => canvas?.heartBoard;
 const onBoard = () => Boolean(canvas?.ready && isBoardScene(canvas.scene));
+
+// the scene controls made to match the scene: off a board the Heart Map's
+// layer is never the one in hand (its control is gone, and Foundry's controls
+// throw on a control they cannot find), so the Token layer takes it
+function syncControls() {
+    if (!onBoard() && canvas?.activeLayer && canvas.activeLayer === layer()) canvas.tokens?.activate();
+    else ui.controls?.initialize();
+}
 
 // A landmark dropped on the board is pinned where it fell, hidden until the
 // GM reveals it. A book landmark (from the compendium, or a world copy of
@@ -97,7 +105,7 @@ function registerHooks() {
         if (onBoard()) {
             canvas.tokens?.releaseAll();
             layer()?.activate();
-        } else ui.controls?.initialize();
+        } else syncControls();
         // (the Heart Map's own toolbar, when it is the one in use)
         syncRail();
     });
@@ -106,7 +114,8 @@ function registerHooks() {
     Hooks.on('updateScene', (scene, changes) => {
         if (scene.id !== canvas?.scene?.id || !foundry.utils.hasProperty(changes, 'flags.heart')) return;
         layer()?.queueRefresh();
-        ui.controls?.initialize();
+        // (a scene that stops being a board drops the Heart Map control)
+        syncControls();
     });
 
     // a claimed hand changes how that player's notes write
@@ -179,7 +188,21 @@ function registerHooks() {
             name: 'heart.board.unmake',
             icon: '<i class="fa-solid fa-thumbtack"></i>',
             condition: (li) => game.user.isGM && isBoardScene(sceneOf(li)),
-            callback: (li) => setBoardScene(sceneOf(li), false),
+            // (it deletes the whole board: asked first, and a copy kept in
+            // File, Earlier boards; Luke 2026-10-23, the board safety audit)
+            callback: async (li) => {
+                const scene = sceneOf(li);
+                const board = boardOf(scene);
+                const ok = await askBoard({
+                    title: loc('heart.board.unmake'),
+                    content: loc('heart.board.unmake-ask', { scene: scene.name, cards: Object.keys(board?.scraps ?? {}).length, strings: Object.keys(board?.links ?? {}).length }),
+                    yes: loc('heart.board.unmake-yes'),
+                    no: loc('heart.board.unmake-no'),
+                });
+                if (!ok) return;
+                await keepBackup(scene, foundry.utils.deepClone(board), { force: true, why: 'replaced' });
+                return setBoardScene(scene, false);
+            },
         }, {
             name: 'heart.board.players-make-scene',
             icon: '<i class="fa-solid fa-users"></i>',

@@ -98,6 +98,8 @@ describe("addBond", () => {
     const companion = await addBond({ characterId: "vess", targetUuid: rex.uuid, notes: "good dog" });
     expect(person).toMatchObject({ name: "Ash", img: ash.img, system: { kind: "person", target: "Actor.ash" } });
     expect(companion).toMatchObject({ name: "Rex", system: { kind: "companion", target: "Actor.rex", notes: "good dog" } });
+    // (the companion's own five track lengths since 2026-10-23: ten each
+    // in this fixture, twelve on a new or migrated companion)
     expect(bondState(companion)).toMatchObject({ kind: "companion", companion: true, missing: false, max: 50 });
   });
 

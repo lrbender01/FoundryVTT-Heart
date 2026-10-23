@@ -207,15 +207,16 @@
                     <span class="resistance-protection" data-tooltip="heart.term.protection">{{localizeHeart "character" "protection-heading"}}</span>
                   </div>
                   {{#each actor.system.resistances as |resistance name|}}
-                  <div class="resistance-row" data-resistance="{{name}}">
+                  <div class="resistance-row stress-row" data-resistance="{{name}}">
                     <!-- Resistance Name -->
                     <span class="resistance-name clickable" data-action="stress-roll" data-resistance="{{name}}" data-tooltip="{{heartTip 'resistance' name}}">
                       {{{heartGlyph "resistance" name}}}{{localizeHeart "resistance" name}}
                     </span>
 
-                    <!-- Stress Checkboxes -->
-                    <span class="resistance-stress red" data-target="system.resistances.{{name}}.value">
-                      {{{ordered-checkable resistance.value 10}}}
+                    <!-- Stress Checkboxes: the track's own length (twelve
+                         since 2026-10-23, Luke), +N for stress past it -->
+                    <span class="resistance-stress stress-track red" data-target="system.resistances.{{name}}.value">
+                      {{{stress-track resistance.value resistance.max}}}
                     </span>
 
                     <!-- Protection Checkboxes -->

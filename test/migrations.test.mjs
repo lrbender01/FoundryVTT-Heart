@@ -10,6 +10,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { migrateFalloutSource } from "../src/items/fallout/migrate.js";
 import { removeRetiredBondActors } from "../src/bonds/migrate.js";
 import { migrateAdversaryLore } from "../src/actors/adversary/migrate.js";
+import { migrateTrackLength, registerTrackLength } from "../src/actors/track-length.js";
 import { resetWorld, fakeActor, fakeItem, fakeUser, setUsers } from "./helpers.mjs";
 
 const gm = fakeUser({ id: "gm", isGM: true });
@@ -201,5 +202,71 @@ describe("the adversary lore migration (once per world)", () => {
     expect(game.settings.set).not.toHaveBeenCalled();
     expect(error).toHaveBeenCalled();
     error.mockRestore();
+  });
+});
+
+// Luke, 2026-10-23: tracks of twelve boxes. A track still at the book's ten
+// grows to twelve; nothing else moves, and it may run on every load.
+describe("the twelve-box track migration", () => {
+  const RES5 = ["blood", "mind", "echo", "fortune", "supplies"];
+  const tracks = (max, extra = {}) => Object.fromEntries(RES5.map((r) => [r, { value: 0, max, protection: 0, ...(extra[r] ?? {}) }]));
+  const twelve = Object.fromEntries(RES5.map((r) => [`system.resistances.${r}.max`, 12]));
+
+  it("raises characters' and companions' ten-box tracks to twelve, in one write", async () => {
+    fakeActor({ id: "vess", type: "character", system: { resistances: tracks(10, { blood: { value: 15 } }) } });
+    fakeActor({ id: "rex", type: "hireling", system: { resistances: tracks(10) } });
+    await migrateTrackLength();
+    expect(Actor.updateDocuments).toHaveBeenCalledTimes(1);
+    expect(Actor.updateDocuments).toHaveBeenCalledWith([
+      { _id: "vess", ...twelve },
+      { _id: "rex", ...twelve },
+    ]);
+  });
+
+  it("leaves twelve, longer, shorter, and other actor types alone; never a value", async () => {
+    fakeActor({ id: "done", type: "character", system: { resistances: tracks(12) } });
+    fakeActor({ id: "long", type: "character", system: { resistances: tracks(14) } });
+    fakeActor({ id: "short", type: "hireling", system: { resistances: tracks(8) } });
+    fakeActor({ id: "drowned", type: "adversary", system: { resistances: tracks(10) } });
+    fakeActor({ id: "us", type: "party", system: { provisions: { value: 3, max: 10 } } });
+    await migrateTrackLength();
+    expect(Actor.updateDocuments).not.toHaveBeenCalled();
+  });
+
+  it("only the touched tracks of a half-done actor", async () => {
+    fakeActor({ id: "vess", type: "character", system: { resistances: tracks(12, { echo: { max: 10 } }) } });
+    await migrateTrackLength();
+    expect(Actor.updateDocuments).toHaveBeenCalledWith([{ _id: "vess", "system.resistances.echo.max": 12 }]);
+  });
+
+  it("only the active GM's client", async () => {
+    fakeActor({ id: "vess", type: "character", system: { resistances: tracks(10) } });
+    asOtherGM();
+    await migrateTrackLength();
+    setUsers([gm, p1], { self: p1, activeGM: gm });
+    await migrateTrackLength();
+    expect(Actor.updateDocuments).not.toHaveBeenCalled();
+  });
+
+  it("a failed write is logged, not thrown, to try again next load", async () => {
+    fakeActor({ id: "vess", type: "character", system: { resistances: tracks(10) } });
+    Actor.updateDocuments.mockRejectedValueOnce(new Error("server said no"));
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    await expect(migrateTrackLength()).resolves.toBeUndefined();
+    expect(error).toHaveBeenCalled();
+  });
+
+  it("a new character or companion made from older data starts with twelve", () => {
+    registerTrackLength();
+    const made = (type, max) => ({ type, _source: { system: { resistances: tracks(max) } }, updateSource: vi.fn() });
+    const old = made("hireling", 10);
+    Hooks.call("preCreateActor", old, {}, {}, "gm");
+    expect(old.updateSource).toHaveBeenCalledWith(twelve);
+    const fresh = made("character", 12);
+    Hooks.call("preCreateActor", fresh, {}, {}, "gm");
+    expect(fresh.updateSource).not.toHaveBeenCalled();
+    const foe = made("adversary", 10);
+    Hooks.call("preCreateActor", foe, {}, {}, "gm");
+    expect(foe.updateSource).not.toHaveBeenCalled();
   });
 });

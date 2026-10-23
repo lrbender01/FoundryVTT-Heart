@@ -15,7 +15,7 @@ import { glyphFor } from '../../common/icons';
 // the resistance is prefilled with this user's last choice, the die is D4.
 // The arithmetic (die steps, doubling, Protection) lives in rules.js, free of
 // webpack-only imports, so the rules tests can load it (2026-09-30, Luke).
-import { stressDie, stressFormula, afterProtection, stressStatus, stressPreview, normalizeStakes, trackMax, markedValue } from './rules';
+import { stressDie, stressFormula, afterProtection, stressStatus, stressPreview, normalizeStakes, trackText, markedValue } from './rules';
 import { applyProvisions } from '../../actors/party/party';
 import { askGM } from '../../common/relay';
 import { oneAtATime } from '../../common/busy';
@@ -139,10 +139,10 @@ export default class StressRoll extends Roll {
             const res = actor?.system?.resistances?.[resistance];
             if (!res) continue;
             const { protection, amount } = afterProtection(total, res.protection, this.options.ignoreProtection);
-            // never past the track's last box (Luke, 2026-10-21, R17); the
-            // amount taken still decides fallout
+            // marked in full, past the last box too (Luke, 2026-10-23: the
+            // R17 cap is gone)
             if (amount > 0 && actor.isOwner) {
-                await actor.update({ [`system.resistances.${resistance}.value`]: markedValue(res.value, amount, trackMax(res)) });
+                await actor.update({ [`system.resistances.${resistance}.value`]: markedValue(res.value, amount) });
             }
             applied.push({ id, name: actor.name, amount, protection, marked: amount > 0 && actor.isOwner });
         }
@@ -221,7 +221,7 @@ export default class StressRoll extends Roll {
         if (opts.stepped) what += `, ${esc(loc('heart.card.passive'))}`;
         if (chatOptions.flavor) what = `${esc(chatOptions.flavor)}: ${what}`;
 
-        // One line each: "+3 (protection 1) · 7 of 10"; the party's: "... of 20"
+        // One line each: "+3 (protection 1) · 7 of 12"; the party's: "... of 20"
         const applied = (opts.applied ?? []).map(a => {
             const doc = game.actors.get(a.id);
             let track = '';
@@ -230,7 +230,8 @@ export default class StressRoll extends Roll {
                 if (p) track = loc('heart.card.track', { value: p.value, max: p.max });
             } else {
                 const r = doc?.system?.resistances?.[opts.resistance];
-                if (r) track = loc('heart.card.track', { value: Number(r.value) || 0, max: trackMax(r) });
+                // (past the last box: "15 (3 past 12)", Luke, 2026-10-23)
+                if (r) track = trackText(r.value, r.max, loc);
             }
             const protection = a.protection
                 ? loc(a.shared ? 'heart.card.qm-protection' : 'heart.card.protection', { protection: a.protection })

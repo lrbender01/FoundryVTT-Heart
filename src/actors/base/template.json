@@ -3,11 +3,11 @@
         "templates": {
             "resistance": {
                 "resistances": {
-                    "blood": {"value": 0, "max": 10, "protection": 0},
-                    "mind": {"value": 0, "max": 10, "protection": 0},
-                    "echo": {"value": 0, "max": 10, "protection": 0},
-                    "fortune": {"value": 0, "max": 10, "protection": 0},
-                    "supplies": {"value": 0, "max": 10, "protection": 0}
+                    "blood": {"value": 0, "max": 12, "protection": 0},
+                    "mind": {"value": 0, "max": 12, "protection": 0},
+                    "echo": {"value": 0, "max": 12, "protection": 0},
+                    "fortune": {"value": 0, "max": 12, "protection": 0},
+                    "supplies": {"value": 0, "max": 12, "protection": 0}
                 }
             },
             "skills": {

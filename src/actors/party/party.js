@@ -27,7 +27,7 @@ import { glyphFor } from '../../common/icons';
 import { ledgerCard } from '../../common/ledger';
 import { askGM } from '../../common/relay';
 import { oneAtATime } from '../../common/busy';
-import { trackMax } from '../../rolls/stress-roll/rules';
+import { trackText } from '../../rolls/stress-roll/rules';
 
 export const PARTY_TYPE = 'party';
 export const PARTY_IMG = 'systems/heart/assets/icons/resistances/provisions.svg';
@@ -256,8 +256,8 @@ export async function restock({ payerId, die = 'd4' } = {}) {
     const payValue = [
         loc('heart.card.pays-amount', { amount: paid?.amount ?? 0 }),
         paid?.protection ? `(${loc('heart.card.protection', { protection: paid.protection })})` : '',
-        // (the track's own size, not ten: R17, 2026-10-21)
-        supplies ? `· ${loc('heart.card.track', { value: Number(supplies.value) || 0, max: trackMax(supplies) })}` : '',
+        // (the track's own size, and stress past it as "15 (3 past 12)": Luke, 2026-10-23)
+        supplies ? `· ${trackText(supplies.value, supplies.max, loc)}` : '',
     ].filter(Boolean).join(' ');
     const falloutButton = (paid?.amount ?? 0) > 0
         ? `<button type="button" data-action="ledger-fallout" data-claim="fallout-${esc(payer.id)}" data-character="${esc(payer.id)}" data-resistance="supplies" data-tooltip="heart.term.fallout">${esc(loc('heart.card.fallout-for', { name: payer.name }))}</button>`

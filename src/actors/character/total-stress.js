@@ -6,10 +6,13 @@
 // step. Pure, no
 // Foundry globals, so it is tested on its own (test/total-stress.test.mjs).
 
+import { TRACK_MAX } from '../../rolls/stress-roll/rules.js';
+
 // The five a fallout check reads; the party's Provisions is never one
 export const STRESS_TRACKS = ['blood', 'mind', 'echo', 'fortune', 'supplies'];
-// a track's length when its data has none (template.json: 10)
-const TRACK_MAX = 10;
+// (a track's length when its data has none is the rules' TRACK_MAX: twelve
+// since 2026-10-23, Luke, so the total's max is 60; the value is the plain
+// sum, never capped)
 
 const num = (v) => Number(v) || 0;
 

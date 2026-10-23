@@ -155,6 +155,20 @@ describe("the relay's board handlers", () => {
     expect(boardOf(scene).scraps.grip.x).toBe(500);
   });
 
+  it("board.moveOwn: their own notes sized and turned (Luke, 2026-10-23), within bounds", async () => {
+    expect((await ask("board.moveOwn", { moves: { mine: { s: 1.23456, r: 12.6 } } })).status).toBe("done");
+    expect(boardOf(scene).scraps.mine).toMatchObject({ x: 900, y: 100, s: 1.235, r: 13 });
+    expect((await ask("board.moveOwn", { moves: { theirs: { r: 5 } } })).status).toBe("not-allowed");
+    expect((await ask("board.moveOwn", { moves: { grip: { s: 2 } } })).status).toBe("not-allowed");
+    // (no size of nothing, none past the cap, no half a move, no empty ask)
+    expect((await ask("board.moveOwn", { moves: { mine: { s: 0 } } })).status).toBe("not-allowed");
+    expect((await ask("board.moveOwn", { moves: { mine: { s: 50 } } })).status).toBe("not-allowed");
+    expect((await ask("board.moveOwn", { moves: { mine: { x: 5 } } })).status).toBe("not-allowed");
+    expect((await ask("board.moveOwn", { moves: { mine: {} } })).status).toBe("not-allowed");
+    expect(boardOf(scene).scraps.mine).toMatchObject({ x: 900, s: 1.235, r: 13 });
+    expect(boardOf(scene).scraps.theirs.r).toBeUndefined();
+  });
+
   it("board.editNote: their own note's text, never another's", async () => {
     const res = await ask("board.editNote", { key: "mine", text: "new words", style: { bold: true } });
     expect(res.status).toBe("done");
