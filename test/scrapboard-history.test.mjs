@@ -218,12 +218,12 @@ describe("a doodle laid down (doodlePatch, both hosts, 2026-10-21)", () => {
     const raw = { scraps: { n1: { type: "note", text: "x", x: 600, y: 600 } }, marks: { ana: { m1: { c: 0, w: 2, pts: [0, 0, 1, 1] } } } };
     const view = boardView(look, normalizeBoard(raw), "gm", size, measure);
     const brush = { size: 40, c: 2, w: 99, b: 1, o: 0.8 };
-    const sheet = doodlePatch(raw, view, { kind: "ring", seed: "s", at: { x: 2000, y: 2000 } }, brush, look, "ana");
+    const sheet = doodlePatch(raw, view, { kind: "eye", seed: "s", at: { x: 2000, y: 2000 } }, brush, look, "ana");
     const ids = Object.keys(sheet.marks.ana);
     expect(ids).not.toContain("m1");
     expect(Object.values(sheet.marks.ana)[0]).toMatchObject({ c: 2, o: 0.8 });
     expect(Object.values(sheet.marks.ana)[0].w).toBeLessThanOrEqual(look.string.w * 3);
-    const card = doodlePatch(raw, view, { kind: "ring", seed: "s", at: { x: 600, y: 600 }, on: "n1" }, brush, look, "ana");
+    const card = doodlePatch(raw, view, { kind: "eye", seed: "s", at: { x: 600, y: 600 }, on: "n1" }, brush, look, "ana");
     expect(Object.values(card.scraps.n1.marks)[0]).toMatchObject({ by: "ana", c: 2 });
   });
 });
@@ -253,7 +253,7 @@ describe("Delete and Erase (Luke, 2026-10-06: never text or pictures)", () => {
     const { c } = live();
     c.selection.add("grip");
     c.pins.add("p1");
-    expect(c.removal()).toEqual({ scraps: [], pins: ["p1"], links: [], cards: ["grip"] });
+    expect(c.removal()).toEqual({ scraps: [], pins: ["p1"], links: [], cards: ["grip"], strokes: [] });
   });
 
   it("a card's tape comes off by itself, its picture and writing never", () => {
@@ -263,9 +263,11 @@ describe("Delete and Erase (Luke, 2026-10-06: never text or pictures)", () => {
     expect(tape).toBeTruthy();
     expect(c.dropPatch("grip", "clip")).toBeNull();
     expect(c.dropPatch("grip", "text")).toBeNull();
-    // (Erase on the tape)
-    const a = c.press("erase", { x: tape.x, y: tape.y });
-    expect(a).toEqual({ do: "patch", patch: { scraps: { grip: { drop: [tape.id] } } } });
+    // (the tape selected alone, then Delete: Erase is the brush's since 2026-10-24)
+    expect(c.press("erase", { x: tape.x, y: tape.y })).toBeNull();
+    c.part = { key: "grip", id: tape.id };
+    const a = { patch: c.pieceOut() };
+    expect(a.patch).toEqual({ scraps: { grip: { drop: [tape.id] } } });
     applyPatch(box.raw, a.patch);
     const after = scrapLayout(normalizeBoard(box.raw).scraps.grip, look, size, measure, look.library.grip);
     expect(after.tapes.some((t) => t.id === tape.id)).toBe(false);

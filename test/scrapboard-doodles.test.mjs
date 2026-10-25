@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { DOODLES, DOODLE_KINDS, DOODLE_SIZE, doodleStrokes, doodleBoard, seasonMarks, normalizeBoard, normalizeLook, boardView, cleanStroke, PIN_SCALE } from "../src/map/scrapboard/model.js";
+import { DOODLES, DOODLE_KINDS, DOODLE_TABS, doodleTabsFor, DOODLE_SIZE, doodleStrokes, doodleBoard, seasonMarks, normalizeBoard, normalizeLook, boardView, cleanStroke, PIN_SCALE } from "../src/map/scrapboard/model.js";
 import { BoardControls } from "../src/map/scrapboard/controls.js";
 import { mayRubOut } from "../src/map/scrapboard/controls.js";
 
@@ -38,17 +38,20 @@ describe("the doodles", () => {
     expect(seasoned).toBeGreaterThan(35);
     expect(seasoned).toBeLessThan(90);
     // (normalized with the card, the strokes keep their owner)
-    const raw = { scraps: { n: { type: "note", text: "x", x: 0, y: 0, marks: doodleStrokes("ring", "n", { by: "ana" }) } } };
+    const raw = { scraps: { n: { type: "note", text: "x", x: 0, y: 0, marks: doodleStrokes("eye", "n", { by: "ana" }) } } };
     expect(Object.values(normalizeBoard(raw).scraps.n.marks)[0].by).toBe("ana");
   });
 
-  it("a doodle laid on the sheet: hand-drawn (no straight segments), the brush's weight, where it was clicked", () => {
+  it("a doodle laid on the sheet: hand-drawn (no straight segments), in the brush's weight or finer, where it was clicked", () => {
     expect(DOODLE_KINDS.length).toBeGreaterThanOrEqual(24);
     for (const kind of DOODLE_KINDS) {
       const strokes = doodleBoard(kind, "s", { x: 1000, y: 800, size: 60, c: 2, w: 8, b: 2 });
       expect(strokes.length).toBeGreaterThan(0);
       for (const st of strokes) {
-        expect(st).toMatchObject({ c: 2, w: 9.6, b: 2 });
+        // (an engraver's outline, detail, and hatching: Luke 2026-10-25)
+        expect(st).toMatchObject({ c: 2, b: 2 });
+        expect(st.w).toBeLessThanOrEqual(9.6);
+        expect(st.w).toBeGreaterThanOrEqual(3.8);
         for (let k = 0; k < st.pts.length; k += 2) {
           expect(Math.abs(st.pts[k] - 1000)).toBeLessThan(80);
           expect(Math.abs(st.pts[k + 1] - 800)).toBeLessThan(80);
@@ -56,7 +59,7 @@ describe("the doodles", () => {
       }
     }
     // (a long line walked in short steps, wavering: no two-point lines)
-    const [u] = doodleBoard("underline", "s", { x: 0, y: 0, size: 60 });
+    const [u] = doodleBoard("signpost", "s", { x: 0, y: 0, size: 60 });
     expect(u.pts.length).toBeGreaterThan(30);
   });
 
@@ -70,7 +73,8 @@ describe("the doodles", () => {
     const ghost = c.marks({ pointer: { x: 10, y: 10 } }).doodle;
     expect(ghost).toMatchObject({ kind: "star", at: { x: 10, y: 10 } });
     const laid = c.press("mark", { x: 10, y: 10 });
-    expect(laid).toEqual({ do: "doodle", kind: "star", seed: ghost.seed, at: { x: 10, y: 10 }, on: null });
+    // (at the doodles window's size and turn: Luke 2026-10-25)
+    expect(laid).toEqual({ do: "doodle", kind: "star", seed: ghost.seed, at: { x: 10, y: 10 }, on: null, size: 50, rot: 0, flip: false });
     expect(c.marks({ pointer: { x: 10, y: 10 } }).doodle.seed).not.toBe(ghost.seed);
     expect(c.dragStart({ x: 10, y: 10 }, { tool: "mark" })).toBeNull();
     // (never on a right-click: Luke 2026-10-06)
@@ -78,7 +82,7 @@ describe("the doodles", () => {
   });
 
   it("every doodle fills the same box, and its line keeps its weight against it, small or large (Luke, 2026-10-06)", () => {
-    expect(DOODLE_KINDS.length).toBeGreaterThanOrEqual(50);
+    expect(DOODLE_KINDS.length).toBeGreaterThanOrEqual(30);
     for (const kind of DOODLE_KINDS) {
       for (const size of [20, DOODLE_SIZE, 150]) {
         const strokes = doodleBoard(kind, "s", { x: 0, y: 0, size, w: 8 });
@@ -88,11 +92,63 @@ describe("the doodles", () => {
         // (a hand's waver and overshoot aside, its widest way the size)
         expect(half / size).toBeGreaterThan(0.8);
         expect(half / size).toBeLessThan(1.25);
-        for (const st of strokes) expect(st.w / size).toBeCloseTo(Math.max(1.5, (8 * size) / DOODLE_SIZE) / size, 2);
+        // (its weights, outline to hatching, against the brush's at its size)
+        const ww = Math.max(1.5, (8 * size) / DOODLE_SIZE);
+        for (const st of strokes) {
+            expect(st.w).toBeLessThanOrEqual(ww * 0.8 + 0.06);
+            expect(st.w).toBeGreaterThanOrEqual(Math.max(1, ww * 0.4) - 0.06);
+        }
       }
     }
   });
 
+});
+
+describe("the doodle bank (Luke, 2026-10-25)", () => {
+  it("places and signs, each a doodle, none twice; a card seasoned only with signs", () => {
+    expect(DOODLE_TABS.places.length).toBe(42);
+    // (the crossed bones taken out in round six: Luke 2026-10-25)
+    expect(DOODLE_TABS.signs.length).toBe(23);
+    expect(DOODLE_KINDS).not.toContain("bones");
+    expect(DOODLES.bones).toBeUndefined();
+    expect(new Set(DOODLE_KINDS).size).toBe(DOODLE_KINDS.length);
+    for (const k of DOODLE_KINDS) expect(typeof DOODLES[k]).toBe("function");
+    for (const k of DOODLE_TABS.places) expect([DOODLES[k].steady, DOODLES[k].upright]).toEqual([0.45, true]);
+    for (let i = 0; i < 80; i++) {
+      const m = seasonMarks(`s${i}`, { by: "ana", type: "note" });
+      if (!Object.keys(m).length) continue;
+      // (a place's ground line is the widest of its strokes; a sign has none)
+      expect(Object.keys(m).length).toBeLessThan(40);
+    }
+  });
+});
+
+describe("doodles in few strokes (Luke, 2026-10-25, round eight)", () => {
+  it("the whole bank in about a thousand strokes, hatching kept, no specks", () => {
+    let total = 0, hatched = 0;
+    for (const kind of DOODLE_KINDS) {
+      const strokes = doodleBoard(kind, "s", { x: 0, y: 0, size: 50, w: 8 });
+      total += strokes.length;
+      // (the hatching's weight is the finest: 0.4 of the brush's)
+      if (strokes.some((st) => st.w <= 8 * 0.4 + 0.06)) hatched++;
+      for (const st of strokes) {
+        const xs = st.pts.filter((_, i) => i % 2 === 0), ys = st.pts.filter((_, i) => i % 2 === 1);
+        // (no speck: nothing under 5% of the doodle's half-width across)
+        expect(Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys))).toBeGreaterThan(50 * 0.05);
+      }
+    }
+    expect(total).toBeLessThan(1100);
+    expect(hatched).toBeGreaterThan(60);
+  });
+});
+
+describe("the GM's flourishes (Luke, 2026-10-25)", () => {
+  it("the GM sees places, signs, flourishes, and their own; a player only their own, none given yet", () => {
+    expect(doodleTabsFor(true)).toEqual(["places", "signs", "flourishes", "yours"]);
+    expect(DOODLE_TABS.flourishes).toHaveLength(5);
+    expect(DOODLE_TABS.given).toEqual([]);
+    expect(doodleTabsFor(false)).toEqual(["yours"]);
+  });
 });
 
 describe("pins alike (Luke, 2026-10-06)", () => {

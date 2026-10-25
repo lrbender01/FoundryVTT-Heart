@@ -11,11 +11,11 @@
 // a player's edits come back to them from the GM's client, and their undo goes
 // through it again (notes.js board.history). The GM's client also keeps
 // rolling copies of each board (backups.js).
-import { customKey, keysTaken, labelPatch, tidyBoard, newStringPatch, diffBoard, recordUpdate, updateRoots, binPatch, unbinPatch, takeOffPatch, pxPerInch, seasonMarks } from './model.js';
-import { loadBoardLook } from './look.js';
+import { unmarkPatch, binLetGo, customKey, keysTaken, labelPatch, tidyBoard, newStringPatch, diffBoard, recordUpdate, updateRoots, binPatch, unbinPatch, takeOffPatch, pxPerInch, seasonMarks, sheetLook, boardSheet, normalizeBoard, boardView, contentBounds, resizeSheet, resizedBoard, pageOf, reshapeSheet, bareSheet, isBareBoard } from './model.js';
+import { loadBoardLook, styleOf, DEFAULT_STYLE } from './look.js';
 import { relay, RelayTimeout } from '../../common/relay.js';
 import { keepBackup } from './backups.js';
-import { boardFromText, boardFileName, renamedCards, renamedBinned } from './boardfile.js';
+import { boardFromText, boardFileName, renamedCards, renamedBinned, downloadDue, worldCopyName } from './boardfile.js';
 
 export const BOARD_FLAG = 'board';
 const PATH = `flags.heart.${BOARD_FLAG}`;
@@ -88,18 +88,31 @@ async function step(scene, dir) {
     const side = dir === 'undo' ? 'before' : 'after';
     let ok = false;
     if (game.user.isGM) {
-        await oneWrite(scene, async () => {
-            const data = recordUpdate(boardOf(scene), rec, side, PATH);
-            if (Object.keys(data).length) await scene.update(data, { heartBoard: true });
-        });
-        ok = true;
-        keepBackup(scene, boardOf(scene));
+        try {
+            await oneWrite(scene, async () => {
+                const data = recordUpdate(boardOf(scene), rec, side, PATH);
+                if (Object.keys(data).length) await scene.update(data, { heartBoard: true });
+            });
+            ok = true;
+            keepBackup(scene, boardOf(scene));
+        } catch (err) {
+            console.error(`heart | the board's ${dir} failed`, err);
+            ui.notifications.warn(game.i18n.localize('heart.board.undo-failed'));
+            ok = null;
+        }
     } else ok = await askHistory(scene, rec, side);
     // (records the GM's client no longer knows: every one kept here is from
     // before its reload, so they all go, said once; Luke, 2026-10-21)
     if (ok === 'forgotten') {
         st.undo = [];
         st.redo = [];
+        return false;
+    }
+    // (the write failed, or the GM's client didn't answer: the record is kept
+    // to try again, never lost from both lists; Luke 2026-10-25, the health
+    // audit)
+    if (ok === null) {
+        st[dir].push(rec);
         return false;
     }
     // (refused, it is let go: it can't be done)
@@ -110,7 +123,8 @@ async function step(scene, dir) {
 // A player's undo or redo through the GM's client (notes.js board.history):
 // true when done, 'forgotten' when the GM's client no longer knows the record
 // (it reloaded since: Luke, 2026-10-21, "Undo doesn't need to survive
-// reloading"; said as a note, not a refusal), else false (said as askGM says)
+// reloading"; said as a note, not a refusal), null when it never got there
+// (no answer, or a failure), else false (said as askGM says)
 const HISTORY_SAYS = { 'not-allowed': 'heart.relay.not-allowed', missing: 'heart.relay.missing', 'needs-gm': 'heart.relay.needs-gm' };
 async function askHistory(scene, rec, side) {
     let res;
@@ -119,7 +133,7 @@ async function askHistory(scene, rec, side) {
     } catch (err) {
         console.error('heart | board.history failed', err);
         ui.notifications.warn(game.i18n.localize(err instanceof RelayTimeout ? 'heart.relay.no-answer' : 'heart.relay.failed'));
-        return false;
+        return null;
     }
     if (res?.status === 'done') return true;
     if (res?.status === 'forgotten') {
@@ -161,6 +175,17 @@ export async function setScrap(scene, key, patch, opts = {}) {
 
 // An edit from the shared controls (controls.js patch: scraps' fields, one
 // string's fields, the board's pins set or taken out), written at once
+// (a stroke written whole is merged into the one stored, so a key it no
+// longer has would stay: a lock let go, or public taken back, is written
+// false, never left out. Luke, 2026-10-25: strokes could be locked but never
+// unlocked)
+export const strokeOver = (had, st) => {
+    if (!had || !st) return st;
+    const out = { ...st };
+    for (const k of ['locked', 'open']) if (had[k] && !st[k]) out[k] = false;
+    return out;
+};
+
 export function patchData(scene, patch) {
     const board = boardOf(scene);
     const data = {};
@@ -179,7 +204,7 @@ export function patchData(scene, patch) {
             if (k === 'marks' && v && typeof v === 'object') {
                 for (const [id, st] of Object.entries(v)) {
                     if (st === null) data[`${PATH}.scraps.${key}.marks.-=${id}`] = null;
-                    else data[`${PATH}.scraps.${key}.marks.${id}`] = st;
+                    else data[`${PATH}.scraps.${key}.marks.${id}`] = strokeOver(board.scraps[key].marks?.[id], st);
                 }
                 continue;
             }
@@ -189,7 +214,7 @@ export function patchData(scene, patch) {
     for (const [layer, strokes] of Object.entries(patch?.marks ?? {})) {
         for (const [id, st] of Object.entries(strokes ?? {})) {
             if (st === null) { if (board.marks?.[layer]?.[id]) data[`${PATH}.marks.${layer}.-=${id}`] = null; }
-            else data[`${PATH}.marks.${layer}.${id}`] = st;
+            else data[`${PATH}.marks.${layer}.${id}`] = strokeOver(board.marks?.[layer]?.[id], st);
         }
     }
     if (patch?.link && board.links?.[patch.link[0]]) {
@@ -247,16 +272,9 @@ export async function addMark(scene, layer, stroke, opts = {}) {
 }
 export async function removeMarks(scene, list, opts = {}) {
     if (!gmOnly() || !scene) return;
-    const marks = boardOf(scene).marks ?? {};
-    const data = {};
-    const scraps = boardOf(scene).scraps ?? {};
-    for (const [layer, id] of list ?? []) {
-        if (String(layer).startsWith('@')) {
-            const key = String(layer).slice(1);
-            if (scraps[key]?.marks?.[id]) data[`${PATH}.scraps.${key}.marks.-=${id}`] = null;
-        } else if (marks[layer]?.[id]) data[`${PATH}.marks.${layer}.-=${id}`] = null;
-    }
-    if (Object.keys(data).length) return update(scene, data, opts);
+    // (model.js unmarkPatch: the editor's own copy too)
+    const patch = unmarkPatch(boardOf(scene), list);
+    if (patch) return applyBoardPatch(scene, patch, opts);
 }
 // Every brush stroke on the board, the sheet's and the cards' (Luke,
 // 2026-10-06: Reset all brushes, the GM's), as one edit Undo takes back
@@ -280,8 +298,9 @@ export async function addScrap(scene, data) {
     if (!gmOnly() || !scene) return null;
     const scraps = boardOf(scene).scraps ?? {};
     const key = data.lib && !scraps[data.lib] ? data.lib : customKey(data.type === 'note' ? 'n' : data.type === 'scrawl' ? 'w' : 'c', keysTaken(boardOf(scene)));
-    // (a card may come with a doodle of its owner's: Luke 2026-10-06)
-    const doodle = data.type === 'scrawl' || data.tag || data.marks ? {} : seasonMarks(`${scene.id}:${key}`, { by: data.author ?? game.user.id, type: data.type ?? 'landmark' });
+    // (a card may come with a doodle of its owner's: Luke 2026-10-06; a
+    // place only, never a note, Luke 2026-10-24)
+    const doodle = data.type === 'scrawl' || data.type === 'note' || data.tag || data.marks ? {} : seasonMarks(`${scene.id}:${key}`, { by: data.author ?? game.user.id, type: data.type ?? 'landmark' });
     await update(scene, { [`${PATH}.scraps.${key}`]: { state: 'known', ...data, ...(Object.keys(doodle).length ? { marks: doodle } : {}), x: Math.round(data.x), y: Math.round(data.y) } });
     return key;
 }
@@ -349,7 +368,15 @@ export async function binCards(scene, keys, opts = {}) {
     const patch = binPatch(boardOf(scene), keys, { at: Date.now(), by: opts.by ?? game.user.id });
     if (!patch) return;
     const data = patchData(scene, patch);
+    binFull(patch);
     if (Object.keys(data).length) return update(scene, data, { ...opts, force: true });
+}
+
+// the GM told when a full bin let its oldest cards go (Luke, 2026-10-25, the
+// map safety fixes): the copy of the board kept before (force) still has them
+function binFull(patch) {
+    const n = binLetGo(patch);
+    if (n) ui.notifications?.warn(game.i18n.format('heart.board.bin-full', { n }));
 }
 
 // A card out of the bin, back where it was (model.js unbinPatch)
@@ -375,31 +402,49 @@ export async function removeMany(scene, what = {}, opts = {}) {
     const patch = takeOffPatch(boardOf(scene), what, { at: Date.now(), by: opts.by ?? game.user.id });
     if (!patch) return;
     const data = patchData(scene, patch);
+    binFull(patch);
     if (Object.keys(data).length) return update(scene, data, { ...opts, force: opts.force || Object.keys(patch.scraps).length > 0 });
 }
 
-// What the model needs to lay a board out here: the look, a texture's size,
-// and a text measure
+// What the model needs to lay a board out here: the look (a scene's style,
+// or a style by its id; default the scene viewed), a texture's size, and a
+// text measure
 let measurer = null;
-async function layoutTools() {
-    const { look, textures, ok } = await loadBoardLook();
+async function loadHands(look) {
+    const fonts = globalThis.document?.fonts;
+    if (!fonts) return;
+    let used = [];
+    try {
+        used = Object.values(game.settings.get('heart', 'boardHands') ?? {});
+    } catch {
+        // (no hands claimed yet)
+    }
+    const faces = [...new Set([...(look.fonts?.hands ?? []), look.fonts?.display, ...used].filter(Boolean))];
+    await Promise.all(faces.map((f) => fonts.load(`40px "${f}"`).catch(() => null)));
+}
+export async function layoutTools(src = globalThis.canvas?.scene) {
+    const { look, textures, ok } = await loadBoardLook(src);
+    // (the hands loaded first: a fit made with the fallback face is kept;
+    // Luke 2026-10-25)
+    await loadHands(look);
     const size = (id) => { const t = textures[id]; return t ? { w: t.w, h: t.h, safe: t.safe, cover: t.cover } : null; };
-    measurer ??= document.createElement('canvas').getContext('2d');
     const measure = (text, px, font) => {
+        // (made when first wanted: a board with nothing to measure needs no page)
+        measurer ??= document.createElement('canvas').getContext('2d');
         measurer.font = `${px}px "${font}"`;
         return measurer.measureText(text).width;
     };
-    return { look, size, measure, ok };
+    return { look, size, measure, ok, textures };
 }
 
 // A name for a string: a pin in it, a name tag (a note), and a thread
 // between them, ordinary pieces from then on (model.js labelPatch)
 export async function labelString(scene, id, text, opts = {}) {
     if (!gmOnly() || !scene || !text) return;
-    const { look, size, measure } = await layoutTools();
-    // (a player's own string's name: theirs, `author`)
-    const { author = null, ...o } = opts;
-    const patch = labelPatch(boardOf(scene), id, text, look, size, measure, { author });
+    const { look, size, measure } = await layoutTools(scene);
+    // (a player's own string's name: theirs, `author`; a public one's public)
+    const { author = null, open = false, ...o } = opts;
+    const patch = labelPatch(boardOf(scene), id, text, look, size, measure, { author, open });
     if (patch) return applyBoardPatch(scene, patch, o);
 }
 
@@ -408,27 +453,121 @@ export async function labelString(scene, id, text, opts = {}) {
 // them): the GM's client, when the world loads and when the scene is viewed
 export async function tidyBoardScene(scene) {
     if (!game.user.isGM || !isBoardScene(scene)) return;
-    const { look, size, measure, ok } = await layoutTools();
+    const { look, size, measure, ok } = await layoutTools(scene);
     // (never on the default look: without the content module's look the tidy
     // would resize the scene and re-lay pins by the wrong cards; Luke
     // 2026-10-23, the board safety audit)
     if (!ok) return;
-    const { board, changed } = tidyBoard(boardOf(scene), look, size, measure);
+    const { board, changed } = tidyBoard(boardOf(scene), sheetLook(look, boardOf(scene)), size, measure);
     if (changed) await replaceBoard(scene, board, { record: false });
-    // (once: an older board scene's tokens brought down to the board's size)
-    // (the scene the look's size: a new sheet, 4 papers by 5 since 2026-10-03)
-    if (scene.width !== look.w || scene.height !== look.h) await scene.update({ width: look.w, height: look.h });
-    if ((scene.flags?.heart?.boardGrid ?? 0) < BOARD_GRID_EDITION) {
+    // (the scene the board's sheet's size: the look's, or its own since
+    // 2026-10-24)
+    await syncBoardScene(scene);
+    // (a board on its scene's own background keeps the scene's grid)
+    if ((scene.flags?.heart?.boardGrid ?? 0) < BOARD_GRID_EDITION && !isBareBoard(boardOf(scene))) {
         await scene.update({ ...gridOf(look), 'flags.heart.boardGrid': BOARD_GRID_EDITION });
     }
 }
 
+// The scene the size of its board's sheet (Luke, 2026-10-24: a map grows
+// and shrinks a page at a time), the active GM's: after a resize, and after
+// an undo, a redo, an import, or a restore that changes the sheet. Pages come
+// or go on its left or top: the tokens, tiles, drawings, notes, lights,
+// sounds, templates, and walls move with the board, as they lay on it. The
+// sheet last matched is kept on the scene (flags.heart.boardSheetAt).
+export async function syncBoardScene(scene) {
+    if (!game.user.isGM || !isBoardScene(scene)) return;
+    if (game.users.activeGM && game.users.activeGM.id !== game.user.id) return;
+    const { look, ok } = await loadBoardLook(scene);
+    if (!ok || !look.page) return;
+    const raw = boardOf(scene);
+    // (a board on its scene's own background: the scene's size is its own)
+    if (isBareBoard(raw)) return;
+    const S = boardSheet(look, raw);
+    const L = sheetLook(look, raw);
+    const P = pageOf(look, raw);
+    const was = scene.flags?.heart?.boardSheetAt ?? { left: 0, top: 0 };
+    const dx = Math.round((S.left - (Number(was.left) || 0)) * P.w);
+    const dy = Math.round((S.top - (Number(was.top) || 0)) * P.h);
+    const same = scene.width === L.w && scene.height === L.h && !dx && !dy && scene.flags?.heart?.boardSheetAt;
+    if (same) return;
+    const d0 = scene.dimensions;
+    await scene.update({ width: L.w, height: L.h, 'flags.heart.boardSheetAt': { left: S.left, top: S.top } }, { heartBoard: true });
+    const d1 = scene.dimensions;
+    const mx = Math.round((d1?.sceneX ?? 0) - (d0?.sceneX ?? 0) + dx);
+    const my = Math.round((d1?.sceneY ?? 0) - (d0?.sceneY ?? 0) + dy);
+    if (mx || my) await shiftPlaceables(scene, mx, my);
+}
+
+// Everything Foundry has on a scene moved by (dx, dy) canvas px
+async function shiftPlaceables(scene, dx, dy) {
+    const at = (d) => ({ _id: d.id, x: d.x + dx, y: d.y + dy });
+    for (const [coll, type] of [['tokens', 'Token'], ['tiles', 'Tile'], ['drawings', 'Drawing'], ['notes', 'Note'], ['lights', 'AmbientLight'], ['sounds', 'AmbientSound'], ['templates', 'MeasuredTemplate']]) {
+        const list = scene[coll];
+        if (list?.size) await scene.updateEmbeddedDocuments(type, list.map(at), { animate: false });
+    }
+    if (scene.walls?.size) await scene.updateEmbeddedDocuments('Wall', scene.walls.map((w) => ({ _id: w.id, c: [w.c[0] + dx, w.c[1] + dy, w.c[2] + dx, w.c[3] + dy] })));
+}
+
+// How far a board's sheet may come in on each side, in whole pages, before
+// it would cut through something placed on it (Luke, 2026-10-24: never
+// smaller than anything placed): { left, right, top, bottom, cols, rows }
+export async function sheetRoom(scene) {
+    const { look, size, measure } = await layoutTools(scene);
+    const raw = boardOf(scene);
+    const S = boardSheet(look, raw);
+    if (S.bare) return { bare: true, left: 0, right: 0, top: 0, bottom: 0, cols: 1, rows: 1 };
+    const L = sheetLook(look, raw);
+    const B = contentBounds(boardView(L, normalizeBoard(raw), 'gm', size, measure), size);
+    const P = pageOf(look, raw);
+    if (!B) return { left: S.cols - 1, right: S.cols - 1, top: S.rows - 1, bottom: S.rows - 1, cols: S.cols, rows: S.rows, empty: true };
+    return {
+        left: Math.max(0, Math.floor(B.x0 / P.w)), right: Math.max(0, Math.floor((L.w - B.x1) / P.w)),
+        top: Math.max(0, Math.floor(B.y0 / P.h)), bottom: Math.max(0, Math.floor((L.h - B.y1) / P.h)),
+        cols: S.cols, rows: S.rows,
+    };
+}
+
+// A board's sheet grown or cut by pages on each side ({ left, right, top,
+// bottom }: more to add, fewer to take away), as one edit Undo takes back;
+// never past what is placed on it (model.js resizeSheet). Returns the result
+// ({ sheet } or { refused: side }).
+export async function resizeBoardSheet(scene, by = {}) {
+    if (!gmOnly() || !scene) return null;
+    const { look, size, measure, ok } = await layoutTools(scene);
+    if (!ok) {
+        ui.notifications.warn(game.i18n.localize('heart.board.no-look'));
+        return null;
+    }
+    const raw = boardOf(scene);
+    const L = sheetLook(look, raw);
+    const bounds = contentBounds(boardView(L, normalizeBoard(raw), 'gm', size, measure), size);
+    const r = resizeSheet(look, raw, by, bounds);
+    if (!r.sheet) return r;
+    const next = resizedBoard(look, raw, by, bounds);
+    await replaceBoard(scene, next);
+    await syncBoardScene(scene);
+    return r;
+}
+
+// A board brought up to date before it is put in (an import, an earlier
+// board, the backup: Luke, 2026-10-24, an older board's notes fitted as it
+// comes in, not at the next load); as it is without the content module's look
+// (against the look of the scene it goes into, and its own sheet, never the
+// scene viewed: Luke 2026-10-25, the health audit)
+export async function tidiedBoard(board, scene) {
+    const { look, size, measure, ok } = await layoutTools(scene);
+    if (!ok) return board;
+    return tidyBoard(board, sheetLook(look, board), size, measure).board;
+}
+
 // A new string between two ends (a pin each: one there, or one made where it
 // was asked for), returning its id
-export async function addString(scene, act, kind, { color = null, state = 'known' } = {}, opts = {}) {
+// (`pin`: its ends' pin, the String window's pick; Luke 2026-10-25)
+export async function addString(scene, act, kind, { color = null, state = 'known', pin = null, plainPins = false } = {}, opts = {}) {
     if (!gmOnly() || !scene) return null;
-    const { look } = await layoutTools();
-    const { id, patch } = newStringPatch(boardOf(scene), act, kind, look, { color, state });
+    const { look } = await layoutTools(scene);
+    const { id, patch } = newStringPatch(boardOf(scene), act, kind, look, { color, state, pin, plainPins });
     await applyBoardPatch(scene, patch, opts);
     return id;
 }
@@ -446,10 +585,13 @@ export async function removeLink(scene, id, opts = {}) {
 // tidy mark were being dropped by export and replace, so every load tidied
 // the pins again)
 const BOARD_PARTS = ['scraps', 'links', 'pins', 'marks', 'bits', 'decor'];
+// (and the parts a board has only once it needs them)
+const ALL_PARTS = [...BOARD_PARTS, 'bin', 'pinsEd', 'notesEd', 'sheet'];
+// (and its own sheet, once it has one: Luke 2026-10-24)
 function boardParts(b) {
     return {
         scraps: b.scraps ?? {}, links: b.links ?? {}, pins: b.pins ?? {}, marks: b.marks ?? {}, bits: b.bits ?? {}, decor: b.decor ?? [],
-        ...(b.bin ? { bin: b.bin } : {}), ...(b.pinsEd ? { pinsEd: b.pinsEd } : {}),
+        ...(b.bin ? { bin: b.bin } : {}), ...(b.pinsEd ? { pinsEd: b.pinsEd } : {}), ...(b.notesEd ? { notesEd: b.notesEd } : {}), ...(b.sheet ? { sheet: b.sheet } : {}),
     };
 }
 
@@ -459,21 +601,28 @@ export function exportBoard(scene) {
     return JSON.stringify(boardParts(b), null, 1);
 }
 
+// The scene update that makes the board at `prefix` (`from`, as it is now)
+// the board `to`, part by part: what changed set, what is gone taken away,
+// nothing merged into what was there (Foundry v12 has no key that replaces
+// an object whole). One write, never an empty board between two (Luke,
+// 2026-10-25, the health audit).
+function replacing(from, to, prefix) {
+    const whole = (k) => ({ path: [k], ...(from?.[k] === undefined ? {} : { b: from[k] }), ...(to?.[k] === undefined ? {} : { a: to[k] }) });
+    return recordUpdate(from ?? {}, { ops: ALL_PARTS.map(whole) }, 'after', prefix);
+}
+
 // Replace the whole board (an import, an earlier board, or the backup
 // restored): one edit of the GM's, undone like any other
 export function replaceBoard(scene, board, { record = true, backup = false } = {}) {
-    // (a copy: the backup restored is the scene's own data, which the first
-    // update below writes over; Luke, 2026-10-21)
+    // (a copy: the backup restored is the scene's own data, which the update
+    // below writes over; Luke, 2026-10-21)
     const clean = foundry.utils.deepClone(boardParts(board));
     return oneWrite(scene, async () => {
         const before = foundry.utils.deepClone(boardOf(scene));
         await keepBackup(scene, before, { force: true, why: 'replaced' });
-        // (a nested object update merges; the board is cleared first so it is replaced)
-        // (the backup too: written over, it merged with the one before it)
-        const data = Object.fromEntries([...BOARD_PARTS, 'bin', 'pinsEd'].map((k) => [`${PATH}.-=${k}`, null]));
-        if (backup) data['flags.heart.-=boardBackup'] = null;
-        await scene.update(data, { heartBoard: true });
-        const out = await scene.update({ [PATH]: clean, ...(backup ? { [BACKUP_PATH]: before } : {}) }, { heartBoard: true });
+        // (the backup too, written over whole: never merged with the one before it)
+        const data = { ...replacing(before, clean, PATH), ...(backup ? replacing(scene.flags?.heart?.boardBackup, boardParts(before), BACKUP_PATH) : {}) };
+        const out = Object.keys(data).length ? await scene.update(data, { heartBoard: true }) : scene;
         if (record) pushEdit(scene, diffBoard(before, boardOf(scene)));
         return out;
     });
@@ -491,7 +640,8 @@ export async function importBoard(scene, text) {
         ui.notifications.error(game.i18n.localize('heart.board.import-bad'));
         return false;
     }
-    await replaceBoard(scene, read.board, { backup: true });
+    // (an older board's notes fitted as it comes in: Luke 2026-10-24)
+    await replaceBoard(scene, await tidiedBoard(read.board, scene), { backup: true });
     ui.notifications.info(game.i18n.format('heart.board.imported', { scraps: read.scraps, links: read.links }));
     return true;
 }
@@ -501,6 +651,48 @@ export async function importBoard(scene, text) {
 export function downloadBoard(scene) {
     if (!gmOnly() || !scene) return;
     saveDataToFile(exportBoard(scene), 'application/json', boardFileName(scene.name, new Date(), game.i18n.localize('heart.board.snapshot-file')));
+    // (when, for the reminder: this computer's)
+    try {
+        localStorage.setItem(DOWNLOADED, JSON.stringify({ ...downloads(), [scene.id]: Date.now() }));
+    } catch {
+        // (a private window: no reminder kept)
+    }
+}
+
+// The map safety fixes (Luke, 2026-10-25). When this computer last
+// downloaded each board ({ sceneId: time }), and the GM reminded, at the
+// session's first view of a board with cards on it, when that was over
+// DOWNLOAD_DAYS ago or never
+const DOWNLOADED = 'heartBoard.downloaded';
+const downloads = () => {
+    try {
+        return JSON.parse(localStorage.getItem(DOWNLOADED) ?? '{}') ?? {};
+    } catch {
+        return {};
+    }
+};
+export function remindDownload(scene) {
+    if (!gmOnly() || !scene || !Object.keys(boardOf(scene).scraps ?? {}).length) return;
+    const last = downloads()[scene.id];
+    if (!downloadDue(last)) return;
+    const days = Math.floor((Date.now() - Number(last)) / 864e5);
+    ui.notifications.info(game.i18n.format(last ? 'heart.board.download-remind' : 'heart.board.download-never', { scene: scene.name, days }));
+}
+
+// A dated copy of a board in the world's own folder (worlds/<world>/
+// heart-boards/), one a day for each board, kept outside any browser: the
+// board's file as Download writes it, so Import loads it back. True once
+// written.
+export async function keepWorldCopy(scene) {
+    if (!gmOnly() || !scene || !isBoardScene(scene)) return false;
+    const dir = `worlds/${game.world.id}/heart-boards`;
+    try {
+        await FilePicker.createDirectory('data', dir);
+    } catch {
+        // (there already)
+    }
+    const file = new File([exportBoard(scene)], worldCopyName(scene.name, scene.id), { type: 'application/json' });
+    return Boolean(await FilePicker.upload('data', dir, file, {}, { notify: false }));
 }
 
 export const hasBackup = (scene) => Boolean(scene?.flags?.heart?.boardBackup);
@@ -508,7 +700,7 @@ export const hasBackup = (scene) => Boolean(scene?.flags?.heart?.boardBackup);
 // Swap the board and its backup (so a restore can itself be undone)
 export async function restoreBackup(scene) {
     if (!gmOnly() || !scene || !hasBackup(scene)) return;
-    return replaceBoard(scene, scene.flags.heart.boardBackup, { backup: true });
+    return replaceBoard(scene, await tidiedBoard(foundry.utils.deepClone(scene.flags.heart.boardBackup), scene), { backup: true });
 }
 
 /* -------------------------------------------- */
@@ -528,9 +720,10 @@ const gridOf = (look) => ({ 'grid.size': BOARD_GRID, 'grid.distance': Math.round
 // Make a scrapboard scene, sized to the look, and view it. Gridless; tokens
 // see everything (the map is a picture, not a dungeon).
 // owners: a players' board's ('all', or user ids), whose players may view it
-export async function createBoardScene({ name, owners = null } = {}) {
+// style: its board style (look.js boardStyles; Luke 2026-10-25)
+export async function createBoardScene({ name, owners = null, style = DEFAULT_STYLE } = {}) {
     if (!gmOnly()) return null;
-    const { look, ok } = await loadBoardLook();
+    const { look, ok } = await loadBoardLook(style);
     if (!ok) ui.notifications.warn(game.i18n.localize('heart.board.no-look'));
     const scene = await Scene.create({
         name: name ?? game.i18n.localize('heart.board.scene-name'),
@@ -542,7 +735,7 @@ export async function createBoardScene({ name, owners = null } = {}) {
         tokenVision: false,
         fog: { exploration: false },
         navigation: true,
-        flags: { heart: { [BOARD_FLAG]: { scraps: {}, links: {}, pins: {}, marks: {}, decor: [] }, boardGrid: BOARD_GRID_EDITION, ...(owners ? { boardOwners: owners } : {}) } },
+        flags: { heart: { [BOARD_FLAG]: { scraps: {}, links: {}, pins: {}, marks: {}, decor: [] }, boardStyle: style, boardGrid: BOARD_GRID_EDITION, ...(owners ? { boardOwners: owners } : {}) } },
         ...(owners ? { ownership: owners === 'all' ? { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER } : Object.fromEntries(owners.map((id) => [id, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER])) } : {}),
     });
     await scene?.view();
@@ -550,9 +743,71 @@ export async function createBoardScene({ name, owners = null } = {}) {
 }
 
 // Turn an existing scene into a scrapboard scene (or back), sized to the look
-export async function setBoardScene(scene, on = true) {
+// (Luke, 2026-10-25) in a style; `bare`: on the scene's own background, its
+// size and grid kept (any scene a board); cols, rows, pw, ph: its sheet's
+// pages (model.js reshapeSheet)
+export async function setBoardScene(scene, on = true, { style = null, bare = false, cols, rows, pw, ph } = {}) {
     if (!gmOnly() || !scene) return;
-    if (!on) return scene.update({ 'flags.heart.-=board': null });
-    const { look } = await loadBoardLook();
-    return scene.update({ width: look.w, height: look.h, ...gridOf(look), 'flags.heart.boardGrid': BOARD_GRID_EDITION, [PATH]: isBoardScene(scene) ? boardOf(scene) : { scraps: {}, links: {}, decor: [] } });
+    // (and what went with it, its owners, backup, sheet, grid, and style, so
+    // made a board again it starts clean: Luke 2026-10-25, the health audit)
+    if (!on) return scene.update(Object.fromEntries(['board', 'boardOwners', 'boardBackup', 'boardSheetAt', 'boardGrid', 'boardStyle'].map((k) => [`flags.heart.-=${k}`, null])));
+    const st = style ?? styleOf(scene);
+    const { look: base } = await loadBoardLook(st);
+    const had = isBoardScene(scene) ? boardOf(scene) : { scraps: {}, links: {}, decor: [] };
+    if (bare) return scene.update({ 'flags.heart.boardStyle': st, 'flags.heart.-=boardSheetAt': null, [PATH]: { ...had, sheet: bareSheet(scene.width, scene.height) } });
+    const sized = [cols, rows, pw, ph].some((v) => v !== undefined && v !== null && v !== '');
+    // (a board's own sheet, when it has one: Luke 2026-10-24)
+    const sheet = sized ? reshapeSheet(base, null, { cols, rows, pw, ph }).sheet : null;
+    const board = sheet ? { ...had, sheet } : had;
+    const look = sheetLook(base, board);
+    return scene.update({ width: look.w, height: look.h, ...gridOf(look), 'flags.heart.boardStyle': st, 'flags.heart.boardGrid': BOARD_GRID_EDITION, [PATH]: board });
+}
+
+// A scene's board as its settings' Board tab leaves it (Luke, 2026-10-25):
+// { board, style, bare, cols, rows, pw, ph }. Made a board, or no longer one
+// (the tab asks first); its style; on its scene's own background, or a
+// sheet of cols x rows pages of pw x ph (0: the style's page). One edit Undo
+// takes back; never smaller than what is placed on it. Returns { done },
+// or { refused: side, w, h } (the size it would need).
+export async function configureBoard(scene, want = {}) {
+    if (!gmOnly() || !scene) return null;
+    const style = String(want.style || styleOf(scene));
+    if (!want.board) return isBoardScene(scene) ? setBoardScene(scene, false).then(() => ({ done: true })) : null;
+    if (!isBoardScene(scene)) {
+        await setBoardScene(scene, true, { style, bare: Boolean(want.bare), cols: want.cols, rows: want.rows, pw: want.pw, ph: want.ph });
+        return { done: true };
+    }
+    if (style !== styleOf(scene)) await scene.update({ 'flags.heart.boardStyle': style });
+    const { look, size, measure, ok } = await layoutTools(style);
+    if (!ok) {
+        ui.notifications.warn(game.i18n.localize('heart.board.no-look'));
+        return null;
+    }
+    const raw = boardOf(scene);
+    const wasBare = isBareBoard(raw);
+    if (want.bare) {
+        if (wasBare) return { done: true };
+        await scene.update({ 'flags.heart.-=boardSheetAt': null });
+        await replaceBoard(scene, { ...raw, sheet: bareSheet(scene.width, scene.height) });
+        return { done: true };
+    }
+    const bounds = contentBounds(boardView(sheetLook(look, raw), normalizeBoard(raw), 'gm', size, measure), size);
+    const r = reshapeSheet(look, raw, want, bounds);
+    if (!r.sheet) return r;
+    if (!wasBare && JSON.stringify(r.sheet) === JSON.stringify(boardSheet(look, raw))) return { done: true };
+    await replaceBoard(scene, { ...raw, sheet: r.sheet });
+    // (off the scene's own background: the board's grid)
+    if (wasBare) await scene.update({ ...gridOf(look), 'flags.heart.boardGrid': BOARD_GRID_EDITION });
+    await syncBoardScene(scene);
+    return { done: true };
+}
+
+// A board on its scene's own background follows the scene's size (the
+// scene's Grid tab; the active GM's)
+export async function followSceneSize(scene) {
+    if (!game.user.isGM || !isBoardScene(scene)) return;
+    if (game.users.activeGM && game.users.activeGM.id !== game.user.id) return;
+    const S = boardOf(scene).sheet;
+    if (!isBareBoard(boardOf(scene)) || (S.w === scene.width && S.h === scene.height)) return;
+    return scene.update({ [`${PATH}.sheet`]: bareSheet(scene.width, scene.height) }, { heartBoard: true });
 }

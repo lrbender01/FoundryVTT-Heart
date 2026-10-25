@@ -4,7 +4,8 @@
 // last button turns it). The tools are the same ones Foundry's buttons have
 // (layer.js boardTools); a rarely used few (a picture, export, import, the
 // backup, the look reloaded) are under one File button.
-import { boardTools } from './layer.js';
+import { boardTools } from './tools.js';
+import { respotToolWindows } from './windows.js';
 import { isBoardScene } from './api.js';
 
 const loc = (key) => game.i18n.localize(key);
@@ -12,7 +13,10 @@ const esc = (s) => Handlebars.escapeExpression(String(s ?? ''));
 
 // (the few under File)
 // (Luke, 2026-10-21: New place and Reshuffle first, Download beside Export)
-const FILE = ['place', 'reshuffle', 'snapshot', 'bin', 'history', 'download', 'export', 'import', 'restore', 'reload'];
+// (and the picture and the players' strings, everyone's: Luke 2026-10-24)
+// (and the GM's switch for showing their doing live: Luke 2026-10-25)
+// (and everyone's statistics and quality: Luke 2026-10-25)
+const FILE = ['snapshot', 'stats', 'quality', 'place', 'reshuffle', 'sheet', 'live', 'bin', 'history', 'download', 'export', 'import', 'restore', 'reload'];
 // Foundry's own icons (Luke, 2026-10-03: Foundry's icons and spacing, the
 // glass kept): a tool's or button's own, and the rail's few
 const FA = { file: 'fa-solid fa-folder-open', turn: 'fa-solid fa-arrows-rotate' };
@@ -29,6 +33,7 @@ export function registerRailSettings() {
         onChange: () => {
             ui.controls?.render(true);
             syncRail();
+            setTimeout(respotToolWindows, 50);
         },
     });
     game.settings.register('heart', 'boardToolbarDir', { scope: 'client', config: false, type: String, default: 'vertical' });
@@ -44,6 +49,12 @@ export function railOn() {
 
 let menuOpen = false;
 
+// Whether a click on `tool` puts it down for Look (Luke, 2026-10-25: the tool
+// in hand clicked again; Look, the board's resting state, stays)
+export function againToLook(tool) {
+    return Boolean(tool) && tool !== 'inspect' && ui.controls?.activeControl === 'heartBoard' && game.activeTool === tool && boardTools().tools.some((t) => t.name === 'inspect');
+}
+
 // The rail as things stand: shown on a board scene (with the setting on),
 // its tool lit while the Heart Map's tools are in hand
 export function syncRail() {
@@ -56,6 +67,9 @@ export function syncRail() {
         return;
     }
     if (!el) {
+        // (a new rail, its File menu shut: Luke 2026-10-25, it reopened
+        // already open on the next board)
+        menuOpen = false;
         el = document.createElement('nav');
         el.id = 'heart-board-rail';
         el.addEventListener('click', onClick);
@@ -84,18 +98,49 @@ export function syncRail() {
     const lit = ui.controls?.activeControl === 'heartBoard' ? game.activeTool : null;
     const icon = (cls) => `<i class="${cls}" aria-hidden="true"></i>`;
     const button = (attr, cls, title, on = false) => `<button type="button" ${attr} class="${on ? 'on' : ''}" data-tooltip="${esc(title)}" aria-label="${esc(title)}">${icon(cls)}</button>`;
-    let html = T.tools.map((t) => button(`data-tool="${t.name}"`, t.icon, t.title, t.name === lit)).join('');
-    const extra = new Map(T.buttons.map((b) => [b.name, b]));
-    // (no lines between the groups: every button the same step apart, as
-    // Foundry's column is; Luke 2026-10-06)
-    const now = [extra.get('preview'), extra.get('undo'), extra.get('redo'), extra.get('theirs')].filter(Boolean);
-    if (now.length) html += `${now.map((b) => button(`data-button="${b.name}"`, b.icon, b.title, b.toggle && b.active)).join('')}`;
-    const file = FILE.map((n) => extra.get(n)).filter(Boolean);
-    if (file.length) {
-        html += `<span class="file">${button('data-file', FA.file, loc('heart.board.tool.file'), menuOpen)}${menuOpen ? `<span class="menu">${file.map((b) => `<button type="button" data-button="${b.name}">${icon(b.icon)}<span>${esc(b.title)}</span></button>`).join('')}</span>` : ''}</span>`;
+    // (in the one order boardTools gives, Luke 2026-10-24: File where its
+    // first item falls; no lines between the groups, every button the same
+    // step apart, as Foundry's column is)
+    const file = T.list.filter((b) => FILE.includes(b.name));
+    let html = '';
+    let filed = false;
+    for (const t of T.list) {
+        if (FILE.includes(t.name)) {
+            if (filed) continue;
+            filed = true;
+            // (Luke, 2026-10-25: tiles, an icon and a word or two, the whole
+            // title its tooltip; kept on screen, above the macro bar)
+            const short = (b) => (game.i18n.has(`heart.board.fileshort.${b.name}`) ? loc(`heart.board.fileshort.${b.name}`) : b.title);
+            html += `<span class="file">${button('data-file', FA.file, loc('heart.board.tool.file'), menuOpen)}${menuOpen ? `<span class="menu">${file.map((b) => `<button type="button" data-button="${b.name}" class="tile ${b.toggle && b.active ? 'on' : ''}" data-tooltip="${esc(b.title)}" aria-label="${esc(b.title)}">${icon(b.icon)}<span>${esc(short(b))}</span></button>`).join('')}</span>` : ''}</span>`;
+            continue;
+        }
+        html += t.button || t.toggle ? button(`data-button="${t.name}"`, t.icon, t.title, t.toggle && t.active) : button(`data-tool="${t.name}"`, t.icon, t.title, t.name === lit);
     }
-    html += `${extra.get('help') ? button('data-button="help"', extra.get('help').icon, extra.get('help').title) : ''}${button('data-turn', FA.turn, loc('heart.board.toolbar-turn'))}`;
+    html += button('data-turn', FA.turn, loc('heart.board.toolbar-turn'));
     el.innerHTML = html;
+    fitMenu(el);
+    // (the tool windows never moved by hand by it, now it is there)
+    respotToolWindows(false);
+}
+
+// The File menu kept on screen: above the macro bar, inside the window's
+// edges; scrolled if it is taller than the room there (Luke, 2026-10-25)
+function fitMenu(el) {
+    const menu = el.querySelector('.menu');
+    if (!menu) return;
+    const hot = document.getElementById('hotbar')?.getBoundingClientRect();
+    const floor = (hot?.height && hot.top > 120 ? hot.top : window.innerHeight) - 8;
+    const at = (side) => parseFloat(getComputedStyle(menu)[side]) || 0;
+    let r = menu.getBoundingClientRect();
+    if (r.bottom > floor) menu.style.top = `${Math.round(at('top') - (r.bottom - floor))}px`;
+    r = menu.getBoundingClientRect();
+    if (r.top < 8) {
+        menu.style.top = `${Math.round(at('top') + (8 - r.top))}px`;
+        menu.style.maxHeight = `${Math.max(120, Math.round(floor - 8))}px`;
+        menu.style.overflowY = 'auto';
+    }
+    r = menu.getBoundingClientRect();
+    if (r.right > window.innerWidth - 8) menu.style.left = `${Math.round(at('left') - (r.right - window.innerWidth + 8))}px`;
 }
 
 async function onClick(event) {
@@ -103,7 +148,7 @@ async function onClick(event) {
     if (!b) return;
     if (b.dataset.tool) {
         menuOpen = false;
-        ui.controls?.initialize({ control: 'heartBoard', tool: b.dataset.tool });
+        ui.controls?.initialize({ control: 'heartBoard', tool: againToLook(b.dataset.tool) ? 'inspect' : b.dataset.tool });
         return syncRail();
     }
     if (b.dataset.file !== undefined) {
@@ -113,10 +158,13 @@ async function onClick(event) {
     if (b.dataset.turn !== undefined) {
         const dir = game.settings.get('heart', 'boardToolbarDir') === 'horizontal' ? 'vertical' : 'horizontal';
         await game.settings.set('heart', 'boardToolbarDir', dir);
-        return syncRail();
+        syncRail();
+        // (the tool windows open follow it: Luke 2026-10-25)
+        return respotToolWindows();
     }
     if (b.dataset.button) {
-        menuOpen = false;
+        // (File's items keep it open: File again, or a tool, shuts it; Luke 2026-10-25)
+        if (!FILE.includes(b.dataset.button)) menuOpen = false;
         const t = boardTools().buttons.find((x) => x.name === b.dataset.button);
         if (!t) return syncRail();
         await t.onClick?.(t.toggle ? !t.active : undefined);

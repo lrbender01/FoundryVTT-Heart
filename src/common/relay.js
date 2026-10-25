@@ -25,9 +25,32 @@ const TIMEOUT_MS = 15000;
 // request for the session) each handler gets a little less than the asking
 // client waits, then the queue moves on without it
 export const HANDLER_LIMIT_MS = 12000;
+// (Luke, 2026-10-25, the health audit: a request queued behind others timed
+// out for the asker and was still written, as the handler's time began only
+// when it started) a request's time counts from when it was sent, on the
+// clock of Foundry's server, which the asker's and the GM's clients share
+const now = () => game.time?.serverTime ?? Date.now();
+// the requests the GM's client answered lately, by sender and id: one asked
+// again under the same id is answered as before, never done twice
+const ANSWERED_MAX = 200;
+const answered = new Map();
+// (a live message past this size is dropped unread: a preview never needs
+// more; Luke 2026-10-25)
+export const LIVE_MAX = 256 * 1024;
 
 const handlers = new Map();
 const pending = new Map();
+
+// Live messages (Luke, 2026-10-25: the Heart map's previews of what each user
+// is doing, map/scrapboard/live.js): broadcast to every other client on the
+// same channel, never queued or answered, never written anywhere
+let liveHandler = null;
+export function onLive(fn) {
+    liveHandler = fn;
+}
+export function sendLive(data) {
+    game.socket?.emit(RELAY_CHANNEL, { ...data, kind: 'live', from: game.user.id });
+}
 let queue = Promise.resolve();
 
 export class RelayTimeout extends Error {
@@ -41,23 +64,41 @@ export function registerRelayHandler(op, fn) {
     handlers.set(op, fn);
 }
 
-// A handler's answer, or a RelayTimeout once HANDLER_LIMIT_MS has passed
-function withinLimit(op, work) {
+// A handler's answer, or a RelayTimeout once `ms` have passed
+function withinLimit(op, work, ms) {
     let timer;
     const limit = new Promise((resolve, reject) => {
-        timer = setTimeout(() => reject(new RelayTimeout(op)), HANDLER_LIMIT_MS);
+        timer = setTimeout(() => reject(new RelayTimeout(op)), ms);
     });
     return Promise.race([work, limit]).finally(() => clearTimeout(timer));
 }
 
-// Run one handler in this client's queue: each waits for the one before it,
-// and a failure (or a handler that never answers) never blocks the next
-export function runQueued(op, data, userId) {
-    const fn = handlers.get(op);
-    if (!fn) return Promise.reject(new Error(`heart | no relay handler "${op}"`));
-    const run = queue.then(() => withinLimit(op, Promise.resolve().then(() => fn(data ?? {}, userId))));
+// Work in this client's queue: each waits for the one before it, and a
+// failure (or work that never ends) never blocks the next. `deadline` (server
+// time): past it the asker has given up, so it is let go unrun; else it has
+// what is left of it, HANDLER_LIMIT_MS at most.
+function inQueue(op, fn, deadline = null) {
+    const run = queue.then(() => {
+        const left = deadline === null ? HANDLER_LIMIT_MS : Math.min(HANDLER_LIMIT_MS, deadline - now());
+        if (left <= 0) throw new RelayTimeout(op);
+        return withinLimit(op, Promise.resolve().then(fn), left);
+    });
     queue = run.catch(() => null);
     return run;
+}
+
+// Run one handler in this client's queue
+export function runQueued(op, data, userId, { deadline = null } = {}) {
+    const fn = handlers.get(op);
+    if (!fn) return Promise.reject(new Error(`heart | no relay handler "${op}"`));
+    return inQueue(op, () => fn(data ?? {}, userId), deadline);
+}
+
+// This client's own work in the handlers' queue, so it never runs between a
+// handler's reading and its write (Luke, 2026-10-25: the GM letting a hand go
+// as a player claimed one lost one of the two)
+export function runLocal(op, fn) {
+    return inQueue(op, fn);
 }
 
 // Ask the active GM's client to run `op`; resolves with its answer
@@ -71,7 +112,10 @@ export function relay(op, data = {}) {
             reject(new RelayTimeout(op));
         }, TIMEOUT_MS);
         pending.set(id, { resolve, reject, timer });
-        game.socket.emit(RELAY_CHANNEL, { kind: 'request', id, op, data, from: game.user.id, to: gm.id });
+        // (`sent`: when, so the GM's client lets it go once this one has
+        // stopped waiting; both sides ship in one build, and a request
+        // without it counts from when it arrives)
+        game.socket.emit(RELAY_CHANNEL, { kind: 'request', id, op, data, from: game.user.id, to: gm.id, sent: now() });
     });
 }
 
@@ -86,7 +130,9 @@ const STATUS_WARNINGS = {
     'needs-gm': 'heart.relay.needs-gm',
 };
 
-export async function askGM(op, data = {}) {
+// (`seen`: given every answer, done or not, as a request that wrote part of
+// what it asked and then failed hands back what it wrote; Luke 2026-10-25)
+export async function askGM(op, data = {}, { seen = null } = {}) {
     let answer;
     try {
         answer = await relay(op, data);
@@ -95,6 +141,7 @@ export async function askGM(op, data = {}) {
         ui.notifications?.warn(game.i18n.localize(err instanceof RelayTimeout ? 'heart.relay.no-answer' : 'heart.relay.failed'));
         return null;
     }
+    seen?.(answer);
     if (answer?.status === 'done') return answer;
     ui.notifications?.warn(game.i18n.localize(STATUS_WARNINGS[answer?.status] ?? 'heart.relay.failed'));
     return null;
@@ -106,6 +153,17 @@ export async function askGM(op, data = {}) {
 // who asked, so that id wins over the `from` the asking client wrote
 // (Luke, 2026-10-21: any client could write the GM's id into `from`).
 export async function onRelayMessage(message, senderId) {
+    // (a live message: everyone's, in the sender's own name only)
+    if (message?.kind === 'live') {
+        if (senderId && senderId !== message.from) return;
+        try {
+            if (JSON.stringify(message).length > LIVE_MAX) return;
+            liveHandler?.(message, senderId ?? message.from);
+        } catch (err) {
+            console.warn('heart | a live message could not be shown', err);
+        }
+        return;
+    }
     if (!message || typeof message !== 'object' || message.to !== game.user.id) return;
     if (message.kind === 'request') {
         if (senderId && senderId !== message.from) {
@@ -114,15 +172,22 @@ export async function onRelayMessage(message, senderId) {
             return;
         }
         const from = senderId ?? message.from;
-        let result = null;
-        let error = null;
-        try {
-            result = await runQueued(message.op, message.data, from);
-        } catch (err) {
-            console.error(`heart | relay "${message.op}" failed`, err);
-            error = String(err?.message ?? err);
+        const seen = `${from}:${message.id}`;
+        let answer = answered.get(seen);
+        if (!answer) {
+            const sent = Number.isFinite(message.sent) ? Math.min(message.sent, now()) : now();
+            answer = runQueued(message.op, message.data, from, { deadline: sent + HANDLER_LIMIT_MS }).then(
+                (result) => ({ result: result ?? null, error: null }),
+                (err) => {
+                    console.error(`heart | relay "${message.op}" failed`, err);
+                    return { result: null, error: String(err?.message ?? err) };
+                },
+            );
+            answered.set(seen, answer);
+            while (answered.size > ANSWERED_MAX) answered.delete(answered.keys().next().value);
         }
-        game.socket.emit(RELAY_CHANNEL, { kind: 'response', id: message.id, to: from, result: result ?? null, error });
+        const { result, error } = await answer;
+        game.socket.emit(RELAY_CHANNEL, { kind: 'response', id: message.id, to: from, result, error });
         return;
     }
     if (message.kind === 'response') {

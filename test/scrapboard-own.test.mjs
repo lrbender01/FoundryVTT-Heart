@@ -9,7 +9,7 @@
 
 import { describe, it, expect } from "vitest";
 import { normalizeLook, normalizeBoard, boardView, binPatch, applyPatch, diffBoard } from "../src/map/scrapboard/model.js";
-import { BoardControls } from "../src/map/scrapboard/controls.js";
+import { BoardControls, PLAYER_MAX_SIZE } from "../src/map/scrapboard/controls.js";
 import { ownCardsOf, mayHistory } from "../src/map/scrapboard/notes.js";
 
 const size = (id) => (id === "tx/paper" ? { w: 300, h: 400, safe: [0.1, 0.1, 0.9, 0.9], cover: 0.64 } : null);
@@ -44,6 +44,16 @@ describe("a player sizes and turns their own notes and writing (Luke, 2026-10-23
     expect(c.onHandle(b.handle)).toBe(true);
     expect(c.onRotor(b.rotor)).toBe(true);
     expect(c.marks().handle).toEqual(b.handle);
+  });
+
+  it("never past the size the GM's relay allows a player; the GM's, any size (Luke, 2026-10-25)", () => {
+    const big = { ...RAW, scraps: { ...RAW.scraps, mine: { ...RAW.scraps.mine, s: 7.9 } } };
+    const c = new BoardControls(host(ANA, big));
+    c.selection.add("mine");
+    expect(c.wheel(-1, { shift: true }).scraps.mine.s).toBe(PLAYER_MAX_SIZE);
+    const g = new BoardControls(host(GM, big));
+    g.selection.add("mine");
+    expect(g.wheel(-1, { shift: true }).scraps.mine.s).toBeGreaterThan(PLAYER_MAX_SIZE);
   });
 
   it("never with anything else selected", () => {

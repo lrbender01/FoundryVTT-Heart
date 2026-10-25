@@ -1,0 +1,517 @@
+@use '../../util'
+
+// The familiar sheet, its roll dialog, and its chat cards (Luke, 2026-10-24):
+// The Witch is Dead's printed sheet. Black ink on off-white paper, rough
+// hand-drawn boxes, hand-lettered headings, and red for what matters (the
+// title, the trait numbers, Danger, the roll buttons, a failure, serious
+// trouble). A fixed art piece like the map, the same in both colour schemes;
+// the window carries no heart-window class, so Heart's dark theme and the
+// glass never reach it (sheet.js). Colours: util.$familiar-* (theme.sass).
+
+$ink: util.$familiar-ink
+$red: util.$familiar-red
+$paper: util.$familiar-paper
+$faint: rgba(util.$familiar-ink-rgb, 0.6)
+$wash: rgba(util.$familiar-ink-rgb, 0.05)
+$red-wash: rgba(util.$familiar-red-rgb, 0.08)
+
+// a box drawn by hand: a slightly uneven ink line with a second stroke
+// showing under it
+@mixin drawn-box($weight: 2px)
+    border: $weight solid $ink
+    border-radius: 3px 14px 4px 12px / 12px 4px 14px 3px
+    box-shadow: 1px 2px 0 rgba(util.$familiar-ink-rgb, 0.35)
+
+@mixin head
+    font-family: util.$font-familiar-head
+    font-size: util.$fs-familiar-head
+    font-weight: normal
+    line-height: 1.3
+    letter-spacing: 0.02em
+    text-transform: uppercase
+    color: $ink
+
+@mixin hand($size: util.$fs-familiar-field)
+    font-family: util.$font-familiar-hand
+    font-size: $size
+    line-height: 1.1
+    color: $ink
+
+// an input written on the paper: no field chrome, the ink is the text
+@mixin bare-field
+    background: transparent
+    border: none
+    border-radius: 0
+    box-shadow: none
+    outline: none
+    height: auto
+    padding: 0 2px
+    margin: 0
+
+    &:focus
+        background: $wash
+        box-shadow: none
+
+// the paper itself, with a little age at the corners
+@mixin paper
+    background-color: $paper
+    background-image: radial-gradient(circle at 8% 6%, rgba(util.$familiar-ink-rgb, 0.05), transparent 38%), radial-gradient(circle at 94% 96%, rgba(util.$familiar-ink-rgb, 0.07), transparent 46%)
+    color: $ink
+
+// a red pen button (Roll species, Roll spell, the dialog's buttons)
+@mixin red-button
+    font-family: util.$font-familiar-hand
+    font-size: util.$fs-familiar-hint
+    line-height: 1.1
+    color: $red
+    background: transparent
+    border: 1.5px solid $red
+    border-radius: 10px 3px 9px 4px / 4px 9px 3px 10px
+    padding: 0 6px
+    cursor: pointer
+    text-shadow: none
+    white-space: nowrap
+
+    &:hover
+        background: $red
+        color: $paper
+        text-shadow: none
+
+// ------------------------------------------------------------------ sheet
+
+.window-app.heart-familiar-sheet .window-content
+    @include paper
+    padding: 10px 14px 12px
+
+.familiar-sheet
+    display: flex
+    flex-direction: column
+    gap: 9px
+    min-height: 100%
+    box-sizing: border-box
+
+    a:hover
+        text-shadow: none
+
+    .familiar-title
+        font-family: util.$font-familiar-head
+        font-size: util.$fs-familiar-title
+        line-height: 1.2
+        color: $red
+        text-align: center
+        text-transform: uppercase
+        letter-spacing: 0.04em
+        margin: 0
+        border: none
+
+    .familiar-row
+        display: flex
+        gap: 9px
+
+    .familiar-box
+        @include drawn-box
+        position: relative
+        display: flex
+        flex-direction: column
+        min-width: 0
+        padding: 4px 8px 6px
+        background: transparent
+
+    .familiar-head
+        @include head
+        display: flex
+        align-items: center
+        gap: 6px
+
+    .familiar-field
+        @include hand
+        @include bare-field
+        width: 100%
+
+    .familiar-hint
+        @include hand(util.$fs-familiar-hint)
+        color: $faint
+
+    .familiar-roll-button
+        @include red-button
+        margin-left: auto
+
+        i
+            margin-right: 4px
+            font-size: 0.8em
+
+    // Name and Species
+    .familiar-identity
+        .familiar-name
+            flex: 3 1 0
+        .familiar-species
+            flex: 2 1 0
+
+    // the Portrait beside the four traits
+    .familiar-main
+        align-items: stretch
+
+    .familiar-portrait
+        flex: 0 0 200px
+        padding: 4px
+
+        .familiar-head
+            position: absolute
+            top: 4px
+            left: 8px
+            z-index: 1
+
+        img
+            flex: 1 1 auto
+            width: 100%
+            height: 100%
+            min-height: 200px
+            object-fit: cover
+            border: none
+            border-radius: 2px 10px 3px 9px / 9px 3px 10px 2px
+            cursor: pointer
+
+        // no portrait yet: Foundry's default drawn faint under the label
+        &.blank img
+            object-fit: contain
+            opacity: 0.18
+            padding: 28px 18px 10px
+
+    .familiar-traits
+        flex: 1 1 0
+        min-width: 0
+        display: grid
+        grid-template-columns: 1fr 1fr
+        gap: 9px
+
+    .familiar-trait
+        align-items: center
+        text-align: center
+        padding: 4px 6px 6px
+
+        .familiar-trait-roll
+            justify-content: center
+            cursor: pointer
+
+            i
+                color: $red
+                font-size: 0.85em
+
+            &:hover
+                color: $red
+
+        .familiar-hint
+            line-height: 1
+
+    // a written number: big red pen, no spinners
+    .familiar-number
+        @include bare-field
+        font-family: util.$font-familiar-hand
+        font-size: util.$fs-familiar-number
+        font-weight: bold
+        line-height: 1
+        color: $red
+        text-align: center
+        width: 2.2em
+        -moz-appearance: textfield
+        appearance: textfield
+
+        &::-webkit-inner-spin-button, &::-webkit-outer-spin-button
+            -webkit-appearance: none
+            margin: 0
+
+    // Current Danger and the Magic spell you know
+    .familiar-lower
+        align-items: stretch
+
+    .familiar-danger
+        flex: 0 0 200px
+        align-items: center
+        text-align: center
+        border-color: $red
+        background: $red-wash
+
+        .familiar-head
+            color: $red
+
+        .familiar-hint
+            line-height: 1
+
+    .familiar-danger-count
+        display: flex
+        align-items: center
+        justify-content: center
+        gap: 6px
+
+    .familiar-step
+        @include hand(util.$fs-familiar-number)
+        color: $red
+        width: 1.1em
+        text-align: center
+        cursor: pointer
+        border-radius: 50%
+
+        &:hover
+            background: $red
+            color: $paper
+
+    .familiar-spell
+        flex: 1 1 0
+        justify-content: flex-start
+        gap: 2px
+
+    // the rules in one line
+    .familiar-rules
+        @include hand(util.$fs-familiar-hint)
+        color: $faint
+        margin: 0
+        padding: 0 4px
+        line-height: 1.05
+
+    // Notes, revenge plans, and vitriol: the rest of the page
+    .familiar-notes
+        flex: 1 1 auto
+        min-height: 140px
+
+        textarea.familiar-field
+            flex: 1 1 auto
+            resize: none
+            min-height: 100px
+            line-height: 1.15
+
+    // a sheet its viewer can't edit reads the same, just not as a field
+    input:disabled, textarea:disabled
+        color: $ink
+        cursor: default
+        opacity: 1
+
+    .familiar-number:disabled
+        color: $red
+
+// ------------------------------------------------------------------ dialogs
+
+.window-app.heart-familiar-dialog
+    .window-content
+        @include paper
+        padding: 10px 14px
+
+    .dialog-content
+        margin-bottom: 8px
+
+    .dialog-buttons
+        gap: 8px
+
+        button
+            @include red-button
+            font-size: util.$fs-familiar-field
+            height: auto
+            padding: 2px 10px
+            background: transparent
+
+            &:hover
+                background: $red
+                color: $paper
+
+            // the main button (roll.js ask: "ok") filled, Cancel or Keep
+            // these an outline
+            &.ok
+                background: $red
+                color: $paper
+
+    .familiar-confirm
+        @include hand(util.$fs-familiar-field)
+        margin: 4px 0
+
+.familiar-roll-form
+    display: flex
+    flex-direction: column
+    gap: 8px
+
+    .familiar-roll-label
+        @include head
+
+    .familiar-targets
+        display: grid
+        grid-template-columns: repeat(5, 1fr)
+        gap: 6px
+
+    .familiar-target
+        cursor: pointer
+
+        input
+            position: absolute
+            opacity: 0
+            pointer-events: none
+
+        span
+            @include drawn-box(1.5px)
+            display: flex
+            flex-direction: column
+            align-items: center
+            padding: 2px 2px 4px
+
+        b
+            @include hand(util.$fs-familiar-card-number)
+            font-weight: bold
+
+        small
+            @include hand(util.$fs-familiar-card-label)
+            text-align: center
+
+        &:hover span
+            border-color: $red
+
+        input:checked + span
+            background: $red
+            border-color: $red
+
+            b, small
+                color: $paper
+
+    .familiar-checks
+        display: flex
+        flex-direction: column
+        gap: 4px
+
+    .familiar-check
+        display: flex
+        align-items: center
+        gap: 8px
+        cursor: pointer
+
+        input
+            position: absolute
+            opacity: 0
+            pointer-events: none
+
+        .familiar-check-box
+            @include drawn-box(1.5px)
+            flex: 0 0 18px
+            height: 18px
+            box-sizing: border-box
+
+        input:checked + .familiar-check-box
+            background: $red
+            border-color: $red
+
+        input:disabled + .familiar-check-box
+            opacity: 0.7
+
+        .familiar-check-text
+            display: flex
+            align-items: baseline
+            gap: 8px
+
+            b
+                @include head
+
+            small
+                @include hand(util.$fs-familiar-hint)
+                color: $faint
+
+// ------------------------------------------------------------------ chat card
+
+.familiar-card
+    @include paper
+    @include drawn-box
+    padding: 4px 8px 6px
+    display: flex
+    flex-direction: column
+    gap: 4px
+
+    .familiar-card-head
+        display: flex
+        align-items: center
+        flex-wrap: wrap
+        gap: 6px
+
+    .familiar-card-title
+        @include head
+        color: $red
+        margin-right: auto
+
+    .familiar-card-tag
+        @include hand(util.$fs-familiar-card-label)
+        color: $red
+        border: 1px solid $red
+        border-radius: 8px 3px 7px 3px / 3px 7px 3px 8px
+        padding: 0 5px
+
+    .familiar-card-sum
+        display: flex
+        align-items: flex-start
+        justify-content: center
+        gap: 4px
+
+    .familiar-card-num
+        display: flex
+        flex-direction: column
+        align-items: center
+        min-width: 0
+
+        b
+            @include hand(util.$fs-familiar-card-number)
+            font-weight: bold
+
+        small
+            @include hand(util.$fs-familiar-card-label)
+            color: $faint
+            text-align: center
+
+        &.die b
+            @include drawn-box(1.5px)
+            min-width: 1.3em
+            text-align: center
+
+        &.total b
+            color: $red
+
+    .familiar-card-op
+        @include hand(util.$fs-familiar-card-number)
+        color: $faint
+
+    .familiar-card-result
+        @include hand(util.$fs-familiar-card-number)
+        font-weight: bold
+        color: $red
+        align-self: center
+        margin-left: 6px
+
+    .familiar-card-line
+        @include hand(util.$fs-familiar-hint)
+        text-align: center
+
+    .familiar-card-outcome
+        font-family: util.$font-familiar-head
+        font-size: util.$fs-familiar-title
+        line-height: 1.2
+        text-align: center
+        text-transform: uppercase
+
+        &.success
+            color: $ink
+
+        &.failure
+            color: $red
+
+    .familiar-card-danger, .familiar-card-trouble
+        display: flex
+        flex-direction: column
+        align-items: center
+        text-align: center
+        padding: 2px 6px 4px
+
+        b
+            @include head
+            color: $red
+
+        small
+            @include hand(util.$fs-familiar-hint)
+
+    .familiar-card-trouble
+        @include drawn-box
+        border-color: $red
+        background: $red
+
+        b, small
+            color: $paper

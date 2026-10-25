@@ -146,7 +146,8 @@ describe("the GM's other tools", () => {
     expect(c.press("string", { x: 300, y: 300 })).toEqual({ do: "select" });
     expect(c.marks().from).toBeTruthy();
     expect(c.press("string", { x: 1300, y: 300 })).toMatchObject({ do: "string", a: "grip", aPt: null, b: "sump", bPt: null });
-    expect(c.press("erase", { x: 1300, y: 300 })).toMatchObject({ do: "erase" });
+    // (Erase rubs out brush strokes only: a card comes off with Delete; Luke 2026-10-24)
+    expect(c.press("erase", { x: 1300, y: 300 })).toBeNull();
   });
 
   it("a patch applies to the board's JSON", () => {
@@ -222,11 +223,10 @@ describe("round three (Luke, 2026-10-02): strings pulled and jointed, pins, the 
     const l = c.host.view().links.find((x) => x.id === "l1");
     expect(l.spans).toHaveLength(2);
     expect(l.joints).toHaveLength(1);
-    // and Erase takes it out again
+    // and Delete takes it out again, its pin selected (Erase is the brush's
+    // since 2026-10-24)
     // (and its pin with it: no loose pin left where it was)
-    const a = c.press("erase", l.joints[0]);
-    expect(a).toMatchObject({ do: "remove", what: { pins: [j.pin] } });
-    const r = removalOf(box.raw, a.what);
+    const r = removalOf(box.raw, { scraps: [], pins: [j.pin], links: [] });
     applyPatch(box.raw, { pins: Object.fromEntries(r.pins.map((id) => [id, null])), links: r.edits });
     expect(box.raw.links.l1.joints).toEqual([]);
     expect(box.raw.pins?.[j.pin]).toBeUndefined();
@@ -298,7 +298,7 @@ describe("round three (Luke, 2026-10-02): strings pulled and jointed, pins, the 
     box.raw.marks = { ana: { m1: { c: 0, w: 6, pts: a.pts } }, gm: { m1: { c: 1, w: 6, pts: [150, 2990, 150, 3060] } } };
     expect(c.dragStart({ x: 150, y: 2980 }, { tool: "mark", shift: true })).toBe("unmark");
     c.dragMove({ x: 150, y: 3060 });
-    expect(c.dragEnd()).toEqual({ do: "unmark", strokes: [["ana", "m1"]] });
+    expect(c.dragEnd()).toMatchObject({ do: "cut", strokes: [["ana", "m1"]] });
   });
 
   it("a players' board's owners edit notes and strings, never places, and never reveal", () => {
@@ -388,7 +388,7 @@ describe("round three (Luke, 2026-10-02): strings pulled and jointed, pins, the 
     applyPatch(box.raw, c.dragMove({ x: 2100, y: 2050 }));
     expect(box.raw.pins.p1).toMatchObject({ x: 2100, y: 2050 });
     expect(box.raw.links.l3).toMatchObject({ aPt: { x: 2000, y: 1950 }, bPt: { x: 2400, y: 2150 }, joints: [{ x: 2200, y: 2250 }] });
-    expect(c.removal()).toEqual({ scraps: [], pins: ["p1"], links: ["l3"], cards: [] });
+    expect(c.removal()).toEqual({ scraps: [], pins: ["p1"], links: ["l3"], cards: [], strokes: [] });
   });
 
   it("a selected card's writing has a handle of its own", () => {
@@ -730,13 +730,12 @@ describe("the marker on cards, and its own Select (Luke, 2026-10-03)", () => {
     expect(Object.keys(box.raw.marks.gm)).toEqual(["m1"]);
   });
 
-  it("Select: a stroke moved wholly onto a card is the card's; wholly off it, the sheet's again", () => {
+  it("Move: a stroke moved wholly onto a card is the card's; wholly off it, the sheet's again", () => {
     const { c, box } = live11(RAW);
     draw(c, box, [2400, 2400, 2420, 2410]);
-    c.markMode = "select";
-    expect(c.press("mark", { x: 2410, y: 2405 })).toEqual({ do: "select" });
+    expect(c.press("move", { x: 2410, y: 2405 })).toEqual({ do: "select" });
     expect(c.markSel.size).toBe(1);
-    expect(c.dragStart({ x: 2410, y: 2405 }, { tool: "mark" })).toBe("mmove");
+    expect(c.dragStart({ x: 2410, y: 2405 }, { tool: "move" })).toBe("mmove");
     c.dragMove({ x: 310, y: 305 });
     applyPatch(box.raw, c.dragEnd());
     expect(box.raw.marks?.gm).toBeUndefined();
@@ -744,7 +743,7 @@ describe("the marker on cards, and its own Select (Luke, 2026-10-03)", () => {
     // (and the selection followed it)
     expect([...c.markSel][0]).toContain("@grip");
     // half off: still the card's
-    expect(c.dragStart({ x: 310, y: 305 }, { tool: "mark" })).toBe("mmove");
+    expect(c.dragStart({ x: 310, y: 305 }, { tool: "move" })).toBe("mmove");
     c.dragMove({ x: 410, y: 305 });
     const p = c.dragEnd();
     applyPatch(box.raw, p);
@@ -752,20 +751,19 @@ describe("the marker on cards, and its own Select (Luke, 2026-10-03)", () => {
     // wholly off: the sheet's
     const sel = at(c, "grip").layout.strokes[0];
     c.markSel = new Set([JSON.stringify(["@grip", sel.id])]);
-    expect(c.dragStart({ x: sel.pts[0], y: sel.pts[1] }, { tool: "mark" })).toBe("mmove");
+    expect(c.dragStart({ x: sel.pts[0], y: sel.pts[1] }, { tool: "move" })).toBe("mmove");
     c.dragMove({ x: sel.pts[0] + 1500, y: sel.pts[1] + 1500 });
     applyPatch(box.raw, c.dragEnd());
     expect(Object.keys(box.raw.scraps.grip.marks)).toHaveLength(0);
     expect(Object.keys(box.raw.marks.gm)).toHaveLength(1);
   });
 
-  it("Select sizes and turns the selection by its corners", () => {
+  it("Move sizes and turns strokes alone by their corners", () => {
     const { c, box } = live11(RAW);
     draw(c, box, [2400, 2400, 2500, 2400]);
-    c.markMode = "select";
-    c.press("mark", { x: 2450, y: 2400 });
+    c.press("move", { x: 2450, y: 2400 });
     const b = c.bounds();
-    expect(c.dragStart(b.handle, { tool: "mark" })).toBe("msize");
+    expect(c.dragStart(b.handle, { tool: "move" })).toBe("msize");
     c.dragMove({ x: b.c.x + (b.handle.x - b.c.x) * 2, y: b.c.y + (b.handle.y - b.c.y) * 2 });
     applyPatch(box.raw, c.dragEnd());
     const st = box.raw.marks.gm.m1;
@@ -776,14 +774,12 @@ describe("the marker on cards, and its own Select (Luke, 2026-10-03)", () => {
   it("a player takes hold of their own strokes only; the GM, any", () => {
     const raw = { ...structuredClone(RAW), marks: { gm: { m1: { c: 0, w: 6, pts: [2400, 2400, 2500, 2400] } }, ana: { m1: { c: 0, w: 6, pts: [2400, 2600, 2500, 2600] } } } };
     const { c } = live11(raw, ANA);
-    c.markMode = "select";
-    c.press("mark", { x: 2450, y: 2400 });
+    c.press("move", { x: 2450, y: 2400 });
     expect(c.markSel.size).toBe(0);
-    c.press("mark", { x: 2450, y: 2600 });
+    c.press("move", { x: 2450, y: 2600 });
     expect([...c.markSel]).toEqual([JSON.stringify(["ana", "m1"])]);
     const g = live11(raw, GM).c;
-    g.markMode = "select";
-    g.press("mark", { x: 2450, y: 2400 });
+    g.press("move", { x: 2450, y: 2400 });
     expect(g.markSel.size).toBe(1);
   });
 });
@@ -836,7 +832,7 @@ describe("players' own strings, and cards locked (Luke, 2026-10-03)", () => {
   it("a player takes off only their own", () => {
     const { c } = live12(ANA);
     c.links.add("gm"); c.links.add("ana"); c.pins.add("a"); c.pins.add("c");
-    expect(c.removal()).toEqual({ scraps: [], pins: ["c"], links: ["ana"], cards: [] });
+    expect(c.removal()).toEqual({ scraps: [], pins: ["c"], links: ["ana"], cards: [], strokes: [] });
   });
 
   it("right-click locks a card (no menu: Luke 2026-10-06); locked, it neither moves nor shows its handles", () => {
@@ -960,7 +956,6 @@ describe("the brush's selected strokes stay the brush's (2026-10-21)", () => {
   it("a press on where their handle was, with Move, never throws", () => {
     const raw = { scraps: {}, links: {}, marks: { gm: { m1: { c: 0, w: 4, pts: [100, 100, 300, 300] } } } };
     const c = new BoardControls({ view: () => boardView(look, normalizeBoard(raw), "gm", size, measure), painter: () => ({ tagOf: () => null, onTag: () => false }), size, user: () => GM, px: () => 1, raw: () => raw });
-    c.markMode = "select";
     c.markSel.add(JSON.stringify(["gm", "m1"]));
     const b = c.bounds();
     expect(b).toBeTruthy();

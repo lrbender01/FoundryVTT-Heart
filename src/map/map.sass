@@ -24,6 +24,26 @@ $picked: #e0574b
     pointer-events: none
 
 .heart-board-dialog
+    // (every map window on the map's frosted glass, as its palettes: Luke
+    // 2026-10-25, the note window first, then the rest)
+    &.app
+        background: rgba(26, 16, 12, 0.72)
+        backdrop-filter: blur(10px) saturate(1.15)
+        -webkit-backdrop-filter: blur(10px) saturate(1.15)
+        border: 1px solid rgba(255, 228, 205, 0.14)
+        border-radius: 10px
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 240, 225, 0.06)
+        overflow: hidden
+
+    .window-header
+        background: rgba(20, 10, 6, 0.55)
+        border-bottom: 1px solid rgba(255, 228, 205, 0.12)
+
+    .window-content
+        background: transparent
+        color: #eadccb
+        padding: 8px 10px
+
     .dialog-content
         @include util.text-body
         display: flex
@@ -33,6 +53,20 @@ $picked: #e0574b
     p
         margin: 0
         line-height: 1.35
+
+    // (Save Render: the brush window's lighter glass; its two buttons the
+    // same size, each on one line; Luke 2026-10-25)
+    &.heart-board-render.app
+        background: rgba(26, 16, 12, 0.55)
+
+    &.heart-board-render .dialog-buttons
+        display: grid
+        grid-template-columns: 1fr 1fr
+        gap: 8px
+
+        button
+            white-space: nowrap
+            margin: 0
 
     // (a line under a field: what Enter does)
     .heart-board-hint
@@ -54,17 +88,21 @@ $picked: #e0574b
         &[data-button="close"], &[data-button="cancel"], &[data-button="no"]
             @include util.button-secondary
 
-    // a labelled row: its label, then its choices (a paint, the brightness,
-    // a paper, a string's kind, name, and colour)
+    // a labelled row: its label over its choices (a paint, the brightness,
+    // a paper, a string's kind, name, and colour; Luke 2026-10-25: no column
+    // of labels)
     .heart-board-row
-        display: grid
-        grid-template-columns: 7em minmax(0, 1fr)
-        align-items: center
-        gap: 8px
+        display: flex
+        flex-direction: column
+        align-items: stretch
+        gap: 3px
 
         > .lab
             @include util.text-label
             color: util.$muted
+            font-size: 11px
+            text-transform: uppercase
+            letter-spacing: 0.08em
 
         input[type="text"]
             width: 100%
@@ -121,6 +159,43 @@ $picked: #e0574b
         .sep
             width: 10px
 
+        // (bold, italic, underline, strike: on the selection and what is
+        // typed next, lit for the caret's; Luke 2026-10-25)
+        button.flag
+            @include util.choice-chip
+            @include util.hover-outline
+            flex: 0 0 auto
+            width: auto
+            min-width: 32px
+            justify-content: center
+            margin: 0
+
+            &.on
+                @include util.choice-chip-on
+
+    // the writing's box, each stretch shown as it is set (Luke, 2026-10-25)
+    .heart-board-rich
+        width: 100%
+        min-height: 72px
+        max-height: 240px
+        overflow-y: auto
+        padding: 6px 8px
+        white-space: pre-wrap
+        overflow-wrap: anywhere
+        background: rgba(0, 0, 0, 0.28)
+        border: 1px solid rgba(255, 228, 205, 0.22)
+        border-radius: util.$radius
+        cursor: text
+        outline: none
+
+        &:focus
+            border-color: rgba($picked, 0.7)
+
+        &:empty::before
+            content: attr(data-placeholder)
+            opacity: 0.5
+            pointer-events: none
+
     // the paints and papers a note (or a string) is written in, and on:
     // Any first, then the swatches
     .heart-board-paints, .heart-board-papers
@@ -165,6 +240,64 @@ $picked: #e0574b
             background: util.$sunken
             border-radius: util.$radius
 
+        // (another paper at random: Luke 2026-10-24)
+        .dice
+            @include util.action-chip
+            flex: none
+            width: 34px
+            height: 34px
+
+    // a switch (a note's or string's Public): a chip that is on or off
+    .heart-board-switch
+        position: relative
+        display: inline-flex
+        margin: 0
+        cursor: pointer
+
+        input
+            @include hidden-input
+
+        > span
+            @include util.choice-chip
+            @include util.hover-outline
+
+        input:checked + span
+            @include util.choice-chip-on
+
+        input:focus-visible + span
+            outline: 2px solid util.$red-bright
+            outline-offset: 1px
+
+    // pages less or more on a side (the sheet's size)
+    .heart-board-stepper
+        display: inline-flex
+        align-items: center
+        gap: 6px
+
+        button
+            @include util.action-chip
+            flex: none
+            width: 30px
+
+        output
+            min-width: 2.5em
+            text-align: center
+            font-variant-numeric: tabular-nums
+
+    // a slider and what it is at (a note's Text size)
+    .heart-board-slide
+        display: flex
+        align-items: center
+        gap: 8px
+        margin: 0
+
+        input
+            flex: 1
+
+        output
+            min-width: 3em
+            text-align: right
+
     // the hands (and the typewriter) as tiles, each writing the sample in
     // its own face: the hand picker's and the note dialog's alike
     .heart-board-faces
@@ -202,7 +335,10 @@ $picked: #e0574b
                 white-space: nowrap
                 overflow: hidden
                 text-overflow: ellipsis
-                line-height: 1.2
+                // (room for each hand's reach above and below: Luke
+                // 2026-10-24, the samples were clipped and ran into the names)
+                line-height: 1.9
+                padding: 0 2px
 
             small
                 opacity: 0.75
@@ -217,6 +353,37 @@ $picked: #e0574b
             // (a player's own: their name on it)
             &.claimed small
                 opacity: 1
+
+    // a string's pins, picked in its own window (Luke, 2026-10-25)
+    .heart-board-pinpick
+        display: grid
+        grid-template-columns: repeat(auto-fill, minmax(44px, 1fr))
+        gap: 4px
+
+        label
+            position: relative
+            margin: 0
+            cursor: pointer
+
+        input
+            @include hidden-input
+
+        span
+            display: grid
+            place-items: center
+            height: 44px
+            background: util.$sunken
+            border: 1px solid util.$line
+            border-radius: util.$radius
+            @include util.hover-outline
+
+        img, canvas
+            max-width: 34px
+            max-height: 34px
+
+        input:checked + span
+            outline: 2px solid $picked
+            outline-offset: -1px
 
     // the Pin tool's pins, as pictures
     .heart-board-pins
@@ -308,7 +475,16 @@ $picked: #e0574b
     flex-direction: column
     gap: 0
     padding: 4px 12px
-    min-width: 420px
+    // (as wide as the person makes it, by its corner: Luke 2026-10-24)
+    // (as narrow as it goes to start, as tall as it needs: Luke 2026-10-25)
+    width: 340px
+    min-width: 340px
+    max-width: calc(100vw - 16px)
+    // (sized freely by its corner, as every map window: Luke 2026-10-25;
+    // what doesn't fit scrolls)
+    max-height: calc(100vh - 16px)
+    resize: both
+    overflow: auto
     color: #eadccb
     background: rgba(26, 16, 12, 0.55)
     backdrop-filter: blur(10px) saturate(1.15)
@@ -333,6 +509,7 @@ $picked: #e0574b
         letter-spacing: 0.04em
         margin-right: auto
 
+
     // (its head drags it: Luke, 2026-10-06)
     .head
         cursor: grab
@@ -349,10 +526,23 @@ $picked: #e0574b
         opacity: 0.7
         min-width: 52px
 
+    // (eighty paints, Luke 2026-10-24: the palette's whole width, by family)
+    .inks-sec
+        display: block
+
+        .lab
+            display: block
+            margin-bottom: 5px
+
     .inks
-        display: flex
-        flex-wrap: wrap
+        display: grid
+        grid-template-columns: repeat(auto-fill, minmax(22px, 1fr))
         gap: 5px
+        justify-items: center
+
+    .restyle
+        margin-left: auto
+        opacity: 0.85
 
     button
         width: auto
@@ -413,6 +603,117 @@ $picked: #e0574b
     small
         opacity: 0.7
 
+    // its views (Luke, 2026-10-25: a double-click on its head): the whole of
+    // it, the paints and brightness alone (every paint shown), its head alone
+    &[data-view=palette] .sec.more
+        display: none
+
+    &[data-view=shut]
+        .sec:not(.head)
+            display: none
+
+    // the eraser's size and mode: the Erase window's (small) and the brush
+    // window's rub-out row (Luke, 2026-10-25)
+    &.heart-board-string.heart-board-erasewin
+        width: 280px
+        min-width: 220px
+
+    .erase-sec small
+        flex-basis: 100%
+
+    .rub-sec .lab
+        flex-basis: 100%
+
+    // the String window and the Pin window (Luke, 2026-10-25): the brush
+    // window's glass, starting tall enough for every paint and pin, low on
+    // the right, clear of the board's middle
+    &.heart-board-string
+        width: 320px
+        min-width: 240px
+        min-height: 44px
+        left: auto
+        right: 320px
+        transform: none
+
+        .inks
+            padding: 3px
+
+        // its pins in its colour, or their own (Luke, 2026-10-25)
+        .tint
+            display: block
+            margin: 0 0 6px
+
+        // the kinds, one under another
+        .kinds-sec
+            display: block
+
+            .lab
+                display: block
+                margin-bottom: 5px
+
+        .kinds
+            display: flex
+            flex-direction: column
+            gap: 4px
+
+            button
+                width: 100%
+                text-align: left
+
+                &.on
+                    background: rgba($picked, 0.88)
+                    color: #1a0d0b
+
+        .preview.pin-preview
+            flex-wrap: nowrap
+
+            canvas
+                width: 96px
+                height: 96px
+                flex: 0 0 auto
+
+        .preview canvas
+            display: block
+            width: 260px
+            height: 70px
+            margin: 0 auto
+            border-radius: 6px
+            background: rgba(10, 6, 4, 0.35)
+
+        .any-row
+            width: 100%
+            margin-bottom: 5px
+
+        button.any.on
+            background: rgba($picked, 0.88)
+            color: #1a0d0b
+
+        .pins-sec
+            display: block
+
+            .lab
+                display: block
+                margin-bottom: 5px
+
+        .pins
+            display: grid
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr))
+            gap: 5px
+
+            button
+                height: 40px
+                padding: 2px
+
+                &.on
+                    border-color: rgba($picked, 0.95)
+                    background: rgba($picked, 0.22)
+
+                img, canvas
+                    display: block
+                    max-width: 32px
+                    max-height: 32px
+                    margin: 0 auto
+
 // The Heart Map's own toolbar (scrapboard/rail.js; Luke, 2026-10-03): the
 // map editor's rail on frosted glass, up the left or along the top. Foundry's
 // own column of the Heart Map's buttons is hidden while it is in use.
@@ -441,11 +742,12 @@ body.heart-board-rail-on #tools-panel-heartBoard
         left: var(--rail-left, 64px)
         top: calc(var(--rail-top, 72px) - 7px)
 
-    // (under the scene navigation)
+    // (under the scene navigation; its icons level with Foundry's top icon,
+    // as up the side: Luke 2026-10-25, it sat a glass's padding low)
     &.horizontal
         flex-direction: row
         left: var(--rail-left, 64px)
-        top: var(--rail-top, 64px)
+        top: calc(var(--rail-top, 64px) - 7px)
 
     // (Foundry's own buttons' size: Luke 2026-10-06)
     button
@@ -480,14 +782,14 @@ body.heart-board-rail-on #tools-panel-heartBoard
     .file
         position: relative
 
-    // the File button's few, by it
+    // the File button's few, by it: tiles, an icon and a word or two (Luke,
+    // 2026-10-25: the list ran off the screen)
     .menu
         position: absolute
-        display: flex
-        flex-direction: column
-        gap: 2px
+        display: grid
+        grid-template-columns: repeat(3, 78px)
+        gap: 4px
         padding: 6px
-        min-width: 260px
         background: rgba(26, 16, 12, 0.8)
         backdrop-filter: blur(10px)
         -webkit-backdrop-filter: blur(10px)
@@ -495,18 +797,24 @@ body.heart-board-rail-on #tools-panel-heartBoard
         border-radius: 9px
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5)
 
-        button
-            width: 100%
-            height: 32px
+        button.tile
+            width: 78px
+            height: 60px
             display: flex
-            gap: 8px
-            padding: 0 8px
-            justify-content: flex-start
-            text-align: left
-            font-size: 13px
+            flex-direction: column
+            align-items: center
+            justify-content: center
+            gap: 5px
+            padding: 4px 3px
+            text-align: center
+            font-size: 10.5px
+            line-height: 1.15
+
+            i
+                font-size: 17px
 
             span
-                white-space: nowrap
+                white-space: normal
 
     &.vertical .menu
         left: calc(var(--rail-btn, 36px) + 8px)
@@ -515,6 +823,45 @@ body.heart-board-rail-on #tools-panel-heartBoard
     &.horizontal .menu
         top: calc(var(--rail-btn, 36px) + 8px)
         left: 0
+
+// the board's statistics (File, Luke 2026-10-25): three tables, a name and
+// its value a row, the numbers steady as they update
+.heart-board-stats
+    max-height: 70vh
+    overflow-y: auto
+
+    h3
+        @include util.text-section
+        color: util.$text
+        border: none
+        margin: 8px 0 2px
+
+        &:first-child
+            margin-top: 0
+
+    table
+        width: 100%
+        margin: 0
+        border: none
+        background: none
+        border-collapse: collapse
+
+    tr
+        background: none !important
+
+    th, td
+        padding: 2px 4px
+        text-align: left
+        vertical-align: top
+        border: none
+
+    th
+        width: 40%
+        font-weight: normal
+        opacity: 0.75
+
+    td
+        font-variant-numeric: tabular-nums
 
 // the Heart Map's help: each tool, then everything else, what it does
 .heart-board-help
@@ -550,8 +897,26 @@ body.heart-board-rail-on #tools-panel-heartBoard
         font-size: 18px
         text-align: center
 
+    // (Luke, 2026-10-25: short paragraphs and bullets, the controls lit)
+    .topic
+        display: block
+        font-size: 15px
+        margin-bottom: 2px
+
     p
-        margin: 2px 0 0
+        margin: 2px 0 6px
+
+    ul
+        margin: 0 0 6px
+        padding-left: 18px
+
+    li
+        margin: 2px 0
+
+    // (Heart's red: Luke 2026-10-25)
+    p b, li b
+        color: util.$red-bright
+        font-weight: 600
 
 // the bin and the earlier boards: a list, each with its button
 .heart-board-bin
@@ -614,62 +979,81 @@ body.heart-board-rail-on #tools-panel-heartBoard
             outline: 1px solid rgba($picked, 0.6)
             box-shadow: none
 
-// the note on its paper (Luke, 2026-10-06: a bigger preview): the paper
-// turned a quarter at a time and freely, the writing on it where it sits,
-// moved by its handle
+// the note's window (Luke, 2026-10-24): wide, two columns, the hands below;
+// its buttons stay in view at its foot while the rest scrolls
+// (Luke, 2026-10-25: on the map's glass, as its other windows; denser, each
+// label over what it names, no column of labels: .heart-board-dialog)
+.heart-note-dialog
+    .heart-note-right
+        gap: 6px
+
+    .heart-board-paints
+        gap: 3px
+
+    .window-content
+        display: flex
+        flex-direction: column
+        overflow: hidden
+
+    .dialog-content
+        flex: 1 1 auto
+        min-height: 0
+        overflow-y: auto
+        padding-right: 4px
+
+    .dialog-buttons
+        flex: 0 0 auto
+        margin-top: 8px
+
+        button
+            font-size: 15px
+            line-height: 34px
+
+    .heart-note-layout
+        display: grid
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr)
+        gap: 14px
+        align-items: start
+
+    .heart-note-left, .heart-note-right
+        display: flex
+        flex-direction: column
+        gap: 8px
+        min-width: 0
+
+    .heart-note-hands > .lab
+        @include util.text-label
+        color: util.$muted
+        display: block
+        margin: 4px 0
+
+    .heart-board-faces
+        grid-template-columns: repeat(3, minmax(0, 1fr))
+        max-height: none
+
+    textarea[name=text]
+        min-height: 72px
+
+// the note as the board will draw it (Luke, 2026-10-24: the board's own
+// painter), on the dark sheet; drag on it to move its writing
 .heart-board-stage
     position: relative
-    height: 300px
+    height: 340px
     margin-bottom: 6px
     overflow: hidden
     border-radius: util.$radius
-    background: #3a2a20
+    background: #2b1f19
     box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.55)
 
-    .heart-board-sheet
-        position: absolute
-        left: 50%
-        top: 50%
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.55)
-
-    .paper
-        position: absolute
-        left: 50%
-        top: 50%
-        background: #d8ccb0 center / 100% 100% no-repeat
-
-    textarea
-        position: absolute
-        width: 80%
-        min-height: 60px
-        transform: translate(-50%, -50%)
-        padding: 4px 6px
-        border: 1px dashed rgba(36, 26, 22, 0.25) !important
-        border-radius: 3px
-        background: transparent !important
-        background-image: none !important
-        color: #241a16
-        line-height: 1.1
-        resize: none
-        box-shadow: none
-        overflow: hidden
-
-        &:focus
-            outline: none
-            border-color: rgba($picked, 0.6) !important
-
-    .grip
-        position: absolute
-        transform: translate(-50%, -50%)
-        width: 22px
-        height: 22px
-        display: grid
-        place-items: center
-        border-radius: 50%
-        background: rgba(26, 16, 12, 0.75)
-        color: #fff
-        font-size: 11px
+    canvas
+        display: block
+        width: 100%
+        height: 100%
         cursor: move
+
+    // (writing on the sheet: nothing to drag)
+    &.sheet canvas
+        cursor: default
 
 // the paper's quarter turns (row actions) and its tilt
 .heart-board-turns
@@ -696,17 +1080,26 @@ body.heart-board-rail-on #tools-panel-heartBoard
             min-width: 3em
             text-align: right
 
-// the brush's doodles (Luke, 2026-10-06): a column of the rail's glass by it
+// the doodles window (Luke, 2026-10-25): the brush window's glass, its own
+// window beside it, moved, sized by its corner, and folded to its head
 .heart-board-doodles
+    // (its height the brush window's when snapped by it: padding inside it)
+    box-sizing: border-box
     position: fixed
     z-index: 70
-    display: grid
-    grid-template-columns: repeat(3, 48px)
-    align-content: start
-    gap: 4px
-    padding: 6px
-    max-height: calc(100vh - 120px)
-    overflow-y: auto
+    display: flex
+    flex-direction: column
+    // (its first width: five doodles of about 48 px across, the tiles'
+    // scroll bar too; always five, Luke 2026-10-25)
+    width: 300px
+    height: 430px
+    min-width: 168px
+    min-height: 44px
+    max-height: calc(100vh - 16px)
+    padding: 4px 10px 8px
+    resize: both
+    overflow: hidden
+    color: #eadccb
     background: rgba(26, 16, 12, 0.55)
     backdrop-filter: blur(10px) saturate(1.15)
     -webkit-backdrop-filter: blur(10px) saturate(1.15)
@@ -714,31 +1107,203 @@ body.heart-board-rail-on #tools-panel-heartBoard
     border-radius: 10px
     box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45)
 
+    .sec
+        display: flex
+        flex-wrap: wrap
+        align-items: center
+        gap: 6px
+        padding: 6px 0
+
+        & + .sec
+            border-top: 1px solid rgba(255, 228, 205, 0.12)
+
+    .head
+        cursor: grab
+        user-select: none
+
+        b
+            font-size: 14px
+            letter-spacing: 0.04em
+            margin-right: auto
+
+        .grip
+            opacity: 0.55
+            font-size: 13px
+
+    .lab
+        font-size: 11px
+        text-transform: uppercase
+        letter-spacing: 0.08em
+        opacity: 0.7
+        min-width: 34px
+
+    .slide
+        display: flex
+        align-items: center
+        gap: 6px
+        width: 100%
+
+        input
+            flex: 1
+            min-width: 0
+            accent-color: $picked
+
+        output
+            min-width: 34px
+            text-align: right
+            font-variant-numeric: tabular-nums
+            opacity: 0.85
+
+    small
+        opacity: 0.7
+        font-size: 11px
+
     button
-        width: 48px
-        height: 48px
-        padding: 0
+        width: auto
+        line-height: normal
         margin: 0
-        background: rgba(230, 214, 188, 0.12)
-        border: 1px solid transparent
+        padding: 3px 8px
+        color: inherit
+        background: rgba(255, 240, 225, 0.05)
+        border: 1px solid rgba(255, 228, 205, 0.16)
         border-radius: 7px
-        cursor: pointer
+        box-shadow: none
 
-        &:hover
-            border-color: rgba(255, 228, 205, 0.25)
+        &:hover:not(:disabled)
+            background: rgba(255, 240, 225, 0.1)
 
+        &:disabled
+            opacity: 0.45
+
+    .save
+        width: 100%
+
+    // (its link and its x, their marks in the middle: Luke 2026-10-25)
+    .dock
+        display: inline-flex
+        align-items: center
+        justify-content: center
+        flex: 0 0 auto
+        width: 26px
+        height: 22px
+        padding: 0
+
+        i
+            margin: 0
+
+    // (Mirror and Pick strokes, lit while on: Luke 2026-10-25)
+    .flip, .pick
         &.on
             border-color: rgba($picked, 0.95)
             background: rgba($picked, 0.22)
 
-        canvas
-            display: block
-            width: 48px
-            height: 48px
+    .flip
+        width: 100%
 
-    .size
+    // (Places, Signs, Yours: Luke 2026-10-25)
+    .tabs
+        display: flex
+        gap: 4px
+        padding-top: 6px
+
+        button
+            flex: 1 1 0
+            padding: 3px 6px
+
+            &.on
+                border-color: rgba($picked, 0.95)
+                background: rgba($picked, 0.22)
+
+    .tiles .empty
         grid-column: 1 / -1
 
-        input
-            width: 100%
-            accent-color: $picked
+    // the doodles, five across whatever the window's width, the tiles growing
+    // as it widens (Luke, 2026-10-25), scrolling
+    .tiles
+        flex: 1 1 auto
+        min-height: 0
+        overflow-y: auto
+        display: grid
+        grid-template-columns: repeat(5, minmax(0, 1fr))
+        // (each row as tall as its tiles, however short the room: rows left
+        // to fit shrank to nothing, the tiles overlapping)
+        grid-auto-rows: max-content
+        align-content: start
+        gap: 4px
+        padding-top: 6px
+
+        .lab
+            grid-column: 1 / -1
+            padding-top: 2px
+
+        button
+            width: auto
+            height: auto
+            line-height: 0
+            padding: 0
+            background: rgba(230, 214, 188, 0.12)
+            border: 1px solid transparent
+            cursor: pointer
+
+            &:hover
+                border-color: rgba(255, 228, 205, 0.25)
+
+            &.saved
+                border-color: rgba(255, 228, 205, 0.18)
+
+            &.on
+                border-color: rgba($picked, 0.95)
+                background: rgba($picked, 0.22)
+
+            // (its picture drawn at the tile's own size, a square, giving the
+            // tile its height: layer.js)
+            canvas
+                display: block
+                width: 100%
+                height: auto
+
+    // (folded to its head: a double-click on it)
+    &[data-view=shut]
+        height: auto !important
+        resize: none
+
+        .sec:not(.head), .tiles
+            display: none
+
+// the window in hand (Luke, 2026-10-25: the one last pressed, the brush's or
+// the doodles'), its edge lit
+.heart-board-palette.in-hand, .heart-board-doodles.in-hand
+    border-color: rgba($picked, 0.55)
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba($picked, 0.25)
+
+// the Board tab of a scene's settings (Luke, 2026-10-25)
+.heart-board-tab
+    fieldset[disabled]
+        opacity: 0.5
+
+    .form-fields input[type=number]
+        flex: 0 0 90px
+        width: 90px
+
+    .form-fields .sep
+        flex: 0 0 auto
+        margin: 0 6px
+        opacity: 0.7
+
+    .heart-board-tab-size
+        font-weight: bold
+
+// a tool window's x (Luke, 2026-10-25): its mark in the middle of its button
+// (Foundry gives every button's icon a margin on its right)
+.heart-board-palette .head .wclose, .heart-board-doodles .head .wclose
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    flex: 0 0 auto
+    width: 26px
+    height: 22px
+    padding: 0
+    margin-left: 4px
+
+    i
+        margin: 0

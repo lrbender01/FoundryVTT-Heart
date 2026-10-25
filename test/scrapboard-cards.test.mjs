@@ -131,7 +131,8 @@ describe("tape and webs come off their cards (Luke, 2026-10-06)", () => {
     c.dragEnd();
     expect(c.wheel(1, { shift: true }).bits.bit1.w).toBeLessThan(v.bits[0].w);
     expect(c.pieceOut()).toEqual({ bits: { bit1: null } });
-    expect(c.press("erase", { x: 1500, y: 1500 })).toEqual({ do: "patch", patch: { bits: { bit1: null } } });
+    // (Erase rubs out brush strokes only: Luke 2026-10-24)
+    expect(c.press("erase", { x: 1500, y: 1500 })).toBeNull();
   });
 
   it("the picture never comes off", () => {
@@ -252,11 +253,15 @@ describe("the reticle (Luke, 2026-10-06)", () => {
     expect(patch?.pins?.p?.s).toBeLessThanOrEqual(3);
   });
 
-  it("a pin through a landmark's clipping shows the reticle and is taken by itself", () => {
+  // (Luke, 2026-10-25: only once its card is selected; before, the card)
+  it("a pin through a landmark's clipping shows the reticle once the card is selected, and is taken by itself", () => {
     const c = ctl(GM);
     const s = c.host.view().scraps[0];
     const p = s.layout.clipPins[0];
     expect(p).toBeTruthy();
+    c.hover({ x: p.x + 3, y: p.y + 2 }, "move");
+    expect(c.grab).toBeNull();
+    c.selection.add("w");
     c.hover({ x: p.x + 3, y: p.y + 2 }, "move");
     expect(c.grab).toMatchObject({ x: p.x, y: p.y });
     c.press("move", { x: p.x, y: p.y });

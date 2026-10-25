@@ -93,4 +93,18 @@ describe("keys the code names", () => {
     }
     expect(missing).toEqual([]);
   });
+
+  // (the class sheet builds its tier headings and "+" labels from the tier,
+  // which the literal checks above can't see; a refactor dropped them as
+  // unused and the Abilities tab showed raw keys: Luke, 2026-10-23)
+  it("the class sheet's built keys exist for every ability tier", () => {
+    const missing = [];
+    for (const tier of ["core", "minor", "major", "zenith"]) {
+      for (const leaf of ["label-multiple", "add"]) {
+        const key = `heart.class.${tier}-ability.${leaf}`;
+        if (!(key in en)) missing.push(key);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
 });

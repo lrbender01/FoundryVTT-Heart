@@ -1,0 +1,69 @@
+{{!--
+  Familiar sheet (Luke, 2026-10-24): The Witch is Dead's own sheet, ink on
+  paper (familiar.sass). Boxes as the game prints them: Name and Species;
+  the Portrait beside the four traits (each heading rolls its trait, the
+  game's words for it as a hint); Current Danger (+ and -) and the Magic
+  spell you know; the rules in one line; Notes, revenge plans, and vitriol.
+  Roll species and Roll spell show only to those who may edit.
+--}}
+<form class="familiar-sheet {{cssClass}}" autocomplete="off">
+
+  <header class="familiar-title">{{localize "heart.familiar.game-title"}}</header>
+
+  <div class="familiar-row familiar-identity">
+    <div class="familiar-box familiar-name">
+      <span class="familiar-head">{{localize "heart.familiar.name-label"}}</span>
+      <input class="familiar-field" type="text" name="name" value="{{actor.name}}" />
+    </div>
+    <div class="familiar-box familiar-species">
+      <span class="familiar-head">{{localize "heart.familiar.species-label"}}
+        {{#if editable}}<a class="familiar-roll-button" data-action="familiar-roll-species" data-tooltip="{{localize 'heart.familiar.roll-species-tip'}}"><i class="fas fa-dice-d10"></i>{{localize "heart.familiar.roll-species"}}</a>{{/if}}
+      </span>
+      <input class="familiar-field" type="text" name="system.species" value="{{system.species}}" />
+    </div>
+  </div>
+
+  <div class="familiar-row familiar-main">
+    <div class="familiar-box familiar-portrait{{#if blankPortrait}} blank{{/if}}">
+      <span class="familiar-head">{{localize "heart.familiar.portrait-label"}}</span>
+      <img src="{{actor.img}}" alt="{{actor.name}}" data-edit="img"{{#if editable}} data-tooltip="{{localize 'heart.familiar.portrait-tip'}}"{{/if}} />
+    </div>
+
+    <div class="familiar-traits">
+      {{#each traits as |t|}}
+      <div class="familiar-box familiar-trait">
+        <a class="familiar-head familiar-trait-roll" data-action="familiar-roll" data-trait="{{t.key}}" data-tooltip="{{t.tip}}">{{t.label}}<i class="fas fa-dice-d10"></i></a>
+        <input class="familiar-number" type="number" name="system.traits.{{t.key}}" value="{{t.value}}" min="0" max="{{@root.traitMax}}" step="1" data-dtype="Number" />
+        <span class="familiar-hint">{{t.hint}}</span>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+
+  <div class="familiar-row familiar-lower">
+    <div class="familiar-box familiar-danger">
+      <span class="familiar-head">{{localize "heart.familiar.danger-label"}}</span>
+      <div class="familiar-danger-count">
+        {{#if editable}}<a class="familiar-step" data-action="familiar-danger" data-delta="-1" data-tooltip="{{localize 'heart.familiar.danger-down'}}">&minus;</a>{{/if}}
+        <input class="familiar-number" type="number" name="system.danger" value="{{danger}}" min="0" step="1" data-dtype="Number" />
+        {{#if editable}}<a class="familiar-step" data-action="familiar-danger" data-delta="1" data-tooltip="{{localize 'heart.familiar.danger-up'}}">+</a>{{/if}}
+      </div>
+      <span class="familiar-hint">{{localize "heart.familiar.danger-hint"}}</span>
+    </div>
+
+    <div class="familiar-box familiar-spell">
+      <span class="familiar-head">{{localize "heart.familiar.spell-label"}}
+        {{#if editable}}<a class="familiar-roll-button" data-action="familiar-roll-spell" data-tooltip="{{localize 'heart.familiar.roll-spell-tip'}}"><i class="fas fa-dice-d10"></i>{{localize "heart.familiar.roll-spell"}}</a>{{/if}}
+      </span>
+      <input class="familiar-field" type="text" name="system.spell" value="{{system.spell}}" />
+      <span class="familiar-hint">{{localize "heart.familiar.spell-hint"}}</span>
+    </div>
+  </div>
+
+  <p class="familiar-rules">{{localize "heart.familiar.rules-line"}}</p>
+
+  <div class="familiar-box familiar-notes">
+    <span class="familiar-head">{{localize "heart.familiar.notes-label"}}</span>
+    <textarea class="familiar-field" name="system.notes">{{system.notes}}</textarea>
+  </div>
+</form>

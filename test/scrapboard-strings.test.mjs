@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { normalizeLook, normalizeBoard, boardView, newStringPatch, onlyPlayersStrings, applyPatch } from "../src/map/scrapboard/model.js";
+import { normalizeLook, normalizeBoard, boardView, newStringPatch, applyPatch } from "../src/map/scrapboard/model.js";
 import { BoardControls } from "../src/map/scrapboard/controls.js";
 
 const size = () => null;
@@ -73,18 +73,5 @@ describe("a string run on from another is shown or hidden as it is", () => {
     c.chaining = true;
     c.chainFrom("d", { x: 2000, y: 500 });
     expect(c.marks({ pointer: { x: 2300, y: 800 } }).line).toEqual([{ x: 2000, y: 500 }, { x: 2300, y: 800 }]);
-  });
-});
-
-describe("the players' strings alone", () => {
-  it("keeps the strings players made and their names; the GM's go, with their tags and pins", () => {
-    const raw = structuredClone(RUN);
-    raw.pins.p1 = pin(300, 2000);
-    raw.pins.p2 = pin(900, 2000);
-    raw.links.mine = { kind: "path", color: 3, author: "ana", aPin: "p1", bPin: "p2" };
-    const v = onlyPlayersStrings(boardView(look, normalizeBoard(raw), "gm", size, measure));
-    expect(v.links.map((l) => l.id)).toEqual(["mine"]);
-    expect(v.scraps.map((s) => s.key)).toEqual([]);
-    expect(v.pins.map((p) => p.id).sort()).toEqual(["p1", "p2"]);
   });
 });

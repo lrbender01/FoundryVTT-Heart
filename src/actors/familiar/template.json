@@ -1,0 +1,16 @@
+{
+    "Actor": {
+        "familiar": {
+            "species": "",
+            "traits": {
+                "clever": 0,
+                "fierce": 0,
+                "sly": 0,
+                "quick": 0
+            },
+            "danger": 0,
+            "spell": "",
+            "notes": ""
+        }
+    }
+}

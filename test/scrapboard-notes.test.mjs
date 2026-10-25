@@ -11,14 +11,14 @@ import { PAINT_ORDER } from "../src/map/scrapboard/model.js";
 
 describe("the paints' and pins' names (2026-10-21)", () => {
   it("orders the paints as the palette does, any more the look has after", () => {
-    expect(paintOrder(14)).toEqual(PAINT_ORDER);
-    expect(paintOrder(16).slice(-2)).toEqual([14, 15]);
+    expect(paintOrder(80)).toEqual(PAINT_ORDER);
+    expect(paintOrder(82).slice(-2)).toEqual([80, 81]);
     expect(paintOrder(3)).toEqual([0, 1, 2]);
   });
 
   it("names a paint in this language, else in English, else Paint n", () => {
     expect(paintName(0)).toBe("Bone");
-    expect(paintName(14)).toBe("heart.board.paint-n{n=15}");
+    expect(paintName(80)).toBe("heart.board.paint-n{n=81}");
     game.i18n.has = (k) => k === "heart.board.paint.blood";
     try {
       expect(paintName(1)).toBe("heart.board.paint.blood");

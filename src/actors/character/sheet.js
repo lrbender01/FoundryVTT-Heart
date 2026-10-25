@@ -402,9 +402,11 @@ export default class CharacterSheet extends HeartActorSheet {
     // Dropping the party actor on this sheet makes the character a member
     // (the other way: drop the character on the party sheet). Any other
     // actor is a bond (2026-10-01): the GM grants it, a player's drop asks
-    // the GM (bonds/flow.js)
+    // the GM (bonds/flow.js). A familiar from The Witch is Dead is never a
+    // bond (Luke, 2026-10-24): it drops as on any Foundry sheet, to nothing.
     async _onDropActor(event, data) {
         const dropped = await Actor.implementation.fromDropData(data);
+        if (dropped?.type === 'familiar') return super._onDropActor(event, data);
         if (dropped && dropped.type !== 'party' && this.actor.type === 'character' && this.actor.isOwner) {
             if (dropped.id === this.actor.id) return false;
             return game.user.isGM ? grantBond(this.actor, dropped) : requestBond(this.actor, dropped);

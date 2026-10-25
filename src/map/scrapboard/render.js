@@ -24,7 +24,7 @@
 //   repaint never builds a stroke again.
 // - Zoomed in, the view is painted again at the screen's own resolution (a
 //   second, finer set of tiles over it), so writing is sharp at any zoom.
-import { normalizeBoard, boardView, onlyPlayersStrings } from './model.js';
+import { normalizeBoard, boardView, sheetLook } from './model.js';
 import { createPainter, sheetGeometry, pointsHash, arrivalAreas, sheetBands } from './paint.js';
 import { loadBoardLook, textureUrl, previewUrl } from './look.js';
 import { boardOf } from './api.js';
@@ -322,6 +322,11 @@ export class ScrapboardRenderer {
     #pumping = false;
     #lookSeen = null;
     #lookGen = 0;
+    // (the tiles painted, the time it took, and the slowest: File's
+    // Statistics, Luke 2026-10-25)
+    #painted = 0;
+    #paintMs = 0;
+    #slowest = 0;
     // (set when a preview stood in for an image: the tile is painted again)
     short = false;
     look = null;
@@ -365,6 +370,32 @@ export class ScrapboardRenderer {
 
     get painter() {
         return this.#painter;
+    }
+
+    // What this client holds and has done (File's Statistics, Luke
+    // 2026-10-25): its tiles and how many wait to be painted, their bitmaps'
+    // memory, the images loaded and theirs, whether the view has its own
+    // sharper tiles, and the tiles painted since the board was drawn
+    stats() {
+        let tiles = 0;
+        let waiting = 0;
+        let bytes = 0;
+        for (const g of [this.#base, this.#focus, this.#nextFocus]) {
+            for (const t of g?.tiles ?? []) {
+                tiles++;
+                if (t.dirty) waiting++;
+                if (t.canvas) bytes += t.canvas.width * t.canvas.height * 4;
+                if (t.bg) bytes += t.bg.width * t.bg.height * 4;
+            }
+        }
+        let images = 0;
+        let imageBytes = 0;
+        for (const e of this.#images.values()) {
+            if (!e.full?.ready || !e.full.im) continue;
+            images++;
+            imageBytes += (e.full.im.width || 0) * (e.full.im.height || 0) * 4;
+        }
+        return { tiles, waiting, bytes, images, imageBytes, sharp: Boolean(this.#focus && !this.#focus.hidden), painted: this.#painted, paintMs: this.#paintMs, slowest: this.#slowest };
     }
 
     /* -------------------------------------------- */
@@ -508,8 +539,14 @@ export class ScrapboardRenderer {
     // The view a viewer ('gm' or 'player') sees of a board (the scene's, or
     // one being edited before it is written)
     async viewOf(scene, viewer, boardJ = boardOf(scene)) {
-        const { look, textures } = await loadBoardLook();
+        const { look: base, textures } = await loadBoardLook(scene);
         this.#textures = textures;
+        // (the hands loaded before a note is laid out: writing fitted with
+        // the fallback face was kept that size; Luke 2026-10-25, notes
+        // resizing themselves every launch)
+        await this.#fonts(base);
+        // (the board's own sheet: its size and pages, Luke 2026-10-24)
+        const look = sheetLook(base, boardJ);
         this.look = look;
         const board = normalizeBoard(boardJ);
         // a landmark of the GM's own takes its actor's name (before its layout
@@ -522,9 +559,7 @@ export class ScrapboardRenderer {
             if (s.art || look.library?.[s.lib]?.art || plainIcon(doc?.img)) continue;
             if (await this.#actorSize(doc.img)) s.art = ACTOR_ART + doc.img;
         }
-        let view = boardView(look, board, viewer, this.size, this.measure);
-        // (the players' strings alone, on this screen: Luke 2026-10-06)
-        if (this.playerStringsOnly) view = onlyPlayersStrings(view);
+        const view = boardView(look, board, viewer, this.size, this.measure);
         // marker layers this client has hidden (the GM's view of each one)
         if (this.hiddenMarks.size) view.marks = Object.fromEntries(Object.entries(view.marks).filter(([k]) => !this.hiddenMarks.has(k)));
         return view;
@@ -534,8 +569,6 @@ export class ScrapboardRenderer {
     hiddenMarks = new Set();
     // the drawing alone, without the board's pieces (this client's)
     marksOnly = false;
-    // the players' strings alone (this client's)
-    playerStringsOnly = false;
 
     /* -------------------------------------------- */
     /*  Drawing                                     */
@@ -561,7 +594,7 @@ export class ScrapboardRenderer {
             this.#lookSeen = look;
             this.#lookGen++;
         }
-        const key = `${JSON.stringify(look.sheet)}${look.w}${look.h}#${this.#lookGen}`;
+        const key = `${JSON.stringify(look.sheet)}${JSON.stringify(look.page)}${look.w}${look.h}#${this.#lookGen}`;
         if (key !== this.lookKey) {
             this.geo = sheetGeometry(look, (id) => this.#textures[id]?.tone ?? null, (id) => this.#textures[id]?.safe ?? null);
             this.lookKey = key;
@@ -679,10 +712,17 @@ export class ScrapboardRenderer {
             const until = now && !whole ? null : start + FRAME_BUDGET;
             let done;
             this.#pxs = grid.k;
+            const t0 = performance.now();
             try {
                 done = grid.paint(t, P, { ...opts, until });
             } finally {
                 this.#pxs = null;
+                const ms = performance.now() - t0;
+                this.#paintMs += ms;
+                if (done) {
+                    this.#painted++;
+                    this.#slowest = Math.max(this.#slowest, ms);
+                }
             }
             if (!done && !now) break;
         }
@@ -746,8 +786,18 @@ export class ScrapboardRenderer {
 
     async #fonts(look, view = null) {
         const faces = [...new Set([...look.fonts.hands, look.fonts.display, ...this.#usedHands(), ...(view?.scraps ?? []).map((s) => s.layout.font)])];
-        await Promise.all(faces.map((f) => document.fonts.load(`40px "${f}"`).catch(() => null)));
+        await Promise.all(faces.map((f) => document.fonts.load(`40px "${f}"`).catch((err) => {
+            // (said once a face: writing laid out in the fallback face is
+            // sized for it; Luke 2026-10-25, it once resized notes unseen)
+            if (!this.#fontsFailed.has(f)) {
+                this.#fontsFailed.add(f);
+                console.warn(`heart | the hand "${f}" could not be loaded`, err);
+            }
+            return null;
+        })));
     }
+
+    #fontsFailed = new Set();
 
     // hands chosen per scrap (a player's note writes in their own)
     #usedHands() {
@@ -761,7 +811,9 @@ export class ScrapboardRenderer {
     // The whole board as a viewer sees it, painted afresh at `scale` bitmap
     // px per board px once every whole image has loaded: a PNG (the Heart Map
     // tools' Save a picture; Luke, 2026-10-02)
-    async snapshot(scene, viewer, scale = 1.5) {
+    // (Luke, 2026-10-25: `type` 'webp' or 'png'; { blob, type }, a WebP too
+    // large for the format a PNG)
+    async snapshot(scene, viewer, scale = 1.5, type = 'png') {
         const view = await this.viewOf(scene, viewer);
         const look = this.look;
         await this.#fonts(look, view);
@@ -785,7 +837,9 @@ export class ScrapboardRenderer {
             P.dropBake();
             P.set({ look, view: this.view ?? view, geo: this.geo });
         }
-        return new Promise((resolve) => c.toBlob(resolve, 'image/png'));
+        const webp = type === 'webp' && c.width <= 16383 && c.height <= 16383;
+        const blob = await new Promise((resolve) => (webp ? c.toBlob(resolve, 'image/webp', 0.92) : c.toBlob(resolve, 'image/png')));
+        return { blob, type: blob?.type || (webp ? 'image/webp' : 'image/png') };
     }
 
     #paintWhole(view, c, k) {

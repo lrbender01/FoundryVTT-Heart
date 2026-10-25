@@ -84,6 +84,37 @@ export function applyGlassPass() {
     }
 }
 
+// One reset for everyone (2026-10-23, Luke: "reset everyone's and then have
+// them pick up the defaults"). The sliders are each client's own, out of the
+// GM's reach, so the GM bumps a hidden world stamp instead:
+//   game.settings.set('heart', 'glassReset', Date.now())
+// and every client puts its own sliders back to their defaults, at once if
+// it is connected, else on its next load. Each client remembers the last
+// stamp it followed, so a reset happens once per bump. The Glass switch
+// itself is left as each user set it.
+export const GLASS_RESET_SETTING = 'glassReset';
+export const GLASS_RESET_SEEN = 'glassResetSeen';
+export const GLASS_SLIDERS = [SEE_THROUGH_SETTING, BLUR_SETTING, TINT_SETTING];
+
+export const needsGlassReset = (stamp, seen) => Boolean(stamp) && stamp !== seen;
+
+export async function followGlassReset() {
+    const stamp = game.settings.get('heart', GLASS_RESET_SETTING);
+    if (!needsGlassReset(stamp, game.settings.get('heart', GLASS_RESET_SEEN))) return false;
+    // (said only where a slider moved: Luke 2026-10-25, every new player
+    // was told their sliders were reset though none had changed)
+    let moved = false;
+    for (const key of GLASS_SLIDERS) {
+        const fallback = game.settings.settings.get(`heart.${key}`)?.default;
+        if (fallback === undefined || game.settings.get('heart', key) === fallback) continue;
+        await game.settings.set('heart', key, fallback);
+        moved = true;
+    }
+    await game.settings.set('heart', GLASS_RESET_SEEN, stamp);
+    if (moved) globalThis.ui?.notifications?.info(game.i18n.localize('heart.glass.reset-done'));
+    return true;
+}
+
 export function applyGlassGround() {
     const active = Boolean(game.modules?.get('fvtt-heart-content')?.active);
     const route = (p) => foundry.utils.getRoute?.(p) ?? p;

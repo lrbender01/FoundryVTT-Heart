@@ -14,6 +14,9 @@ import {
   RelayTimeout,
   RELAY_CHANNEL,
   HANDLER_LIMIT_MS,
+  LIVE_MAX,
+  runLocal,
+  onLive,
 } from "../src/common/relay.js";
 
 const tick = (ms = 5) => new Promise((r) => setTimeout(r, ms));
@@ -102,6 +105,7 @@ describe("relay()", () => {
       data: { x: 1 },
       from: "player",
       to: "gm",
+      sent: expect.any(Number),
     });
     await onRelayMessage({ kind: "response", id: "req-1", to: "player", result: { status: "done" }, error: null });
     await expect(asked).resolves.toEqual({ status: "done" });
@@ -180,6 +184,67 @@ describe("the GM's side", () => {
     await expect(asked).resolves.toEqual({ status: "done" });
   });
 
+  // 2026-10-25 (the health audit, A10): a request's time counts from when it
+  // was sent, and one asked again under its id is never done twice
+  it("lets a request go unrun once its asker has stopped waiting", async () => {
+    game.user = { id: "gm", isGM: true };
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const fn = vi.fn(async () => ({ status: "done" }));
+    registerRelayHandler("late", fn);
+    await onRelayMessage({ kind: "request", id: "r5", op: "late", data: {}, from: "player", to: "gm", sent: Date.now() - HANDLER_LIMIT_MS - 1 }, "player");
+    expect(fn).not.toHaveBeenCalled();
+    expect(game.socket.emit.mock.calls[0][1]).toMatchObject({ kind: "response", id: "r5", result: null, error: expect.any(String) });
+  });
+
+  it("lets a request queued behind a slow one go once its time is up", async () => {
+    vi.useFakeTimers();
+    game.user = { id: "gm", isGM: true };
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    registerRelayHandler("hog", () => new Promise(() => {}));
+    const fn = vi.fn(async () => ({ status: "done" }));
+    registerRelayHandler("behind", fn);
+    const hog = expect(runQueued("hog")).rejects.toBeInstanceOf(RelayTimeout);
+    const asked = onRelayMessage({ kind: "request", id: "r6", op: "behind", data: {}, from: "player", to: "gm", sent: Date.now() }, "player");
+    await vi.advanceTimersByTimeAsync(HANDLER_LIMIT_MS + 1);
+    await hog;
+    await asked;
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it("answers a request asked again under the same id without running it twice", async () => {
+    game.user = { id: "gm", isGM: true };
+    const fn = vi.fn(async () => ({ status: "done", n: fn.mock.calls.length }));
+    registerRelayHandler("once", fn);
+    const msg = { kind: "request", id: "r7", op: "once", data: {}, from: "player", to: "gm", sent: Date.now() };
+    await onRelayMessage(msg, "player");
+    await onRelayMessage({ ...msg }, "player");
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(game.socket.emit).toHaveBeenCalledTimes(2);
+    expect(game.socket.emit.mock.calls[1][1]).toMatchObject({ id: "r7", result: { status: "done", n: 1 } });
+  });
+
+  it("runs this client's own work in the handlers' queue (runLocal)", async () => {
+    const log = [];
+    let finish;
+    registerRelayHandler("first", () => new Promise((r) => { finish = r; }).then(() => log.push("handler")));
+    const first = runQueued("first");
+    const mine = runLocal("mine", () => log.push("mine"));
+    await tick();
+    expect(log).toEqual([]);
+    finish();
+    await Promise.all([first, mine]);
+    expect(log).toEqual(["handler", "mine"]);
+  });
+
+  it("drops a live message past LIVE_MAX unread", () => {
+    const seen = vi.fn();
+    onLive(seen);
+    onRelayMessage({ kind: "live", from: "p2", what: "drag", pad: "x".repeat(LIVE_MAX) }, "p2");
+    expect(seen).not.toHaveBeenCalled();
+    onRelayMessage({ kind: "live", from: "p2", what: "drag" }, "p2");
+    expect(seen).toHaveBeenCalledTimes(1);
+  });
+
   it("reports a failing handler as an error answer", async () => {
     game.user = { id: "gm", isGM: true };
     vi.spyOn(console, "error").mockImplementation(() => {});
@@ -209,6 +274,16 @@ describe("askGM()", () => {
     registerRelayHandler(`status-${status}`, async () => ({ status }));
     await expect(askGM(`status-${status}`)).resolves.toBeNull();
     expect(ui.notifications.warn).toHaveBeenCalledWith(key);
+  });
+
+  // 2026-10-25 (the health audit, B6): a request that wrote part of what it
+  // asked hands back its undo even when it failed
+  it("hands every answer to `seen`, done or not", async () => {
+    registerRelayHandler("part", async () => ({ status: "failed", undo: { ops: [1] } }));
+    const seen = vi.fn();
+    await expect(askGM("part", {}, { seen })).resolves.toBeNull();
+    expect(seen).toHaveBeenCalledWith({ status: "failed", undo: { ops: [1] } });
+    expect(ui.notifications.warn).toHaveBeenCalledWith("heart.relay.failed");
   });
 
   it("says the GM didn't answer on a timeout", async () => {

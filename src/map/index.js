@@ -12,14 +12,17 @@
 // control (scrapboard/layer.js). An earlier map scene (flags.heart.map, the
 // v2 map) becomes a scrapboard scene the first time the GM views it.
 import './map.sass';
-import { ScrapboardLayer, boardControls } from './scrapboard/layer.js';
-import { loadBoardLook, reloadBoardLook } from './scrapboard/look.js';
+import { ScrapboardLayer } from './scrapboard/layer.js';
+import { boardControls } from './scrapboard/tools.js';
+import { loadBoardLook, reloadBoardLook, boardStyles } from './scrapboard/look.js';
+import { addBoardTab, createBoardDialog } from './scrapboard/scene-tab.js';
 import {
     isBoardScene, boardOf, createBoardScene, setBoardScene, setScrap, setLink, addScrap, addLink, removeScrap,
-    removeLink, exportBoard, importBoard, restoreBackup, undo, redo, isPlayersBoard, ownersOf, tidyBoardScene, followRename, downloadBoard, newPlace,
+    removeLink, exportBoard, importBoard, restoreBackup, undo, redo, isPlayersBoard, ownersOf, tidyBoardScene, syncBoardScene, followRename, downloadBoard, newPlace,
+    configureBoard, followSceneSize, remindDownload, keepWorldCopy,
 } from './scrapboard/api.js';
-import { registerBoardSettings, registerBoardRelay, handOf, playersBoardDialog, askBoard } from './scrapboard/notes.js';
-import { registerRailSettings, syncRail } from './scrapboard/rail.js';
+import { registerBoardSettings, registerBoardRelay, handOf, playersBoardDialog, askBoard, freeGMHands } from './scrapboard/notes.js';
+import { registerRailSettings, syncRail, againToLook } from './scrapboard/rail.js';
 import { keepBackup } from './scrapboard/backups.js';
 
 // (the scenes whose board was copied as this session found it)
@@ -47,7 +50,7 @@ function onDrop(_canvas, data) {
     if (doc?.type !== 'landmark') return;
     (async () => {
         const scene = canvas.scene;
-        const { look } = await loadBoardLook();
+        const { look } = await loadBoardLook(scene);
         const at = layer()?.renderer.toMap({ x: data.x, y: data.y }) ?? { x: data.x, y: data.y };
         const source = doc._stats?.compendiumSource ?? doc.flags?.core?.sourceId;
         // (a library entry with no uuid never matches a landmark with no
@@ -90,13 +93,16 @@ function registerHooks() {
     Hooks.on('getSceneControlButtons', boardControls);
 
     Hooks.on('canvasReady', async () => {
-        await convertOldMap(canvas.scene);
-        // (a copy of the board as the session found it: the GM's, once a scene)
-        if (game.user.isGM && isBoardScene(canvas.scene) && !kept.has(canvas.scene.id)) {
-            kept.add(canvas.scene.id);
-            await keepBackup(canvas.scene, foundry.utils.deepClone(boardOf(canvas.scene)), { force: true, why: 'start' });
+        const scene = canvas.scene;
+        try {
+            await convertOldMap(scene);
+        } catch (err) {
+            console.warn('heart | the old map could not be converted', err);
         }
-        await tidyBoardScene(canvas.scene);
+        // The board shown and in hand first, then the GM's copy and tidy
+        // (Luke, 2026-10-25: the first paint waited for both writes, and a
+        // throw in either left the board blank); a tidy that changes the
+        // board is drawn again by its own scene update
         layer()?.refresh();
         // the Heart Map control shows on scrapboard scenes only, and is the
         // one in hand when such a scene is viewed (GM and players alike)
@@ -108,11 +114,38 @@ function registerHooks() {
         } else syncControls();
         // (the Heart Map's own toolbar, when it is the one in use)
         syncRail();
+        try {
+            // (a copy of the board as the session found it: the GM's, once a scene)
+            if (game.user.isGM && isBoardScene(scene) && !kept.has(scene.id)) {
+                kept.add(scene.id);
+                await keepBackup(scene, foundry.utils.deepClone(boardOf(scene)), { force: true, why: 'start' });
+                // (and, the active GM's, a dated copy in the world's folder
+                // and the Download reminder: Luke 2026-10-25, the map safety
+                // fixes)
+                if (!game.users.activeGM || game.users.activeGM.id === game.user.id) {
+                    remindDownload(scene);
+                    await keepWorldCopy(scene).catch((err) => console.warn('heart | the board could not be copied to the world', err));
+                }
+            }
+            await tidyBoardScene(scene);
+        } catch (err) {
+            console.warn('heart | the board could not be copied or tidied', err);
+        }
     });
     Hooks.on('canvasTearDown', () => document.getElementById('heart-board-rail')?.remove());
 
-    Hooks.on('updateScene', (scene, changes) => {
+    Hooks.on('updateScene', (scene, changes, options) => {
+        // (the scene the size of its board's sheet, after an undo, a redo, an
+        // import, or a restore changed it: the active GM's; Luke 2026-10-24)
+        if (foundry.utils.hasProperty(changes, 'flags.heart.board')) syncBoardScene(scene).catch((err) => console.warn('heart | the scene could not follow its sheet', err));
+        // (a board on its scene's own background the scene's size: Luke 2026-10-25)
+        if (('width' in changes || 'height' in changes) && !options?.heartBoard) followSceneSize(scene).catch((err) => console.warn('heart | the board could not follow its scene', err));
         if (scene.id !== canvas?.scene?.id || !foundry.utils.hasProperty(changes, 'flags.heart')) return;
+        // (a new style: drawn again in it at once, never twice)
+        if (foundry.utils.hasProperty(changes, 'flags.heart.boardStyle')) {
+            layer()?.refresh();
+            return syncControls();
+        }
         layer()?.queueRefresh();
         // (a scene that stops being a board drops the Heart Map control)
         syncControls();
@@ -124,6 +157,11 @@ function registerHooks() {
     });
 
     Hooks.on('dropCanvasData', onDrop);
+
+    // a user gone: what they were doing on the map with them (Luke, 2026-10-25)
+    Hooks.on('userConnected', (user, connected) => {
+        if (!connected) layer()?.dropPeer?.(user.id);
+    });
 
     // a place's cards follow its actor (Luke, 2026-10-21): a rename is
     // written to every board's cards by the one active GM (an edit Undo takes
@@ -140,23 +178,45 @@ function registerHooks() {
         // 2026-10-21)
         if (!game.user.isGM || (game.users.activeGM && game.users.activeGM.id !== game.user.id)) return;
         for (const scene of game.scenes) if (isBoardScene(scene)) await tidyBoardScene(scene).catch((err) => console.warn('heart | a board could not be tidied', scene.name, err));
+        // (no GM holds a hand: Luke 2026-10-25)
+        await freeGMHands().catch((err) => console.warn('heart | a GM hand could not be let go', err));
     });
 
     // the marker's palette shows while the Marker is in hand
-    Hooks.on('renderSceneControls', () => {
-        if (onBoard()) layer()?.syncPalette();
+    Hooks.on('renderSceneControls', (app, html) => {
+        // (the toolbar first: a tool's window opens beside it; Luke
+        // 2026-10-25, made first it opened by Foundry's, to the right)
         syncRail();
+        if (onBoard()) layer()?.syncPalette();
+        // (the tool in hand clicked again puts it down: Look, Luke 2026-10-25)
+        const el = html?.[0] ?? html;
+        if (el?.addEventListener && !el.dataset.heartAgain) {
+            el.dataset.heartAgain = '1';
+            el.addEventListener('click', (ev) => {
+                const li = ev.target.closest?.('.control-tool[data-tool]');
+                if (!li || ui.controls?.activeControl !== 'heartBoard') return;
+                if (againToLook(li.dataset.tool)) setTimeout(() => ui.controls?.initialize({ control: 'heartBoard', tool: 'inspect' }), 0);
+            }, true);
+        }
     });
 
     // the selection's marks keep their width on screen
     Hooks.on('canvasPan', () => {
         if (!onBoard()) return;
+        // (what the pointer rested on let go: its caption never stuck through
+        // a pan; Luke 2026-10-25)
+        layer()?.panned();
         layer()?.drawMarks();
         // (what is on the screen painted sharp again once the view settles)
         layer()?.renderer.queueFocus();
     });
 
-    // the Scenes sidebar: Create Heart Map (GM)
+    // a scene's settings: its Board tab (Luke, 2026-10-25)
+    Hooks.on('renderSceneConfig', (app, html) => {
+        addBoardTab(app, html).catch((err) => console.warn('heart | the Board tab could not be added', err));
+    });
+
+    // the Scenes sidebar: Create Board (GM)
     Hooks.on('renderSceneDirectory', (app, html) => {
         if (!game.user.isGM) return;
         const root = html instanceof HTMLElement ? html : html[0];
@@ -166,7 +226,11 @@ function registerHooks() {
         button.type = 'button';
         button.className = 'heart-map-create';
         button.innerHTML = `<i class="fa-solid fa-thumbtack"></i> ${Handlebars.escapeExpression(loc('heart.board.create'))}`;
-        button.addEventListener('click', () => createBoardScene());
+        // (its name and style asked first: Luke 2026-10-25)
+        button.addEventListener('click', async () => {
+            const answer = await createBoardDialog();
+            if (answer) await createBoardScene(answer);
+        });
         actions.append(button);
         // a players' board: a canvas of their own (Luke, 2026-10-02)
         const players = document.createElement('button');
@@ -183,7 +247,10 @@ function registerHooks() {
             name: 'heart.board.make',
             icon: '<i class="fa-solid fa-thumbtack"></i>',
             condition: (li) => game.user.isGM && !isBoardScene(sceneOf(li)),
-            callback: (li) => setBoardScene(sceneOf(li), true),
+            // (a scene with a picture keeps it, and its size, as the board's
+            // background; the Board tab of its settings changes it: Luke
+            // 2026-10-25)
+            callback: (li) => setBoardScene(sceneOf(li), true, { bare: Boolean(sceneOf(li)?.background?.src) }),
         }, {
             name: 'heart.board.unmake',
             icon: '<i class="fa-solid fa-thumbtack"></i>',
@@ -234,7 +301,13 @@ async function createPlayersBoard() {
     if (!game.user.isGM) return null;
     const answer = await playersBoardDialog();
     if (!answer) return null;
-    return createBoardScene({ name: answer.name, owners: answer.owners });
+    let style;
+    try {
+        style = localStorage.getItem('heartBoard.lastStyle') || undefined;
+    } catch {
+        // (a private window: Heart's)
+    }
+    return createBoardScene({ name: answer.name, owners: answer.owners, style });
 }
 
 registerHooks();
@@ -265,6 +338,14 @@ export function initialise() {
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY,
         onDown: () => Boolean(layer()?.reshuffle()),
     });
+    // the selection made public, or its maker's again (Luke, 2026-10-24:
+    // Shift+P), anyone's, only while the board's tools are in hand
+    game.keybindings.register('heart', 'boardShare', {
+        name: 'heart.board.key-share',
+        editable: [{ key: 'KeyP', modifiers: [SHIFT] }],
+        precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY,
+        onDown: (ctx) => (ctx?.event?.target?.closest?.('input, textarea, select, [contenteditable]') ? false : Boolean(layer()?.share())),
+    });
     registerBoardSettings();
     registerRailSettings();
     registerBoardRelay();
@@ -273,6 +354,10 @@ export function initialise() {
         createPlayersBoard,
         ownersOf,
         setBoardScene,
+        // (a scene's board as its Board tab would leave it, and the styles
+        // there are: Luke 2026-10-25)
+        configure: configureBoard,
+        styles: boardStyles,
         isBoardScene,
         board: boardOf,
         look: loadBoardLook,

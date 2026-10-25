@@ -67,3 +67,28 @@ describe("a place's cards follow its actor's name", () => {
     expect(renamedCards(raw, "Actor.a", "")).toEqual({});
   });
 });
+
+describe("the map safety fixes (Luke, 2026-10-25)", () => {
+  it("a Download reminder when never downloaded, or not for a week", async () => {
+    const { downloadDue, DOWNLOAD_DAYS } = await import("../src/map/scrapboard/boardfile.js");
+    const now = Date.UTC(2026, 9, 25);
+    expect(downloadDue(undefined, now)).toBe(true);
+    expect(downloadDue(now - 864e5, now)).toBe(false);
+    expect(downloadDue(now - (DOWNLOAD_DAYS + 1) * 864e5, now)).toBe(true);
+  });
+
+  it("a board's dated copy in the world, named for its scene, the day, and its id", async () => {
+    const { worldCopyName } = await import("../src/map/scrapboard/boardfile.js");
+    expect(worldCopyName("The Ledger: Act I", "abc123", new Date(2026, 9, 25))).toBe("The Ledger Act I 2026-10-25 abc123.json");
+  });
+
+  it("a full bin lets its oldest cards go, and says how many", async () => {
+    const { binPatch, binLetGo, BIN_MAX } = await import("../src/map/scrapboard/model.js");
+    const bin = Object.fromEntries(Array.from({ length: BIN_MAX }, (_, i) => [`old${i}`, { at: i, scrap: { type: "note", text: String(i) } }]));
+    const raw = { scraps: { n1: { type: "note", text: "new", x: 0, y: 0 } }, links: {}, pins: {}, bin };
+    const p = binPatch(raw, ["n1"], { at: BIN_MAX + 1 });
+    expect(binLetGo(p)).toBe(1);
+    expect(p.bin.old0).toBeNull();
+    expect(binLetGo(binPatch({ ...raw, bin: {} }, ["n1"]))).toBe(0);
+  });
+});

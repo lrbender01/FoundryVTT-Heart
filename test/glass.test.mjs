@@ -5,13 +5,57 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { glassOn, toggleGlass, glassToggleButton, applyGlassClass, glassGround, glassPass, glassLayers, GLASS_SETTING, GLASS_GROUND } from "../src/common/glass.js";
+import { glassOn, toggleGlass, glassToggleButton, applyGlassClass, glassGround, glassPass, glassLayers, needsGlassReset, followGlassReset, GLASS_SETTING, GLASS_GROUND } from "../src/common/glass.js";
 import { resetWorld } from "./helpers.mjs";
 
 const key = `heart.${GLASS_SETTING}`;
 
 beforeEach(() => {
   resetWorld();
+});
+
+describe("the GM's reset of everyone's sliders (2026-10-23)", () => {
+  const defaults = () => {
+    game.settings.settings = new Map([
+      ["heart.glassSeeThrough", { default: 25 }],
+      ["heart.glassBlur", { default: 6 }],
+      ["heart.glassTint", { default: 80 }],
+    ]);
+  };
+
+  it("follows a stamp once, never the default 0", () => {
+    expect(needsGlassReset(0, 0)).toBe(false);
+    expect(needsGlassReset(5, 0)).toBe(true);
+    expect(needsGlassReset(5, 5)).toBe(false);
+  });
+
+  it("puts this client's sliders back to their defaults and leaves the switch alone", async () => {
+    defaults();
+    for (const [k, v] of [["glassSeeThrough", 60], ["glassBlur", 12], ["glassTint", 25], ["glassSheets", true], ["glassReset", 7], ["glassResetSeen", 0]]) game.settings.store.set(`heart.${k}`, v);
+    expect(await followGlassReset()).toBe(true);
+    expect(["glassSeeThrough", "glassBlur", "glassTint", "glassSheets", "glassResetSeen"].map((k) => game.settings.store.get(`heart.${k}`))).toEqual([25, 6, 80, true, 7]);
+    // (once per stamp: a slider moved since stays where it was put)
+    game.settings.store.set("heart.glassBlur", 3);
+    expect(await followGlassReset()).toBe(false);
+    expect(game.settings.store.get("heart.glassBlur")).toBe(3);
+  });
+
+  it("says so only where a slider moved (Luke, 2026-10-25)", async () => {
+    defaults();
+    const said = () => ui.notifications.info.mock.calls.filter(([m]) => m === "heart.glass.reset-done").length;
+    // (a new player: every slider already at its default)
+    for (const [k, v] of [["glassSeeThrough", 25], ["glassBlur", 6], ["glassTint", 80], ["glassReset", 9], ["glassResetSeen", 0]]) game.settings.store.set(`heart.${k}`, v);
+    const before = said();
+    expect(await followGlassReset()).toBe(true);
+    expect(said()).toBe(before);
+    expect(game.settings.store.get("heart.glassResetSeen")).toBe(9);
+    // (one slider moved: put back, and said)
+    game.settings.store.set("heart.glassBlur", 3);
+    game.settings.store.set("heart.glassReset", 10);
+    expect(await followGlassReset()).toBe(true);
+    expect(game.settings.store.get("heart.glassBlur")).toBe(6);
+    expect(said()).toBe(before + 1);
+  });
 });
 
 describe("the glass switch", () => {

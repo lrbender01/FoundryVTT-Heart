@@ -28,8 +28,11 @@ export function canHoldChild(parentType, childType) {
 const CHARACTER_ONLY = ['class', 'calling', 'ancestry'];
 
 // Why an item of `itemType` may not land on an actor of `actorType`, as a
-// reason id ('character-only', 'tag', 'haunt'), or null when it may
+// reason id ('familiar', 'character-only', 'tag', 'haunt'), or null when it
+// may. A familiar (The Witch is Dead, Luke, 2026-10-24) has no place for any
+// Heart item: one dropped on it would be lost on its sheet.
 export function actorDropRefusal(actorType, itemType) {
+    if (actorType === 'familiar') return 'familiar';
     if (CHARACTER_ONLY.includes(itemType) && actorType !== 'character') return 'character-only';
     if (itemType === 'tag') return 'tag';
     if (itemType === 'haunt' && actorType !== 'landmark') return 'haunt';

@@ -50,6 +50,10 @@ describe("actor sheets refuse only clear mistakes", () => {
     for (const actor of ACTOR_TYPES.filter((a) => a !== "landmark")) expect(actorDropRefusal(actor, "haunt")).toBe("haunt");
   });
 
+  it("a familiar (The Witch is Dead, 2026-10-24) takes no Heart item", () => {
+    for (const type of ITEM_TYPES) expect(actorDropRefusal("familiar", type)).toBe("familiar");
+  });
+
   it("gear, abilities, fallouts, and items still land everywhere", () => {
     for (const actor of ACTOR_TYPES) {
       for (const type of ["ability", "equipment", "resource", "fallout", "item", "beat", "bond"]) {

@@ -14,7 +14,7 @@ import { registerRelay } from './common/relay';
 import { ART_SETTING, applyArtClass, carryOldArtSetting, redrawArtWindows } from './common/art-toggle';
 import { startupVersions } from './common/versions';
 import { localizeHeart } from './common/localize';
-import { GLASS_SETTING, SEE_THROUGH_SETTING, BLUR_SETTING, TINT_SETTING, applyGlassClass, applyGlassGround, applyGlassPass } from './common/glass';
+import { GLASS_SETTING, SEE_THROUGH_SETTING, BLUR_SETTING, TINT_SETTING, GLASS_RESET_SETTING, GLASS_RESET_SEEN, followGlassReset, applyGlassClass, applyGlassGround, applyGlassPass } from './common/glass';
 import { isRepeatable } from './items/ability/repeat';
 import { registerGrantCleanup } from './items/trinkets';
 import { clearedTraits, coreTraitsOf } from './actors/character/traits';
@@ -143,6 +143,22 @@ function registerSettings() {
       range: { min: 0, max: 90, step: 5 },
       onChange: applyGlassPass,
     });
+    // the GM's reset of everyone's sliders (2026-10-23, Luke; common/glass.js
+    // followGlassReset): a world stamp, and the last one this client followed
+    game.settings.register('heart', GLASS_RESET_SETTING, {
+      scope: 'world',
+      config: false,
+      default: 0,
+      type: Number,
+      onChange: () => followGlassReset(),
+    });
+    game.settings.register('heart', GLASS_RESET_SEEN, {
+      scope: 'client',
+      config: false,
+      default: 0,
+      type: Number,
+    });
+    Hooks.once('ready', () => followGlassReset());
     applyGlassClass();
     applyGlassGround();
     applyGlassPass();
