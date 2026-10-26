@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from "vitest";
 import { normalizeLook, normalizeBoard, boardView } from "../src/map/scrapboard/model.js";
-import { boardCounts, liveCounts, fmtBytes } from "../src/map/scrapboard/stats.js";
+import { boardCounts, boardBytes, liveCounts, fmtBytes } from "../src/map/scrapboard/stats.js";
 
 const size = (id) => (id === "tx/paper" ? { w: 300, h: 400, safe: [0.1, 0.1, 0.9, 0.9], cover: 0.64 } : null);
 const measure = (text, px) => String(text).length * px * 0.5;
@@ -27,9 +27,10 @@ describe("boardCounts: the board as this user sees it", () => {
   };
 
   it("counts cards, strokes by nib, points, the eraser's pieces and bites, and pins", () => {
-    const c = boardCounts(boardView(look, normalizeBoard(raw), "gm", size, measure), raw);
+    const c = boardCounts(boardView(look, normalizeBoard(raw), "gm", size, measure));
     expect(c).toMatchObject({ cards: 2, notes: 2, places: 0, strokes: 4, onCards: 1, points: 2 + 3 + 3 + 2, brush: 2, pen: 1, filled: 1, wash: 0, pieces: 1, bites: 2, pins: 1 });
-    expect(c.bytes).toBe(JSON.stringify(raw).length);
+    expect(boardBytes(raw)).toBe(JSON.stringify(raw).length);
+    expect(boardBytes(null)).toBe(0);
   });
 
   it("a player's counts leave out what is hidden from them", () => {
@@ -37,7 +38,7 @@ describe("boardCounts: the board as this user sees it", () => {
   });
 
   it("nothing at all: zeros", () => {
-    expect(boardCounts(null)).toMatchObject({ cards: 0, strokes: 0, pins: 0, bytes: 0 });
+    expect(boardCounts(null)).toMatchObject({ cards: 0, strokes: 0, pins: 0 });
   });
 });
 
