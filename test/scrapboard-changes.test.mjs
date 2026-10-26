@@ -71,6 +71,14 @@ describe("piecesOf and changes", () => {
     expect(C.changes(was, now)).toEqual([{ box, sheet: true }, { box, sheet: true }]);
   });
 
+  it("anyMeets: whether anything drawn reaches a tile (a bare board's empty tiles never painted; Luke, 2026-10-26)", () => {
+    const P = C.piecesOf(view(RAW()), painter(new Map([["gm:m1", { sig: "a", box: { x0: 5000, y0: 5000, x1: 5100, y1: 5100 } }]])));
+    expect(C.anyMeets(P, { x0: 0, y0: 0, x1: 200, y1: 200 })).toBe(false);
+    expect(C.anyMeets(P, { x0: 350, y0: 350, x1: 450, y1: 450 })).toBe(true);
+    expect(C.anyMeets(P, { x0: 5050, y0: 5050, x1: 6000, y1: 6000 })).toBe(true);
+    expect(C.anyMeets(new Map(), { x0: 0, y0: 0, x1: 1e6, y1: 1e6 })).toBe(false);
+  });
+
   it("a long string: a box for each stretch, not one round it all", () => {
     const raw = { ...RAW(), pins: { a: { id: "a", tex: "tx/pin", x: 100, y: 100 }, b: { id: "b", tex: "tx/pin", x: 4000, y: 3000 } }, links: { l1: { id: "l1", aPin: "a", bPin: "b", kind: "plain", joints: [] } } };
     const p = C.piecesOf(view(raw), painter()).get("l:l1");

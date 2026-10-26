@@ -75,6 +75,18 @@ export function piecesOf(view, painter) {
     return out;
 }
 
+// Whether any piece drawn reaches into a part of the board (a tile's reach).
+// On a bare board (no sheet of its own: a scene's background, or a baked
+// map) a tile nothing reaches holds nothing: never painted, its memory let
+// go (Luke, 2026-10-26: a 25,000 px bare board held about 400 MB of empty
+// tiles)
+export function anyMeets(pieces, R) {
+    for (const e of pieces.values()) {
+        for (const box of e.boxes ?? (e.box ? [e.box] : [])) if (box && meets(box, R)) return true;
+    }
+    return false;
+}
+
 // The parts of the board a change of pieces touches ([{ box, sheet }]):
 // where a piece was and where it is, for each one gone, new, or different
 export function changes(was, now) {

@@ -6,6 +6,7 @@ import { isBoardScene, exportBoard, importBoard, restoreBackup, hasBackup, downl
 import { exportDialog, importDialog, binDialog, backupsDialog, askBoard, sheetDialog } from './notes.js';
 import { reloadBoardLook } from './look.js';
 import { statsDialog, qualityDialog } from './stats.js';
+import { layersDialog } from './layers.js';
 import { heartDialogOptions } from '../../common/dialog.js';
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
@@ -140,6 +141,8 @@ export function boardTools() {
         button('reshuffle', 'fa-solid fa-shuffle', () => layer?.reshuffle()),
         // (Luke, 2026-10-24: pages added or taken away on any side)
         button('sheet', 'fa-solid fa-expand', () => sheetDialog(scene)),
+        // (a baked map's overlays, roofs, and NPC fog: Luke 2026-10-25)
+        ...(layer?.backdrop?.on ? [button('layers', 'fa-solid fa-layer-group', () => layersDialog(scene, layer.backdrop))] : []),
         button('bin', 'fa-solid fa-box-archive', () => binDialog(scene)),
         button('history', 'fa-solid fa-clock-rotate-left', () => backupsDialog(scene)),
         // (Luke, 2026-10-21: the board saved as a file, Import loads it back)

@@ -824,6 +824,42 @@ body.heart-board-rail-on #tools-panel-heartBoard
         top: calc(var(--rail-btn, 36px) + 8px)
         left: 0
 
+// a baked map's layers (File, the GM's; Luke 2026-10-25): overlays, the NPC
+// fog, and the roofs, a long list scrolled
+.heart-board-layers
+    max-height: 70vh
+    overflow-y: auto
+
+    h3
+        @include util.text-section
+        color: util.$text
+        border: none
+        margin: 8px 0 2px
+
+        &:first-child
+            margin-top: 0
+
+    .row
+        display: flex
+        align-items: center
+        gap: 6px
+        margin: 2px 0
+
+    input[type="number"]
+        width: 80px
+
+    .parts
+        margin-left: 22px
+
+    .all
+        display: flex
+        gap: 6px
+        margin: 4px 0
+
+    .hint, .none
+        margin: 2px 0 6px
+        opacity: 0.75
+
 // the board's statistics (File, Luke 2026-10-25): three tables, a name and
 // its value a row, the numbers steady as they update
 .heart-board-stats

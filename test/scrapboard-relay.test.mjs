@@ -93,6 +93,21 @@ describe("the GM's quick edits each keep their own ids (Luke, 2026-10-25)", () =
     expect(Object.values(boardOf(scene).marks.gm).map((s) => s.pts[0]).sort()).toEqual([10, 20]);
   });
 
+  it("a whole board replaced from a function sees the writes queued before it (Luke, 2026-10-26: the tidy wiped the Plenty sketch)", async () => {
+    let seen = null;
+    await Promise.all([
+      applyBoardPatch(scene, { marks: { gm: { m1: { c: 0, w: 4, pts: [1, 1, 9, 9] } } } }),
+      replaceBoard(scene, (now) => { seen = Object.keys(now.marks?.gm ?? {}); return { ...now, sheet: { bare: true, w: 1000, h: 1000 } }; }, { record: false }),
+    ]);
+    expect(seen).toEqual(["m1"]);
+    expect(boardOf(scene).marks.gm.m1).toBeDefined();
+    expect(boardOf(scene).sheet).toMatchObject({ bare: true });
+    // (null: no write at all)
+    const writes = scene.updates.length;
+    await replaceBoard(scene, () => null);
+    expect(scene.updates.length).toBe(writes);
+  });
+
   it("two cards added at once: two cards", async () => {
     const [k1, k2] = await Promise.all([addScrap(scene, { type: "note", text: "a", x: 1, y: 1 }), addScrap(scene, { type: "note", text: "b", x: 2, y: 2 })]);
     expect(k1).not.toBe(k2);

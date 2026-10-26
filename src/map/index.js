@@ -19,11 +19,12 @@ import { addBoardTab, createBoardDialog } from './scrapboard/scene-tab.js';
 import {
     isBoardScene, boardOf, createBoardScene, setBoardScene, setScrap, setLink, addScrap, addLink, removeScrap,
     removeLink, exportBoard, importBoard, restoreBackup, undo, redo, isPlayersBoard, ownersOf, tidyBoardScene, syncBoardScene, followRename, downloadBoard, newPlace,
-    configureBoard, followSceneSize, remindDownload, keepWorldCopy,
+    configureBoard, followSceneSize, remindDownload, keepWorldCopy, applyBoardPatch,
 } from './scrapboard/api.js';
 import { registerBoardSettings, registerBoardRelay, handOf, playersBoardDialog, askBoard, freeGMHands } from './scrapboard/notes.js';
 import { registerRailSettings, syncRail, againToLook } from './scrapboard/rail.js';
 import { keepBackup } from './scrapboard/backups.js';
+import { registerBoardFog } from './scrapboard/fog.js';
 
 // (the scenes whose board was copied as this session found it)
 const kept = new Set();
@@ -207,8 +208,13 @@ function registerHooks() {
         // a pan; Luke 2026-10-25)
         layer()?.panned();
         layer()?.drawMarks();
-        // (what is on the screen painted sharp again once the view settles)
+        // (what is on the screen painted sharp again once the view settles;
+        // on a bare board, its own tiles shown at once where the sharp ones
+        // no longer cover the view)
+        layer()?.renderer.syncBase();
         layer()?.renderer.queueFocus();
+        // (a baked map's tiles for the view)
+        layer()?.backdrop?.update();
     });
 
     // a scene's settings: its Board tab (Luke, 2026-10-25)
@@ -349,6 +355,8 @@ export function initialise() {
     registerBoardSettings();
     registerRailSettings();
     registerBoardRelay();
+    // (the NPC fog on a board with a baked map: Luke 2026-10-25)
+    registerBoardFog();
     game.heart.board = {
         create: createBoardScene,
         createPlayersBoard,
@@ -367,6 +375,9 @@ export function initialise() {
         },
         setScrap,
         setLink,
+        // (a board patch written in its turn, one edit to undo; a function of
+        // the board, made then: Luke 2026-10-26, for macros)
+        patch: applyBoardPatch,
         addScrap,
         addLink,
         removeScrap,

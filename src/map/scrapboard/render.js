@@ -26,7 +26,7 @@
 //   second, finer set of tiles over it), so writing is sharp at any zoom.
 import { normalizeBoard, boardView, sheetLook } from './model.js';
 import { createPainter, sheetGeometry, arrivalAreas, sheetBands } from './paint.js';
-import { meets, grow, piecesOf, changes } from './changes.js';
+import { meets, grow, piecesOf, changes, anyMeets } from './changes.js';
 import { loadBoardLook, textureUrl, previewUrl } from './look.js';
 import { boardOf } from './api.js';
 
@@ -61,10 +61,13 @@ const fromAfar = (im, url) => {
 // far bigger than anything the map draws), and whether a drag repaints the
 // board as it goes. Auto is high for the GM, standard for players, and light
 // on a device short of memory.
+// (and how much of a baked background's tiles a client keeps, MB decoded,
+// each held on the GPU too: backdrop.js; Luke 2026-10-25. A screen at the
+// finest level needs about 20 tiles of 1 MB; the rest is for panning back)
 export const DETAIL = {
-    high: { scale: 1.25, cap: 1600, live: true },
-    standard: { scale: 1, cap: 1100, live: true },
-    light: { scale: 0.7, cap: 700, live: false },
+    high: { scale: 1.25, cap: 1600, live: true, bakedMB: 192 },
+    standard: { scale: 1, cap: 1100, live: true, bakedMB: 128 },
+    light: { scale: 0.7, cap: 700, live: false, bakedMB: 64 },
 };
 export function detailOf() {
     let d = 'auto';
@@ -250,6 +253,22 @@ class TileGrid {
         s.position.set(at.x, at.y);
         s.width = (t.bx1 - t.bx0) * this.r.scale;
         s.height = (t.by1 - t.by0) * this.r.scale;
+    }
+
+    // a tile with nothing in it let go of: no canvases, no sprite (a bare
+    // board's empty tiles)
+    release(t) {
+        if (t.sprite && !t.sprite.destroyed) {
+            t.sprite.parent?.removeChild(t.sprite);
+            t.sprite.destroy({ texture: true, baseTexture: true });
+        }
+        t.sprite = null;
+        t.canvas = null;
+        t.bg = null;
+        t.bands = null;
+        t.bgAreas = null;
+        t.bgDirty = true;
+        t.dirty = false;
     }
 
     show(on = true) {
@@ -623,8 +642,14 @@ export class ScrapboardRenderer {
         queue.sort((a, b) => a.rank - b.rank);
         P.set({ look, view: this.view, geo: this.geo });
         const start = performance.now();
+        // (a bare board's tile nothing reaches: let go, never painted)
+        const bare = Boolean(look.bare);
         for (let i = 0; i < queue.length; i++) {
             const { grid, t, rank } = queue[i];
+            if (bare && !anyMeets(this.#sigs, grid.reach(t))) {
+                grid.release(t);
+                continue;
+            }
             if (now ? rank !== 0 : i > 0 && performance.now() - start > FRAME_BUDGET) break;
             // (a sheet to paint whole goes a band at a time even for an edit:
             // the frame's budget, at least one band a frame)
@@ -678,6 +703,7 @@ export class ScrapboardRenderer {
             this.#focus?.destroy();
             this.#nextFocus?.destroy();
             this.#focus = this.#nextFocus = null;
+            this.syncBase();
             return;
         }
         const v = this.#inView();
@@ -702,6 +728,30 @@ export class ScrapboardRenderer {
         this.#focus = N;
         this.#nextFocus = null;
         N.show(true);
+        this.syncBase();
+    }
+
+    // On a bare board (no sheet: a scene's background, or a baked map) the
+    // tiles are see-through, so the board's own under the finer ones showed
+    // every stroke twice, darker zoomed in (Luke, 2026-10-26: "my color gets
+    // lighter when I zoom out"). Never both at once there: the finer ones
+    // while they cover the whole view, else the board's own alone (a moment
+    // soft, until finer ones are made for the new view). Showing the board's
+    // own again under finer ones left in place had flashed a dark rectangle
+    // as the view zoomed out (Luke, 2026-10-26). An opaque board's are left
+    // as they were: the finer ones over the board's, covered, unseen.
+    syncBase() {
+        const B = this.#base;
+        if (!B) return;
+        const F = this.#focus;
+        if (!this.look?.bare) {
+            if (B.hidden) B.show(true);
+            return;
+        }
+        const v = F ? this.#inView() : null;
+        const covered = Boolean(v) && F.x0 <= Math.max(0, v.x0) && F.y0 <= Math.max(0, v.y0) && F.x1 >= Math.min(this.look.w, v.x1) && F.y1 >= Math.min(this.look.h, v.y1);
+        if (F && F.hidden === covered) F.show(covered);
+        if (B.hidden !== covered) B.show(!covered);
     }
 
     async #fonts(look, view = null) {

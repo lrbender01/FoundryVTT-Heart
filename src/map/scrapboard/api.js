@@ -15,6 +15,8 @@ import { unmarkPatch, binLetGo, customKey, keysTaken, labelPatch, tidyBoard, new
 import { loadBoardLook, styleOf, DEFAULT_STYLE } from './look.js';
 import { relay, RelayTimeout } from '../../common/relay.js';
 import { keepBackup } from './backups.js';
+import { manifestAt } from './backdrop.js';
+import { SQUARES, metresPer } from './baked.js';
 import { boardFromText, boardFileName, renamedCards, renamedBinned, downloadDue, worldCopyName } from './boardfile.js';
 
 export const BOARD_FLAG = 'board';
@@ -478,8 +480,11 @@ export async function tidyBoardScene(scene) {
     // would resize the scene and re-lay pins by the wrong cards; Luke
     // 2026-10-23, the board safety audit)
     if (!ok) return;
-    const { board, changed } = tidyBoard(boardOf(scene), sheetLook(look, boardOf(scene)), size, measure);
-    if (changed) await replaceBoard(scene, board, { record: false });
+    // (tidied when the write's turn comes, on the board as it is then)
+    await replaceBoard(scene, (now) => {
+        const { board, changed } = tidyBoard(now, sheetLook(look, now), size, measure);
+        return changed ? board : null;
+    }, { record: false });
     // (the scene the board's sheet's size: the look's, or its own since
     // 2026-10-24)
     await syncBoardScene(scene);
@@ -637,12 +642,19 @@ function replacing(from, to, prefix) {
 }
 
 // Replace the whole board (an import, an earlier board, or the backup
-// restored): one edit of the GM's, undone like any other
+// restored): one edit of the GM's, undone like any other.
+// (`board` a function of the board: the new one made when the write's turn
+// comes, from the board as it is then, null for no write. Luke 2026-10-26:
+// the tidy read the board, waited on the look, and wrote its copy back over
+// strokes laid in between, the Plenty sketch's all of them)
 export function replaceBoard(scene, board, { record = true, backup = false } = {}) {
     // (a copy: the backup restored is the scene's own data, which the update
     // below writes over; Luke, 2026-10-21)
-    const clean = foundry.utils.deepClone(boardParts(board));
+    const given = typeof board === 'function' ? null : foundry.utils.deepClone(boardParts(board));
     return oneWrite(scene, async () => {
+        const made = typeof board === 'function' ? board(boardOf(scene)) : null;
+        if (typeof board === 'function' && !made) return scene;
+        const clean = given ?? foundry.utils.deepClone(boardParts(made));
         const before = foundry.utils.deepClone(boardOf(scene));
         await keepBackup(scene, before, { force: true, why: 'replaced' });
         // (the backup too, written over whole: never merged with the one before it)
@@ -794,12 +806,56 @@ export async function setBoardScene(scene, on = true, { style = null, bare = fal
 // sheet of cols x rows pages of pw x ph (0: the style's page). One edit Undo
 // takes back; never smaller than what is placed on it. Returns { done },
 // or { refused: side, w, h } (the size it would need).
+// A board's baked map (Luke, 2026-10-25: the Village of Plenty; any board on
+// a baked map): its manifest named, the scene made the map's size at `ppu`
+// px per the map's unit (Foundry's smallest grid, 50, at least), its grid
+// one unit, token vision and fog exploration off; the switches already made
+// for that manifest kept. None wanted: the flags let go.
+async function setBaked(scene, want) {
+    const had = scene.flags?.heart?.baked ?? null;
+    if (!want.baked) return had ? scene.update({ 'flags.heart.-=baked': null }) : null;
+    const m = await manifestAt(want.baked);
+    if (!m) {
+        ui.notifications.warn(game.i18n.format('heart.board.baked-missing', { path: want.baked }));
+        return null;
+    }
+    // (its square: 5 ft by default, the tabletop standard, measured in feet
+    // or in metres (Luke, 2026-10-26); a square of 50 px, Foundry's smallest
+    // grid. An older call's `ppu`: that many px a metre, a square a metre)
+    const sq = SQUARES[want.square] ?? (want.ppu ? null : SQUARES['5ft']);
+    const grid = sq ? { size: 50, distance: sq.distance, units: sq.units } : { size: Math.max(50, Math.min(1000, Math.round(Number(want.ppu) || 50))), distance: 1, units: 'm' };
+    // (scene px a unit of the map's: metres a unit over metres a square, in squares of px)
+    const ppu = (grid.size / (grid.distance * metresPer(grid.units))) * metresPer(m.unit);
+    const keep = had?.manifest === want.baked ? had : {};
+    const w = Math.round(m.size.w * ppu);
+    const h = Math.round(m.size.h * ppu);
+    return scene.update({
+        width: w,
+        height: h,
+        // (the bare board the scene's new size in the same write: the
+        // scene-size hook caught up only later)
+        [`${PATH}.sheet`]: bareSheet(w, h),
+        'grid.size': grid.size,
+        'grid.distance': grid.distance,
+        'grid.units': grid.units,
+        tokenVision: false,
+        'fog.exploration': false,
+        'flags.heart.baked': { manifest: want.baked, fog: Number(keep.fog) || 0, ...(keep.dark === undefined ? {} : { dark: keep.dark }), ...(keep.lit === undefined ? {} : { lit: keep.lit }), overlays: keep.overlays ?? {}, roofs: keep.roofs ?? {} },
+    });
+}
+
 export async function configureBoard(scene, want = {}) {
     if (!gmOnly() || !scene) return null;
     const style = String(want.style || styleOf(scene));
-    if (!want.board) return isBoardScene(scene) ? setBoardScene(scene, false).then(() => ({ done: true })) : null;
+    if (!want.board) {
+        if (!isBoardScene(scene)) return null;
+        await setBoardScene(scene, false);
+        await setBaked(scene, {});
+        return { done: true };
+    }
     if (!isBoardScene(scene)) {
         await setBoardScene(scene, true, { style, bare: Boolean(want.bare), cols: want.cols, rows: want.rows, pw: want.pw, ph: want.ph });
+        if (want.bare) await setBaked(scene, want);
         return { done: true };
     }
     if (style !== styleOf(scene)) await scene.update({ 'flags.heart.boardStyle': style });
@@ -811,16 +867,21 @@ export async function configureBoard(scene, want = {}) {
     const raw = boardOf(scene);
     const wasBare = isBareBoard(raw);
     if (want.bare) {
-        if (wasBare) return { done: true };
-        await scene.update({ 'flags.heart.-=boardSheetAt': null });
-        await replaceBoard(scene, { ...raw, sheet: bareSheet(scene.width, scene.height) });
+        if (!wasBare) {
+            await scene.update({ 'flags.heart.-=boardSheetAt': null });
+            await replaceBoard(scene, (now) => ({ ...now, sheet: bareSheet(scene.width, scene.height) }));
+        }
+        // (and its baked map, or none: the scene's own background)
+        await setBaked(scene, want);
         return { done: true };
     }
+    // (on its own sheet: no baked map)
+    await setBaked(scene, {});
     const bounds = contentBounds(boardView(sheetLook(look, raw), normalizeBoard(raw), 'gm', size, measure), size);
     const r = reshapeSheet(look, raw, want, bounds);
     if (!r.sheet) return r;
     if (!wasBare && JSON.stringify(r.sheet) === JSON.stringify(boardSheet(look, raw))) return { done: true };
-    await replaceBoard(scene, { ...raw, sheet: r.sheet });
+    await replaceBoard(scene, (now) => ({ ...now, sheet: r.sheet }));
     // (off the scene's own background: the board's grid)
     if (wasBare) await scene.update({ ...gridOf(look), 'flags.heart.boardGrid': BOARD_GRID_EDITION });
     await syncBoardScene(scene);

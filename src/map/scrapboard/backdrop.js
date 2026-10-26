@@ -1,0 +1,324 @@
+// A board's baked background, drawn (2026-10-25: the Village of Plenty, and
+// any board on a baked map). The manifest's tiles under the board's own
+// drawing: the overview always, then the level the zoom needs, loaded as the
+// view moves (fetched and decoded off the page's thread), coarser tiles left
+// under finer ones until those come, the least recently used let go past the
+// quality setting's memory; its overlays and its roofs as the GM switched
+// them. The rules are baked.js's; this is the drawing. Design: monorepo
+// docs/plans/board-baked-backgrounds.md.
+import { cleanManifest, cleanBakedFlags, levelFor, tilesIn, tileUrl, TileCache, overlayShown, shownParts, metrePx, metresPer } from './baked.js';
+import { refreshFog } from './fog.js';
+
+// (in Foundry's primary group, under the board's own tiles at 100; tokens
+// far above)
+const SORT = { base: 40, overlays: 50, roofs: 60 };
+// (tiles fetched at once)
+const LOADS = 6;
+// (a roof's alpha kept this many px across at most, to know what it covers)
+const MASK_PX = 96;
+
+export const bakedFlags = (scene) => cleanBakedFlags(scene?.flags?.heart?.baked);
+
+// manifests by path, each fetched once a page (a failed one asked again)
+const manifests = new Map();
+export function manifestAt(path) {
+    if (!manifests.has(path)) {
+        const folder = path.slice(0, path.lastIndexOf('/') + 1);
+        const p = fetch(path, { cache: 'no-cache' })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((j) => cleanManifest(j, folder))
+            .catch(() => null)
+            .then((m) => {
+                if (!m) manifests.delete(path);
+                return m;
+            });
+        manifests.set(path, p);
+    }
+    return manifests.get(path);
+}
+
+// a roof's alpha, small: { w, h, a } (a: 0..255 a px)
+function alphaMask(bmp) {
+    const k = Math.min(1, MASK_PX / Math.max(bmp.width, bmp.height));
+    const w = Math.max(1, Math.round(bmp.width * k));
+    const h = Math.max(1, Math.round(bmp.height * k));
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(bmp, 0, 0, w, h);
+    const d = g.getImageData(0, 0, w, h).data;
+    const a = new Uint8Array(w * h);
+    for (let i = 0; i < a.length; i++) a[i] = d[i * 4 + 3];
+    return { w, h, a };
+}
+
+export class Backdrop {
+    // `r`: the board's renderer (its scale and its board-to-canvas mapping)
+    constructor(r) {
+        this.r = r;
+        this.scene = null;
+        this.m = null;
+        this.flags = null;
+        this.cache = null;
+        this.layers = null;
+        this.items = new Map();
+        this.loading = new Set();
+        this.failed = new Set();
+        this.queue = [];
+        this.ticket = 0;
+        this.level = null;
+        this.warned = false;
+        this.frame = 0;
+    }
+
+    get on() {
+        return Boolean(this.m);
+    }
+
+    // The scene's baked background as its flags name it now: the manifest
+    // read again when it is another, the overlays and roofs as switched
+    async sync(scene) {
+        const flags = bakedFlags(scene);
+        if (!flags) return this.clear();
+        if (this.scene !== scene || this.flags?.manifest !== flags.manifest || !this.m) {
+            this.clear();
+            const ticket = this.ticket;
+            const m = await manifestAt(flags.manifest);
+            if (ticket !== this.ticket || canvas.scene !== scene) return;
+            if (!m) {
+                if (!this.warned) ui.notifications.warn(game.i18n.format('heart.board.baked-missing', { path: flags.manifest }));
+                this.warned = true;
+                return;
+            }
+            this.scene = scene;
+            this.m = m;
+            this.flags = flags;
+            this.cache = new TileCache((this.r.detail?.bakedMB ?? 256) * 1024 * 1024);
+            this.#build();
+        }
+        this.flags = flags;
+        this.update();
+        // (a roof or the distance switched: the NPC fog looked at again)
+        refreshFog();
+    }
+
+    #build() {
+        const make = (sortLayer) => {
+            const c = new PIXI.Container();
+            c.elevation = 0;
+            c.sortLayer = sortLayer;
+            c.sort = 0;
+            c.sortableChildren = true;
+            c.eventMode = 'none';
+            canvas.primary.addChild(c);
+            return c;
+        };
+        this.layers = { base: make(SORT.base), overlays: make(SORT.overlays), roofs: make(SORT.roofs) };
+        canvas.primary.sortDirty = true;
+        const all = { x0: 0, y0: 0, x1: this.m.size.w, y1: this.m.size.h };
+        // (the whole map at once, kept: the overview, else level 0's tiles)
+        if (this.m.overview) this.#want({ key: 'overview', url: this.m.overview, rect: all, layer: 'base', z: -1, pin: true });
+        else for (const t of tilesIn(this.m.levels[0], this.m.tilePx, all, this.m.size)) this.#want({ key: `b:0:${t.x}_${t.y}`, url: tileUrl(this.m.levels[0], t.x, t.y), rect: t.rect, layer: 'base', z: 0, pin: true });
+        // (every roof at once: small, and the fog needs what each covers)
+        for (const roof of this.m.roofs) for (const part of roof.parts) this.#want({ key: `r:${roof.id}/${part.id}`, url: part.image, rect: part.rect, layer: 'roofs', z: 0, pin: true, roof: roof.id, part: part.id, mask: true });
+        this.#pump();
+    }
+
+    // the view in map units
+    #view(u) {
+        const scr = canvas.app.renderer.screen;
+        const tl = this.r.toMap(canvas.stage.toLocal(new PIXI.Point(0, 0)));
+        const br = this.r.toMap(canvas.stage.toLocal(new PIXI.Point(scr.width, scr.height)));
+        return { x0: tl.x / u, y0: tl.y / u, x1: br.x / u, y1: br.y / u };
+    }
+
+    // On a pan or zoom (a frame at most): the level the zoom needs, its tiles
+    // in view wanted, what is shown set, the rest let go past the budget
+    update() {
+        if (!this.m || this.frame) return;
+        this.frame = requestAnimationFrame(() => {
+            this.frame = 0;
+            this.#update();
+        });
+    }
+
+    #update() {
+        if (!this.m || !canvas.ready || canvas.scene !== this.scene) return;
+        const u = this.#mapPx();
+        const view = this.#view(u);
+        const res = canvas.app.renderer.resolution || window.devicePixelRatio || 1;
+        const need = canvas.stage.scale.x * this.r.scale * u * res;
+        const margin = Math.max(view.x1 - view.x0, view.y1 - view.y0) * 0.25;
+        const { tilePx } = this.m;
+        const wanted = new Set();
+        const L = levelFor(this.m.levels, need);
+        this.level = L;
+        const li = this.m.levels.indexOf(L);
+        for (const t of tilesIn(L, tilePx, view, this.m.size, { margin })) {
+            const key = `b:${li}:${t.x}_${t.y}`;
+            wanted.add(key);
+            this.#want({ key, url: tileUrl(L, t.x, t.y), rect: t.rect, layer: 'base', z: li });
+        }
+        const gm = game.user.isGM;
+        this.m.overlays.forEach((o, oi) => {
+            if (!overlayShown(o, this.flags, gm)) return;
+            const ol = levelFor(o.levels, need);
+            const oli = o.levels.indexOf(ol);
+            const origin = { x: o.rect.x0, y: o.rect.y0 };
+            const size = { w: o.rect.x1 - o.rect.x0, h: o.rect.y1 - o.rect.y0 };
+            for (const t of tilesIn(ol, tilePx, view, size, { margin, origin })) {
+                const key = `o:${o.id}:${oli}:${t.x}_${t.y}`;
+                wanted.add(key);
+                this.#want({ key, url: tileUrl(ol, t.x, t.y), rect: t.rect, layer: 'overlays', z: oi * 32 + oli, overlay: o.id });
+            }
+        });
+        // (only what is wanted now waits to load: a view left behind is not fetched)
+        this.queue = this.queue.filter((it) => it.pin || wanted.has(it.key));
+        this.#show(view, margin);
+        for (const e of this.cache.prune(new Set([...wanted, ...[...this.items.keys()].filter((k) => this.items.get(k).shownNow)]))) this.#drop(e);
+        this.#pump();
+    }
+
+    // what is drawn: each piece in view (and a margin) in a layer shown;
+    // roofs as switched
+    #show(view, margin) {
+        const gm = game.user.isGM;
+        const near = { x0: view.x0 - margin, y0: view.y0 - margin, x1: view.x1 + margin, y1: view.y1 + margin };
+        const meets = (r) => r.x1 >= near.x0 && r.x0 <= near.x1 && r.y1 >= near.y0 && r.y0 <= near.y1;
+        const roofsOn = new Set(shownParts(this.m, this.flags).map(({ roof, part }) => `r:${roof.id}/${part.id}`));
+        const overlaysOn = new Set(this.m.overlays.filter((o) => overlayShown(o, this.flags, gm)).map((o) => o.id));
+        for (const [key, e] of this.items) {
+            let on = e.key === 'overview' || meets(e.rect);
+            if (e.overlay) on &&= overlaysOn.has(e.overlay);
+            if (e.roof) on &&= roofsOn.has(key);
+            e.shownNow = on;
+            if (e.sprite && !e.sprite.destroyed) e.sprite.visible = on;
+        }
+    }
+
+    // a piece to load (once: a failed one never asked for again this scene)
+    #want(it) {
+        if (this.items.has(it.key)) {
+            this.cache.get(it.key);
+            return;
+        }
+        if (this.loading.has(it.key) || this.failed.has(it.key) || this.queue.some((q) => q.key === it.key)) return;
+        this.queue.push(it);
+    }
+
+    #pump() {
+        while (this.loading.size < LOADS && this.queue.length) this.#load(this.queue.shift());
+    }
+
+    async #load(it) {
+        const ticket = this.ticket;
+        this.loading.add(it.key);
+        try {
+            const res = await fetch(it.url);
+            if (!res.ok) throw new Error(`${res.status}`);
+            const bmp = await createImageBitmap(await res.blob());
+            if (ticket !== this.ticket) {
+                bmp.close();
+                return;
+            }
+            const sprite = new PIXI.Sprite(PIXI.Texture.from(bmp));
+            sprite.eventMode = 'none';
+            sprite.zIndex = it.z;
+            this.layers[it.layer].addChild(sprite);
+            const e = { ...it, sprite, bmp, bytes: bmp.width * bmp.height * 4, shownNow: false };
+            if (it.mask) e.alpha = alphaMask(bmp);
+            this.#place(e);
+            this.items.set(it.key, e);
+            // (a roof's own shape known now: the fog follows it, not its box)
+            if (it.mask) refreshFog();
+            if (!it.pin) this.cache.put(it.key, e, e.bytes);
+            // (shown as the next frame sets what is in view)
+            this.update();
+        } catch {
+            // (missing: transparent, as the manifest says; never asked again)
+            if (ticket === this.ticket) this.failed.add(it.key);
+        } finally {
+            this.loading.delete(it.key);
+            if (ticket === this.ticket) this.#pump();
+        }
+    }
+
+    // scene px per one of the map's units (its manifest's: metres), whatever
+    // the scene measures in (feet for a 5 ft square; Luke 2026-10-26)
+    #mapPx() {
+        return metrePx(this.scene) * metresPer(this.m?.unit);
+    }
+
+    // a piece where its rect lies on the canvas
+    #place(e) {
+        const u = this.#mapPx();
+        const a = this.r.toCanvas({ x: e.rect.x0 * u, y: e.rect.y0 * u });
+        e.sprite.position.set(a.x, a.y);
+        e.sprite.width = (e.rect.x1 - e.rect.x0) * u * this.r.scale;
+        e.sprite.height = (e.rect.y1 - e.rect.y0) * u * this.r.scale;
+    }
+
+    #drop(e) {
+        this.items.delete(e.key);
+        if (e.sprite && !e.sprite.destroyed) {
+            e.sprite.parent?.removeChild(e.sprite);
+            e.sprite.destroy({ texture: true, baseTexture: true });
+        }
+        e.bmp?.close?.();
+    }
+
+    // (the map's unit in scene px, for others: the fog)
+    get mapPx() {
+        return this.m ? this.#mapPx() : 0;
+    }
+
+    // Whether a point (scene px, from the scene's top-left) lies under a
+    // roof shown: its rect, then its own alpha (the whole rect while its
+    // picture is still coming)
+    underRoof(x, y) {
+        if (!this.m) return false;
+        const u = this.#mapPx();
+        const mx = x / u;
+        const my = y / u;
+        for (const { roof, part } of shownParts(this.m, this.flags)) {
+            const R = part.rect;
+            if (mx < R.x0 || mx > R.x1 || my < R.y0 || my > R.y1) continue;
+            const A = this.items.get(`r:${roof.id}/${part.id}`)?.alpha;
+            if (!A) return true;
+            const i = Math.min(A.w - 1, Math.floor(((mx - R.x0) / (R.x1 - R.x0)) * A.w));
+            const j = Math.min(A.h - 1, Math.floor(((my - R.y0) / (R.y1 - R.y0)) * A.h));
+            if (A.a[j * A.w + i] > 40) return true;
+        }
+        return false;
+    }
+
+    // what it holds (File's Statistics)
+    stats() {
+        let bytes = 0;
+        for (const e of this.items.values()) bytes += e.bytes;
+        return this.m ? { id: this.m.id, rev: this.m.rev, level: this.level?.pxPerUnit ?? null, pieces: this.items.size, loading: this.loading.size + this.queue.length, failed: this.failed.size, bytes, budget: this.cache?.budget ?? 0 } : null;
+    }
+
+    // let go of everything (another scene, or none)
+    clear() {
+        this.ticket++;
+        cancelAnimationFrame(this.frame);
+        this.frame = 0;
+        for (const e of [...this.items.values()]) this.#drop(e);
+        this.items.clear();
+        for (const c of Object.values(this.layers ?? {})) {
+            c.parent?.removeChild(c);
+            c.destroy({ children: true });
+        }
+        this.layers = null;
+        this.loading.clear();
+        this.failed.clear();
+        this.queue = [];
+        this.cache = null;
+        this.scene = null;
+        this.m = null;
+        this.flags = null;
+        this.level = null;
+    }
+}

@@ -16,7 +16,8 @@ const esc = (s) => Handlebars.escapeExpression(String(s ?? ''));
 // (and the picture and the players' strings, everyone's: Luke 2026-10-24)
 // (and the GM's switch for showing their doing live: Luke 2026-10-25)
 // (and everyone's statistics and quality: Luke 2026-10-25)
-const FILE = ['snapshot', 'stats', 'quality', 'place', 'reshuffle', 'sheet', 'live', 'bin', 'history', 'download', 'export', 'import', 'restore', 'reload'];
+// (and a baked map's layers, the GM's: Luke 2026-10-25)
+const FILE = ['snapshot', 'stats', 'quality', 'place', 'reshuffle', 'sheet', 'layers', 'live', 'bin', 'history', 'download', 'export', 'import', 'restore', 'reload'];
 // Foundry's own icons (Luke, 2026-10-03: Foundry's icons and spacing, the
 // glass kept): a tool's or button's own, and the rail's few
 const FA = { file: 'fa-solid fa-folder-open', turn: 'fa-solid fa-arrows-rotate' };

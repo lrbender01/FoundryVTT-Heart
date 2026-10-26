@@ -29,6 +29,8 @@
 // The map is drawn by render.js in the primary group; this layer (in the
 // interface group) takes the pointer and draws the tools' marks.
 import { ScrapboardRenderer } from './render.js';
+import { Backdrop } from './backdrop.js';
+import { refreshFogAll } from './fog.js';
 import { pinThumb } from './paint.js';
 import { loadBoardLook, textureUrl } from './look.js';
 import { NIBS, NIB_DEFAULTS, nibStyleOf, LINK_KINDS, cardWord, cutPatch, freshStrokeIds, absorbPatch, markMax, brushStroke, doodleBoard, doodlePatch, brushColor, DOODLE_TABS, doodleTabsFor, noteFields, customKey, keysTaken, sharePatch, mayShare, savedDoodleOf, cleanSavedDoodles, isSavedKind, SAVED_MAX, pinChoices, pickFrom, pinPreview, pinTint, pinScale } from './model.js';
@@ -130,6 +132,8 @@ export class ScrapboardLayer extends InteractionLayer {
     }
 
     renderer = new ScrapboardRenderer();
+    // a baked map under the board (backdrop.js; Luke 2026-10-25)
+    backdrop = new Backdrop(this.renderer);
     // the GM sees the map as players do, with their tools (Player view)
     preview = false;
     // the brush's paint (an index into the look's marker paints) and width
@@ -356,6 +360,7 @@ export class ScrapboardLayer extends InteractionLayer {
 
     async _tearDown(options) {
         this.renderer.clear();
+        this.backdrop.clear();
         // (every picture this user's marks were showing let go with the
         // scene, the reticle's timer, and a place waiting for its click
         // forgotten: Luke, 2026-10-21)
@@ -773,7 +778,13 @@ export class ScrapboardLayer extends InteractionLayer {
     async refresh() {
         // (never mid-load: canvasReady draws it once the canvas is up)
         if (!canvas.ready || !canvas.scene) return;
-        if (!this.isBoard) return this.renderer.clear();
+        if (!this.isBoard) {
+            this.backdrop.clear();
+            return this.renderer.clear();
+        }
+        // (its baked background, when it has one: the map under the board;
+        // Luke 2026-10-25, the Village of Plenty)
+        this.backdrop.sync(canvas.scene).catch((err) => console.warn('heart | the baked map could not be drawn', err));
         this.#working = null;
         this.#pending = null;
         // (what others let go of is on the board now; what they still drag
@@ -795,6 +806,8 @@ export class ScrapboardLayer extends InteractionLayer {
     // a new detail level: everything painted again
     reset() {
         this.renderer.reset();
+        // (a baked map's memory follows the detail: made again)
+        this.backdrop.clear();
         return this.refresh();
     }
 
@@ -803,6 +816,8 @@ export class ScrapboardLayer extends InteractionLayer {
         this.controls.clear();
         this.controls.from = null;
         await this.refresh();
+        // (the NPC fog as the players see it, or gone again: Luke 2026-10-26)
+        refreshFogAll();
         // (the players' tools, or the GM's again)
         ui.controls?.initialize({ control: 'heartBoard', tool: 'inspect' });
     }
@@ -1142,6 +1157,8 @@ export class ScrapboardLayer extends InteractionLayer {
             // (the board's own tiles are sprites of Foundry's, outside this layer)
             sprites: sprites + R.tiles,
             render: R,
+            // (a baked map's tiles, when the board has one)
+            baked: this.backdrop.stats(),
             fps: canvas.app?.ticker?.FPS ?? 0,
             frameMs: canvas.app?.ticker?.deltaMS ?? 0,
             heap: performance.memory?.usedJSHeapSize ?? 0,

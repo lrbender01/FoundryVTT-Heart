@@ -138,6 +138,10 @@ function statsHtml(layer) {
             row('painted', loc('heart.board.stats.painted-value', { tiles: num(R.painted), avg: R.painted ? (R.paintMs / R.painted).toFixed(1) : '0', slow: (R.slowest || 0).toFixed(0) })),
             row('tile-memory', fmtBytes(R.bytes)),
             row('images', loc('heart.board.stats.images-value', { n: num(R.images), size: fmtBytes(R.imageBytes) })),
+            ...(S.baked ? [
+                row('baked', loc('heart.board.stats.baked-value', { level: S.baked.level ?? '-', pieces: num(S.baked.pieces), loading: num(S.baked.loading) })),
+                row('baked-memory', loc('heart.board.stats.baked-memory-value', { used: fmtBytes(S.baked.bytes), budget: fmtBytes(S.baked.budget) })),
+            ] : []),
             ...(S.heap ? [row('heap', fmtBytes(S.heap))] : []),
             ...(S.gpuSide ? [row('gpu', loc('heart.board.stats.gpu-value', { px: num(S.gpuSide) }))] : []),
         ]),
