@@ -15,12 +15,21 @@ const QUALITIES = ['high', 'standard', 'light'];
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const esc = (s) => Handlebars.escapeExpression(String(s ?? ''));
 
+// The board's stored size in bytes (its JSON's length; 0 when it has none)
+export function boardBytes(raw) {
+    try {
+        return raw ? JSON.stringify(raw).length : 0;
+    } catch {
+        return 0;
+    }
+}
+
 // What is on the board as this user sees it (a board view, model.js
 // boardView): its cards by kind, its strokes (on the sheet and on cards) by
 // nib, their points, the pieces the eraser left and its bites, pins,
-// strings, and set pieces; with `raw`, the board's stored size in bytes
-export function boardCounts(view, raw = null) {
-    const out = { cards: 0, places: 0, notes: 0, writing: 0, strokes: 0, onCards: 0, points: 0, brush: 0, pen: 0, wash: 0, filled: 0, pieces: 0, bites: 0, pins: 0, strings: 0, decor: 0, bytes: 0 };
+// strings, and set pieces
+export function boardCounts(view) {
+    const out = { cards: 0, places: 0, notes: 0, writing: 0, strokes: 0, onCards: 0, points: 0, brush: 0, pen: 0, wash: 0, filled: 0, pieces: 0, bites: 0, pins: 0, strings: 0, decor: 0 };
     const stroke = (st) => {
         if (!Array.isArray(st?.pts)) return;
         out.strokes++;
@@ -46,13 +55,6 @@ export function boardCounts(view, raw = null) {
     out.pins = (view?.pins ?? []).length;
     out.strings = (view?.links ?? []).length;
     out.decor = (view?.decor ?? []).length;
-    if (raw) {
-        try {
-            out.bytes = JSON.stringify(raw).length;
-        } catch {
-            out.bytes = 0;
-        }
-    }
     return out;
 }
 
@@ -119,7 +121,7 @@ function statsHtml(layer) {
             row('pins', loc('heart.board.stats.pins-value', { pins: num(B.pins), strings: num(B.strings) })),
             row('decor', num(B.decor)),
             row('size', loc('heart.board.stats.size-value', { w: num(Math.round(S.w)), h: num(Math.round(S.h)) })),
-            ...(B.bytes ? [row('bytes', fmtBytes(B.bytes))] : []),
+            ...(S.bytes ? [row('bytes', fmtBytes(S.bytes))] : []),
         ]),
         table('live-head', [
             row('users', loc('heart.board.stats.users-value', { here: num(S.here), heard: num(L.peers) })),

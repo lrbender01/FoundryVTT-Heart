@@ -11,11 +11,11 @@
 // control and, in the player view, can try the picker without claiming a
 // hand. Players' writes go through the GM's relay (one queue on the GM's
 // client; each request checked against who asked).
-import { LINK_KINDS, nibOf, cutPatch, absorbPatch, mayShareStroke, HAND_SCALE, pinChoices, pickFrom, ALIGNS, TEXT_STYLES, textStyleOf, markMax, cleanStroke, customKey, keysTaken, safePath, TYPEWRITER, newStringPatch, mergeRecords, recordTarget, recordUpdate, binList, removalOf, brushColor, PAINT_NAMES, PAINT_ORDER, noteFields, mineOrOpen, mayShare, mayBit, sharePatch, breakAwayPatch, normalizeBoard, scrapLayout, boardView, WEB_TEX, TEXT_SIZE_MIN, NOTE_AR_MIN, MAX_INKS, sheetLook, pickNotePaper, notePreview, uvOn, fmtOf } from './model.js';
+import { LINK_KINDS, nibOf, cutPatch, freshStrokeIds, doodlePatch, DOODLE_KINDS, isSavedKind, cleanSavedDoodle,absorbPatch, mayShareStroke, HAND_SCALE, pinChoices, pickFrom, ALIGNS, TEXT_STYLES, textStyleOf, markMax, cleanStroke, keysTaken, safePath, TYPEWRITER, newStringPatch, mergeRecords, recordTarget, recordUpdate, binList, removalOf, brushColor, PAINT_NAMES, PAINT_ORDER, noteFields, mineOrOpen, mayShare, mayBit, sharePatch, breakAwayPatch, normalizeBoard, scrapLayout, boardView, WEB_TEX, TEXT_SIZE_MIN, NOTE_AR_MIN, MAX_INKS, sheetLook, pickNotePaper, notePreview, uvOn, fmtOf } from './model.js';
 import { listBackups, readBackup } from './backups.js';
 import { askGM, registerRelayHandler, runLocal } from '../../common/relay.js';
 import { heartDialogOptions } from '../../common/dialog.js';
-import { mayMove, mayRubOut, mayStroke, PLAYER_MAX_SIZE } from './controls.js';
+import { mayMove, mayRubOut, mayStroke, PLAYER_MAX_SIZE, DOODLE_MIN, DOODLE_MAX } from './controls.js';
 
 // (the move rule lives with the shared controls; re-exported for the tests)
 export { mayMove };
@@ -701,6 +701,7 @@ function requestNames(req) {
         ids(p.bin).forEach(name);
     };
     ref(req.mark?.on);
+    ref(req.doodle?.a?.on);
     patch(req.remark);
     list(req.unmark).forEach(stroke);
     list(req.cut?.strokes).forEach(stroke);
@@ -1335,7 +1336,40 @@ async function boardEditFor(scene, board, req, who, sink, tools) {
         if (!s || !st || s.locked || !ptsOk(L, st.pts, true) || Object.keys(s.marks ?? {}).length >= CARD_MARKS_MAX) return { status: 'not-allowed' };
         // (as wide as its own nib allows: a wash's far wider; Luke 2026-10-25)
         st.w = Math.min(st.w, markMax(look, st.n));
-        await applyBoardPatch(scene, { scraps: { [req.mark.on]: { marks: { [customKey('m', s.marks ?? {})]: st } } } }, { sink });
+        // (its id picked when the write's turn comes)
+        await applyBoardPatch(scene, (b) => freshStrokeIds(b, { scraps: { [req.mark.on]: { marks: { new: st } } } }), { sink });
+        return { status: 'done' };
+    }
+    // a doodle laid (Luke, 2026-10-25): what was laid and the brush; its
+    // strokes and their ids worked out here (model.js doodlePatch), never
+    // taken from the asker, whose board may be behind (a second doodle laid
+    // before the first came back took the first's ids and overwrote it). On
+    // the sheet in their layer, or on a card that takes it
+    if (req.doodle) {
+        const a = req.doodle.a ?? {};
+        const b = req.doodle.brush ?? {};
+        const saved = isSavedKind(a.kind) ? cleanSavedDoodle(a.saved) : null;
+        const card = a.on ? board.scraps?.[a.on] : null;
+        if (!(DOODLE_KINDS.includes(a.kind) || saved) || !pointOk(L, a.at) || (a.on && (!card || card.locked || (card.state === 'hidden' && !who.isGM)))) return { status: 'not-allowed' };
+        const brush = {
+            size: Math.max(DOODLE_MIN, Math.min(DOODLE_MAX, Number(b.size) || DOODLE_MIN)),
+            c: cleanInk(b.c) ?? 0,
+            w: Math.max(1, Math.min(markMax(look), Number(b.w) || 8)),
+            b: Math.max(0, Math.min(2, Math.round(Number(b.b ?? 1)) || 0)),
+            o: Math.max(0.05, Math.min(1, Number(b.o) || 0.85)),
+        };
+        const at = { x: Number(a.at.x), y: Number(a.at.y) };
+        // (the board laid out only for a card's frame)
+        const view = card ? boardView(look, normalizeBoard(board), 'gm', size, measure) : null;
+        const patch = doodlePatch(board, view, { kind: a.kind, seed: String(a.seed ?? '').slice(0, 120) || `${a.kind}:${Date.now()}`, at, on: card ? a.on : null, rot: finite(a.rot) ? Number(a.rot) : 0, flip: Boolean(a.flip), saved }, brush, look, userId);
+        // (each as wide as its nib allows, as a move is; no more than its
+        // card or their layer holds)
+        const strokes = (card ? patch.scraps?.[a.on]?.marks : patch.marks?.[userId]) ?? {};
+        for (const st of Object.values(strokes)) st.w = Math.min(st.w, markMax(look, st.n));
+        const made = Object.keys(strokes).length;
+        const had = Object.keys((card ? card.marks : board.marks?.[userId]) ?? {}).length;
+        if (!made || had + made > (card ? CARD_MARKS_MAX : LAYER_MAX)) return { status: 'not-allowed' };
+        await applyBoardPatch(scene, (b) => freshStrokeIds(b, patch), { sink });
         return { status: 'done' };
     }
     // strokes moved, sized, or turned (with Move): each the
@@ -1420,10 +1454,9 @@ async function boardEditFor(scene, board, req, who, sink, tools) {
         const r = Number(req.cut.sweep?.r);
         const keys = (Array.isArray(req.cut.strokes) ? req.cut.strokes : []).filter((e) => Array.isArray(e) && e.length === 2).slice(0, 300).map((e) => [String(e[0]), String(e[1])]);
         if (pts.length < 2 || pts.length % 2 || !(r > 0 && r <= 400) || !keys.length) return { status: 'not-allowed' };
-        const view = () => boardView(look, normalizeBoard(board), 'gm', size, measure);
         const may = (where, st, card) => (String(where).startsWith('@') ? mayStroke(st.by, card, who) : mayRubOut(where, who)) || Boolean(st.open);
-        const patch = cutPatch(board, view, { pts, r }, keys, look, may);
-        if (patch) await applyBoardPatch(scene, patch, { sink });
+        // (worked out when the write's turn comes, on the board as it is then)
+        await applyBoardPatch(scene, (b) => cutPatch(b, () => boardView(look, normalizeBoard(b), 'gm', size, measure), { pts, r }, keys, look, may), { sink });
         return { status: 'done' };
     }
     if (req.unmark) {

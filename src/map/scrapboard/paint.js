@@ -1369,7 +1369,10 @@ function markState() {
       // (its points' hash kept with them: Luke, 2026-10-21)
       // (and its nib and fill: Luke 2026-10-25, a stroke restyled from the
       // brush to the pen was painted again only when something else was)
-      out.set(`${layer}:${id}`, { sig: `${m.c}|${m.w}|${m.o}|${m.b}|${m.n ?? ""}|${m.fill ? 1 : 0}|${pointsHash(m.pts)}`, box: markBox(m) });
+      // (and, a piece, its seed, stretch, and bites: Luke 2026-10-25, an
+      // eraser grazing a stroke bites it without moving a point, and was
+      // never painted)
+      out.set(`${layer}:${id}`, { sig: `${m.c}|${m.w}|${m.o}|${m.b}|${m.n ?? ""}|${m.fill ? 1 : 0}|${pointsHash(m.pts)}|${m.seed ?? ""}|${m.span ? m.span.join(",") : ""}|${m.bites?.length ? pointsHash(m.bites.flat()) : ""}`, box: markBox(m) });
     }
   }
   for (const s of view?.scraps ?? []) {

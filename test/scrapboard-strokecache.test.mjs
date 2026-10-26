@@ -184,6 +184,23 @@ describe("the painter keeps its strokes' layers", () => {
     P.paintSheet(c, 1, 0, 0);
     expect(made.length).toBe(3);
   });
+  it("a stroke bitten by the eraser, or a piece's stretch or seed changed, is a change the sheet repaints (Luke, 2026-10-25)", () => {
+    const sigOf = (marks) => painterFor(marks).markState().get("gm:short").sig;
+    const was = sigOf(STROKES);
+    const bitten = structuredClone(STROKES);
+    bitten.gm.short.bites = [[420, 415, 6]];
+    expect(sigOf(bitten)).not.toBe(was);
+    const more = structuredClone(bitten);
+    more.gm.short.bites.push([440, 412, 6]);
+    expect(sigOf(more)).not.toBe(sigOf(bitten));
+    const piece = structuredClone(STROKES);
+    piece.gm.short.span = [0.2, 0.6];
+    expect(sigOf(piece)).not.toBe(was);
+    const seeded = structuredClone(STROKES);
+    seeded.gm.short.seed = "mark:m9:6";
+    expect(sigOf(seeded)).not.toBe(was);
+  });
+
   it("never keeps a stroke being drawn or moved", () => {
     const P = painterFor();
     const g = recordingCanvas(400, 400).getContext();

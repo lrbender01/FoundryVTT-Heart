@@ -25,7 +25,8 @@
 // - Zoomed in, the view is painted again at the screen's own resolution (a
 //   second, finer set of tiles over it), so writing is sharp at any zoom.
 import { normalizeBoard, boardView, sheetLook } from './model.js';
-import { createPainter, sheetGeometry, pointsHash, arrivalAreas, sheetBands } from './paint.js';
+import { createPainter, sheetGeometry, arrivalAreas, sheetBands } from './paint.js';
+import { meets, grow, piecesOf, changes } from './changes.js';
 import { loadBoardLook, textureUrl, previewUrl } from './look.js';
 import { boardOf } from './api.js';
 
@@ -97,41 +98,6 @@ const MAX_BOARD_PX = 48e6;
 const FRAME_BUDGET = 8;
 // the finest the sheet's own scans are worth (bitmap px per board px)
 const SHEET_FINEST = 2.5;
-
-const meets = (a, b) => a.x1 >= b.x0 && a.x0 <= b.x1 && a.y1 >= b.y0 && a.y0 <= b.y1;
-const grow = (b, p) => ({ x0: b.x0 - p, y0: b.y0 - p, x1: b.x1 + p, y1: b.y1 + p });
-// the box round a flat list of points
-function boxOf(pts, pad = 0) {
-    let x0 = Infinity;
-    let y0 = Infinity;
-    let x1 = -Infinity;
-    let y1 = -Infinity;
-    for (let i = 0; i + 1 < pts.length; i += 2) {
-        x0 = Math.min(x0, pts[i]);
-        x1 = Math.max(x1, pts[i]);
-        y0 = Math.min(y0, pts[i + 1]);
-        y1 = Math.max(y1, pts[i + 1]);
-    }
-    return x0 === Infinity ? null : grow({ x0, y0, x1, y1 }, pad);
-}
-// a piece as it is drawn, as a string to compare (numbers to a tenth;
-// nothing twice). A run of numbers (a card's strokes, a string's points) is
-// its hash (paint.js pointsHash, to a tenth, kept with the points), never
-// written out number by number (Luke, 2026-10-21: every change wrote out
-// every card's strokes)
-function sigOf(x) {
-    const seen = new WeakSet();
-    return JSON.stringify(x, (_k, v) => {
-        if (typeof v === 'number') return Math.round(v * 10) / 10;
-        if (typeof v === 'function') return undefined;
-        if (v && typeof v === 'object') {
-            if (seen.has(v)) return undefined;
-            seen.add(v);
-            if (Array.isArray(v) && v.length >= 16 && v.every((n) => typeof n === 'number')) return `#${v.length}:${pointsHash(v, { round: true })}`;
-        }
-        return v;
-    });
-}
 
 // A set of tiles over a part of the board (x0..x1, y0..y1 board px) at k
 // bitmap px per board px: each a canvas `size` px square (a power of two, so
@@ -602,7 +568,7 @@ export class ScrapboardRenderer {
         this.#painter.set({ look, view, geo: this.geo });
         const k = this.#boardScale(look);
         const whole = JSON.stringify([this.lookKey, k, this.marksOnly, canvas.dimensions.sceneWidth, canvas.dimensions.sceneHeight]);
-        const sigs = this.#piecesOf(view);
+        const sigs = piecesOf(view, this.#painter);
         const fresh = whole !== this.#whole || !this.#base;
         if (fresh) {
             // (a new look, scale, or scene: every tile, from the sheet up)
@@ -613,7 +579,7 @@ export class ScrapboardRenderer {
             this.#base = new TileGrid(this, { x0: 0, y0: 0, x1: look.w, y1: look.h, k, size: 1024, sort: 0, mipmap: true });
             this.#whole = whole;
         } else {
-            for (const { box, sheet } of this.#changes(this.#sigs, sigs)) {
+            for (const { box, sheet } of changes(this.#sigs, sigs)) {
                 for (const grid of [this.#base, this.#focus, this.#nextFocus]) grid?.mark(box, { sheet });
             }
         }
@@ -623,52 +589,6 @@ export class ScrapboardRenderer {
         this.#pump({ now: !fresh });
         this.queueFocus();
         return view;
-    }
-
-    // every piece drawn, as [what it is, where it reaches]
-    #piecesOf(view) {
-        const P = this.#painter;
-        const out = new Map();
-        for (const s of view.scraps ?? []) {
-            const L = s.layout ?? {};
-            const pts = [...(L.hull ?? [])];
-            for (const t of [...(L.tapes ?? []), ...(L.extras ?? [])]) { const m = Math.max(t.w, t.h ?? 0); pts.push(t.cx - m, t.cy - m, t.cx + m, t.cy + m); }
-            for (const p of [...(L.clipPins ?? []), ...(L.pins ?? []), ...(L.pin ? [L.pin] : [])]) pts.push(p.x - p.w, p.y - p.w, p.x + p.w, p.y + p.w);
-            out.set(`s:${s.key}`, { sig: sigOf(s), box: boxOf(pts, 50) });
-        }
-        for (const l of view.links ?? []) {
-            // (a long string: a box for each stretch of it, not one round it all)
-            const P0 = l.points ?? [];
-            const boxes = [];
-            for (let i = 0; i < P0.length; i += 16) boxes.push(boxOf(P0.slice(i, i + 18), 60));
-            const T = l.label ? P.tagOf(l) : null;
-            if (T) boxes.push(boxOf([T.x - T.w, T.y - T.w, T.x + T.w, T.y + T.w, T.mid.x, T.mid.y], 60));
-            out.set(`l:${l.id}`, { sig: sigOf(l), boxes: boxes.filter(Boolean) });
-        }
-        for (const p of view.pins ?? []) out.set(`p:${p.id}`, { sig: sigOf(p), box: boxOf([p.x, p.y], (p.w ?? 40) + 20) });
-        // (the board's loose pieces: tape and webs off their cards)
-        for (const b of view.bits ?? []) out.set(`b:${b.id}`, { sig: sigOf(b), box: boxOf([b.x, b.y], Math.max(b.w, b.h ?? 0) + 30) });
-        (view.decor ?? []).forEach((d, i) => out.set(`d:${i}`, { sig: sigOf(d), box: boxOf([d.x, d.y], (d.w ?? 100) * 1.5 + 20) }));
-        // the marker's strokes are the sheet's: a change repaints the sheet there
-        for (const [id, m] of P.markState()) out.set(`m:${id}`, { sig: m.sig, box: m.box, sheet: true });
-        return out;
-    }
-
-    // the parts of the board a change of pieces touches
-    #changes(was, now) {
-        const out = [];
-        const take = (e) => {
-            for (const box of e?.boxes ?? (e?.box ? [e.box] : [])) out.push({ box, sheet: Boolean(e.sheet) });
-        };
-        for (const [id, a] of was) {
-            const b = now.get(id);
-            if (!b || b.sig !== a.sig) take(a);
-        }
-        for (const [id, b] of now) {
-            const a = was.get(id);
-            if (!a || a.sig !== b.sig) take(b);
-        }
-        return out;
     }
 
     // the board px on screen (null before the canvas is up)

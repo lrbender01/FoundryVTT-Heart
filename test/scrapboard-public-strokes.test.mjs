@@ -75,6 +75,13 @@ describe("public strokes (Luke, 2026-10-25)", () => {
     expect(sharePatch(open, null, { strokes: [["ana", "a1"]] }, false, ANA).marks.ana.a1.open).toBe(false);
   });
 
+  it("a note and a stroke on it switched together: both switch (Luke, 2026-10-25)", () => {
+    const raw = { scraps: { n1: { type: "note", text: "x", x: 0, y: 0, author: "ana", marks: { k1: { c: 1, w: 4, by: "ana", pts: [0, 0, 0.2, 0] } } } }, links: {}, marks: {} };
+    const p = sharePatch(raw, null, { scraps: ["n1"], strokes: [["@n1", "k1"]] }, true, ANA);
+    expect(p.scraps.n1.open).toBe(true);
+    expect(p.scraps.n1.marks.k1.open).toBe(true);
+  });
+
   it("Shift+right-click switches it, its maker's; another's is refused", () => {
     const raw = sheet();
     expect(live(raw, ANA).press("move", { x: 200, y: 101 }, { right: true, shift: true })).toMatchObject({ do: "share", on: true, sel: { strokes: [["ana", "a1"]] } });

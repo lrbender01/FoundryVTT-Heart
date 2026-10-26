@@ -12,10 +12,10 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { resetWorld, fakeUser, setUsers, FakeCollection } from "./helpers.mjs";
 import { runQueued, registerRelayHandler } from "../src/common/relay.js";
 import { registerBoardRelay, forgetHandedRecords, freeHand, safeKey } from "../src/map/scrapboard/notes.js";
-import { setScrap, removeMany, undo, redo, binCards, applyBoardPatch, replaceBoard, restoreBackup, followRename, boardOf, pushEdit, setBoardScene } from "../src/map/scrapboard/api.js";
+import { addPin, addScrap, setScrap, removeMany, undo, redo, binCards, applyBoardPatch, replaceBoard, restoreBackup, followRename, boardOf, pushEdit, setBoardScene } from "../src/map/scrapboard/api.js";
 import { backupsToDrop } from "../src/map/scrapboard/backups.js";
 import { onRelayMessage } from "../src/common/relay.js";
-import { recordUpdate, normalizeLook, markMax } from "../src/map/scrapboard/model.js";
+import { recordUpdate, normalizeLook, markMax, freshStrokeIds } from "../src/map/scrapboard/model.js";
 
 const isPlain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
@@ -77,6 +77,27 @@ beforeEach(() => {
   game.scenes = new FakeCollection([scene]);
   forgetHandedRecords();
   registerBoardRelay();
+});
+
+describe("the GM's quick edits each keep their own ids (Luke, 2026-10-25)", () => {
+  it("two pins put in at once: two pins", async () => {
+    const [a, b] = await Promise.all([addPin(scene, { tex: "t", x: 1, y: 1 }), addPin(scene, { tex: "t", x: 2, y: 2 })]);
+    expect(a).not.toBe(b);
+    expect(boardOf(scene).pins[a]).toMatchObject({ x: 1 });
+    expect(boardOf(scene).pins[b]).toMatchObject({ x: 2 });
+  });
+
+  it("two strokes laid at once, made with the same id from the board as it was: both kept", async () => {
+    const st = (x) => ({ marks: { gm: { m1: { c: 0, w: 4, pts: [x, 0, x + 9, 9] } } } });
+    await Promise.all([applyBoardPatch(scene, (b) => freshStrokeIds(b, st(10))), applyBoardPatch(scene, (b) => freshStrokeIds(b, st(20)))]);
+    expect(Object.values(boardOf(scene).marks.gm).map((s) => s.pts[0]).sort()).toEqual([10, 20]);
+  });
+
+  it("two cards added at once: two cards", async () => {
+    const [k1, k2] = await Promise.all([addScrap(scene, { type: "note", text: "a", x: 1, y: 1 }), addScrap(scene, { type: "note", text: "b", x: 2, y: 2 })]);
+    expect(k1).not.toBe(k2);
+    expect([boardOf(scene).scraps[k1].text, boardOf(scene).scraps[k2].text]).toEqual(["a", "b"]);
+  });
 });
 
 describe("the GM's writes, undone and done again", () => {
@@ -270,6 +291,33 @@ describe("the relay's board handlers", () => {
     expect(Object.keys(boardOf(scene).marks.bo)).toHaveLength(2);
     // (a sweep that isn't one is refused)
     expect((await ask("board.edit", { cut: { sweep: { pts: [1], r: 5 }, strokes: [["ana", "a1"]] } })).status).toBe("not-allowed");
+  });
+
+  it("board.edit: a player's doodle, its strokes and ids worked out by the GM, never overwriting what is there (Luke, 2026-10-25)", async () => {
+    // (a stroke of theirs the asker's board has not seen yet, at m1)
+    scene.flags.heart.board.marks.ana = { m1: { c: 2, w: 6, pts: [0, 0, 300, 0] } };
+    const brush = { size: 60, c: 1, w: 6, b: 1, o: 0.85 };
+    expect((await ask("board.edit", { doodle: { a: { kind: "gate", seed: "gate:1", at: { x: 400, y: 400 } }, brush } })).status).toBe("done");
+    const mine = boardOf(scene).marks.ana;
+    expect(mine.m1.pts).toEqual([0, 0, 300, 0]);
+    expect(Object.keys(mine).length).toBeGreaterThan(5);
+    // (a second one laid at once: both kept)
+    const n = Object.keys(mine).length;
+    expect((await ask("board.edit", { doodle: { a: { kind: "gate", seed: "gate:2", at: { x: 600, y: 400 } }, brush } })).status).toBe("done");
+    expect(Object.keys(boardOf(scene).marks.ana)).toHaveLength(n + (n - 1));
+    // (on a card, laid out to find its frame; never a kind there is none
+    // of, nor off the sheet)
+    vi.stubGlobal("document", { createElement: () => ({ getContext: () => ({ measureText: (t) => ({ width: String(t).length * 8 }) }) }) });
+    try {
+      expect((await ask("board.edit", { doodle: { a: { kind: "sun", seed: "sun:1", at: { x: 100, y: 100 }, on: "grip" }, brush } })).status).toBe("done");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    const onCard = Object.values(boardOf(scene).scraps.grip.marks ?? {});
+    expect(onCard.length).toBeGreaterThan(0);
+    expect(onCard.every((st) => st.by === "ana")).toBe(true);
+    expect((await ask("board.edit", { doodle: { a: { kind: "nonsense", at: { x: 400, y: 400 } }, brush } })).status).toBe("not-allowed");
+    expect((await ask("board.edit", { doodle: { a: { kind: "gate", at: { x: 1e9, y: 0 } }, brush } })).status).toBe("not-allowed");
   });
 
   it("a stroke's lock let go is written, merged as Foundry merges (Luke, 2026-10-25)", async () => {

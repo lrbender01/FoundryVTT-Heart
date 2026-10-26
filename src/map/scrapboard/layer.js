@@ -31,7 +31,7 @@
 import { ScrapboardRenderer } from './render.js';
 import { pinThumb } from './paint.js';
 import { loadBoardLook, textureUrl } from './look.js';
-import { NIBS, NIB_DEFAULTS, nibStyleOf, LINK_KINDS, cardWord, cutPatch, absorbPatch, markMax, brushStroke, doodleBoard, doodlePatch, brushColor, DOODLE_TABS, doodleTabsFor, noteFields, customKey, keysTaken, sharePatch, mayShare, savedDoodleOf, cleanSavedDoodles, isSavedKind, SAVED_MAX, pinChoices, pickFrom, pinPreview, pinTint, pinScale } from './model.js';
+import { NIBS, NIB_DEFAULTS, nibStyleOf, LINK_KINDS, cardWord, cutPatch, freshStrokeIds, absorbPatch, markMax, brushStroke, doodleBoard, doodlePatch, brushColor, DOODLE_TABS, doodleTabsFor, noteFields, customKey, keysTaken, sharePatch, mayShare, savedDoodleOf, cleanSavedDoodles, isSavedKind, SAVED_MAX, pinChoices, pickFrom, pinPreview, pinTint, pinScale } from './model.js';
 import { BoardControls, applyPatch, LOCK_MS, strokeEdges, DOODLE_MIN, DOODLE_MAX, dockAt, snapSide } from './controls.js';
 import {
     isBoardScene, boardOf, ownsBoard, addPin, addScrap, removeMarks, clearAllBrushes,
@@ -49,7 +49,7 @@ import { SELECTED, layPasses, PASS_BLENDS, doodleBake, stringGhost, dashed, hand
 import { heartDialogOptions } from '../../common/dialog.js';
 import { sendLive, onLive } from '../../common/relay.js';
 import { LiveSender, livePeer, livePeerAfterUpdate, livePeerAt, liveShows, landingOf, landedOn } from './live.js';
-import { boardCounts, liveCounts } from './stats.js';
+import { boardCounts, boardBytes, liveCounts } from './stats.js';
 import { showArt, showImage } from '../../common/art.js';
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
@@ -754,8 +754,12 @@ export class ScrapboardLayer extends InteractionLayer {
         const patch = doodlePatch(boardOf(canvas.scene), r.view, { ...a, saved }, brush, r.look, game.user.id);
         // (shown where it was laid until the board shows it: Luke 2026-10-25)
         this.#landGhost(a.at, patch);
-        if (game.user.isGM && !this.preview) return applyBoardPatch(canvas.scene, patch);
-        return boardEdit(canvas.scene, { remark: patch });
+        // (its ids picked when the write's turn comes: two quick doodles, both kept)
+        if (game.user.isGM && !this.preview) return applyBoardPatch(canvas.scene, (board) => freshStrokeIds(board, patch));
+        // (what was laid, the GM working out its strokes and ids on the board
+        // as it is: Luke 2026-10-25, ids picked here from a board behind the
+        // GM's overwrote strokes already there)
+        return boardEdit(canvas.scene, { doodle: { a: { kind: a.kind, seed: a.seed, at: a.at, on: a.on ?? null, rot: a.rot ?? 0, flip: Boolean(a.flip), ...(saved ? { saved } : {}) }, brush } });
     }
 
     // the doodle last in hand, picked up again when the doodles window is
@@ -1098,6 +1102,8 @@ export class ScrapboardLayer extends InteractionLayer {
         if (this.#peers.delete(id)) this.#liveChanged(true);
     }
 
+    #sized = null;
+
     // The board's statistics on this client (File's Statistics, stats.js;
     // Luke 2026-10-25): what is on the board as this user sees it, everyone
     // else's live doing, what is drawn, and how the frame rate, the tiles,
@@ -1121,8 +1127,13 @@ export class ScrapboardLayer extends InteractionLayer {
         } catch {
             gpuSide = 0;
         }
+        // (the board's saved size every 5 s: its whole JSON, too much to
+        // make every second on a large board)
+        const now = Date.now();
+        if (!this.#sized || this.#sized.scene !== canvas.scene?.id || now - this.#sized.at > 5000) this.#sized = { at: now, scene: canvas.scene?.id, bytes: boardBytes(boardOf(canvas.scene)) };
         return {
-            board: boardCounts(r.view, boardOf(canvas.scene)),
+            board: boardCounts(r.view),
+            bytes: this.#sized.bytes,
             live: liveCounts([...this.#peers.values()]),
             here: game.users.filter((u) => u.active && u.viewedScene === canvas.scene?.id).length,
             liveIn: this.#liveIn,
@@ -1686,7 +1697,9 @@ export class ScrapboardLayer extends InteractionLayer {
                 this.drawMarks();
                 // (begun on a card: the card's, in its own frame; the patch is
                 // the shared controls', model.js strokePatch, Luke 2026-10-21)
-                if (game.user.isGM) return applyBoardPatch(scene, a.patch);
+                // (its id picked when the write's turn comes: a dash right
+                // after a stroke, both kept)
+                if (game.user.isGM) return applyBoardPatch(scene, (board) => freshStrokeIds(board, a.patch));
                 return boardEdit(scene, { mark: a.on ? { ...a.stroke, on: a.on } : a.stroke });
             case 'unmark':
                 this.drawMarks();
@@ -1705,10 +1718,8 @@ export class ScrapboardLayer extends InteractionLayer {
             }
             case 'cut': {
                 this.drawMarks();
-                if (gm && !this.preview) {
-                    const p = cutPatch(boardOf(scene), this.renderer.view, a.sweep, a.strokes, this.renderer.look);
-                    return p ? applyBoardPatch(scene, p) : null;
-                }
+                // (worked out when the write's turn comes, on the board as it is then)
+                if (gm && !this.preview) return applyBoardPatch(scene, (board) => cutPatch(board, this.renderer.view, a.sweep, a.strokes, this.renderer.look));
                 return boardEdit(scene, { cut: { sweep: a.sweep, strokes: a.strokes } });
             }
             case 'open':

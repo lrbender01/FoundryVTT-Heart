@@ -129,6 +129,15 @@ describe("the bin: cards never deleted outright", () => {
     expect(l).toMatchObject({ bPin: "b" });
   });
 
+  it("a pin given a new id never takes one of its own card's pins still to come back (Luke, 2026-10-25)", () => {
+    const b = { scraps: { n2: { type: "note", text: "y", x: 0, y: 0 } }, links: {}, pins: { pin1: { tex: "tx/pin", x: 9, y: 9 }, pin2: { tex: "tx/pin", x: 5, y: 5 }, pin3: { tex: "tx/pin", x: 1, y: 1 } }, bin: {
+      n1: { at: 1, scrap: { type: "note", text: "x", x: 500, y: 500 }, pins: { pin3: { tex: "tx/pin", on: "n1", at: { u: 0.1, v: 0.1 } }, pin4: { tex: "tx/pin", on: "n1", at: { u: 0.9, v: 0.9 } } } },
+    } };
+    applyPatch(b, unbinPatch(b, "n1"));
+    expect(Object.values(b.pins).filter((p) => p.on === "n1")).toHaveLength(2);
+    expect(b.pins.pin3).toEqual({ tex: "tx/pin", x: 1, y: 1 });
+  });
+
   it("a string whose other end has gone stays in the bin", () => {
     const b = clone(RAW);
     applyPatch(b, binPatch(b, ["grip"], { at: 5 }));

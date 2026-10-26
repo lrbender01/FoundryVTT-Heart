@@ -146,9 +146,15 @@ async function askHistory(scene, rec, side) {
 
 // A board write. It is kept as this user's edit, or (`sink`, the relay's)
 // handed back to the player who asked for it; the GM's client keeps a copy of
-// the board now and then (`force`: now, as before cards come off)
-function update(scene, data, { sink = null, record = true, force = false } = {}) {
+// the board now and then (`force`: now, as before cards come off).
+// (`data` a function: the update made when the write's turn comes, from the
+// board as it is then, so the new ids it picks are free. Luke 2026-10-25:
+// ids picked before an earlier write had landed took its pin or stroke,
+// two quick pins making one)
+function update(scene, data0, { sink = null, record = true, force = false } = {}) {
     return oneWrite(scene, async () => {
+        const data = typeof data0 === 'function' ? data0() : data0;
+        if (!data || !Object.keys(data).length) return null;
         const roots = updateRoots(data, PATH);
         const before = foundry.utils.deepClone(boardOf(scene));
         if (force) await keepBackup(scene, before, { force: true, why: 'removed' });
@@ -248,17 +254,24 @@ export function patchData(scene, patch) {
     }
     return data;
 }
+// (`patch` a function of the board: made when the write's turn comes, as
+// update's)
 export async function applyBoardPatch(scene, patch, opts = {}) {
     if (!gmOnly() || !scene) return;
+    if (typeof patch === 'function') return update(scene, () => patchData(scene, patch(boardOf(scene))), opts);
     const data = patchData(scene, patch);
     if (Object.keys(data).length) return update(scene, data, opts);
 }
 
 // A pin of the board's own: { tex, on, at } in a scrap, or { tex, x, y } loose
+// (its id picked when the write's turn comes: two quick pins, two pins)
 export async function addPin(scene, data, opts = {}) {
     if (!gmOnly() || !scene || !data?.tex) return null;
-    const id = customKey('pin', boardOf(scene).pins ?? {});
-    await update(scene, { [`${PATH}.pins.${id}`]: data }, opts);
+    let id = null;
+    await update(scene, () => {
+        id = customKey('pin', boardOf(scene).pins ?? {});
+        return { [`${PATH}.pins.${id}`]: data };
+    }, opts);
     return id;
 }
 
@@ -266,8 +279,11 @@ export async function addPin(scene, data, opts = {}) {
 // id]]); a whole layer (or every one) cleared
 export async function addMark(scene, layer, stroke, opts = {}) {
     if (!gmOnly() || !scene || !layer) return null;
-    const id = customKey('m', boardOf(scene).marks?.[layer] ?? {});
-    await update(scene, { [`${PATH}.marks.${layer}.${id}`]: stroke }, opts);
+    let id = null;
+    await update(scene, () => {
+        id = customKey('m', boardOf(scene).marks?.[layer] ?? {});
+        return { [`${PATH}.marks.${layer}.${id}`]: stroke };
+    }, opts);
     return id;
 }
 export async function removeMarks(scene, list, opts = {}) {
@@ -296,12 +312,16 @@ export async function setLink(scene, id, patch) {
 // GM's own (uuid, name), a note (text), or pencil writing (scrawl: text)
 export async function addScrap(scene, data) {
     if (!gmOnly() || !scene) return null;
-    const scraps = boardOf(scene).scraps ?? {};
-    const key = data.lib && !scraps[data.lib] ? data.lib : customKey(data.type === 'note' ? 'n' : data.type === 'scrawl' ? 'w' : 'c', keysTaken(boardOf(scene)));
-    // (a card may come with a doodle of its owner's: Luke 2026-10-06; a
-    // place only, never a note, Luke 2026-10-24)
-    const doodle = data.type === 'scrawl' || data.type === 'note' || data.tag || data.marks ? {} : seasonMarks(`${scene.id}:${key}`, { by: data.author ?? game.user.id, type: data.type ?? 'landmark' });
-    await update(scene, { [`${PATH}.scraps.${key}`]: { state: 'known', ...data, ...(Object.keys(doodle).length ? { marks: doodle } : {}), x: Math.round(data.x), y: Math.round(data.y) } });
+    let key = null;
+    // (its key picked when the write's turn comes)
+    await update(scene, () => {
+        const scraps = boardOf(scene).scraps ?? {};
+        key = data.lib && !scraps[data.lib] ? data.lib : customKey(data.type === 'note' ? 'n' : data.type === 'scrawl' ? 'w' : 'c', keysTaken(boardOf(scene)));
+        // (a card may come with a doodle of its owner's: Luke 2026-10-06; a
+        // place only, never a note, Luke 2026-10-24)
+        const doodle = data.type === 'scrawl' || data.type === 'note' || data.tag || data.marks ? {} : seasonMarks(`${scene.id}:${key}`, { by: data.author ?? game.user.id, type: data.type ?? 'landmark' });
+        return { [`${PATH}.scraps.${key}`]: { state: 'known', ...data, ...(Object.keys(doodle).length ? { marks: doodle } : {}), x: Math.round(data.x), y: Math.round(data.y) } };
+    });
     return key;
 }
 
@@ -567,8 +587,13 @@ export async function tidiedBoard(board, scene) {
 export async function addString(scene, act, kind, { color = null, state = 'known', pin = null, plainPins = false } = {}, opts = {}) {
     if (!gmOnly() || !scene) return null;
     const { look } = await layoutTools(scene);
-    const { id, patch } = newStringPatch(boardOf(scene), act, kind, look, { color, state, pin, plainPins });
-    await applyBoardPatch(scene, patch, opts);
+    // (its ids picked when the write's turn comes)
+    let id = null;
+    await applyBoardPatch(scene, (board) => {
+        const made = newStringPatch(board, act, kind, look, { color, state, pin, plainPins });
+        id = made.id;
+        return made.patch;
+    }, opts);
     return id;
 }
 

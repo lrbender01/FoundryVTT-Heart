@@ -1175,9 +1175,11 @@ export function sharePatch(raw, view, { scraps = [], links = [], pins = [], bits
         else (out.marks[where] ??= {})[id] = { ...st, open };
     }
     const hidden = (x) => x?.state === 'hidden' && !user?.isGM;
+    // (merged into what is there: Luke 2026-10-25, a note and a stroke on it
+    // switched together lost the stroke's switch to the note's)
     const take = (coll, id, x) => {
         if (!x || hidden(x) || !mayShare(x, user) || Boolean(x.open) === open) return;
-        out[coll][id] = { open };
+        out[coll][id] = { ...(out[coll][id] ?? {}), open };
     };
     for (const k of scraps) {
         const s = raw?.scraps?.[k];
@@ -1190,7 +1192,7 @@ export function sharePatch(raw, view, { scraps = [], links = [], pins = [], bits
         // (its name goes with it: the tag and its thread)
         const vl = view?.links?.find((x) => x.id === id);
         for (const t of vl?.threads ?? []) if (raw.links?.[t] && Boolean(raw.links[t].open) !== open) out.links[t] = { open };
-        if (vl?.nameNote && raw.scraps?.[vl.nameNote] && Boolean(raw.scraps[vl.nameNote].open) !== open) out.scraps[vl.nameNote] = { open };
+        if (vl?.nameNote && raw.scraps?.[vl.nameNote] && Boolean(raw.scraps[vl.nameNote].open) !== open) out.scraps[vl.nameNote] = { ...(out.scraps[vl.nameNote] ?? {}), open };
     }
     for (const id of pins) take('pins', id, raw?.pins?.[id]);
     for (const id of bits) take('bits', id, raw?.bits?.[id]);
@@ -2959,8 +2961,17 @@ export function cutPatch(raw, view, sweep, keys, look, may = () => true) {
     let V = null;
     const viewNow = () => (V ??= typeof view === 'function' ? view() : view);
     const out = { marks: {}, scraps: {} };
+    // (the ids each layer or card has, those given out here too: Luke
+    // 2026-10-25, every stroke's second piece took the same new id, so one
+    // drag across many strokes kept only the last stroke's)
+    const ids = {};
+    // (each stroke once: a stroke named twice was cut twice, its pieces
+    // after the first made twice)
+    const done = new Set();
     let any = false;
     for (const [where, id] of keys ?? []) {
+        if (done.has(`${where}|${id}`)) continue;
+        done.add(`${where}|${id}`);
         const onCard = String(where).startsWith('@');
         const key = onCard ? String(where).slice(1) : null;
         const card = onCard ? raw?.scraps?.[key] : null;
@@ -2975,7 +2986,7 @@ export function cutPatch(raw, view, sweep, keys, look, may = () => true) {
         if (!pieces) continue;
         any = true;
         const seed = had.seed ?? (onCard ? `cmark:${key}:${id}` : `mark:${id}:${had.pts.length}`);
-        const taken = { ...((onCard ? card.marks : raw.marks?.[where]) ?? {}) };
+        const taken = (ids[where] ??= { ...((onCard ? card.marks : raw.marks?.[where]) ?? {}) });
         const put = {};
         put[id] = null;
         pieces.forEach((pc, i) => {
@@ -4694,6 +4705,28 @@ export function takeOffPatch(raw, { scraps = [], pins = [], links = [] } = {}, {
     return Object.keys(out.scraps).length + Object.keys(out.pins).length + Object.keys(out.links).length ? out : null;
 }
 
+// A patch of new strokes alone (a stroke laid, a doodle), each given an id
+// free on `board`, the board as it is when the patch is written (Luke,
+// 2026-10-25: ids picked from a board behind it took strokes already there)
+export function freshStrokeIds(board, patch) {
+    const out = {};
+    const give = (taken, strokes, put) => {
+        for (const st of Object.values(strokes ?? {})) {
+            if (!st) continue;
+            const id = customKey('m', taken);
+            taken[id] = 1;
+            put(id, st);
+        }
+    };
+    for (const [layer, strokes] of Object.entries(patch?.marks ?? {})) {
+        give({ ...(board?.marks?.[layer] ?? {}) }, strokes, (id, st) => { ((out.marks ??= {})[layer] ??= {})[id] = st; });
+    }
+    for (const [key, sp] of Object.entries(patch?.scraps ?? {})) {
+        give({ ...(board?.scraps?.[key]?.marks ?? {}) }, sp?.marks, (id, st) => { ((out.scraps ??= {})[key] ??= { marks: {} }).marks[id] = st; });
+    }
+    return out;
+}
+
 // A doodle laid down (Luke, 2026-10-06; one copy for both hosts, 2026-10-21):
 // on the card under it (its own strokes, in its frame) or on the sheet in the
 // layer of whoever placed it (`me`), in the brush's paint, brightness, width,
@@ -4770,8 +4803,10 @@ export function unbinPatch(raw, key) {
     const k = scraps[key] ? customKey(e.scrap.type === 'note' ? 'n' : e.scrap.type === 'scrawl' ? 'w' : 'c', keysTaken(raw)) : key;
     const pinId = {};
     const newPins = {};
+    // (a new id never one of the entry's own still to come back: Luke
+    // 2026-10-25, pin3 given pin4 was overwritten by the entry's own pin4)
     for (const [id, p] of Object.entries(e.pins ?? {})) {
-        const nid = pinsNow[id] ? customKey('pin', { ...pinsNow, ...newPins }) : id;
+        const nid = pinsNow[id] ? customKey('pin', { ...pinsNow, ...newPins, ...e.pins }) : id;
         pinId[id] = nid;
         newPins[nid] = { ...p, ...(p.on === key ? { on: k } : {}) };
     }
@@ -4794,7 +4829,7 @@ export function unbinPatch(raw, key) {
             }
             continue;
         }
-        const nid = linksNow[id] ? customKey('l', { ...linksNow, ...newLinks }) : id;
+        const nid = linksNow[id] ? customKey('l', { ...linksNow, ...newLinks, ...e.links }) : id;
         newLinks[nid] = { ...moved, joints: moved.joints.filter((j) => !j?.pin || newPins[j.pin] || pinsNow[j.pin]) };
     }
     // (the joints other strings ran through its pins, put back in those

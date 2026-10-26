@@ -129,6 +129,41 @@ describe("cutPatch: the strokes asked for, cut", () => {
     expect(p.marks.ana.m2.seed).toBe("mark:m1:4");
   });
 
+  it("one drag across many strokes keeps every piece of each, each its own id (Luke, 2026-10-25: the gate's bars lost their lower halves)", () => {
+    const bars = {};
+    for (let i = 1; i <= 6; i++) bars[`m${i}`] = { c: 2, w: 6, pts: [i * 40, 0, i * 40, 200] };
+    const raw = { scraps: {}, links: {}, marks: { ana: bars } };
+    const view = boardView(look, normalizeBoard(raw), "gm", size, measure);
+    const p = cutPatch(raw, view, { pts: [0, 100, 300, 100], r: 8 }, Object.keys(bars).map((id) => ["ana", id]), look);
+    const pieces = Object.entries(p.marks.ana).filter(([, st]) => st);
+    expect(pieces).toHaveLength(12);
+    // (each bar's top and bottom, none lost)
+    for (let i = 1; i <= 6; i++) {
+      const mine = pieces.filter(([, st]) => st.pts[0] === i * 40);
+      expect(mine.map(([, st]) => (st.span[0] === 0 ? "top" : "bottom")).sort()).toEqual(["bottom", "top"]);
+    }
+  });
+
+  it("a stroke named twice is cut once", () => {
+    const raw = { scraps: {}, links: {}, marks: { ana: { m1: line } } };
+    const view = boardView(look, normalizeBoard(raw), "gm", size, measure);
+    const p = cutPatch(raw, view, { pts: [150, -40, 150, 40], r: 10 }, [["ana", "m1"], ["ana", "m1"]], look);
+    expect(Object.values(p.marks.ana).filter(Boolean)).toHaveLength(2);
+  });
+
+  it("the same on a card", () => {
+    const marks = {};
+    for (let i = 1; i <= 4; i++) marks[`k${i}`] = { c: 1, w: 4, by: "ana", pts: [-0.3 + i * 0.12, -0.3, -0.3 + i * 0.12, 0.3] };
+    const raw = { scraps: { n1: { type: "note", text: "x", x: 1000, y: 1000, marks } }, links: {} };
+    const view = boardView(look, normalizeBoard(raw), "gm", size, measure);
+    const L = view.scraps[0].layout.strokes;
+    const ys = L.flatMap((st) => [st.pts[1], st.pts[3]]);
+    const xs = L.flatMap((st) => [st.pts[0], st.pts[2]]);
+    const midY = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const p = cutPatch(raw, view, { pts: [Math.min(...xs) - 50, midY, Math.max(...xs) + 50, midY], r: 5 }, Object.keys(marks).map((id) => ["@n1", id]), look);
+    expect(Object.values(p.scraps.n1.marks).filter(Boolean)).toHaveLength(8);
+  });
+
   it("all of it rubbed out: the stroke goes", () => {
     const raw = { scraps: {}, links: {}, marks: { ana: { m1: line } } };
     const view = boardView(look, normalizeBoard(raw), "gm", size, measure);
