@@ -1,5 +1,5 @@
 const fs = require('fs');
-const config = require('../foundryvtt.config.js');
+const config = require('../foundryvtt.config.cjs');
 const content = fs.readFileSync('./src/manifest.json');
 const manifest = JSON.parse(content);
 

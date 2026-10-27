@@ -11,7 +11,7 @@
 // a player's edits come back to them from the GM's client, and their undo goes
 // through it again (notes.js board.history). The GM's client also keeps
 // rolling copies of each board (backups.js).
-import { unmarkPatch, binLetGo, customKey, keysTaken, labelPatch, tidyBoard, newStringPatch, diffBoard, recordUpdate, updateRoots, binPatch, unbinPatch, takeOffPatch, pxPerInch, seasonMarks, sheetLook, boardSheet, normalizeBoard, boardView, contentBounds, resizeSheet, resizedBoard, pageOf, reshapeSheet, bareSheet, isBareBoard } from './model.js';
+import { unmarkPatch, binLetGo, customKey, keysTaken, labelPatch, tidyBoard, newStringPatch, diffBoard, recordUpdate, updateRoots, binPatch, unbinPatch, takeOffPatch, pxPerInch, seasonMarks, sheetLook, boardSheet, normalizeBoard, PART_NAMES, emptyBoardParts, boardView, contentBounds, resizeSheet, resizedBoard, pageOf, reshapeSheet, bareSheet, isBareBoard } from './model.js';
 import { loadBoardLook, styleOf, DEFAULT_STYLE } from './look.js';
 import { relay, RelayTimeout } from '../../common/relay.js';
 import { keepBackup } from './backups.js';
@@ -24,7 +24,7 @@ const PATH = `flags.heart.${BOARD_FLAG}`;
 const BACKUP_PATH = 'flags.heart.boardBackup';
 
 export const isBoardScene = (scene) => Boolean(scene?.flags?.heart?.[BOARD_FLAG]);
-export const boardOf = (scene) => scene?.flags?.heart?.[BOARD_FLAG] ?? { scraps: {}, links: {}, pins: {}, marks: {}, decor: [] };
+export const boardOf = (scene) => scene?.flags?.heart?.[BOARD_FLAG] ?? emptyBoardParts();
 
 // A players' board (Luke, 2026-10-02): a canvas of their own, for one player,
 // several, or the whole group ('all'), where they do anything but see what's
@@ -630,11 +630,11 @@ export async function removeLink(scene, id, opts = {}) {
 // What a board is, whole (Luke, 2026-10-21: the loose pieces and the pins'
 // tidy mark were being dropped by export and replace, so every load tidied
 // the pins again)
-const BOARD_PARTS = ['scraps', 'links', 'pins', 'marks', 'bits', 'decor'];
-// (and the parts a board has only once it needs them)
-// (its own sheet, once it has one: Luke 2026-10-24; and its pieces and clock
-// stages, which every export, replace, and copy was dropping: 2026-10-27)
-const ALL_PARTS = [...BOARD_PARTS, 'bin', 'pinsEd', 'notesEd', 'sheet', 'pieces', 'stages'];
+// (2026-10-27: no longer a list written here; every part comes from the one
+// description in model.js, BOARD_PARTS, which export, replace, and copy all
+// read; its sheet, pieces, and clock stages were each dropped by a hand-kept
+// list once)
+const ALL_PARTS = PART_NAMES;
 // (boardParts lives in boardfile.js, pure and tested there)
 
 // The board as the mock's File tab takes it

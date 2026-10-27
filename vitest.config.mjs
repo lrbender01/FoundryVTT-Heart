@@ -6,7 +6,7 @@ import { defineConfig } from "vitest/config";
 // not an npm workspace and installs nothing for it).
 //
 // Webpack-only imports (2026-10-02): templates and stylesheets are webpack
-// loaders' business (dev-utils/templates-loader.js, sass-loader), so here
+// loaders' business (dev-utils/templates-loader.cjs, sass-loader), so here
 // they resolve to stand-ins and the modules that import them (the roll
 // classes, the chat message class, the sheets) load under vitest:
 //   - a template (.html, .handlebars, .hbs) is `{ path, source: '' }`, its

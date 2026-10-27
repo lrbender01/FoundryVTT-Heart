@@ -1,6 +1,6 @@
 // modules we need
 const path = require('path');
-const config = require('./foundryvtt.config.js');
+const config = require('./foundryvtt.config.cjs');
 const TerserPlugin = require('terser-webpack-plugin');
 
 // auto calculated values
@@ -47,7 +47,7 @@ module.exports = (env, argv) => {
             name: `heart-${(argv && argv.mode) || 'development'}`,
             version: globVersion(),
             buildDependencies: {
-                config: [__filename, path.resolve(__dirname, 'dev-utils', 'templates-loader.js'), path.resolve(__dirname, 'foundryvtt.config.js')],
+                config: [__filename, path.resolve(__dirname, 'dev-utils', 'templates-loader.cjs'), path.resolve(__dirname, 'foundryvtt.config.cjs')],
             },
         },
         // Size hints target sites downloaded over the network; Foundry loads
@@ -67,7 +67,7 @@ module.exports = (env, argv) => {
             rules: [{
                     test: /\.html$|\.handlebars$|\.hbs$/,
                     use: {
-                        loader: path.resolve('dev-utils', 'templates-loader.js'),
+                        loader: path.resolve('dev-utils', 'templates-loader.cjs'),
                         options: {
                             name: id
                         }
@@ -75,6 +75,10 @@ module.exports = (env, argv) => {
                 },
                 {
                     test: /\.js$/,
+                    // The package is ESM ("type": "module", 2026-10-27), which
+                    // makes webpack demand full file extensions; src/ imports
+                    // omit them, as they always did.
+                    resolve: { fullySpecified: false },
                     use: 'webpack-import-glob-loader'
                 },
                 {

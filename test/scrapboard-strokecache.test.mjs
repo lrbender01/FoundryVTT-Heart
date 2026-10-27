@@ -105,6 +105,19 @@ describe("StrokeLayerCache", () => {
     expect(C.get("big", 0, 0, 1, 1)).toBe(null);
     expect(C.bytes).toBe(0);
   });
+  it("makes room before a piece is built, so it never holds more than its budget meanwhile", () => {
+    const C = new paint.StrokeLayerCache(4 * 100 * 100 * 4);
+    for (const k of ["a", "b", "c", "d"]) C.put(k, part(0, 0, 100, 100));
+    expect(C.bytes).toBe(C.budget);
+    C.room(100 * 100 * 4);
+    // (the oldest went, one piece's worth, before the new one exists)
+    expect(C.bytes).toBe(3 * 40000);
+    expect(C.get("a", 0, 0, 1, 1)).toBe(null);
+    expect(C.get("d", 0, 0, 1, 1)).not.toBe(null);
+    // (a piece too large to keep asks for nothing)
+    C.room(1e9);
+    expect(C.bytes).toBe(3 * 40000);
+  });
   it("lets a stroke's smaller pieces go when a piece covering them comes", () => {
     const C = new paint.StrokeLayerCache(1e9);
     C.put("s", part(0, 0, 50, 50));

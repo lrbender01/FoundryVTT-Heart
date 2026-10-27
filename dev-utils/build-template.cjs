@@ -1,6 +1,6 @@
 const fs = require('fs');
 const glob = require('glob');
-const {mergeDeep} = require('./common');
+const {mergeDeep} = require('./common.cjs');
 
 const paths = glob.globSync('./src/**/template.json');
 const templates = {};

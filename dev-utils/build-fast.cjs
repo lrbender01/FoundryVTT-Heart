@@ -1,8 +1,8 @@
 // The incremental build (2026-10-27): the same result as `build-all`, made
 // quicker for the edit-and-reload loop.
 //
-//   node dev-utils/build-fast.js            build once
-//   node dev-utils/build-fast.js --watch    build, then keep rebuilding on a change
+//   node dev-utils/build-fast.cjs            build once
+//   node dev-utils/build-fast.cjs --watch    build, then keep rebuilding on a change
 //
 // What differs from build-all (which stays the clean build for releases, and
 // the one CI runs):
@@ -83,10 +83,10 @@ function fingerprints() {
     statics.push({ name: 'LICENSE', data: `${fs.statSync(license).size}:${Math.round(fs.statSync(license).mtimeMs)}` });
     return {
         manifest: hashParts([
-            ...content([path.join(ROOT, 'src', 'manifest.json'), path.join(ROOT, 'foundryvtt.config.js'), dev('build-manifest.js')]),
+            ...content([path.join(ROOT, 'src', 'manifest.json'), path.join(ROOT, 'foundryvtt.config.cjs'), dev('build-manifest.cjs')]),
             { name: 'version', data: version() },
         ]),
-        template: hashParts(content([...templates, dev('build-template.js'), dev('common.js')])),
+        template: hashParts(content([...templates, dev('build-template.cjs'), dev('common.cjs')])),
         static: hashParts(statics),
     };
 }
@@ -109,9 +109,9 @@ const writeState = (s) => {
 
 const node = (file, ...args) => spawnSync(process.execPath, [file, ...args], { cwd: ROOT, stdio: 'inherit' });
 const STEP_RUNNERS = {
-    manifest: () => node(path.join('dev-utils', 'build-manifest.js'), version()),
-    template: () => node(path.join('dev-utils', 'build-template.js')),
-    static: () => node(path.join('dev-utils', 'copy-static.js')),
+    manifest: () => node(path.join('dev-utils', 'build-manifest.cjs'), version()),
+    template: () => node(path.join('dev-utils', 'build-template.cjs')),
+    static: () => node(path.join('dev-utils', 'copy-static.cjs')),
 };
 
 // Run the support steps whose inputs changed; returns the steps run
@@ -133,11 +133,29 @@ function supportSteps() {
 }
 
 const WEBPACK = path.join(ROOT, 'node_modules', 'webpack-cli', 'bin', 'cli.js');
-const webpackArgs = ['--mode', 'production', '--env', 'incremental'];
+const webpackArgs = ['--config', 'webpack.config.cjs', '--mode', 'production', '--env', 'incremental'];
 const sizeKey = (f) => { try { const s = fs.statSync(f); return `${s.size}:${s.mtimeMs}`; } catch { return null; } };
+
+// The newest time (ms) on anything the build reads: src, static, dev-utils,
+// the config files. `npm run plenty` compares it with the value recorded by
+// the last good run (its list of inputs is the same).
+function newestInput() {
+    let newest = 0;
+    const visit = (p) => {
+        let st;
+        try { st = fs.statSync(p); } catch { return; }
+        if (st.isDirectory()) {
+            for (const n of fs.readdirSync(p)) if (n !== 'node_modules' && n !== '.git') visit(path.join(p, n));
+        } else if (st.mtimeMs > newest) newest = st.mtimeMs;
+    };
+    for (const n of ['src', 'static', 'dev-utils', 'webpack.config.cjs', 'package.json', 'foundryvtt.config.cjs', 'LICENSE']) visit(path.join(ROOT, n));
+    return newest;
+}
 
 function once() {
     const t0 = Date.now();
+    // (taken before webpack starts: a file saved during the build stays newer)
+    const inputsNewest = newestInput();
     const bundle = path.join(DIST, 'heart.js');
     const before = sizeKey(bundle);
     const w = spawnSync(process.execPath, [WEBPACK, ...webpackArgs], { cwd: ROOT, stdio: 'inherit' });
@@ -146,6 +164,7 @@ function once() {
     const seconds = Math.round((Date.now() - t0) / 100) / 10;
     const codeChanged = sizeKey(bundle) !== before;
     const state = readState();
+    state.inputsNewest = inputsNewest;
     state.last = { when: new Date().toISOString(), codeChanged, ran, seconds };
     writeState(state);
     console.log(`build-fast: heart.js ${codeChanged ? 'CHANGED' : 'unchanged'}; support steps run: ${ran.length ? ran.join(', ') : 'none'}; ${seconds} s`);

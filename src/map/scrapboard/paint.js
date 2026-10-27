@@ -100,6 +100,19 @@ export class StrokeLayerCache {
     return null;
   }
 
+  // Room made for a piece of `bytes` BEFORE it is built (Luke, 2026-10-27:
+  // the page died at load; the cache let go of the old only after the new
+  // was made, so a build's peak was the budget and one piece over): the
+  // oldest go first until it fits. A piece past a quarter of the budget is
+  // not kept (see put), so it asks for no room.
+  room(bytes) {
+    if (bytes > this.budget / 4) return;
+    for (const old of [...this.pieces.keys()]) {
+      if (this.bytes + bytes <= this.budget) break;
+      this.#drop(old);
+    }
+  }
+
   put(key, p) {
     const bytes = (p.i1 - p.i0) * (p.j1 - p.j0) * 4;
     if (bytes > this.budget / 4) return p;
@@ -138,6 +151,13 @@ export class StrokeLayerCache {
     this.bytes = 0;
   }
 }
+
+// The most a bake of the whole sheet may be, in bitmap px (Luke, 2026-10-27:
+// a 500 m board baked as one 25,080 px square, 629 Mpx, 2.5 GB, which Chrome
+// refuses without a word: every stroke after it vanished, and the strokes'
+// layers built for it took the machine down). Past it drawBackground paints
+// the sheet live, only within the `area` it is given. 64 Mpx is 256 MB.
+export const BAKE_MAX_PIXELS = 64e6;
 
 // Images that came (a host's ids) against what was drawn short of them while
 // it watched (painter watch / unwatch: [{ id, box }], box in board px, null
@@ -1353,6 +1373,8 @@ function drawPins(g) {
 // (`scale` bitmap px per board px), redone only when `key` (the look)
 // changes; a bake that found a texture not loaded yet is redone next time.
 // `live` draws it fresh instead (the mock, while the background is edited).
+// A sheet whose bake would pass BAKE_MAX_PIXELS is drawn live too (2026-10-27),
+// within the `area` a host gives, never baked whole.
 // The marker is part of the sheet (under its grime), so it is baked with it:
 // a stroke drawn or rubbed out redoes only its own part of the bake.
 const BAKE_PAD = 40;
@@ -1406,6 +1428,43 @@ function paintSheet(c, scale, ox, oy, area = null) {
   BAKING = scale;
   try { drawSheet(g, area); drawDecor(g, look.decor.filter((d) => d.layer !== "page")); } finally { BAKING = wasBaking; g.restore(); }
 }
+// the size of the whole sheet's bake (bitmap px) at `scale`
+const bakePixels = (scale) => Math.round((look.w + BAKE_PAD * 2) * scale) * Math.round((look.h + BAKE_PAD * 2) * scale);
+// (each image drawn short, once per place)
+const useKey = (u) => `${u.id}|${JSON.stringify(u.box)}`;
+// A bake found incomplete (an image not in yet), an image having come: only
+// the parts those images lie in painted again, with the parts a stroke
+// changed (Luke, 2026-10-27: every arrival baked the whole sheet again, and
+// a picture that was no use to the sheet did too). Null when one of the
+// images could lie anywhere: the whole bake is done again.
+function rebakeArrived(marks, epoch) {
+  const arrived = new Set();
+  for (const u of bake.uses) {
+    if (arrived.has(u.id)) continue;
+    const im = env.img(u.id);
+    if (im && !im.preview) arrived.add(u.id);
+  }
+  const a = arrivalAreas(bake.uses, arrived);
+  if (a.whole) return null;
+  const boxes = [...markChanges(bake.marks, marks), ...a.areas];
+  const was = watching, before = missing;
+  watching = [];
+  let fresh = [];
+  try {
+    for (const b of boxes) paintSheet(bake.canvas, bake.scale, BAKE_PAD * bake.scale, BAKE_PAD * bake.scale, b);
+  } finally {
+    fresh = watching;
+    watching = was;
+    missing = before;
+  }
+  const had = new Set(a.rest.map(useKey));
+  const uses = [...a.rest];
+  for (const u of fresh) if (!had.has(useKey(u))) { had.add(useKey(u)); uses.push(u); }
+  if (was) was.push(...fresh);
+  Object.assign(bake, { uses, complete: !uses.length, marks, epoch });
+  missing = !bake.complete;
+  return bake;
+}
 function bakeBackground(key, scale = 1) {
   const marks = markState();
   const epoch = env.epoch?.() ?? null;
@@ -1414,11 +1473,25 @@ function bakeBackground(key, scale = 1) {
     bake.marks = marks;
     return bake;
   }
+  if (bake?.key === key && bake.scale === scale && epoch !== null && bake.uses) {
+    const part = rebakeArrived(marks, epoch);
+    if (part) return part;
+  }
   const c = bake?.canvas ?? document.createElement("canvas");
   c.width = Math.round((look.w + BAKE_PAD * 2) * scale); c.height = Math.round((look.h + BAKE_PAD * 2) * scale);
   missing = false;
-  paintSheet(c, scale, BAKE_PAD * scale, BAKE_PAD * scale);
-  bake = { canvas: c, key, scale, complete: !missing, marks, epoch };
+  // (what is drawn short of an image is noted where it lies, for rebakeArrived)
+  const was = watching;
+  watching = [];
+  let uses = [];
+  try {
+    paintSheet(c, scale, BAKE_PAD * scale, BAKE_PAD * scale);
+  } finally {
+    uses = watching;
+    watching = was;
+  }
+  if (was) was.push(...uses);
+  bake = { canvas: c, key, scale, complete: !missing, marks, epoch, uses };
   // (a patch of the old look is no use)
   if (patch && patch.key !== key) patch = null;
   return bake;
@@ -1466,9 +1539,17 @@ function sharpenContinue(ms = 8) {
   nextPatch = null;
   return true;
 }
-function drawBackground(g, { key = "", live = false, scale = 1, sharp = true } = {}) {
+// `area` (board px; with `live`, or past BAKE_MAX_PIXELS): only what lies in it
+// is painted, so a stroke's layer is built only for a stroke that reaches it,
+// at the scale `g` draws at (the caller's canvas is its bound, and clips)
+function drawBackground(g, { key = "", live = false, scale = 1, sharp = true, area = null } = {}) {
   drawTable(g);
-  if (live) { drawSheet(g); drawDecor(g, look.decor.filter((d) => d.layer !== "page")); return; }
+  if (live || bakePixels(scale) > BAKE_MAX_PIXELS) {
+    const was = LEAN;
+    LEAN = Boolean(area);
+    try { drawSheet(g, area); drawDecor(g, look.decor.filter((d) => d.layer !== "page")); } finally { LEAN = was; }
+    return;
+  }
   const B = bakeBackground(key, scale);
   g.drawImage(B.canvas, -BAKE_PAD, -BAKE_PAD, look.w + BAKE_PAD * 2, look.h + BAKE_PAD * 2);
   if (sharp) drawPatch(g, key, B.marks);
@@ -1527,6 +1608,11 @@ const OVER = 0.42;
 // pixels are the same either way.
 const LAYER_BYTES = Math.min(192, Math.max(48, (globalThis.navigator?.deviceMemory ?? 8) * 24)) * 2 ** 20;
 const layerCache = new StrokeLayerCache(LAYER_BYTES);
+// (a sheet painted live for a view, drawBackground with an area: a layer of
+// no more than LEAN_PX px is built in one canvas shared and not kept; 2026-10-27)
+let LEAN = false;
+const LEAN_PX = 256 * 256;
+let leanCanvas = null;
 // (layer px round the part a paint needs, the part's edges on an 8 px grid:
 // the resampling's reach, and its mipmaps' blocks kept in step)
 const LAYER_MARGIN = 8;
@@ -1582,8 +1668,15 @@ function brush(g, m, c0, seed0, { atop = false, over = false, layerOnly = false,
   let part = held && held.i0 <= i0 && held.j0 <= j0 && held.i1 >= i1 && held.j1 >= j1 ? held : null;
   if (!part && keep) part = layerCache.get(key, i0, j0, i1, j1);
   if (!part) {
-    part = brushLayer(m, c, seed, k, x0, y0, i0, j0, i1, j1);
-    if (keep) layerCache.put(key, part);
+    // (a small layer, in a sheet painted for a view too big to bake: built in
+    // the one canvas shared, laid down at once, never kept; thousands of
+    // strokes small on the screen are not thousands of canvases. Not a bright
+    // stroke's, held for its light pass.)
+    const lean = LEAN && !layerOnly && (i1 - i0) * (j1 - j0) <= LEAN_PX && !(hold && (m.b ?? 1) >= BRIGHTS.length - 1);
+    // (room made first: the cache never holds more than its budget while a layer is built)
+    if (keep && !lean) layerCache.room((i1 - i0) * (j1 - j0) * 4);
+    part = brushLayer(m, c, seed, k, x0, y0, i0, j0, i1, j1, lean ? (leanCanvas ??= document.createElement("canvas")) : null);
+    if (keep && !lean) layerCache.put(key, part);
   }
   if (hold && !over && (m.b ?? 1) >= BRIGHTS.length - 1) hold.set(key, part);
   const lay = part.canvas;
@@ -1629,7 +1722,7 @@ function layAlpha(o, B) {
 // A stroke's painted layer, or the part i0..i1 x j0..j1 of it (layer px, at k
 // layer px per board px, the layer's corner at board x0, y0): the brush's own
 // drawing, the same pixels wherever the part is cut
-function brushLayer(m, c, seed, k, x0, y0, i0, j0, i1, j1) {
+function brushLayer(m, c, seed, k, x0, y0, i0, j0, i1, j1, into = null) {
   const r = rng(seed);
   // (a piece of a stroke partly rubbed out, Luke 2026-10-25: its cut ends
   // run on a little past where it was cut, and the eraser's bites take out
@@ -1675,7 +1768,7 @@ function brushLayer(m, c, seed, k, x0, y0, i0, j0, i1, j1) {
   };
   // (ragged: a slow waver and a fine tearing of the edge)
   const edge = (i, k) => { const a = along(i); return 1 + 0.08 * Math.sin(a * 0.19 + ph[2 + k]) + 0.07 * Math.sin(a * 0.83 + ph[3 + k] * 2) + 0.05 * Math.sin(a * 2.3 + ph[4 - k]); };
-  const lay = document.createElement("canvas");
+  const lay = into ?? document.createElement("canvas");
   lay.width = i1 - i0; lay.height = j1 - j0;
   const x = lay.getContext("2d");
   x.setTransform(k, 0, 0, k, -x0 * k - i0, -y0 * k - j0);
@@ -2053,6 +2146,8 @@ return {
   // the Pin tool's, under the pointer); true once its picture is in
   // (`tint`: a string's colour on it, model.js pinTint)
   drawPin(g, tex, x, y, w, rot, tint = null) { const im = env.img(tex); if (!im) return false; sprite(g, tex, x, y, w, rot + pinUpright(tex), { shadow: 6, tint }); return !im.preview; },
+  // (whether the whole sheet's bake at `scale` stays within BAKE_MAX_PIXELS)
+  bakeFits(scale = 1) { return Boolean(look) && bakePixels(scale) <= BAKE_MAX_PIXELS; },
   drawTable, drawSheet, drawBackground, bakeBackground, sharpenBackground, sharpenContinue, drawPatch, paintSheet, markState, markChanges, drawForeground,
   // (the bake and patch let go: a picture painted, or the board left)
   dropBake() { bake = null; patch = null; nextPatch = null; },

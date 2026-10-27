@@ -715,8 +715,11 @@ $picked: #e0574b
                     margin: 0 auto
 
 // The Heart Map's own toolbar (scrapboard/rail.js; Luke, 2026-10-03): the
-// map editor's rail on frosted glass, up the left or along the top. Foundry's
-// own column of the Heart Map's buttons is hidden while it is in use.
+// map editor's rail, up the left or along the top, in Foundry's own scene-
+// control style (Luke 2026-10-28: uniform Foundry, no glass; every window it
+// opens stays glass). No panel behind it: each button is its own box, as in
+// Foundry's column. Foundry's own column of the Heart Map's buttons is hidden
+// while it is in use.
 // (and the token control's: the rail carries its Select, Measure, and Target)
 body.heart-board-rail-on #tools-panel-heartBoard, body.heart-board-rail-on #tools-panel-token
     display: none !important
@@ -727,31 +730,29 @@ body.heart-board-rail-on #tools-panel-heartBoard, body.heart-board-rail-on #tool
     display: flex
     align-items: center
     gap: var(--rail-gap, 10px)
-    padding: 6px
-    background: rgba(26, 16, 12, 0.55)
-    backdrop-filter: blur(10px) saturate(1.15)
-    -webkit-backdrop-filter: blur(10px) saturate(1.15)
-    border: 1px solid rgba(255, 228, 205, 0.14)
-    border-radius: 10px
-    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 240, 225, 0.06)
-    color: #eadccb
+    padding: 0
+    // (clicks pass through the gaps, as through Foundry's column)
+    pointer-events: none
+    color: util.$ctl-text
 
-    // (its top icon level with Foundry's top icon, not its glass: the glass's
-    // padding and border above it. Luke 2026-10-06)
+    // (--rail-left is where the old panel's edge fell: its 7px of padding and
+    // border stay as an offset so the icons sit where they always did)
     &.vertical
         flex-direction: column
-        left: var(--rail-left, 64px)
-        top: calc(var(--rail-top, 72px) - 7px)
+        left: calc(var(--rail-left, 64px) + 7px)
+        top: var(--rail-top, 72px)
 
     // (under the scene navigation; its icons level with Foundry's top icon,
-    // as up the side: Luke 2026-10-25, it sat a glass's padding low)
+    // as up the side)
     &.horizontal
         flex-direction: row
-        left: var(--rail-left, 64px)
-        top: calc(var(--rail-top, 64px) - 7px)
+        left: calc(var(--rail-left, 64px) + 7px)
+        top: var(--rail-top, 64px)
 
-    // (Foundry's own buttons' size: Luke 2026-10-06)
+    // (Foundry's own buttons: size, fill, border, radius, glow; style.css
+    // "#controls ol.control-tools > li")
     button
+        box-sizing: border-box
         width: var(--rail-btn, 36px)
         height: var(--rail-btn, 36px)
         padding: 0
@@ -759,21 +760,22 @@ body.heart-board-rail-on #tools-panel-heartBoard, body.heart-board-rail-on #tool
         display: grid
         place-items: center
         line-height: 1
-        background: none
-        border: 1px solid transparent
-        border-radius: 7px
-        color: inherit
+        background: util.$ctl-bg
+        border: 1px solid util.$ctl-border
+        border-radius: 5px
+        color: util.$ctl-text
         cursor: pointer
-        box-shadow: none
+        pointer-events: all
+        box-shadow: 0 0 10px util.$ctl-shadow
 
-        &:hover
-            background: rgba(255, 240, 225, 0.08)
-            border-color: rgba(255, 228, 205, 0.18)
-
-        &.on
-            background: rgba($picked, 0.88)
-            border-color: rgba(255, 190, 175, 0.5)
-            color: #1a0d0b
+        // (Foundry's hover and active: bright text, the orange border with the
+        // red edge above, the orange glow)
+        &:hover, &.on
+            color: util.$ctl-text-hi
+            background: util.$ctl-bg
+            border: 1px solid util.$ctl-border-hi-alt
+            border-bottom: 1px solid util.$ctl-border-hi
+            box-shadow: 0 0 10px util.$ctl-glow
 
     // (Foundry's icons, at its own size)
     i
@@ -791,14 +793,11 @@ body.heart-board-rail-on #tools-panel-heartBoard, body.heart-board-rail-on #tool
         position: absolute
         display: grid
         grid-template-columns: repeat(3, 78px)
-        gap: 4px
-        padding: 6px
-        background: rgba(26, 16, 12, 0.8)
-        backdrop-filter: blur(10px)
-        -webkit-backdrop-filter: blur(10px)
-        border: 1px solid rgba(255, 228, 205, 0.16)
-        border-radius: 9px
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5)
+        // (no panel: the tiles are Foundry-style boxes like the buttons, five
+        // apart as Foundry's sub-controls are)
+        gap: 5px
+        padding: 0
+        pointer-events: none
 
         button.tile
             width: 78px

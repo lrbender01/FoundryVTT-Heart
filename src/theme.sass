@@ -68,6 +68,19 @@
     --heart-glass-base: 21, 18, 18
     --heart-glass-window: 26, 24, 24
     --heart-glass-title: 14, 13, 13
+    // Foundry's own scene-control look, for the board's rail (Luke 2026-10-28:
+    // the toolbar is uniform Foundry style, not glass). Foundry's v12 values
+    // from style.css "#controls ol.control-tools > li"; its own custom
+    // properties first so a changed Foundry theme carries through, the v12
+    // value as the fallback. The same in both schemes.
+    --heart-ctl-bg: rgba(0, 0, 0, 0.5)
+    --heart-ctl-shadow: var(--color-shadow-dark, #000)
+    --heart-ctl-text: var(--color-text-light-heading, #c9c7b8)
+    --heart-ctl-text-hi: var(--color-text-light-highlight, #f0f0e0)
+    --heart-ctl-border: var(--color-border-dark, #000)
+    --heart-ctl-border-hi: var(--color-border-highlight, #ff6400)
+    --heart-ctl-border-hi-alt: var(--color-border-highlight-alt, #ff0000)
+    --heart-ctl-glow: var(--color-shadow-highlight, #ff6400)
     // The Witch is Dead's familiar sheet, its dialogs, and its chat cards
     // (Luke, 2026-10-24; actors/familiar/familiar.sass): the game's printed
     // sheet, black ink and bold red on off-white paper, in both schemes

@@ -512,8 +512,11 @@ Hooks.on('deleteItem', async function(item, options, userId) {
     }
 });
 
-if (module.hot) {
-    module.hot.accept();
+// (2026-10-27: the package is ESM, where webpack gives a module no `module`
+// variable, so a bare `module.hot` threw ReferenceError at load; webpack's
+// own `import.meta.webpackHot` is the ESM form and is simply undefined here.)
+if (import.meta.webpackHot) {
+    import.meta.webpackHot.accept();
 
     (async () => {
         Hooks._ids = {};

@@ -944,6 +944,8 @@ export function normalizeBoard(json) {
         // Luke, 2026-10-24)
         bits[id] = { id, tex: String(b.tex), ...pointAt(b), w: clamp(num(b.w, 40), 4, 3000), r: num(b.r, 0), flip: Boolean(b.flip), alpha: clamp(num(b.alpha, 1), 0.05, 1), author: b.author ? String(b.author) : null, open: Boolean(b.open) };
     }
+    // (the parts of BOARD_PARTS marked `view`, each read its own way:
+    // test/scrapboard-parts.test.mjs fails if this list and that one differ)
     return { scraps, links, pins, marks, bits, decor: normalizeDecor(j.decor), sheet: sheetAt(j.sheet), pieces: normalizePieces(j.pieces), stages: normalizeStages(j.stages) };
 }
 
@@ -4778,7 +4780,73 @@ export function seasonMarks(key, { by = null, type = 'note' } = {}) {
 // board's JSON and its value before (b) and after (a), a missing key meaning
 // it wasn't there. Values are whole only where one side had nothing there;
 // otherwise the paths go down to plain values and arrays.
-const BOARD_KEYS = ['scraps', 'links', 'pins', 'marks', 'bits', 'decor', 'bin', 'sheet', 'pieces', 'stages'];
+//
+// The board's parts (2026-10-27, the ecosystem audit's first finding): the one
+// description every list of a board's top-level keys is derived from. The same
+// list was written out by hand in about ten places across Foundry, Map Dreamer,
+// and the old editor, and it dropped data twice (the pins' edition on
+// 2026-10-21; pieces and stages on 2026-10-27). A new top-level key is added
+// HERE and nowhere else: the history, the file forms (boardfile.js), the
+// replace and export in api.js, Map Dreamer's snapshot and operation roots, and
+// the editor's Import all read this list. test/scrapboard-parts.test.mjs fails
+// when a described part is dropped by any of them.
+//   name     the key on the board (flags.heart.board.<name>)
+//   kind     'records' (a keyed collection of records), 'layers' (keyed
+//            layers of keyed strokes), 'list' (an array), 'object' (one
+//            record), or 'scalar' (a number)
+//   empty()  its value when the board has none
+//   always   a file or copy of the board always carries it (else only once
+//            present(value) is true)
+//   present  whether a value is worth keeping (parts that are not always)
+//   view     normalizeBoard returns it
+//   depth    how many path keys an update to it names (updateRoots): a card,
+//            a string, a pin, a stroke (marks: layer and id), or the whole
+//            list (decor)
+//   items    its records are whole things (a record's op inside one that is
+//            gone since is let go, never a blank one made)
+// A key the description does not name is UNKNOWN: normalizeBoard leaves it out
+// of the view, boardFromText reports it and leaves it out of the board it
+// returns (it would not reach the scene), diffBoard (no roots) still diffs
+// it, and boardParts (a file, a copy, Map Dreamer's snapshot) carries it
+// through untouched, so a newer editor's board loses nothing in an older one.
+const nonEmptyObject = (v) => Boolean(v) && typeof v === 'object' && Object.keys(v).length > 0;
+const truthy = (v) => Boolean(v);
+export const BOARD_PARTS = Object.freeze([
+    { name: 'scraps', kind: 'records', empty: () => ({}), always: true, view: true, depth: 2, items: true },
+    { name: 'links', kind: 'records', empty: () => ({}), always: true, view: true, depth: 2, items: true },
+    { name: 'pins', kind: 'records', empty: () => ({}), always: true, view: true, depth: 2, items: true },
+    { name: 'marks', kind: 'layers', empty: () => ({}), always: true, view: true, depth: 3, items: false },
+    { name: 'bits', kind: 'records', empty: () => ({}), always: true, view: true, depth: 2, items: true },
+    { name: 'decor', kind: 'list', empty: () => [], always: true, view: true, depth: 1, items: false },
+    { name: 'bin', kind: 'records', empty: () => ({}), always: false, present: truthy, view: false, depth: 2, items: true },
+    { name: 'pinsEd', kind: 'scalar', empty: () => 0, always: false, present: truthy, view: false, depth: 2, items: false },
+    { name: 'notesEd', kind: 'scalar', empty: () => 0, always: false, present: truthy, view: false, depth: 2, items: false },
+    { name: 'sheet', kind: 'object', empty: () => null, always: false, present: truthy, view: true, depth: 2, items: false },
+    { name: 'pieces', kind: 'records', empty: () => ({}), always: false, present: nonEmptyObject, view: true, depth: 2, items: false },
+    { name: 'stages', kind: 'list', empty: () => [], always: false, present: (v) => Array.isArray(v) && v.length > 0, view: true, depth: 2, items: false },
+]);
+// (derived: the names, and the depths and whole-record collections)
+export const PART_NAMES = Object.freeze(BOARD_PARTS.map((p) => p.name));
+const PART_BY_NAME = new Map(BOARD_PARTS.map((p) => [p.name, p]));
+// A board's keys the description does not name (skipping the unsafe names a
+// record sent through the relay could carry): [key]
+export const unknownParts = (board) => Object.keys(board && typeof board === 'object' && !Array.isArray(board) ? board : {}).filter((k) => !PART_BY_NAME.has(k) && safePath([k]));
+// What a board is, whole, as a file or a copy carries it: every always part
+// (its value, or its empty one), the others once present, and any unknown key
+// as it is. Pure: a new object; the parts are shared, not copied.
+export function boardPartsOf(b) {
+    const out = {};
+    for (const p of BOARD_PARTS) {
+        const v = b?.[p.name];
+        if (p.always) out[p.name] = v ?? p.empty();
+        else if (p.present(v)) out[p.name] = v;
+    }
+    for (const k of unknownParts(b)) out[k] = b[k];
+    return out;
+}
+// A board with nothing on it yet, as boardOf answers for a scene without one
+export const emptyBoardParts = () => Object.fromEntries(BOARD_PARTS.filter((p) => p.always).map((p) => [p.name, p.empty()]));
+
 const isPlain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const copy = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
 const sameJSON = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -4791,7 +4859,7 @@ const getAt = (o, path) => path.reduce((v, k) => (v && typeof v === 'object' && 
 // (the collections whose items are whole things: a record's op inside one
 // that is gone since, a card someone took off, is let go, never a blank one
 // made: Luke, 2026-10-21)
-const ITEMS = new Set(['scraps', 'links', 'pins', 'bits', 'bin']);
+const ITEMS = new Set(BOARD_PARTS.filter((p) => p.items).map((p) => p.name));
 function setAt(o, path, has, v) {
     if (!safePath(path)) return;
     if (path.length > 2 && ITEMS.has(path[0]) && !isPlain(o?.[path[0]]?.[path[1]])) return;
@@ -4821,10 +4889,13 @@ function diffInto(ops, path, a, b) {
 }
 
 // What changed between two boards' JSON: everywhere, or only under `roots`
-// (paths: what an edit touched)
+// (paths: what an edit touched). With no roots: every described part, the
+// editions too, and any key either board has that the description doesn't
+// name (2026-10-27: pinsEd and notesEd were left out of the full diff, and an
+// unknown key would have been)
 export function diffBoard(before = {}, after = {}, roots = null) {
     const ops = [];
-    const list = roots ? roots.filter((p, i) => !roots.some((q, j) => j !== i && q.length < p.length && q.every((k, n) => k === p[n])) && !roots.slice(0, i).some((q) => sameJSON(q, p))) : BOARD_KEYS.map((k) => [k]);
+    const list = roots ? roots.filter((p, i) => !roots.some((q, j) => j !== i && q.length < p.length && q.every((k, n) => k === p[n])) && !roots.slice(0, i).some((q) => sameJSON(q, p))) : [...PART_NAMES, ...unknownParts(before), ...unknownParts(after).filter((k) => !unknownParts(before).includes(k))].map((k) => [k]);
     for (const p of list) diffInto(ops, p, getAt(before, p), getAt(after, p));
     return { ops };
 }
@@ -4864,7 +4935,7 @@ export function updateRoots(data, prefix = 'flags.heart.board') {
         if (k === prefix) return null;
         if (!k.startsWith(`${prefix}.`)) continue;
         const parts = k.slice(prefix.length + 1).split('.').map((s) => s.replace(/^-=/, ''));
-        const deep = parts[0] === 'marks' ? 3 : parts[0] === 'decor' ? 1 : 2;
+        const deep = PART_BY_NAME.get(parts[0])?.depth ?? 2;
         roots.push(parts.slice(0, deep));
     }
     return roots;
