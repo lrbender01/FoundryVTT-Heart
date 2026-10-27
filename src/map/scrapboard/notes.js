@@ -11,7 +11,7 @@
 // control and, in the player view, can try the picker without claiming a
 // hand. Players' writes go through the GM's relay (one queue on the GM's
 // client; each request checked against who asked).
-import { LINK_KINDS, nibOf, cutPatch, freshStrokeIds, doodlePatch, DOODLE_KINDS, isSavedKind, cleanSavedDoodle,absorbPatch, mayShareStroke, HAND_SCALE, pinChoices, pickFrom, ALIGNS, TEXT_STYLES, textStyleOf, markMax, cleanStroke, keysTaken, safePath, TYPEWRITER, newStringPatch, mergeRecords, recordTarget, recordUpdate, binList, removalOf, brushColor, PAINT_NAMES, PAINT_ORDER, noteFields, mineOrOpen, mayShare, mayBit, sharePatch, breakAwayPatch, normalizeBoard, scrapLayout, boardView, WEB_TEX, TEXT_SIZE_MIN, NOTE_AR_MIN, MAX_INKS, sheetLook, pickNotePaper, notePreview, uvOn, fmtOf } from './model.js';
+import { LINK_KINDS, nibOf, cutPatch, freshStrokeIds, doodlePatch, DOODLE_KINDS, isSavedKind, cleanSavedDoodle,absorbPatch, mayShareStroke, HAND_SCALE, pinChoices, pickFrom, ALIGNS, TEXT_STYLES, textStyleOf, markMax, cleanStroke, keysTaken, safePath, TYPEWRITER, newStringPatch, mergeRecords, recordTarget, recordUpdate, binList, removalOf, brushColor, PAINT_NAMES, PAINT_ORDER, noteFields, mineOrOpen, mayShare, mayBit, sharePatch, breakAwayPatch, normalizeBoard, scrapLayout, boardView, WEB_TEX, TEXT_SIZE_MIN, NOTE_AR_MIN, MAX_INKS, sheetLook, pickNotePaper, notePreview, uvOn, fmtOf, gmNoteFields } from './model.js';
 import { listBackups, readBackup } from './backups.js';
 import { askGM, registerRelayHandler, runLocal } from '../../common/relay.js';
 import { heartDialogOptions } from '../../common/dialog.js';
@@ -103,6 +103,15 @@ export function registerBoardSettings() {
     // whether the GM's doing on the map is shown to the players as it happens
     // (Luke, 2026-10-25: on; File's switch turns it off for quiet prep)
     game.settings.register('heart', 'boardLiveShare', { scope: 'client', config: false, type: Boolean, default: true });
+    // whether the GM sees their own GM notes on the board (Plenty finish item
+    // 2, 2026-10-26: the rail's switch and File, Map layers; render-only)
+    game.settings.register('heart', 'boardGmNotes', {
+        scope: 'client', config: false, type: Boolean, default: true,
+        onChange: () => {
+            canvas?.heartBoard?.refresh?.();
+            ui.controls?.render?.();
+        },
+    });
     // how finely this client paints the map (render.js DETAIL): auto is high
     // for the GM, standard for players, light on a device short of memory
     game.settings.register('heart', 'boardDetail', {
@@ -217,7 +226,7 @@ export async function ensureHand() {
 // bold, italic, underline, and strike through apply to what is selected and
 // to what is typed next, the alignment to the whole note. A new note starts
 // in Soot at Medium.
-export async function noteDialog({ text = '', fmt = [], hand = null, paper = null, ink = null, type = 'note', chooseHand = false, title = 'heart.board.note-title', style = {}, typed = false, shownPaper = null, paint = null, bright = null, pturn = null, turn = null, textAt = null, base = null, open = false, canShare = false, textSize = null } = {}) {
+export async function noteDialog({ text = '', fmt = [], hand = null, paper = null, ink = null, type = 'note', chooseHand = false, title = 'heart.board.note-title', style = {}, typed = false, shownPaper = null, paint = null, bright = null, pturn = null, turn = null, textAt = null, base = null, open = false, canShare = false, textSize = null, gmOnly = false, canGm = false } = {}) {
     const canType = mayType();
     const st = textStyleOf(style);
     // (Luke, 2026-10-03: how the writing is set: align, bold, italic,
@@ -289,6 +298,9 @@ export async function noteDialog({ text = '', fmt = [], hand = null, paper = nul
     let shapeBack = false;
     const shapeRow = note && base?.ar ? row(loc('heart.board.note-shape'), `<button type="button" class="heart-board-act" data-shape>${esc(loc('heart.board.note-shape-own'))}</button>`) : '';
     const shareRow = canShare ? row(loc('heart.board.public'), `<label class="heart-board-switch" data-tooltip="${esc(loc('heart.board.public-hint'))}"><input type="checkbox" name="open" ${open ? 'checked' : ''}><span>${esc(loc('heart.board.public-on'))}</span></label>`) : '';
+    // (a GM note: hidden from the players for good; the GM's switch, Plenty
+    // finish item 2)
+    const gmRow = canGm ? row(loc('heart.board.gm-note'), `<label class="heart-board-switch" data-tooltip="${esc(loc('heart.board.gm-note-hint'))}"><input type="checkbox" name="gmOnly" ${gmOnly ? 'checked' : ''}><span>${esc(loc('heart.board.gm-note-on'))}</span></label>`) : '';
     let q = pturn;
     let deg = turn;
     let at = textAt && Number.isFinite(textAt.u) ? { ...textAt } : null;
@@ -311,7 +323,7 @@ export async function noteDialog({ text = '', fmt = [], hand = null, paper = nul
             title: loc(title),
             // (Luke, 2026-10-24: wide, two columns, the hands below, the
             // buttons always in view)
-            content: `<div class="heart-note-layout"><div class="heart-note-left">${preview}${area}${hint}${turns}${sizeRow}</div><div class="heart-note-right">${styleRow}${paintRow}${paperRow}${shapeRow}${shareRow}</div></div>${faceRow ? `<div class="heart-note-hands"><span class="lab">${esc(loc('heart.board.note-hands'))}</span>${faceRow}</div>` : ''}`,
+            content: `<div class="heart-note-layout"><div class="heart-note-left">${preview}${area}${hint}${turns}${sizeRow}</div><div class="heart-note-right">${styleRow}${paintRow}${paperRow}${shapeRow}${shareRow}${gmRow}</div></div>${faceRow ? `<div class="heart-note-hands"><span class="lab">${esc(loc('heart.board.note-hands'))}</span>${faceRow}</div>` : ''}`,
             buttons: {
                 ok: {
                     icon: '<i class="fa-solid fa-check"></i>',
@@ -337,6 +349,7 @@ export async function noteDialog({ text = '', fmt = [], hand = null, paper = nul
                             ...(note && touched.at && at ? { textAt: at } : {}),
                             ...(note ? { textSize: Number.isFinite(ts) && ts < 100 ? ts / 100 : null } : {}),
                             ...(canShare ? { open: html.find('[name=open]').is(':checked') } : {}),
+                            ...(canGm ? { gmOnly: html.find('[name=gmOnly]').is(':checked') } : {}),
                             ...(shapeBack ? { ar: null } : {}),
                         });
                     },
@@ -598,12 +611,12 @@ export async function editNote(scene, key) {
     const vs = canvas.heartBoard?.renderer?.view?.scraps?.find((x) => x.key === key)?.layout;
     const shownPaper = vs?.paper?.tex ?? null;
     const canShare = mayShare(s, who);
-    const answer = await noteDialog({ text: s.text ?? '', fmt: s.fmt ?? [], hand: face, paper: s.paper ?? null, ink: s.ink ?? null, type: s.type, chooseHand: gm, title: s.author && s.author === game.user.id ? 'heart.board.note-edit' : 'heart.board.note-edit-any', style: s, typed: Boolean(s.typed), shownPaper, paint: s.paint ?? null, bright: s.bright ?? null, base: { ...foundry.utils.deepClone(s), key }, open: Boolean(s.open), canShare, textSize: s.textSize ?? null });
+    const answer = await noteDialog({ text: s.text ?? '', fmt: s.fmt ?? [], hand: face, paper: s.paper ?? null, ink: s.ink ?? null, type: s.type, chooseHand: gm, title: s.author && s.author === game.user.id ? 'heart.board.note-edit' : 'heart.board.note-edit-any', style: s, typed: Boolean(s.typed), shownPaper, paint: s.paint ?? null, bright: s.bright ?? null, base: { ...foundry.utils.deepClone(s), key }, open: Boolean(s.open), canShare, textSize: s.textSize ?? null, canGm: gm, gmOnly: Boolean(s.gm) });
     if (!answer || (!answer.text && s.type !== 'note')) return;
     if (gm) {
         // (a blank note written on again: its writing back on it)
         const drop = answer.text && (s.drop ?? []).includes('text') ? { drop: s.drop.filter((id) => id !== 'text') } : {};
-        return setScrap(scene, key, { text: answer.text, fmt: answer.fmt ?? [], hand: answer.hand === face && !s.hand ? null : answer.hand, paper: answer.paper, ink: answer.ink, typed: Boolean(answer.typed), ...answer.style, ...noteFields(answer, look, s), ...(s.type === 'note' ? { textSize: answer.textSize ?? null } : {}), ...(canShare ? { open: Boolean(answer.open) } : {}), ...('ar' in answer ? { ar: null } : {}), ...drop });
+        return setScrap(scene, key, { text: answer.text, fmt: answer.fmt ?? [], hand: answer.hand === face && !s.hand ? null : answer.hand, paper: answer.paper, ink: answer.ink, typed: Boolean(answer.typed), ...answer.style, ...noteFields(answer, look, s), ...(s.type === 'note' ? { textSize: answer.textSize ?? null } : {}), ...(canShare ? { open: Boolean(answer.open) } : {}), ...('ar' in answer ? { ar: null } : {}), ...gmNoteFields(Boolean(answer.gmOnly), s), ...drop });
     }
     return asked(scene, 'board.editNote', { sceneId: scene.id, key, text: answer.text, fmt: answer.fmt ?? [], paper: answer.paper, ink: answer.ink, style: answer.style, typed: answer.typed, look: noteLookOf(answer), textSize: answer.textSize ?? null, ...(canShare ? { open: Boolean(answer.open) } : {}), ...('ar' in answer ? { ar: null } : {}) });
 }

@@ -7,6 +7,7 @@ import { exportDialog, importDialog, binDialog, backupsDialog, askBoard, sheetDi
 import { reloadBoardLook } from './look.js';
 import { statsDialog, qualityDialog } from './stats.js';
 import { layersDialog } from './layers.js';
+import { gmNotesShown } from './render.js';
 import { heartDialogOptions } from '../../common/dialog.js';
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
@@ -171,10 +172,13 @@ export function boardTools() {
     ] : [];
     // (Player view: the players' own tools, and the way back; no Undo there)
     const undoing = !(gm && layer?.preview);
-    const buttons = [...(undoing ? [undoB, redoB] : []), ...(gm ? [preview] : []), shareB, snapshot, statsB, qualityB, ...fileGM, help];
+    // (the GM's own notes shown or hidden on this client: Plenty finish item 2;
+    // never in Player view, which hides them anyway)
+    const gmNotesB = gm && !layer?.preview ? [{ name: 'gmnotes', icon: 'fa-solid fa-user-lock', title: loc('heart.board.tool.gmnotes'), toggle: true, active: gmNotesShown(), onClick: async (on) => game.settings.set('heart', 'boardGmNotes', Boolean(on)) }] : [];
+    const buttons = [...(undoing ? [undoB, redoB] : []), ...(gm ? [preview] : []), ...gmNotesB, shareB, snapshot, statsB, qualityB, ...fileGM, help];
     const reveal = tools.filter((t) => t.name === 'reveal');
     const before = tools.filter((t) => t.name !== 'reveal');
-    const list = [...before, ...(undoing ? [undoB, redoB] : []), ...(gm ? [preview] : []), ...reveal, shareB, snapshot, statsB, qualityB, ...fileGM, help];
+    const list = [...before, ...(undoing ? [undoB, redoB] : []), ...(gm ? [preview] : []), ...reveal, ...gmNotesB, shareB, snapshot, statsB, qualityB, ...fileGM, help];
     return { tools, buttons, list };
 }
 

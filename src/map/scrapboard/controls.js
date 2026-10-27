@@ -1092,6 +1092,8 @@ export class BoardControls {
             // (the patch the host writes, model.js revealPatch: one copy for
             // both hosts, Luke 2026-10-21)
             const shown = (a) => ({ ...a, patch: revealPatch(a) });
+            // (a GM note is never revealed: Plenty finish item 2)
+            if (scrap?.gm || (h?.kind === 'pin' && h.pin.gm) || link?.gm) return null;
             if (scrap) return shown({ do: 'reveal', scrap, dir: right ? -1 : 1, to: revealOf(scrap, right ? -1 : 1) });
             if (h?.kind === 'pin') return shown({ do: 'reveal', pin: h.pin, to: h.pin.state === 'hidden' ? 'known' : 'hidden' });
             // a string is drawn or not (two states), and only between places
@@ -1106,7 +1108,7 @@ export class BoardControls {
                 const others = run.filter((l) => l.id !== link.id);
                 return shown({
                     do: 'reveal', link, dir: 1, to,
-                    also: { links: [...new Set([...others.map((l) => l.id), ...run.flatMap((l) => l.threads ?? [])])], scraps: run.map((l) => l.nameNote).filter(Boolean) },
+                    also: { links: [...new Set([...others.filter((l) => !l.gm).map((l) => l.id), ...run.flatMap((l) => l.threads ?? [])])], scraps: run.map((l) => l.nameNote).filter(Boolean) },
                 });
             }
             return null;

@@ -807,6 +807,12 @@ export function normalizeBoard(json) {
             state: ((st) => (st === 'rumoured' && pick(s.type, SCRAP_TYPES, 'landmark') !== 'landmark' ? 'known' : st))(pick(s.state, STATES, 'known')),
             // a name tag (a note hung from a string: sized to its writing)
             tag: Boolean(s.tag),
+            // a GM note (Plenty finish item 2, 2026-10-26): hidden from the
+            // players for good, and drawn in full for the GM, not as a ghost.
+            // Always read with `state: 'hidden'`, so a client or tool that does
+            // not know `gm` still sees a hidden ghost, never a known note;
+            // Reveal leaves it alone
+            gm: Boolean(s.gm),
             // where its own pin holds it to the board, as a point on its text
             // box ({ u, v }; null: near the top)
             pinAt: endAt(s.pinAt),
@@ -864,6 +870,8 @@ export function normalizeBoard(json) {
             author: l.author ? String(l.author) : null,
             // public: anyone's to change (Luke, 2026-10-24)
             open: Boolean(l.open),
+            // a GM string (with `state: 'hidden'`: see a scrap's `gm`)
+            gm: Boolean(l.gm),
             // its colour (Luke, 2026-10-03: any string in any colour): an
             // index into the sheet's paints, the marker's; null: its kind's own
             color: l.color === undefined || l.color === null || l.color === '' || !Number.isFinite(Number(l.color)) ? null : clamp(Math.round(Number(l.color)), 0, MAX_INKS - 1),
@@ -908,7 +916,7 @@ export function normalizeBoard(json) {
         if (!p?.tex) continue;
         // (s: its size set by hand, null: by its strings; r: its turn set by
         // hand, null: by its strings' pull)
-        const base = { id, tex: String(p.tex), s: p.s === undefined || p.s === null ? null : Math.max(0.001, num(p.s, 1)), r: p.r === undefined || p.r === null ? null : num(p.r, 0), state: p.state === 'hidden' ? 'hidden' : 'known', author: p.author ? String(p.author) : null, open: Boolean(p.open),
+        const base = { id, tex: String(p.tex), s: p.s === undefined || p.s === null ? null : Math.max(0.001, num(p.s, 1)), r: p.r === undefined || p.r === null ? null : num(p.r, 0), state: p.state === 'hidden' ? 'hidden' : 'known', author: p.author ? String(p.author) : null, open: Boolean(p.open), gm: Boolean(p.gm),
             // (its own paint, picked in the Pin window: over any string's; Luke 2026-10-25)
             c: p.c === undefined || p.c === null || !Number.isFinite(Number(p.c)) ? null : clamp(Math.round(Number(p.c)), 0, MAX_INKS - 1) };
         if (p.on && endAt(p.at)) pins[id] = { ...base, on: String(p.on), at: endAt(p.at) };
@@ -2196,9 +2204,12 @@ export function boardView(look, board, viewer, size, measure) {
         .filter(s => gm || s.state !== 'hidden')
         // (writing on the sheet always under the cards; then by layer)
         .sort((a, b) => ((b.type === 'scrawl') - (a.type === 'scrawl')) || (a.z - b.z) || (a.y - b.y))
-        .map(s => ({ ...s, look: s.state === 'hidden' ? 'ghost' : s.state, layout: scrapLayout(s, look, size, measure, s.lib ? look.library[s.lib] : null) }));
+        // (a GM note, hidden for good, is drawn in full for the GM: look 'gm')
+        .map(s => ({ ...s, look: s.state === 'hidden' ? (s.gm ? 'gm' : 'ghost') : s.state, layout: scrapLayout(s, look, size, measure, s.lib ? look.library[s.lib] : null) }));
     const byKey = Object.fromEntries(scraps.map(s => [s.key, s]));
     const hidden = (k) => board.scraps[k]?.state === 'hidden';
+    // hidden, and not for the GM's own notes: what players will one day see
+    const ghostly = (k) => hidden(k) && !board.scraps[k].gm;
     // the board's own pins (before the strings, which may be held by them):
     // in a scrap (gone with it when players can't see it) or loose; a hidden
     // one is the GM's alone
@@ -2210,7 +2221,7 @@ export function boardView(look, board, viewer, size, measure) {
         const w = Math.max(11, base * (p.s ?? 1)) * pinScale(p.tex);
         // (a little turn of its own: Luke 2026-10-06, they stood too crooked)
         const own = ((hashSeed(p.id) % 21) - 10) / 2;
-        const look2 = pinHidden(p) ? 'ghost' : 'known';
+        const look2 = pinHidden(p) ? ((p.state === 'hidden' && !p.gm) || (p.on && ghostly(p.on)) ? 'ghost' : 'gm') : 'known';
         // (its own paint, over any string's)
         const tint = p.c !== null && p.c !== undefined ? { tint: look.ink.marker?.[p.c] ?? null } : {};
         if (!p.on) return { ...p, w, rot: (p.r ?? own) * DEG, look: look2, ...tint };
@@ -2285,15 +2296,18 @@ export function boardView(look, board, viewer, size, measure) {
             const ends = [{ ...pin(a, 'a'), shared: l.aPin }, { ...pin(b, 'b'), shared: l.bPin }];
             if (junction) junction = pin(junction, 'join');
             const joints = J.map((p) => ({ ...pin(p, `j${p.idx}`), idx: p.idx, shared: p.pin ?? null }));
-            const pinHid = [l.aPin, l.bPin, ...J.map((j) => j.pin)].some((id) => id && pinById[id]?.look === 'ghost');
+            const held = [l.aPin, l.bPin, ...J.map((j) => j.pin)].filter(Boolean);
+            const pinHid = held.some((id) => pinById[id]?.look === 'ghost');
+            const anyHid = l.state === 'hidden' || hidden(l.a) || hidden(l.b) || held.some((id) => pinById[id]?.look && pinById[id].look !== 'known');
             return {
                 ...l, depth, junction, joints, waypoints, spans, ends, run, pinTex, pinS,
-                look: l.state === 'hidden' || hidden(l.a) || hidden(l.b) || pinHid ? 'ghost' : l.state,
+                // (a GM string, or one held only by GM notes, is the GM's own: 'gm')
+                look: anyHid ? ((l.state === 'hidden' && !l.gm) || ghostly(l.a) || ghostly(l.b) || pinHid ? 'ghost' : 'gm') : l.state,
                 points,
             };
         })
         // (players never see a string held by a pin they can't see)
-        .filter((l) => gm || l.look !== 'ghost');
+        .filter((l) => gm || (l.look !== 'ghost' && l.look !== 'gm'));
     // (Luke, 2026-10-06) a string players can't see takes its name with it:
     // the thread its tag hangs by, the tag, and their pins
     if (!gm) {
@@ -2395,12 +2409,12 @@ export function boardView(look, board, viewer, size, measure) {
     // ghost too, its thread and tag)
     if (gm) {
         for (const l of links) {
-            if (l.look !== 'ghost') continue;
+            if (l.look !== 'ghost' && l.look !== 'gm') continue;
             for (const id of l.threads ?? []) {
                 const t = links.find((x) => x.id === id);
-                if (t) t.look = 'ghost';
+                if (t) t.look = l.look;
             }
-            if (l.nameNote && byKey[l.nameNote]) byKey[l.nameNote].look = 'ghost';
+            if (l.nameNote && byKey[l.nameNote]) byKey[l.nameNote].look = l.look;
         }
     }
     // players never see a pin that only hidden strings hold
@@ -2530,16 +2544,37 @@ export function revealOf(s, dir = 1) {
 // What a Reveal press writes (controls.js press; one copy for both hosts,
 // Luke 2026-10-21): the card's, pin's, or string's new state, and a string's
 // joined strings, name tags, and threads with it. Null for anything else.
+// (a GM note, pin, or string, `gm`, is never revealed: it is the GM's for good;
+// Plenty finish item 2, 2026-10-26)
 export function revealPatch(a) {
     const state = { state: a?.to };
-    if (a?.scrap) return { scraps: { [a.scrap.key]: state } };
-    if (a?.pin) return { pins: { [a.pin.id]: state } };
-    if (!a?.link) return null;
+    if (a?.scrap) return a.scrap.gm ? null : { scraps: { [a.scrap.key]: state } };
+    if (a?.pin) return a.pin.gm ? null : { pins: { [a.pin.id]: state } };
+    if (!a?.link || a.link.gm) return null;
     return {
         link: [a.link.id, state],
         links: Object.fromEntries((a.also?.links ?? []).map((id) => [id, { ...state }])),
         scraps: Object.fromEntries((a.also?.scraps ?? []).map((k) => [k, { ...state }])),
     };
+}
+
+// A card's fields for the note window's "GM only" switch: on, a GM note
+// (hidden, `gm`); off on a card that was one, no longer the GM's alone (it
+// stays hidden until the GM reveals it); else nothing
+export function gmNoteFields(on, was = null) {
+    if (on) return { gm: true, state: 'hidden' };
+    return was?.gm ? { gm: false } : {};
+}
+
+// The view without the GM's notes (the "GM notes" switch, render-only: the
+// board's other views, bounds, cuts, and the relay still see them). Drops the
+// GM-look cards, pins, and strings, and what hangs from a dropped card.
+export function withoutGmNotes(view) {
+    const gone = new Set(view.scraps.filter((s) => s.look === 'gm').map((s) => s.key));
+    const pins = view.pins.filter((p) => p.look !== 'gm' && !(p.on && gone.has(p.on)));
+    const live = new Set(pins.map((p) => p.id));
+    const links = view.links.filter((l) => l.look !== 'gm' && !(l.a && gone.has(l.a)) && !(l.b && gone.has(l.b)) && [l.aPin, l.bPin].every((id) => !id || live.has(id)));
+    return { ...view, scraps: view.scraps.filter((s) => !gone.has(s.key)), pins, links };
 }
 
 // A name tag's paper (a ticket stub)

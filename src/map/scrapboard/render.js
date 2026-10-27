@@ -24,7 +24,7 @@
 //   repaint never builds a stroke again.
 // - Zoomed in, the view is painted again at the screen's own resolution (a
 //   second, finer set of tiles over it), so writing is sharp at any zoom.
-import { normalizeBoard, boardView, sheetLook } from './model.js';
+import { normalizeBoard, boardView, sheetLook, withoutGmNotes } from './model.js';
 import { createPainter, sheetGeometry, arrivalAreas, sheetBands } from './paint.js';
 import { meets, grow, piecesOf, changes, anyMeets } from './changes.js';
 import { loadBoardLook, textureUrl, previewUrl } from './look.js';
@@ -56,6 +56,15 @@ const fromAfar = (im, url) => {
         // (not a url: left as it is)
     }
 };
+// whether this client shows the GM's own notes (the boardGmNotes setting)
+export function gmNotesShown() {
+    try {
+        return game.settings.get('heart', 'boardGmNotes') !== false;
+    } catch {
+        return true;
+    }
+}
+
 // How finely a client paints (the boardDetail setting): bitmap px per board
 // px, the longest side an image is kept at once loaded (the books' art is
 // far bigger than anything the map draws), and whether a drag repaints the
@@ -544,7 +553,9 @@ export class ScrapboardRenderer {
             if (s.art || look.library?.[s.lib]?.art || plainIcon(doc?.img)) continue;
             if (await this.#actorSize(doc.img)) s.art = ACTOR_ART + doc.img;
         }
-        const view = boardView(look, board, viewer, this.size, this.measure);
+        let view = boardView(look, board, viewer, this.size, this.measure);
+        // (the GM's own notes switched off on this client: Plenty finish item 2)
+        if (viewer === 'gm' && !gmNotesShown()) view = withoutGmNotes(view);
         // marker layers this client has hidden (the GM's view of each one)
         if (this.hiddenMarks.size) view.marks = Object.fromEntries(Object.entries(view.marks).filter(([k]) => !this.hiddenMarks.has(k)));
         return view;

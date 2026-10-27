@@ -7,6 +7,10 @@
 import { boardTools } from './tools.js';
 import { respotToolWindows } from './windows.js';
 import { isBoardScene } from './api.js';
+import { ACTOR_TOOLS, BOARD_CONTROL, TOKEN_CONTROL, railControl, makeToolMemory, flip, keepTool } from './actor-tools.js';
+
+// the board tool last held, for the flip back from the token tools
+const memory = makeToolMemory();
 
 const loc = (key) => game.i18n.localize(key);
 const esc = (s) => Handlebars.escapeExpression(String(s ?? ''));
@@ -37,7 +41,19 @@ export function registerRailSettings() {
             setTimeout(respotToolWindows, 50);
         },
     });
-    game.settings.register('heart', 'boardToolbarDir', { scope: 'client', config: false, type: String, default: 'vertical' });
+    // (horizontal unless a client set otherwise: the Actors group sits first
+    // and a long column runs into the macro bar; Plenty finish, 2026-10-26)
+    game.settings.register('heart', 'boardToolbarDir', { scope: 'client', config: false, type: String, default: 'horizontal' });
+}
+
+// The flip between the board tool last held and token Select (the "Board:
+// flip to the token tools" key, everyone's; Plenty finish item 1a)
+export function flipActorTools() {
+    if (!canvas?.ready || !isBoardScene(canvas.scene) || !railControl(ui.controls?.activeControl)) return false;
+    const control = ui.controls.activeControl;
+    if (control === BOARD_CONTROL) memory.hold(game.activeTool);
+    ui.controls.initialize(flip({ control, memory, tools: boardTools().list.map((t) => t.name) }));
+    return true;
 }
 
 export function railOn() {
@@ -60,8 +76,12 @@ export function againToLook(tool) {
 // its tool lit while the Heart Map's tools are in hand
 export function syncRail() {
     let el = document.getElementById('heart-board-rail');
-    // (only while the Heart Map's control is the one in hand: Luke 2026-10-06)
-    const on = railOn() && canvas?.ready && isBoardScene(canvas.scene) && ui.controls?.activeControl === 'heartBoard';
+    // (only while the Heart Map's control is the one in hand: Luke 2026-10-06;
+    // or the token control, whose Select, Measure, and Target the rail carries:
+    // Plenty finish item 1a)
+    const control = ui.controls?.activeControl;
+    const on = railOn() && canvas?.ready && isBoardScene(canvas.scene) && railControl(control);
+    if (on && control === BOARD_CONTROL) memory.hold(game.activeTool);
     document.body.classList.toggle('heart-board-rail-on', Boolean(on));
     if (!on) {
         el?.remove();
@@ -96,14 +116,16 @@ export function syncRail() {
         el.style.setProperty('--rail-top', `${Math.round(fb.top)}px`);
     }
     const T = boardTools();
-    const lit = ui.controls?.activeControl === 'heartBoard' ? game.activeTool : null;
+    const lit = control === BOARD_CONTROL ? game.activeTool : null;
+    const litActor = control === TOKEN_CONTROL ? game.activeTool : null;
     const icon = (cls) => `<i class="${cls}" aria-hidden="true"></i>`;
     const button = (attr, cls, title, on = false) => `<button type="button" ${attr} class="${on ? 'on' : ''}" data-tooltip="${esc(title)}" aria-label="${esc(title)}">${icon(cls)}</button>`;
     // (in the one order boardTools gives, Luke 2026-10-24: File where its
     // first item falls; no lines between the groups, every button the same
     // step apart, as Foundry's column is)
     const file = T.list.filter((b) => FILE.includes(b.name));
-    let html = '';
+    // (the Actors group first: Foundry's own token tools, for everyone)
+    let html = ACTOR_TOOLS.map((a) => button(`data-actor-tool="${a.name}"`, a.icon, loc(a.title), a.name === litActor)).join('');
     let filed = false;
     for (const t of T.list) {
         if (FILE.includes(t.name)) {
@@ -147,9 +169,15 @@ function fitMenu(el) {
 async function onClick(event) {
     const b = event.target.closest('button');
     if (!b) return;
+    if (b.dataset.actorTool) {
+        menuOpen = false;
+        if (ui.controls?.activeControl === BOARD_CONTROL) memory.hold(game.activeTool);
+        ui.controls?.initialize({ control: TOKEN_CONTROL, tool: b.dataset.actorTool });
+        return syncRail();
+    }
     if (b.dataset.tool) {
         menuOpen = false;
-        ui.controls?.initialize({ control: 'heartBoard', tool: againToLook(b.dataset.tool) ? 'inspect' : b.dataset.tool });
+        ui.controls?.initialize({ control: BOARD_CONTROL, tool: againToLook(b.dataset.tool) ? 'inspect' : b.dataset.tool });
         return syncRail();
     }
     if (b.dataset.file !== undefined) {
@@ -169,8 +197,13 @@ async function onClick(event) {
         const t = boardTools().buttons.find((x) => x.name === b.dataset.button);
         if (!t) return syncRail();
         await t.onClick?.(t.toggle ? !t.active : undefined);
-        // (a toggle's state, or the tools it brings, may have changed)
-        ui.controls?.initialize({ control: 'heartBoard' });
+        // (a toggle's state, or the tools it brings, may have changed; the
+        // board's control is rebuilt only if it was in hand, with the tool
+        // kept, so a button never pulls the GM off the tokens)
+        if (ui.controls?.activeControl === BOARD_CONTROL) {
+            const tool = keepTool(game.activeTool, boardTools().list.map((x) => x.name));
+            ui.controls.initialize({ control: BOARD_CONTROL, ...(tool ? { tool } : {}) });
+        }
         return syncRail();
     }
 }

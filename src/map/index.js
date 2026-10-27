@@ -22,7 +22,7 @@ import {
     configureBoard, followSceneSize, remindDownload, keepWorldCopy, applyBoardPatch,
 } from './scrapboard/api.js';
 import { registerBoardSettings, registerBoardRelay, handOf, playersBoardDialog, askBoard, freeGMHands } from './scrapboard/notes.js';
-import { registerRailSettings, syncRail, againToLook } from './scrapboard/rail.js';
+import { registerRailSettings, syncRail, againToLook, flipActorTools } from './scrapboard/rail.js';
 import { keepBackup } from './scrapboard/backups.js';
 import { registerBoardFog } from './scrapboard/fog.js';
 
@@ -351,6 +351,16 @@ export function initialise() {
         editable: [{ key: 'KeyP', modifiers: [SHIFT] }],
         precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY,
         onDown: (ctx) => (ctx?.event?.target?.closest?.('input, textarea, select, [contenteditable]') ? false : Boolean(layer()?.share())),
+    });
+    // the flip between the board tool last held and Foundry's token Select
+    // (Plenty finish item 1a, 2026-10-26: Q, free in Foundry's defaults; anyone's,
+    // players move their familiars too; never while typing in a field)
+    game.keybindings.register('heart', 'boardFlipActors', {
+        name: 'heart.board.key-flip',
+        hint: 'heart.board.key-flip-hint',
+        editable: [{ key: 'KeyQ' }],
+        precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY,
+        onDown: (ctx) => (ctx?.event?.target?.closest?.('input, textarea, select, [contenteditable]') ? false : flipActorTools()),
     });
     registerBoardSettings();
     registerRailSettings();

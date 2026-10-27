@@ -33,7 +33,7 @@ import { Backdrop } from './backdrop.js';
 import { refreshFogAll } from './fog.js';
 import { pinThumb } from './paint.js';
 import { loadBoardLook, textureUrl } from './look.js';
-import { NIBS, NIB_DEFAULTS, nibStyleOf, LINK_KINDS, cardWord, cutPatch, freshStrokeIds, absorbPatch, markMax, brushStroke, doodleBoard, doodlePatch, brushColor, DOODLE_TABS, doodleTabsFor, noteFields, customKey, keysTaken, sharePatch, mayShare, savedDoodleOf, cleanSavedDoodles, isSavedKind, SAVED_MAX, pinChoices, pickFrom, pinPreview, pinTint, pinScale } from './model.js';
+import { NIBS, NIB_DEFAULTS, nibStyleOf, LINK_KINDS, cardWord, cutPatch, freshStrokeIds, absorbPatch, markMax, brushStroke, doodleBoard, doodlePatch, brushColor, DOODLE_TABS, doodleTabsFor, noteFields, customKey, keysTaken, sharePatch, mayShare, savedDoodleOf, cleanSavedDoodles, isSavedKind, SAVED_MAX, pinChoices, pickFrom, pinPreview, pinTint, pinScale, gmNoteFields } from './model.js';
 import { BoardControls, applyPatch, LOCK_MS, strokeEdges, DOODLE_MIN, DOODLE_MAX, dockAt, snapSide } from './controls.js';
 import {
     isBoardScene, boardOf, ownsBoard, addPin, addScrap, removeMarks, clearAllBrushes,
@@ -1693,7 +1693,7 @@ export class ScrapboardLayer extends InteractionLayer {
                     return;
                 }
                 // (the key it will have, so its preview is the note: Luke 2026-10-24)
-                const answer = await noteDialog({ type: a.type, chooseHand: true, title: a.type === 'scrawl' ? 'heart.board.write-title' : 'heart.board.note-title', base: this.#freshBase(a), canShare: true });
+                const answer = await noteDialog({ type: a.type, chooseHand: true, title: a.type === 'scrawl' ? 'heart.board.write-title' : 'heart.board.note-title', base: this.#freshBase(a), canShare: true, canGm: game.user.isGM });
                 if (!answer || (!answer.text && a.type !== 'note')) return;
                 return addScrap(scene, { type: a.type, x: a.at.x, y: a.at.y, ...this.#noteData(answer) });
             }
@@ -1841,6 +1841,8 @@ export class ScrapboardLayer extends InteractionLayer {
         if (answer.ink !== null && answer.ink !== undefined) data.ink = answer.ink;
         Object.assign(data, answer.style ?? {});
         if (answer.typed) data.typed = true;
+        // (a GM note: hidden for good, Plenty finish item 2)
+        Object.assign(data, gmNoteFields(Boolean(answer.gmOnly)));
         // (its paint, its paper's turn, its own turn, where its writing sits)
         for (const [k, v] of Object.entries(noteFields(answer, this.renderer.look))) if (v !== null) data[k] = v;
         return data;

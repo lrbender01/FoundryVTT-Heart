@@ -4,6 +4,7 @@
 // NPC fog's distance. Each switch is one scene update; every client draws
 // from the scene's flags (backdrop.js) and its fog follows (fog.js).
 import { cleanBakedFlags, metresPer, squareIn } from './baked.js';
+import { gmNotesShown } from './render.js';
 import { heartDialogOptions } from '../../common/dialog.js';
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
@@ -46,6 +47,7 @@ function bodyOf(m, f, units = 'm') {
         <h3>${esc(loc('heart.board.layers.measure'))}</h3>
         <div class="all"><button type="button" data-units="ft" class="${ft ? 'on' : ''}" aria-pressed="${ft}">${esc(loc('heart.board.layers.feet'))}</button><button type="button" data-units="m" class="${ft ? '' : 'on'}" aria-pressed="${!ft}">${esc(loc('heart.board.layers.metres'))}</button></div>
         <h3>${esc(loc('heart.board.layers.overlays'))}</h3>${overlays}
+        ${box('data-gmnotes', gmNotesShown(), loc('heart.board.layers.gm-notes'), ` <small>${esc(loc('heart.board.layers.gm-only'))}</small>`)}
         <h3>${esc(loc('heart.board.layers.fog'))}</h3>
         <label class="row"><input type="number" data-fog min="0" max="30000" step="1" value="${shown(f.fog)}"> <span>${esc(ft ? loc('heart.board.layers.ft') : loc('heart.board.layers.m'))}</span></label>
         <p class="hint">${esc(loc('heart.board.layers.fog-hint'))}</p>
@@ -92,6 +94,8 @@ export function layersDialog(scene, backdrop) {
                 else if (el.dataset.fog !== undefined) await set({ 'flags.heart.baked.fog': Math.max(0, Number(el.value) || 0) * metresPer(scene.grid.units) });
                 else if (el.dataset.dark !== undefined) await set({ 'flags.heart.baked.dark': Math.max(0, Math.min(100, Number(el.value) || 0)) });
                 else if (el.dataset.lit !== undefined) await set({ 'flags.heart.baked.lit': el.checked });
+                // (this client's, not the scene's: Plenty finish item 2)
+                else if (el.dataset.gmnotes !== undefined) await game.settings.set('heart', 'boardGmNotes', el.checked);
             });
             root.addEventListener('click', async (ev) => {
                 const u = ev.target.closest('[data-units]');
