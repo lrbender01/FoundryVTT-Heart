@@ -1,5 +1,6 @@
-import { TRAITS, TARGETS, DEFAULT_TARGET, familiarOutcome, traitsOf, dangerOf, dangerStep, hasTraits, speciesFor, spellFor, spellIdOf, speciesUpdate, targetOf } from './rules';
+import { TRAITS, TARGETS, DEFAULT_TARGET, familiarOutcome, traitsOf, dangerOf, dangerStep, hasTraits, speciesFor, spellFor, spellIdOf, speciesIdOf, speciesArtPath, speciesLocked, spellLocked, speciesUpdate, speciesPortraitUpdate, targetOf } from './rules';
 import { oneAtATime } from '../../common/busy';
+import { DEFAULT_IMGS } from '../../common/icons';
 
 // The familiar's rolls (The Witch is Dead, Luke, 2026-10-24): a trait roll
 // through a small dialog, and the sheet's Roll species and Roll spell. Each
@@ -24,6 +25,26 @@ export function sigilSrc(id) {
     if (!id || !game.modules?.get('fvtt-heart-content')?.active) return null;
     return `modules/fvtt-heart-content/assets/art/familiar/sigils/${id}.webp`;
 }
+
+// A species' picture (Luke, 2026-10-27): the content module's art, or null
+// without it. The file may not be painted yet, so `speciesArtExists` asks.
+export const familiarSpeciesId = (actor) => speciesIdOf(actor?.system?.species, speciesLabel);
+export function speciesSrc(id) {
+    if (!id || !game.modules?.get('fvtt-heart-content')?.active) return null;
+    return speciesArtPath(id);
+}
+async function speciesArtExists(src) {
+    if (!src) return false;
+    try {
+        const res = await fetch(src, { method: 'HEAD' });
+        return res.ok;
+    } catch (_err) {
+        return false;
+    }
+}
+// Foundry's mystery man and the system's stand-ins are no portrait
+const isStandIn = (src) => DEFAULT_IMGS.has(src) || src === CONST.DEFAULT_TOKEN || src === 'icons/svg/mystery-man.svg';
+
 const sigilImg = (id, cls = 'familiar-card-sigil') => {
     const src = sigilSrc(id);
     return src ? `<img class="${cls}" src="${esc(src)}" alt="${esc(spellLabel(id))}"/>` : '';
@@ -206,8 +227,13 @@ function mayEdit(actor) {
 
 // Roll species: a d10 on the table sets the species and all four traits,
 // after asking when something is already written in
+// (once rolled it is kept, Luke, 2026-10-27: the GM unlocks it, unlockRoll)
 export async function rollSpecies(actor) {
     if (!mayEdit(actor)) return null;
+    if (speciesLocked(actor.system)) {
+        ui.notifications.warn(loc('heart.familiar.species-locked', { name: actor.name }));
+        return null;
+    }
     if (hasTraits(actor.system)) {
         const go = await ask({
             title: loc('heart.familiar.confirm-species.title'),
@@ -228,13 +254,34 @@ export async function rollSpecies(actor) {
         content: resultCard(loc('heart.familiar.species-label'), face, name, detail),
     });
     await diceLanded(message);
-    await actor.update(speciesUpdate(entry, name));
+    // the species' picture becomes the portrait and the token's art, unless
+    // the player chose a portrait by hand or the picture isn't there yet
+    const art = speciesSrc(entry.id);
+    const portrait = (await speciesArtExists(art)) ? speciesPortraitUpdate(entry.id, actor.img, isStandIn) : {};
+    await actor.update({ ...speciesUpdate(entry, name), ...portrait });
     return entry;
 }
 
-// Roll spell: a d10 for the spell the witch taught you
+// The GM lets a familiar roll its species or spell again (the sheet's small
+// unlock). GM-only.
+export async function unlockRoll(actor, which) {
+    if (!game.user?.isGM) {
+        ui.notifications.warn(loc('heart.familiar.gm-only'));
+        return null;
+    }
+    const key = which === 'species' ? 'system.speciesLocked' : which === 'spell' ? 'system.spellLocked' : null;
+    if (!actor || !key) return null;
+    return actor.update({ [key]: false });
+}
+
+// Roll spell: a d10 for the spell the witch taught you (once rolled it is
+// kept, Luke, 2026-10-27: the GM unlocks it, unlockRoll)
 export async function rollSpell(actor) {
     if (!mayEdit(actor)) return null;
+    if (spellLocked(actor.system)) {
+        ui.notifications.warn(loc('heart.familiar.spell-locked', { name: actor.name }));
+        return null;
+    }
     const roll = await new Roll('1d10').evaluate();
     const face = faceOf(roll);
     const id = spellFor(face);
@@ -245,6 +292,6 @@ export async function rollSpell(actor) {
         content: resultCard(loc('heart.familiar.spell-label'), face, name, '', sigilImg(id)),
     });
     await diceLanded(message);
-    await actor.update({ 'system.spell': name });
+    await actor.update({ 'system.spell': name, 'system.spellLocked': true });
     return id;
 }

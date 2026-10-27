@@ -9,8 +9,8 @@
 // globals; the windows are Foundry's.
 import { heartDialogOptions } from '../../common/dialog.js';
 
-// the qualities past Auto (render.js DETAIL)
-const QUALITIES = ['high', 'standard', 'light'];
+// the qualities past Auto (render.js DETAIL; Ultra, quality.js)
+const QUALITIES = ['ultra', 'high', 'standard', 'light'];
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const esc = (s) => Handlebars.escapeExpression(String(s ?? ''));
@@ -185,8 +185,19 @@ export function qualityDialog() {
     const choice = (d) => ({
         icon: Q.picked === d ? '<i class="fa-solid fa-check"></i>' : '',
         label: d === 'auto' ? `${qualityName('auto')} (${qualityName(autoKey())})` : qualityName(d),
-        callback: () => (Q.picked === d ? null : game.settings.set('heart', 'boardDetail', d)),
+        callback: () => (Q.picked === d ? null : d === 'ultra' ? askUltra() : game.settings.set('heart', 'boardDetail', d)),
     });
+    // (Ultra asked first: experimental, made for the GM's strong graphics
+    // card; the setting's own change offers the reload)
+    const askUltra = () =>
+        Dialog.confirm({
+            title: qualityName('ultra'),
+            content: `<p>${esc(loc('heart.board.detail-ultra-warn'))}</p>${game.user?.isGM ? '' : `<p><strong>${esc(loc('heart.board.detail-ultra-player'))}</strong></p>`}`,
+            yes: () => game.settings.set('heart', 'boardDetail', 'ultra'),
+            no: () => null,
+            defaultYes: false,
+            options: heartDialogOptions({ classes: ['heart-board-dialog'], width: 460 }),
+        });
     const content = `<p>${esc(loc('heart.board.detail-hint'))}</p>`;
     new Dialog({
         title: loc('heart.board.detail'),

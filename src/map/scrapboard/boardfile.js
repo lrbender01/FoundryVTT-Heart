@@ -53,7 +53,23 @@ export function boardFromText(text) {
     if (Number.isFinite(Number(raw.notesEd)) && Number(raw.notesEd) > 0) board.notesEd = Number(raw.notesEd);
     // (and its own sheet, its size in pages: Luke, 2026-10-24)
     if (checked.sheet) board.sheet = checked.sheet;
+    // (and its pieces and clock stages, as the model reads them; an older
+    // file without them loads as before: 2026-10-27)
+    if (Object.keys(checked.pieces).length) board.pieces = Object.fromEntries(Object.keys(checked.pieces).map((k) => [k, raw.pieces[k]]));
+    if (checked.stages.length) board.stages = raw.stages.filter((s) => checked.stages.some((c) => c.id === (typeof s === 'string' ? s : s?.id)));
     return { board, scraps: Object.keys(board.scraps).length, links: Object.keys(board.links).length };
+}
+
+// What a board is, whole, as it is written out or copied (a download, a
+// replace, the world's daily copy): the six always-there parts, and the ones
+// a board has only once it needs them (its bin, pins' and notes' edition,
+// sheet, pieces, and clock stages)
+export function boardParts(b) {
+    return {
+        scraps: b.scraps ?? {}, links: b.links ?? {}, pins: b.pins ?? {}, marks: b.marks ?? {}, bits: b.bits ?? {}, decor: b.decor ?? [],
+        ...(b.bin ? { bin: b.bin } : {}), ...(b.pinsEd ? { pinsEd: b.pinsEd } : {}), ...(b.notesEd ? { notesEd: b.notesEd } : {}), ...(b.sheet ? { sheet: b.sheet } : {}),
+        ...(b.pieces && Object.keys(b.pieces).length ? { pieces: b.pieces } : {}), ...(Array.isArray(b.stages) && b.stages.length ? { stages: b.stages } : {}),
+    };
 }
 
 // The cards of a place of the GM's own (its actor's uuid) whose stored name

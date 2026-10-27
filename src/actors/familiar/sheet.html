@@ -17,9 +17,20 @@
     </div>
     <div class="familiar-box familiar-species">
       <span class="familiar-head">{{localize "heart.familiar.species-label"}}
-        {{#if editable}}<a class="familiar-roll-button" data-action="familiar-roll-species" data-tooltip="{{localize 'heart.familiar.roll-species-tip'}}"><i class="fas fa-dice-d10"></i>{{localize "heart.familiar.roll-species"}}</a>{{/if}}
+        {{#if editable}}
+        {{#if speciesLocked}}
+        {{#if isGM}}<a class="familiar-unlock" data-action="familiar-unlock" data-which="species" data-tooltip="{{localize 'heart.familiar.unlock-species-tip'}}"><i class="fas fa-lock-open"></i></a>{{/if}}
+        <span class="familiar-roll-button locked" aria-disabled="true" data-tooltip="{{localize 'heart.familiar.species-locked-tip'}}"><i class="fas fa-lock"></i>{{localize "heart.familiar.roll-species"}}</span>
+        {{else}}
+        <a class="familiar-roll-button" data-action="familiar-roll-species" data-tooltip="{{localize 'heart.familiar.roll-species-tip'}}"><i class="fas fa-dice-d10"></i>{{localize "heart.familiar.roll-species"}}</a>
+        {{/if}}
+        {{/if}}
       </span>
-      <input class="familiar-field" type="text" name="system.species" value="{{system.species}}" />
+      <div class="familiar-species-line">
+        {{#if speciesPic}}<span class="familiar-species-pic" data-tooltip="{{system.species}}"><img src="{{speciesPic}}" alt="{{system.species}}" /><i class="fas fa-paw"></i></span>
+        {{else}}<span class="familiar-species-pic missing"><i class="fas fa-paw"></i></span>{{/if}}
+        <input class="familiar-field" type="text" name="system.species" value="{{system.species}}" />
+      </div>
     </div>
   </div>
 
@@ -53,7 +64,14 @@
 
     <div class="familiar-box familiar-spell">
       <span class="familiar-head">{{localize "heart.familiar.spell-label"}}
-        {{#if editable}}<a class="familiar-roll-button" data-action="familiar-roll-spell" data-tooltip="{{localize 'heart.familiar.roll-spell-tip'}}"><i class="fas fa-dice-d10"></i>{{localize "heart.familiar.roll-spell"}}</a>{{/if}}
+        {{#if editable}}
+        {{#if spellLocked}}
+        {{#if isGM}}<a class="familiar-unlock" data-action="familiar-unlock" data-which="spell" data-tooltip="{{localize 'heart.familiar.unlock-spell-tip'}}"><i class="fas fa-lock-open"></i></a>{{/if}}
+        <span class="familiar-roll-button locked" aria-disabled="true" data-tooltip="{{localize 'heart.familiar.spell-locked-tip'}}"><i class="fas fa-lock"></i>{{localize "heart.familiar.roll-spell"}}</span>
+        {{else}}
+        <a class="familiar-roll-button" data-action="familiar-roll-spell" data-tooltip="{{localize 'heart.familiar.roll-spell-tip'}}"><i class="fas fa-dice-d10"></i>{{localize "heart.familiar.roll-spell"}}</a>
+        {{/if}}
+        {{/if}}
       </span>
       <div class="familiar-spell-line">
         {{#if spellSigil}}<a class="familiar-sigil" data-action="familiar-show-spell" data-tooltip="{{localize 'heart.familiar.show-spell-tip'}}"><img src="{{spellSigil}}" alt="{{system.spell}}" /></a>{{/if}}

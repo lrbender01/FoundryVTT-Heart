@@ -308,18 +308,25 @@ describe("the relay's board handlers", () => {
     expect((await ask("board.edit", { cut: { sweep: { pts: [1], r: 5 }, strokes: [["ana", "a1"]] } })).status).toBe("not-allowed");
   });
 
-  it("board.edit: a player's doodle, its strokes and ids worked out by the GM, never overwriting what is there (Luke, 2026-10-25)", async () => {
+  it("board.edit: a player's doodle on the sheet, one piece of theirs worked out by the GM, never overwriting what is there (Luke, 2026-10-25; one piece, 2026-10-26)", async () => {
     // (a stroke of theirs the asker's board has not seen yet, at m1)
     scene.flags.heart.board.marks.ana = { m1: { c: 2, w: 6, pts: [0, 0, 300, 0] } };
     const brush = { size: 60, c: 1, w: 6, b: 1, o: 0.85 };
     expect((await ask("board.edit", { doodle: { a: { kind: "gate", seed: "gate:1", at: { x: 400, y: 400 } }, brush } })).status).toBe("done");
-    const mine = boardOf(scene).marks.ana;
-    expect(mine.m1.pts).toEqual([0, 0, 300, 0]);
-    expect(Object.keys(mine).length).toBeGreaterThan(5);
+    // (their strokes untouched; the doodle one piece, theirs, holding only its settings)
+    expect(Object.keys(boardOf(scene).marks.ana)).toEqual(["m1"]);
+    const pieces = boardOf(scene).pieces;
+    expect(Object.values(pieces)).toHaveLength(1);
+    expect(Object.values(pieces)[0]).toMatchObject({ kind: "doodle", x: 400, y: 400, author: "ana", gen: { name: "doodle", params: { kind: "gate", size: 60 }, seed: "gate:1" } });
     // (a second one laid at once: both kept)
-    const n = Object.keys(mine).length;
     expect((await ask("board.edit", { doodle: { a: { kind: "gate", seed: "gate:2", at: { x: 600, y: 400 } }, brush } })).status).toBe("done");
-    expect(Object.keys(boardOf(scene).marks.ana)).toHaveLength(n + (n - 1));
+    expect(Object.keys(boardOf(scene).pieces)).toHaveLength(2);
+    // (theirs to move, and to take off; Ctrl+Z puts it back)
+    const id = Object.keys(boardOf(scene).pieces)[0];
+    expect((await ask("board.edit", { own: { pieces: { [id]: { x: 450 } } } })).status).toBe("done");
+    expect(boardOf(scene).pieces[id].x).toBe(450);
+    expect((await ask("board.edit", { own: { pieces: { [id]: null } } })).status).toBe("done");
+    expect(boardOf(scene).pieces[id]).toBeUndefined();
     // (on a card, laid out to find its frame; never a kind there is none
     // of, nor off the sheet)
     vi.stubGlobal("document", { createElement: () => ({ getContext: () => ({ measureText: (t) => ({ width: String(t).length * 8 }) }) }) });

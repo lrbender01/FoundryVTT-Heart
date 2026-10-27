@@ -39,7 +39,7 @@
 // writing, its pins, a web, on the note or off it), and draw with the marker
 // on their own layer.
 import { hitAt, onPaper, onTagAt } from './hits.js';
-import { NIBS, nibOf, inkHalf, viaFrom, pointInPoly, nearestOnPath, customKey, revealOf, revealPatch, applyPatch, strokeToCard, strokePatch, splitPulls, isOpen, mineOrOpen, mayShare, mayBit, sharePatch, breakAwayPatch, NOTE_AR_MIN, mayShareStroke, strokeMaker, noteBlank } from './model.js';
+import { NIBS, nibOf, inkHalf, viaFrom, pointInPoly, nearestOnPath, customKey, revealOf, revealPatch, applyPatch, strokeToCard, strokePatch, splitPulls, isOpen, mineOrOpen, mayShare, mayBit, sharePatch, breakAwayPatch, NOTE_AR_MIN, mayShareStroke, strokeMaker, noteBlank, isPieceLayer, mayPiece, pieceHull } from './model.js';
 
 // (the patch rule lives with the model; here for the hosts and tests)
 export { applyPatch };
@@ -464,7 +464,16 @@ export class BoardControls {
 
     // how many things are selected (cards, pins, strings)
     get count() {
-        return this.selection.size + this.pins.size + this.links.size + this.markSel.size + (this.part ? 1 : 0) + (this.bit ? 1 : 0);
+        return this.selection.size + this.pins.size + this.links.size + this.markSel.size + (this.part ? 1 : 0) + (this.bit ? 1 : 0) + (this.piece ? 1 : 0);
+    }
+
+    // one of the scene's pieces selected, by its id (a doodle laid, a
+    // building; Luke 2026-10-26, pieces.md): taken, moved, sized, turned,
+    // locked, and taken off whole, as a loose piece of the board's is
+    piece = null;
+
+    mayPiece(p) {
+        return mayPiece(p, this.host.user());
     }
 
     clear() {
@@ -475,6 +484,7 @@ export class BoardControls {
         this.link = null;
         this.part = null;
         this.bit = null;
+        this.piece = null;
     }
 
     // The pins stuck in a card, for its white dots: its own (when shown) and
@@ -501,6 +511,7 @@ export class BoardControls {
         if (this.editor) return true;
         if (t?.type === 'part') return this.may(t.scrap);
         if (t?.type === 'bit') return this.mayBit(t.bit);
+        if (t?.type === 'piece') return this.mayPiece(t.piece) && !t.piece.locked;
         if (t?.type !== 'cards') return false;
         const sel = this.selected();
         return sel.length > 0 && sel.every((s) => this.may(s));
@@ -607,6 +618,10 @@ export class BoardControls {
             const b = view?.bits?.find((q) => q.id === this.bit);
             return b ? { type: 'bit', bit: b } : null;
         }
+        if (this.piece) {
+            const p = view?.pieces?.find((q) => q.id === this.piece);
+            return p ? { type: 'piece', piece: p } : null;
+        }
         if (this.part) {
             const s = view?.scraps.find((x) => x.key === this.part.key);
             const p = s?.layout.parts?.find((q) => q.id === this.part.id);
@@ -634,6 +649,7 @@ export class BoardControls {
         const view = this.host.view();
         if (this.part && !view?.scraps.some((s) => s.key === this.part.key)) this.part = null;
         if (this.bit && !view?.bits?.some((b) => b.id === this.bit && this.mayBit(b))) this.bit = null;
+        if (this.piece && !view?.pieces?.some((p) => p.id === this.piece && this.mayPiece(p))) this.piece = null;
         const keys = new Set(view?.scraps.filter((s) => this.may(s)).map((s) => s.key));
         for (const k of [...this.selection]) if (!keys.has(k)) this.selection.delete(k);
         // (a player keeps their own pins and strings selected: Luke,
@@ -670,6 +686,7 @@ export class BoardControls {
         };
         if (t.type === 'part') take(frameOf(t.part));
         else if (t.type === 'bit') take(frameOf({ x: t.bit.x, y: t.bit.y, w: t.bit.w, h: t.bit.h, rot: t.bit.rot }));
+        else if (t.type === 'piece') take(pieceHull(t.piece));
         else if (t.type === 'pin') take(frameOf({ x: t.pin.x, y: t.pin.y, w: t.pin.w, h: t.pin.w, rot: 0 }));
         else {
             const free = this.selected().filter((s) => !s.locked);
@@ -765,6 +782,7 @@ export class BoardControls {
             const l = h?.kind === 'link' ? h.item : h?.kind === 'tag' ? h.link : null;
             if (l) return this.mine(l) && !this.links.has(l.id) ? { key: `l:${l.id}`, line: l.points, open: theirs(l) } : null;
             if (h?.kind === 'bit') return this.mayBit(h.item) && this.bit !== h.item.id ? { key: `b:${h.item.id}`, hull: frameOf({ x: h.item.x, y: h.item.y, w: h.item.w, h: h.item.h, rot: h.item.rot }), open: theirs(h.item) } : null;
+            if (h?.kind === 'piece') return this.mayPiece(h.item) && this.piece !== h.item.id ? { key: `p:${h.item.id}`, hull: pieceHull(h.item), open: theirs(h.item), ...(h.item.locked ? { lock: { x: pieceHull(h.item)[0], y: pieceHull(h.item)[1] } } : {}) } : null;
         }
         const s = h?.kind === 'scrap' ? h.item : h?.kind === 'scrapPin' ? h.scrap : this.#ownCardUnder(pt, h);
         if (!s || !this.may(s) || this.selection.has(s.key)) return null;
@@ -985,7 +1003,7 @@ export class BoardControls {
             parts: d?.partsAt ?? [...(this.#partsCard()?.layout.parts ?? []).map((p) => ({ ...p, on: this.part?.id === p.id })), ...this.#pinsIn(this.#partsCard())],
             // a selected piece's box (a writing box being sized: the box as
             // dragged, its top-left pinned, until it is let go)
-            partBox: d?.boxNow ? d.boxNow.poly : (() => { const t = this.#target(); return t?.type === 'part' ? frameOf(t.part) : t?.type === 'bit' ? frameOf({ x: t.bit.x, y: t.bit.y, w: t.bit.w, h: t.bit.h, rot: t.bit.rot }) : null; })(),
+            partBox: d?.boxNow ? d.boxNow.poly : (() => { const t = this.#target(); return t?.type === 'part' ? frameOf(t.part) : t?.type === 'bit' ? frameOf({ x: t.bit.x, y: t.bit.y, w: t.bit.w, h: t.bit.h, rot: t.bit.rot }) : t?.type === 'piece' ? pieceHull(t.piece) : null; })(),
             grab: d?.kind === 'string' && d.snap ? { x: d.snap.x, y: d.snap.y, locked: true } : d || !this.grab ? null : { x: this.grab.x, y: this.grab.y, locked: Date.now() - this.grab.since >= LOCK_MS },
             // a few words by the reticle, once it has caught something
             caption: d || !this.grab || Date.now() - this.grab.since < LOCK_MS || this.from || this.grabTool !== 'move' ? null : this.#caption(this.grab.key),
@@ -1273,6 +1291,12 @@ export class BoardControls {
             this.bit = h.item.id;
             return { do: 'select' };
         }
+        if (h?.kind === 'piece') {
+            if (!this.mayPiece(h.item)) return this.#pick(null, ctrl);
+            this.clear();
+            this.piece = h.item.id;
+            return { do: 'select' };
+        }
         if (h && h.kind !== 'scrapPin' && !this.editor && this.#mineHit(h)) {
             if (h.kind === 'pin') return this.#toggle(this.pins, h.pin.id, ctrl);
             const id = h.kind === 'link' ? h.item.id : h.link.id;
@@ -1483,6 +1507,15 @@ export class BoardControls {
             this.bit = h.item.id;
             this.drag = { kind: 'bit', start: pt, bit: h.item, raw };
             return 'bit';
+        }
+        // (a piece dragged whole; a locked one stays, selected)
+        if (h?.kind === 'piece' && this.mayPiece(h.item)) {
+            this.clear();
+            this.piece = h.item.id;
+            if (h.item.locked) return null;
+            // (not 'piece': that is a card's pin or tag dragged)
+            this.drag = { kind: 'scenePiece', start: pt, piece: h.item, raw };
+            return 'scenePiece';
         }
         // a string itself (Luke, 2026-10-02): Ctrl pins a new joint into it,
         // Shift breaks it there (the new end comes away with the pointer),
@@ -1851,6 +1884,7 @@ export class BoardControls {
         this.link = null;
         this.part = null;
         this.bit = null;
+        this.piece = null;
     }
 
     // Writing alone moved and let go on a blank note this user may change
@@ -1901,6 +1935,8 @@ export class BoardControls {
             if (t?.type === 'part' && d.anchor) return this.#textBoxPatch(t, raw, pt, d);
             if (t?.type === 'part') return this.#partPatch(t, raw, d.kind === 'size' ? { f } : { delta });
             if (t?.type === 'bit') return { bits: { [t.bit.id]: d.kind === 'size' ? { w: Math.max(6, Math.round(t.bit.w * f)) } : { r: Math.round(t.bit.r + delta) } } };
+            // (a piece sized about its middle, its box and picture together; turned)
+            if (t?.type === 'piece') return { pieces: { [t.piece.id]: d.kind === 'size' ? { w: Math.max(4, Math.round(t.piece.w * f * 10) / 10), h: Math.max(4, Math.round(t.piece.h * f * 10) / 10) } : { r: Math.round((t.piece.r ?? 0) + delta) } } };
             if (t?.type === 'pin') {
                 const p = raw.pins?.[t.pin.id] ?? {};
                 // (no pin grown past three times itself: a head's handles lie
@@ -1913,6 +1949,7 @@ export class BoardControls {
             return { scraps: Object.fromEntries(Object.entries(d.turns).map(([k, r]) => [k, { r: Math.round(r + delta) }])) };
         }
         if (d.kind === 'bit') return { bits: { [d.bit.id]: { x: Math.round(d.bit.x + dx), y: Math.round(d.bit.y + dy) } } };
+        if (d.kind === 'scenePiece') return { pieces: { [d.piece.id]: { x: Math.round((d.piece.x + dx) * 10) / 10, y: Math.round((d.piece.y + dy) * 10) / 10 } } };
         if (d.kind === 'part') {
             const { scrap, id } = d.part;
             const had = raw.scraps?.[scrap.key]?.parts ?? {};
@@ -2299,6 +2336,9 @@ export class BoardControls {
         if (view && this.#strokesOf.view === view) return this.#strokesOf.list;
         const out = [];
         for (const [layer, strokes] of Object.entries(view?.marks ?? {})) {
+            // (a piece's strokes are the piece's, taken only as one: model.js
+            // PIECE_LAYER; Luke 2026-10-26)
+            if (isPieceLayer(layer)) continue;
             for (const [id, st] of Object.entries(strokes)) out.push({ ...st, key: JSON.stringify([layer, id]), where: layer, id, by: layer });
         }
         // (a locked card's strokes are frozen with it: Luke 2026-10-25)
@@ -2603,6 +2643,8 @@ export class BoardControls {
         const h = this.#hitMove(pt);
         const st = this.#moveStrokeAt(pt, h);
         if (st) return { do: 'patch', patch: this.strokeLockPatch(st) };
+        // (a piece of the scene's, locked or let go as a card is: Luke 2026-10-26)
+        if (h?.kind === 'piece') return this.mayPiece(h.item) ? { do: 'patch', patch: { pieces: { [h.item.id]: { locked: h.item.locked ? null : true } } } } : null;
         const card = h?.kind === 'scrap' ? h.item : h?.kind === 'scrapPin' ? h.scrap : this.#scrapUnder(pt);
         return card && this.may(card) ? { do: 'patch', patch: this.lockPatch(card.key) } : null;
     }
@@ -2666,6 +2708,13 @@ export class BoardControls {
         if (bit && (this.gm || this.mayBit(bit))) {
             const patch = { bits: { [this.bit]: null } };
             this.bit = null;
+            return patch;
+        }
+        // (a piece of the scene's, never a locked one; Ctrl+Z puts it back)
+        const pc = this.piece ? this.host.raw()?.pieces?.[this.piece] : null;
+        if (pc && !pc.locked && this.mayPiece(pc)) {
+            const patch = { pieces: { [this.piece]: null } };
+            this.piece = null;
             return patch;
         }
         if (!this.part) return null;
@@ -2835,6 +2884,10 @@ export class BoardControls {
         const raw = this.host.raw() ?? {};
         if (t.type === 'part') return this.#partPatch(t, raw, ctrl ? { delta: step * 5 } : { f: step > 0 ? 0.95 : 1.05 });
         if (t.type === 'bit') return { bits: { [t.bit.id]: ctrl ? { r: Math.round(t.bit.r + step * 5) } : { w: Math.max(6, Math.round(t.bit.w * (step > 0 ? 0.95 : 1.05))) } } };
+        if (t.type === 'piece') {
+            const f = step > 0 ? 0.95 : 1.05;
+            return { pieces: { [t.piece.id]: ctrl ? { r: Math.round((t.piece.r ?? 0) + step * 5) } : { w: Math.max(4, Math.round(t.piece.w * f * 10) / 10), h: Math.max(4, Math.round(t.piece.h * f * 10) / 10) } } };
+        }
         if (t.type === 'pin') {
             const p = raw.pins?.[t.pin.id] ?? {};
             return { pins: { [t.pin.id]: ctrl ? { r: Math.round((p.r ?? (t.pin.rot / DEGREE)) + step * 5) } : { s: clampS((p.s ?? t.pin.sEff ?? 1) * (step > 0 ? 0.95 : 1.05), this.#pinFloor(t.pin), this.#sizeMax()) } } };

@@ -1,6 +1,7 @@
 
 import sheet_modules from './*/sheet.js';
 import proxies from './*/proxy.js';
+import NpcSheet from './adversary/npc-sheet';
 import { resistanceBarOf, resistanceOf, marksForLeft } from './adversary/resistance';
 import { registerResistanceBarSync, correctResistanceBars } from './adversary/resistance-sync';
 
@@ -66,6 +67,15 @@ export function initialise() {
             // which Sheet Config showed as "[object Object]"
             label: `heart.${type}.label-single`
         });
+    });
+
+    // The Witch is Dead NPC sheet (Luke, 2026-10-27): a second sheet for
+    // adversaries, never the default. Its id, heart.NpcSheet, is what the
+    // toolkit's Board Tools set as an NPC actor's flags.core.sheetClass.
+    Actors.registerSheet('heart', NpcSheet, {
+        types: ['adversary'],
+        makeDefault: false,
+        label: 'heart.npc.label-single'
     });
 
     CONFIG.Actor.documentClass = HeartActor;

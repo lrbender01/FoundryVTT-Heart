@@ -8,10 +8,35 @@
 // docs/plans/board-baked-backgrounds.md.
 import { cleanManifest, cleanBakedFlags, levelFor, tilesIn, tileUrl, TileCache, overlayShown, shownParts, metrePx, metresPer } from './baked.js';
 import { refreshFog } from './fog.js';
+import { roofAlpha, roofsOpened } from './roof-rule.js';
 
 // (in Foundry's primary group, under the board's own tiles at 100; tokens
-// far above)
-const SORT = { base: 40, overlays: 50, roofs: 60 };
+// at 700. The roofs over the tokens, under the weather at 1000: Luke
+// 2026-10-26, a roof covers the people inside and fades away when the
+// pointer is over it)
+const SORT = { base: 40, overlays: 50, roofs: 800 };
+// how faint a roof goes under the pointer, and how fast it gets there (a
+// frame's share of the way)
+export const ROOF_FADE = 0.12;
+const FADE_STEP = 0.25;
+
+// The roof under the pointer fades (Luke, 2026-10-26: NPCs are hard to
+// reach under a roof). One listener for the page, on Foundry's canvas
+// element, for whichever board's baked map is showing.
+let showing = null;
+let hoverBound = false;
+function bindHover() {
+    if (hoverBound || !canvas?.app?.view) return;
+    hoverBound = true;
+    const at = (e) => {
+        if (!showing?.m || !canvas.ready) return;
+        const p = canvas.canvasCoordinatesFromClient({ x: e.clientX, y: e.clientY });
+        const d = canvas.dimensions;
+        showing.hover(p.x - d.sceneX, p.y - d.sceneY);
+    };
+    canvas.app.view.addEventListener('pointermove', at, { passive: true });
+    canvas.app.view.addEventListener('pointerleave', () => showing?.hover(null, null), { passive: true });
+}
 // (tiles fetched at once)
 const LOADS = 6;
 // (a roof's alpha kept this many px across at most, to know what it covers)
@@ -100,6 +125,7 @@ export class Backdrop {
         this.flags = flags;
         this.update();
         // (a roof or the distance switched: the NPC fog looked at again)
+        this.retarget();
         refreshFog();
     }
 
@@ -116,6 +142,9 @@ export class Backdrop {
         };
         this.layers = { base: make(SORT.base), overlays: make(SORT.overlays), roofs: make(SORT.roofs) };
         canvas.primary.sortDirty = true;
+        // (the roof under the pointer fades: this board's)
+        showing = this;
+        bindHover();
         const all = { x0: 0, y0: 0, x1: this.m.size.w, y1: this.m.size.h };
         // (the whole map at once, kept: the overview, else level 0's tiles)
         if (this.m.overview) this.#want({ key: 'overview', url: this.m.overview, rect: all, layer: 'base', z: -1, pin: true });
@@ -148,8 +177,9 @@ export class Backdrop {
         const u = this.#mapPx();
         const view = this.#view(u);
         const res = canvas.app.renderer.resolution || window.devicePixelRatio || 1;
-        const need = canvas.stage.scale.x * this.r.scale * u * res;
-        const margin = Math.max(view.x1 - view.x0, view.y1 - view.y0) * 0.25;
+        // (Ultra: a finer level sooner, and more of it round the view: render.js DETAIL)
+        const need = canvas.stage.scale.x * this.r.scale * u * res * (this.r.detail?.bakedNeed ?? 1);
+        const margin = Math.max(view.x1 - view.x0, view.y1 - view.y0) * (this.r.detail?.bakedMargin ?? 0.25);
         const { tilePx } = this.m;
         const wanted = new Set();
         const L = levelFor(this.m.levels, need);
@@ -231,7 +261,10 @@ export class Backdrop {
             this.#place(e);
             this.items.set(it.key, e);
             // (a roof's own shape known now: the fog follows it, not its box)
-            if (it.mask) refreshFog();
+            if (it.mask) {
+                this.retarget();
+                refreshFog();
+            }
             if (!it.pin) this.cache.put(it.key, e, e.bytes);
             // (shown as the next frame sets what is in view)
             this.update();
@@ -281,7 +314,11 @@ export class Backdrop {
         const u = this.#mapPx();
         const mx = x / u;
         const my = y / u;
+        // (a roof a player has lifted, a selected token of theirs inside, hides
+        // no one; one only stood in, still drawn shut, hides as before)
+        const open = this.roofsOpen().lifted;
         for (const { roof, part } of shownParts(this.m, this.flags)) {
+            if (open.has(roof.id)) continue;
             const R = part.rect;
             if (mx < R.x0 || mx > R.x1 || my < R.y0 || my > R.y1) continue;
             const A = this.items.get(`r:${roof.id}/${part.id}`)?.alpha;
@@ -301,10 +338,86 @@ export class Backdrop {
     }
 
     // let go of everything (another scene, or none)
+    // The roof parts under a point (scene px from the scene's top-left; null:
+    // the pointer gone) fade, the rest come back, a little each frame
+    hover(x, y) {
+        if (!this.m) return;
+        const u = this.#mapPx();
+        const under = new Set(x === null ? [] : this.#roofsAt(x / u, y / u).map((h) => h.key));
+        if (JSON.stringify([...under]) === JSON.stringify([...(this.under ?? [])])) return;
+        this.under = under;
+        if (!this.fading) this.fading = requestAnimationFrame(() => this.#fade());
+    }
+
+    // The player's tokens moved, were selected or let go, came or went (Luke,
+    // 2026-10-27: roofs open from inside only): the roofs looked at again
+    retarget() {
+        this.opened = null;
+        if (!this.m) return;
+        if (!this.fading) this.fading = requestAnimationFrame(() => this.#fade());
+    }
+
+    // For a player, the roofs their tokens are inside ({ inside, lifted }, roof
+    // ids; roof-rule.js), found once until a token changes. The GM: none.
+    // Selecting a token must clear it too (controlToken calls retarget).
+    roofsOpen() {
+        if (this.opened) return this.opened;
+        const none = { inside: new Set(), lifted: new Set() };
+        if (!this.m || game.user.isGM || !canvas.ready) return (this.opened = none);
+        const u = this.#mapPx();
+        const d = canvas.dimensions;
+        const tokens = (canvas.tokens?.placeables ?? []).filter((t) => t.isOwner).map((t) => ({ id: t.id, x: (t.center.x - d.sceneX) / u, y: (t.center.y - d.sceneY) / u }));
+        const ctl = new Set((canvas.tokens?.controlled ?? []).map((t) => t.id));
+        return (this.opened = roofsOpened(tokens, ctl, (x, y) => this.#roofsAt(x, y).map((h) => h.id)));
+    }
+
+    #fade() {
+        this.fading = 0;
+        let more = false;
+        const gm = game.user.isGM;
+        const open = this.roofsOpen();
+        for (const [key, e] of this.items) {
+            if (!e.roof || !e.sprite || e.sprite.destroyed) continue;
+            const want = roofAlpha({ isGM: gm, inside: open.inside.has(e.roof), lifted: open.lifted.has(e.roof), hovered: Boolean(this.under?.has(key)), fade: ROOF_FADE });
+            const a = e.sprite.alpha;
+            if (Math.abs(a - want) < 0.02) {
+                e.sprite.alpha = want;
+                continue;
+            }
+            e.sprite.alpha = a + (want - a) * FADE_STEP;
+            more = true;
+        }
+        if (more) this.fading = requestAnimationFrame(() => this.#fade());
+    }
+
+    // the shown roof parts at a map point ({ key, id }: the part's key and its
+    // roof's id; its rect, then its own alpha)
+    #roofsAt(mx, my) {
+        const out = [];
+        for (const { roof, part } of shownParts(this.m, this.flags)) {
+            const R = part.rect;
+            if (mx < R.x0 || mx > R.x1 || my < R.y0 || my > R.y1) continue;
+            const key = `r:${roof.id}/${part.id}`;
+            const A = this.items.get(key)?.alpha;
+            if (A) {
+                const i = Math.min(A.w - 1, Math.floor(((mx - R.x0) / (R.x1 - R.x0)) * A.w));
+                const j = Math.min(A.h - 1, Math.floor(((my - R.y0) / (R.y1 - R.y0)) * A.h));
+                if (A.a[j * A.w + i] <= 40) continue;
+            }
+            out.push({ key, id: roof.id });
+        }
+        return out;
+    }
+
     clear() {
+        this.opened = null;
         this.ticket++;
         cancelAnimationFrame(this.frame);
         this.frame = 0;
+        cancelAnimationFrame(this.fading ?? 0);
+        this.fading = 0;
+        this.under = null;
+        if (showing === this) showing = null;
         for (const e of [...this.items.values()]) this.#drop(e);
         this.items.clear();
         for (const c of Object.values(this.layers ?? {})) {

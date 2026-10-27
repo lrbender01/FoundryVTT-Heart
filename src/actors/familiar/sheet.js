@@ -2,8 +2,8 @@ import sheetHTML from './sheet.html';
 import './familiar.sass';
 import HeartActorSheet from '../base/sheet';
 import template from './template.json';
-import { TRAITS, TRAIT_MAX, traitsOf, dangerOf, dangerStep, clampFamiliarData } from './rules';
-import { rollTrait, rollSpecies, rollSpell, traitLabel, familiarSpellId, sigilSrc, showSpell } from './roll';
+import { TRAITS, TRAIT_MAX, traitsOf, dangerOf, dangerStep, clampFamiliarData, speciesLocked, spellLocked } from './rules';
+import { rollTrait, rollSpecies, rollSpell, unlockRoll, traitLabel, familiarSpellId, sigilSrc, showSpell, familiarSpeciesId, speciesSrc } from './roll';
 import { DEFAULT_IMGS } from '../../common/icons';
 import { oneAtATime } from '../../common/busy';
 
@@ -55,6 +55,13 @@ export default class FamiliarSheet extends HeartActorSheet {
         // the spell's sigil (Luke, 2026-10-26), when the spell is one of the
         // ten and the content module gives the art
         data.spellSigil = sigilSrc(familiarSpellId(this.actor));
+        // the species' picture (Luke, 2026-10-27); a placeholder stands in
+        // until the file is painted (activateListeners)
+        data.speciesPic = speciesSrc(familiarSpeciesId(this.actor));
+        // roll once: a rolled species or spell is locked; the GM unlocks
+        data.speciesLocked = speciesLocked(system);
+        data.spellLocked = spellLocked(system);
+        data.isGM = game.user.isGM;
         return data;
     }
 
@@ -80,7 +87,21 @@ export default class FamiliarSheet extends HeartActorSheet {
             oneAtATime(`familiar-show-spell-${this.actor.id}`, ev.currentTarget, () => showSpell(this.actor));
         });
 
+        // a species picture not painted yet shows the placeholder, never a
+        // broken image
+        html.find('.familiar-species-pic img').each((_i, img) => {
+            const miss = () => img.closest('.familiar-species-pic')?.classList.add('missing');
+            img.addEventListener('error', miss, { once: true });
+            if (img.complete && img.naturalWidth === 0) miss();
+        });
+
         if (!this.isEditable) return;
+
+        // the GM lets a rolled species or spell be rolled again
+        html.find('[data-action=familiar-unlock]').on('click', ev => {
+            ev.preventDefault();
+            oneAtATime(`familiar-unlock-${this.actor.id}`, ev.currentTarget, () => unlockRoll(this.actor, ev.currentTarget.dataset.which));
+        });
 
         // Danger by hand: up, or down for a problem solved or run from
         html.find('[data-action=familiar-danger]').on('click', ev => {

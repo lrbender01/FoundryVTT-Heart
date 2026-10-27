@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { boardFileName, boardFromText, renamedCards } from "../src/map/scrapboard/boardfile.js";
+import { boardFileName, boardFromText, boardParts, renamedCards } from "../src/map/scrapboard/boardfile.js";
 
 describe("the board's file name", () => {
   it("is the scene's name and the day", () => {
@@ -44,6 +44,27 @@ describe("a board read back from text", () => {
     expect(Object.keys(read.board.bin)).toEqual(["n1"]);
     expect(read.board.pinsEd).toBe(1);
     expect(read.board.decor).toEqual(BOARD.decor);
+  });
+
+  it("keeps the scene's pieces and clock stages through boardParts, a download's text, and a read back (2026-10-27)", () => {
+    const whole = {
+      ...BOARD,
+      pieces: { hut1: { kind: "house", x: 100, y: 200, w: 50, h: 40 }, "bad id": { x: 1, y: 1 } },
+      stages: [{ id: "dawn", name: "Dawn" }, { id: "dusk", name: "Dusk", block: "dawn" }],
+    };
+    const text = JSON.stringify(boardParts(whole), null, 1);
+    const parts = JSON.parse(text);
+    expect(Object.keys(parts.pieces)).toEqual(["hut1", "bad id"]);
+    expect(parts.stages).toHaveLength(2);
+    const read = boardFromText(text);
+    expect(Object.keys(read.board.pieces)).toEqual(["hut1"]);
+    expect(read.board.pieces.hut1).toEqual(whole.pieces.hut1);
+    expect(read.board.stages).toEqual(whole.stages);
+    // (an older file without them, and a board with none, stay without)
+    expect(boardFromText(JSON.stringify(BOARD)).board).not.toHaveProperty("pieces");
+    expect(boardFromText(JSON.stringify(BOARD)).board).not.toHaveProperty("stages");
+    expect(boardParts(BOARD)).not.toHaveProperty("pieces");
+    expect(boardParts({ ...BOARD, pieces: {}, stages: [] })).not.toHaveProperty("stages");
   });
 
   it("reads the editor's whole file ({ look, board })", () => {

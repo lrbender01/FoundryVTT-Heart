@@ -21,10 +21,14 @@ import {
     removeLink, exportBoard, importBoard, restoreBackup, undo, redo, isPlayersBoard, ownersOf, tidyBoardScene, syncBoardScene, followRename, downloadBoard, newPlace,
     configureBoard, followSceneSize, remindDownload, keepWorldCopy, applyBoardPatch,
 } from './scrapboard/api.js';
+import { registerUltra } from './scrapboard/quality.js';
 import { registerBoardSettings, registerBoardRelay, handOf, playersBoardDialog, askBoard, freeGMHands } from './scrapboard/notes.js';
-import { registerRailSettings, syncRail, againToLook, flipActorTools } from './scrapboard/rail.js';
+import { registerRailSettings, syncRail, againToLook, flipActorTools, railGroupControls } from './scrapboard/rail.js';
+import { railGroups } from './scrapboard/rail-groups.js';
+import { floating, kept as keptWindows, writeWindow, shutButton, registerToolWindow, carryWindows } from './scrapboard/windows.js';
 import { keepBackup } from './scrapboard/backups.js';
 import { registerBoardFog } from './scrapboard/fog.js';
+import { sessionControls, registerSessionTools } from '../common/session-tools.js';
 
 // (the scenes whose board was copied as this session found it)
 const kept = new Set();
@@ -92,6 +96,12 @@ async function convertOldMap(scene) {
 
 function registerHooks() {
     Hooks.on('getSceneControlButtons', boardControls);
+    // (Session scripting, the GM's group on every scene; its pull heard here)
+    Hooks.on('getSceneControlButtons', sessionControls);
+    registerSessionTools();
+    // (the groups other modules put on the board's rail, in Foundry's column
+    // when the board's toolbar is off)
+    Hooks.on('getSceneControlButtons', railGroupControls);
 
     Hooks.on('canvasReady', async () => {
         const scene = canvas.scene;
@@ -363,6 +373,8 @@ export function initialise() {
         onDown: (ctx) => (ctx?.event?.target?.closest?.('input, textarea, select, [contenteditable]') ? false : flipActorTools()),
     });
     registerBoardSettings();
+    // (Ultra quality's canvas hooks, before the canvas is made: quality.js)
+    registerUltra();
     registerRailSettings();
     registerBoardRelay();
     // (the NPC fog on a board with a baked map: Luke 2026-10-25)
@@ -402,5 +414,16 @@ export function initialise() {
         handOf,
         // the GM sees the board as players do (also the Player view tool)
         preview: (on = true) => layer()?.setPreview(on),
+        // Groups another module adds to the board's rail (rail-groups.js; the
+        // toolkit's Story group, Luke 2026-10-27): register({ id, icon, title,
+        // gmOnly, fold, tools: [{ name, icon, title, label, run, on }] }),
+        // unregister(id), refresh() when a tool's lit state changed
+        railGroups,
+        // The board's own floating windows for a module's: drag by a head
+        // marked data-grip, a corner to size, a place kept per client. Make one
+        // with windows.floating(id, 'heart-board-palette ...', { at, view,
+        // views, size }), join it with registerToolWindow(id, at) so the
+        // toolbar puts it back when it turns, and carry() as the scene is left.
+        windows: { floating, kept: keptWindows, writeWindow, shutButton, registerToolWindow, carry: carryWindows },
     };
 }

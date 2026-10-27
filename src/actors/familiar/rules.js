@@ -114,11 +114,61 @@ export function spellFor(face) {
     return n >= 1 && n <= SPELLS.length ? SPELLS[n - 1] : null;
 }
 
-// The actor update a rolled species makes: its name and all four traits
+// The ten species ids, in the table's order: each one's picture is
+// <content module>/assets/art/familiar/species/<id>.webp (Luke, 2026-10-27)
+export const SPECIES_IDS = Object.freeze(SPECIES.map(s => s.id));
+
+// The species a familiar's written species names (as spellIdOf does for the
+// spell): its id when the text is one of the ten (its label as `labelOf`
+// gives it, or its id), else null
+export function speciesIdOf(text, labelOf = (id) => id) {
+    const key = String(text ?? '').trim().toLowerCase();
+    if (!key) return null;
+    return SPECIES_IDS.find(id => id === key || String(labelOf(id) ?? '').trim().toLowerCase() === key) ?? null;
+}
+
+// A species' picture in the content module (the system ships none), or null
+// for an id that isn't one of the ten
+export function speciesArtPath(id) {
+    return SPECIES_IDS.includes(id) ? `modules/fvtt-heart-content/assets/art/familiar/species/${id}.webp` : null;
+}
+
+// Roll once (Luke, 2026-10-27): a rolled species or spell is kept. The lock
+// is `system.speciesLocked` / `system.spellLocked`: true once rolled, false
+// when the GM has unlocked it. Left unset (a familiar from before the lock),
+// a species or spell already written in counts as locked.
+function lockedBy(flag, written) {
+    if (flag === true) return true;
+    if (flag === false) return false;
+    return Boolean(String(written ?? '').trim());
+}
+export const speciesLocked = (system) => lockedBy(system?.speciesLocked, system?.species);
+export const spellLocked = (system) => lockedBy(system?.spellLocked, system?.spell);
+
+// Whether the portrait may be set to a species' picture: none chosen yet
+// (`isDefault` says whether a path is Foundry's or the system's stand-in), or
+// the picture of a species rolled earlier (a GM's unlocked re-roll). A portrait
+// the player chose by hand is never replaced.
+export function portraitOpen(img, isDefault = () => false) {
+    const src = String(img ?? '').trim();
+    if (!src || isDefault(src)) return true;
+    return SPECIES_IDS.some(id => speciesArtPath(id) === src);
+}
+
+// The actor update a rolled species makes: its name, all four traits, and the
+// lock (roll once)
 export function speciesUpdate(entry, name) {
-    const update = { 'system.species': String(name ?? '') };
+    const update = { 'system.species': String(name ?? ''), 'system.speciesLocked': true };
     for (const key of TRAITS) update[`system.traits.${key}`] = clampTrait(entry?.traits?.[key]);
     return update;
+}
+
+// The extra update that puts a species' picture on the portrait and the
+// prototype token, or {} when the portrait is the player's own
+export function speciesPortraitUpdate(id, img, isDefault = () => false) {
+    const art = speciesArtPath(id);
+    if (!art || !portraitOpen(img, isDefault)) return {};
+    return { img: art, 'prototypeToken.texture.src': art };
 }
 
 // The rating a target number names; anything off the table is Basic

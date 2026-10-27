@@ -17,7 +17,7 @@ import { relay, RelayTimeout } from '../../common/relay.js';
 import { keepBackup } from './backups.js';
 import { manifestAt } from './backdrop.js';
 import { SQUARES, metresPer } from './baked.js';
-import { boardFromText, boardFileName, renamedCards, renamedBinned, downloadDue, worldCopyName } from './boardfile.js';
+import { boardFromText, boardParts, boardFileName, renamedCards, renamedBinned, downloadDue, worldCopyName } from './boardfile.js';
 
 export const BOARD_FLAG = 'board';
 const PATH = `flags.heart.${BOARD_FLAG}`;
@@ -245,6 +245,22 @@ export function patchData(scene, patch) {
         if (p === null) { if (board.pins?.[id]) data[`${PATH}.pins.-=${id}`] = null; }
         else if (board.pins?.[id]) for (const [k, v] of Object.entries(p)) data[`${PATH}.pins.${id}.${k}`] = v;
         else data[`${PATH}.pins.${id}`] = p;
+    }
+    // (the scene's pieces, pieces.md, Luke 2026-10-26: a new one whole; one
+    // there field by field, a null taking a field off, a field holding an
+    // object (its settings, its strokes, its places by stage) set as it is,
+    // never merged into what was; a null piece taken off)
+    for (const [id, p] of Object.entries(patch?.pieces ?? {})) {
+        const had = board.pieces?.[id];
+        if (p === null) { if (had) data[`${PATH}.pieces.-=${id}`] = null; }
+        else if (!had) data[`${PATH}.pieces.${id}`] = p;
+        else {
+            for (const [k, v] of Object.entries(p)) {
+                if (v === null) { if (k in had) data[`${PATH}.pieces.${id}.-=${k}`] = null; }
+                else if (v && typeof v === 'object' && had[k] && typeof had[k] === 'object') Object.assign(data, recordUpdate(board, { ops: [{ path: ['pieces', id, k], b: had[k], a: v }] }, 'after', PATH));
+                else data[`${PATH}.pieces.${id}.${k}`] = v;
+            }
+        }
     }
     // (the bin: a card taken off, or put back)
     for (const [k, e] of Object.entries(patch?.bin ?? {})) {
@@ -616,14 +632,10 @@ export async function removeLink(scene, id, opts = {}) {
 // the pins again)
 const BOARD_PARTS = ['scraps', 'links', 'pins', 'marks', 'bits', 'decor'];
 // (and the parts a board has only once it needs them)
-const ALL_PARTS = [...BOARD_PARTS, 'bin', 'pinsEd', 'notesEd', 'sheet'];
-// (and its own sheet, once it has one: Luke 2026-10-24)
-function boardParts(b) {
-    return {
-        scraps: b.scraps ?? {}, links: b.links ?? {}, pins: b.pins ?? {}, marks: b.marks ?? {}, bits: b.bits ?? {}, decor: b.decor ?? [],
-        ...(b.bin ? { bin: b.bin } : {}), ...(b.pinsEd ? { pinsEd: b.pinsEd } : {}), ...(b.notesEd ? { notesEd: b.notesEd } : {}), ...(b.sheet ? { sheet: b.sheet } : {}),
-    };
-}
+// (its own sheet, once it has one: Luke 2026-10-24; and its pieces and clock
+// stages, which every export, replace, and copy was dropping: 2026-10-27)
+const ALL_PARTS = [...BOARD_PARTS, 'bin', 'pinsEd', 'notesEd', 'sheet', 'pieces', 'stages'];
+// (boardParts lives in boardfile.js, pure and tested there)
 
 // The board as the mock's File tab takes it
 export function exportBoard(scene) {

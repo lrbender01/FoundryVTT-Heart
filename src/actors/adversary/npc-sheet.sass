@@ -1,0 +1,71 @@
+@use '../../util'
+
+// The Witch is Dead NPC sheet (Luke, 2026-10-27): the familiar sheet's boxes
+// (familiar/familiar.sass, imported by npc-sheet.js) with a column of facts
+// beside the portrait and rich boxes for the longer text. The same paper,
+// ink, and red; nothing new here but the layout.
+
+$ink: util.$familiar-ink
+$red: util.$familiar-red
+$faint: rgba(util.$familiar-ink-rgb, 0.6)
+$red-wash: rgba(util.$familiar-red-rgb, 0.08)
+
+.npc-sheet
+    .familiar-name
+        flex: 1 1 auto
+
+    // the facts beside the portrait: Descriptors, Wants, and Voice
+    .npc-facts
+        flex: 1 1 0
+        min-width: 0
+        display: flex
+        flex-direction: column
+        gap: 9px
+
+        textarea.familiar-field
+            resize: none
+            line-height: 1.15
+            min-height: 2.4em
+
+    // a voice is a line spoken
+    .npc-voice textarea.familiar-field
+        font-style: italic
+
+    // longer text: the editor sits in the box, in the sheet's ink
+    .npc-rich
+        flex: 0 0 auto
+
+        .editor
+            min-height: 3em
+            color: $ink
+
+        .editor-content, .editor-content p, .editor-content li, .editor-content h3
+            font-family: util.$font-familiar-hand
+            font-size: util.$fs-familiar-field
+            line-height: 1.1
+            color: $ink
+
+        .editor-content h3
+            font-family: util.$font-familiar-head
+            font-size: util.$fs-familiar-head
+            text-transform: uppercase
+            margin: 6px 0 2px
+            border: none
+
+        .editor-content p
+            margin: 0 0 4px
+
+        .editor-edit
+            color: $red
+
+    // the GM's notes: the red-washed box, as Danger is
+    .npc-gm-notes
+        border-color: $red
+        background: $red-wash
+
+        .familiar-head
+            color: $red
+
+    .npc-gm-notes
+        flex: 1 1 auto
+        min-height: 140px

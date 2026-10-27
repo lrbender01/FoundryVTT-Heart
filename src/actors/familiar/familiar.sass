@@ -140,12 +140,72 @@ $red-wash: rgba(util.$familiar-red-rgb, 0.08)
             margin-right: 4px
             font-size: 0.8em
 
+    // a rolled species or spell is kept (Luke, 2026-10-27): the button greyed
+    // under a lock, and the GM's small unlock beside it
+    .familiar-roll-button.locked
+        color: $faint
+        border-color: $faint
+        cursor: default
+        opacity: 0.7
+
+        &:hover
+            background: transparent
+            color: $faint
+
+    .familiar-unlock
+        @include hand(util.$fs-familiar-hint)
+        margin-left: auto
+        color: $red
+        cursor: pointer
+
+        i
+            font-size: 0.8em
+
+        & + .familiar-roll-button
+            margin-left: 0
+
     // Name and Species
     .familiar-identity
         .familiar-name
             flex: 3 1 0
         .familiar-species
             flex: 2 1 0
+
+    // the species' picture beside its name, as the spell's sigil sits (the
+    // placeholder's paw shows until the picture is painted)
+    .familiar-species-line
+        display: flex
+        align-items: center
+        gap: 6px
+
+    .familiar-species-pic
+        position: relative
+        flex: 0 0 auto
+        display: flex
+        align-items: center
+        justify-content: center
+        width: 56px
+        height: 56px
+        border-radius: 3px
+        box-shadow: 1px 2px 0 rgba(util.$familiar-ink-rgb, 0.35)
+        background: $wash
+        overflow: hidden
+
+        i
+            color: $faint
+            opacity: 0.45
+            font-size: 24px
+
+        img
+            position: absolute
+            inset: 0
+            width: 100%
+            height: 100%
+            object-fit: cover
+            border: none
+
+        &.missing img
+            display: none
 
     // the Portrait beside the four traits
     .familiar-main

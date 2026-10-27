@@ -14,6 +14,11 @@
 // (Map layers sets both); a player's token being dragged moves the fog with
 // it, not only where it is let go)
 import { fogHides, fogDistance, unitPx, metrePx } from './baked.js';
+import { pointInPoly } from './model.js';
+import { registerPlayRules } from './play-rules.js';
+
+// (a point in a flat [x, y, ...] polygon)
+const inPoly = (pt, poly) => pointInPoly(pt, poly);
 
 const loc = (key) => game.i18n.localize(key);
 
@@ -62,15 +67,24 @@ export function hiddenByFog(token) {
     if (!b?.on || theirs(token) || token.isPreview) return false;
     const at = fromScene(token.center);
     const flags = b.flags ?? {};
-    const units = fogDistance(flags, { darkness: darknessOf(canvas.scene), inLight: (Number(flags.fog) || 0) > 0 && inLight(token, at) });
+    const lit = (Number(flags.fog) || 0) > 0 && inLight(token, at);
+    const units = fogDistance(flags, { darkness: darknessOf(canvas.scene), inLight: lit });
     // (the distance kept in metres, whatever the scene measures in)
-    return fogHides({ npc: true, at, party: partyNow(), dist: units * metrePx(canvas.scene), underRoof: b.underRoof(at.x, at.y), seen: Boolean(token.document.flags?.heart?.fogSeen) });
+    let dist = units * metrePx(canvas.scene);
+    // (in the forest, sight reaches only so far, 10 ft: an NPC among the
+    // trees unseen past that, unless it carries or stands in a light; Luke
+    // 2026-10-27. The forest is Board Tools' Import walls', flags.heart.fogForest)
+    const F = canvas.scene.flags?.heart?.fogForest;
+    if (F?.polys?.length && !lit && F.polys.some((p) => inPoly(at, p))) dist = dist > 0 ? Math.min(dist, Number(F.reach) || 0) : Number(F.reach) || 0;
+    return fogHides({ npc: true, at, party: partyNow(), dist, underRoof: b.underRoof(at.x, at.y), seen: Boolean(token.document.flags?.heart?.fogSeen) });
 }
 
 // every token's visibility looked at again (the party and lights found afresh)
 export function refreshFog() {
     party = null;
     lights = null;
+    // (the roofs a player's tokens are inside, found afresh: backdrop.js)
+    if (canvas.heartBoard?.backdrop) canvas.heartBoard.backdrop.opened = null;
     if (!fogged()) return;
     for (const t of canvas.tokens?.placeables ?? []) t.renderFlags?.set({ refreshVisibility: true });
 }
@@ -117,6 +131,8 @@ export function registerBoardFog() {
         party = null;
         lights = null;
     });
+    // (roofs open from inside only, doors need a token nearby: Luke 2026-10-27)
+    registerPlayRules();
     // (the GM's switch on an NPC's HUD: always seen by players, or the fog's)
     Hooks.on('renderTokenHUD', (hud, html) => {
         const token = hud.object;

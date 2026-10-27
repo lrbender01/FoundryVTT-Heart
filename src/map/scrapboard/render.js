@@ -73,7 +73,13 @@ export function gmNotesShown() {
 // (and how much of a baked background's tiles a client keeps, MB decoded,
 // each held on the GPU too: backdrop.js; Luke 2026-10-25. A screen at the
 // finest level needs about 20 tiles of 1 MB; the rest is for panning back)
+// (Ultra, Luke 2026-10-26: the GM's strong graphics card; experimental for
+// players. Twice the board's paint, images kept far larger, a gigabyte of
+// baked tiles, a finer baked level sooner and more of it round the view, the
+// board's tiles allowed four times the memory, and the sheet's scans used as
+// fine as they go: quality.js for the rest)
 export const DETAIL = {
+    ultra: { scale: 2, cap: 4096, live: true, bakedMB: 1024, boardPx: 192e6, sheetFinest: 4, bakedNeed: 1.5, bakedMargin: 0.5 },
     high: { scale: 1.25, cap: 1600, live: true, bakedMB: 192 },
     standard: { scale: 1, cap: 1100, live: true, bakedMB: 128 },
     light: { scale: 0.7, cap: 700, live: false, bakedMB: 64 },
@@ -119,7 +125,7 @@ const GUTTER = 8;
 class TileGrid {
     constructor(r, { x0, y0, x1, y1, k, size, sort, mipmap }) {
         Object.assign(this, { r, x0, y0, x1, y1, k, size, sort, mipmap });
-        this.kb = Math.min(k, SHEET_FINEST);
+        this.kb = Math.min(k, r.detail?.sheetFinest ?? SHEET_FINEST);
         const step = (size - GUTTER * 2) / k;
         this.tiles = [];
         for (let by = y0; by < y1; by += step) {
@@ -572,7 +578,7 @@ export class ScrapboardRenderer {
 
     // the board's tiles' scale: the detail's, within the memory a board may take
     #boardScale(look) {
-        return Math.min(this.detail.scale, Math.sqrt(MAX_BOARD_PX / (look.w * look.h)));
+        return Math.min(this.detail.scale, Math.sqrt((this.detail.boardPx ?? MAX_BOARD_PX) / (look.w * look.h)));
     }
 
     // Paint the scene's board for a viewer and show it: only what changed

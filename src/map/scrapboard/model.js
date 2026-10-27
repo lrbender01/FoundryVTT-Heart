@@ -944,7 +944,186 @@ export function normalizeBoard(json) {
         // Luke, 2026-10-24)
         bits[id] = { id, tex: String(b.tex), ...pointAt(b), w: clamp(num(b.w, 40), 4, 3000), r: num(b.r, 0), flip: Boolean(b.flip), alpha: clamp(num(b.alpha, 1), 0.05, 1), author: b.author ? String(b.author) : null, open: Boolean(b.open) };
     }
-    return { scraps, links, pins, marks, bits, decor: normalizeDecor(j.decor), sheet: sheetAt(j.sheet) };
+    return { scraps, links, pins, marks, bits, decor: normalizeDecor(j.decor), sheet: sheetAt(j.sheet), pieces: normalizePieces(j.pieces), stages: normalizeStages(j.stages) };
+}
+
+/* -------------------------------------------- */
+/*  Pieces (Luke, 2026-10-26)                   */
+/* -------------------------------------------- */
+
+// A scene's elements, each its own piece (monorepo docs/board-editor/
+// pieces.md: the data standard for every scene from Plenty on): a building,
+// a roof, a tree or a woodland block, a fence, a field, a road, a grave, a
+// prop, a person. Each has its id, kind, place, box, turn, layer, an
+// optional shape (what a click hits), and its picture (frozen) or its own
+// strokes (thawed), in its own frame (centre 0, 0, unturned).
+export const PIECE_LAYERS = ['ground', 'low', 'standing', 'roof', 'label', 'people'];
+export const PIECE_ID = /^[a-z0-9][a-z0-9_-]{0,59}$/;
+const STAGE_ID = /^[a-z0-9][a-z0-9_-]{0,39}$/;
+// the most numbers a piece's shape keeps, and the most strokes a thawed piece holds
+const PIECE_SHAPE_MAX = 20000;
+export const PIECE_MARKS_MAX = 3000;
+const str = (v, n) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, n) : null);
+const nums = (a, min, max) => (Array.isArray(a) && a.length >= min && a.length <= max && a.length % 2 === 0 && a.every((v) => Number.isFinite(Number(v))) ? a.map((v) => Math.round(Number(v) * 10) / 10) : null);
+// (a picture's url: a path inside Foundry's data or the editor's map folder,
+// never a script or another site)
+const safeUrl = (u) => {
+    const s = str(u, 500);
+    return s && !/^[a-z][a-z0-9+.-]*:/i.test(s) && !s.includes('..') ? s : null;
+};
+
+// One piece as stored, checked and made whole, or null
+export function normalizePiece(p, id = null) {
+    if (!p || typeof p !== 'object' || !Number.isFinite(Number(p.x)) || !Number.isFinite(Number(p.y))) return null;
+    const out = {
+        kind: str(p.kind, 40) ?? 'prop',
+        x: Math.round(Number(p.x) * 10) / 10,
+        y: Math.round(Number(p.y) * 10) / 10,
+        w: clamp(num(p.w, 100), 1, 100000),
+        h: clamp(num(p.h, 100), 1, 100000),
+        r: num(p.r, 0),
+        z: Math.round(num(p.z, 0)),
+        layer: PIECE_LAYERS.includes(p.layer) ? p.layer : 'standing',
+        state: p.state === 'hidden' ? 'hidden' : 'known',
+    };
+    if (id) out.id = id;
+    const name = str(p.name, 120);
+    if (name) out.name = name;
+    if (p.shape && typeof p.shape === 'object') {
+        const poly = nums(p.shape.poly, 6, PIECE_SHAPE_MAX);
+        const line = nums(p.shape.line, 4, PIECE_SHAPE_MAX);
+        if (poly) out.shape = { poly };
+        else if (line) out.shape = { line, w: clamp(num(p.shape.w, 10), 0.5, 10000) };
+    }
+    const url = safeUrl(p.img?.url);
+    if (url) out.img = { url, w: clamp(num(p.img.w, out.w), 1, 32768), h: clamp(num(p.img.h, out.h), 1, 32768) };
+    if (p.marks && typeof p.marks === 'object') {
+        const m = {};
+        for (const [k, st] of Object.entries(p.marks).slice(0, PIECE_MARKS_MAX)) {
+            const c = cleanStroke(st);
+            if (c) m[k] = c;
+        }
+        if (Object.keys(m).length) out.marks = m;
+    }
+    if (p.gen && typeof p.gen === 'object' && str(p.gen.name, 60)) out.gen = { name: str(p.gen.name, 60), params: isPlain(p.gen.params) ? copy(p.gen.params) : {}, seed: p.gen.seed ?? null };
+    if (p.src && typeof p.src === 'object' && str(p.src.id, 120)) out.src = { from: str(p.src.from, 60), id: str(p.src.id, 120) };
+    if (p.times && typeof p.times === 'object') {
+        const t = {};
+        for (const [stage, at] of Object.entries(p.times)) {
+            if (!STAGE_ID.test(stage) || !at || typeof at !== 'object') continue;
+            const e = {};
+            if (Number.isFinite(Number(at.x)) && Number.isFinite(Number(at.y))) Object.assign(e, { x: Math.round(Number(at.x) * 10) / 10, y: Math.round(Number(at.y) * 10) / 10 });
+            if (Number.isFinite(Number(at.r))) e.r = Number(at.r);
+            if (typeof at.hidden === 'boolean') e.hidden = at.hidden;
+            if (Object.keys(e).length) t[stage] = e;
+        }
+        if (Object.keys(t).length) out.times = t;
+    }
+    if (p.locked) out.locked = true;
+    // (its picture mirrored: a person or a beast facing what it is about;
+    // Luke 2026-10-26)
+    if (p.flip) out.flip = true;
+    const author = str(p.author, 60);
+    if (author) out.author = author;
+    if (p.origin === 'prep' || p.origin === 'table') out.origin = p.origin;
+    return out;
+}
+
+// A board's pieces: { id: piece }, those that aren't one left out
+export function normalizePieces(list) {
+    const out = {};
+    for (const [id, p] of Object.entries(list && typeof list === 'object' ? list : {})) {
+        if (!PIECE_ID.test(id)) continue;
+        const n = normalizePiece(p, id);
+        if (n) out[id] = n;
+    }
+    return out;
+}
+
+// A scene's clock stages, in order: [{ id, name }] (pieces.md, Clock stages)
+export function normalizeStages(list) {
+    if (!Array.isArray(list)) return [];
+    const seen = new Set();
+    const out = [];
+    for (const s of list) {
+        const id = typeof s === 'string' ? s : s?.id;
+        if (!STAGE_ID.test(String(id ?? '')) || seen.has(id)) continue;
+        seen.add(id);
+        // (`block`: the stage of the story it is a step inside, when it is a
+        // quarter hour between them; Luke 2026-10-27)
+        const block = typeof s?.block === 'string' && STAGE_ID.test(s.block) && s.block !== id ? s.block : null;
+        out.push({ id, name: str(s?.name, 60) ?? id, ...(block ? { block } : {}) });
+    }
+    return out;
+}
+
+// Where a piece is at a stage: its place there, else at the stage before
+// that has one, else its own (`stages`: the scene's, in order). { x, y, r,
+// hidden }
+export function pieceAt(p, stage = null, stages = []) {
+    const base = { x: p.x, y: p.y, r: p.r ?? 0, hidden: p.state === 'hidden' };
+    if (!stage || !p.times) return base;
+    const ids = stages.map((s) => s.id ?? s);
+    const i = ids.indexOf(stage);
+    const order = i < 0 ? [stage] : ids.slice(0, i + 1).reverse();
+    const at = { ...base };
+    // (each part from the latest stage that sets it)
+    const got = { pos: false, r: false, hidden: false };
+    for (const s of order) {
+        const t = p.times[s];
+        if (!t) continue;
+        if (!got.pos && 'x' in t) {
+            at.x = t.x;
+            at.y = t.y;
+            got.pos = true;
+        }
+        if (!got.r && 'r' in t) {
+            at.r = t.r;
+            got.r = true;
+        }
+        if (!got.hidden && 'hidden' in t) {
+            at.hidden = t.hidden;
+            got.hidden = true;
+        }
+    }
+    return at;
+}
+
+// A piece's outline on the board (its shape, else its box), turned and
+// placed: a flat [x, y, ...] polygon, for a click and the selection
+export function pieceHull(p) {
+    const c = Math.cos(((p.r ?? 0) * Math.PI) / 180);
+    const s = Math.sin(((p.r ?? 0) * Math.PI) / 180);
+    const local = p.shape?.poly ?? [-p.w / 2, -p.h / 2, p.w / 2, -p.h / 2, p.w / 2, p.h / 2, -p.w / 2, p.h / 2];
+    const out = [];
+    for (let i = 0; i + 1 < local.length; i += 2) out.push(p.x + local[i] * c - local[i + 1] * s, p.y + local[i] * s + local[i + 1] * c);
+    return out;
+}
+
+// The topmost piece under a board point (people first, then roofs, down to
+// the ground), or null. `tol`: board px of reach for a line's piece.
+// (`skip(p)`: a piece not to take, a hidden one for a player)
+export function pieceAtPoint(pieces, pt, { tol = 0, skip = () => false } = {}) {
+    const list = Object.entries(pieces ?? {}).map(([id, p]) => ({ id, ...p })).filter((p) => !skip(p));
+    list.sort((a, b) => PIECE_LAYERS.indexOf(b.layer) - PIECE_LAYERS.indexOf(a.layer) || (b.z ?? 0) - (a.z ?? 0));
+    for (const p of list) {
+        if (p.shape?.line) {
+            const c = Math.cos((-(p.r ?? 0) * Math.PI) / 180);
+            const s = Math.sin((-(p.r ?? 0) * Math.PI) / 180);
+            const lx = (pt.x - p.x) * c - (pt.y - p.y) * s;
+            const ly = (pt.x - p.x) * s + (pt.y - p.y) * c;
+            const L = p.shape.line;
+            for (let i = 0; i + 3 < L.length; i += 2) {
+                const ax = L[i], ay = L[i + 1], dx = L[i + 2] - ax, dy = L[i + 3] - ay;
+                const l2 = dx * dx + dy * dy;
+                const u = l2 ? Math.max(0, Math.min(1, ((lx - ax) * dx + (ly - ay) * dy) / l2)) : 0;
+                if (Math.hypot(lx - ax - u * dx, ly - ay - u * dy) <= p.shape.w / 2 + tol) return p;
+            }
+            continue;
+        }
+        if (pointInPoly(pt, pieceHull(p))) return p;
+    }
+    return null;
 }
 
 // A board's own sheet (Luke, 2026-10-24: a map grows or shrinks a page at a
@@ -2435,7 +2614,24 @@ export function boardView(look, board, viewer, size, measure) {
             }
         }
     }
-    return { viewer: gm ? 'gm' : 'player', scraps, links, pins: shown, marks: board.marks ?? {}, bits, decor: board.decor };
+    // (the scene's pieces, bottom to top: a hidden one the GM's alone, faint;
+    // pieces.md, Luke 2026-10-26)
+    const L = PIECE_LAYERS;
+    const pieces = Object.values(board.pieces ?? {})
+        .filter((p) => gm || p.state !== 'hidden')
+        .sort((a, b) => L.indexOf(a.layer) - L.indexOf(b.layer) || (a.z ?? 0) - (b.z ?? 0))
+        .map((p) => ({ ...p, rot: (p.r ?? 0) * DEG }));
+    // (a doodle laid as one piece, Luke 2026-10-26: painted as its strokes,
+    // each piece its own layer apart from everyone's, so the sheet's bake,
+    // its grime, and its patches draw it exactly as loose strokes were; the
+    // tools never take those strokes one by one: PIECE_LAYER)
+    const marks = { ...(board.marks ?? {}) };
+    for (const p of pieces) {
+        const st = pieceStrokes(p);
+        if (!st.length) continue;
+        marks[`${PIECE_LAYER}${p.id}`] = Object.fromEntries(st.map((s, i) => [`d${i}`, p.state === 'hidden' ? { ...s, o: (s.o ?? 0.85) * 0.35 } : s]));
+    }
+    return { viewer: gm ? 'gm' : 'player', scraps, links, pins: shown, marks, bits, decor: board.decor, pieces };
 }
 
 // A junction's place from { t, off } against the line a -> b, and back
@@ -2643,6 +2839,17 @@ export function applyPatch(board, patch) {
         board.bits ??= {};
         if (p === null) delete board.bits[id];
         else board.bits[id] = { ...(board.bits[id] ?? {}), ...p };
+    }
+    // (the scene's pieces: each set field by field, its strokes, place per
+    // stage, and shape whole; null takes it off. pieces.md)
+    for (const [id, p] of Object.entries(patch?.pieces ?? {})) {
+        board.pieces ??= {};
+        if (p === null) delete board.pieces[id];
+        else {
+            const next = { ...(board.pieces[id] ?? {}), ...p };
+            for (const [k, v] of Object.entries(p)) if (v === null) delete next[k];
+            board.pieces[id] = next;
+        }
     }
     // (the bin: cards taken off, or put back)
     for (const [k, e] of Object.entries(patch?.bin ?? {})) {
@@ -4571,7 +4778,7 @@ export function seasonMarks(key, { by = null, type = 'note' } = {}) {
 // board's JSON and its value before (b) and after (a), a missing key meaning
 // it wasn't there. Values are whole only where one side had nothing there;
 // otherwise the paths go down to plain values and arrays.
-const BOARD_KEYS = ['scraps', 'links', 'pins', 'marks', 'bits', 'decor', 'bin', 'sheet'];
+const BOARD_KEYS = ['scraps', 'links', 'pins', 'marks', 'bits', 'decor', 'bin', 'sheet', 'pieces', 'stages'];
 const isPlain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const copy = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
 const sameJSON = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -4778,6 +4985,68 @@ export function doodlePatch(raw, view, a, brush, look, me) {
         marks[id] = card ? { ...strokeToCard(st, card, look), by: me } : st;
     }
     return card ? { scraps: { [card.key]: { marks } } } : { marks: { [me]: marks } };
+}
+
+/* -------------------------------------------- */
+/*  A doodle laid as one piece (Luke, 2026-10-26)              */
+/* -------------------------------------------- */
+
+// "Doodles always land as one single baked image, selectable as a unit,
+// never as strokes: they get heavy very fast." A doodle laid on the sheet is
+// one piece (pieces.md) holding only what makes it: its kind, seed, size,
+// mirror, and the brush's paint, width, brightness, opacity, and nib (a
+// kept drawing's own strokes too). Its strokes are made from those when the
+// board is laid out (boardView), in a layer of its own the tools never take
+// apart. Its turn is the piece's; its size, the piece's box against the
+// size it was laid at.
+
+// the layer a piece's strokes are painted in (`~<piece id>`): never a user's
+export const PIECE_LAYER = '~';
+export const isPieceLayer = (layer) => String(layer ?? '').startsWith(PIECE_LAYER);
+// a doodle's box, in its size (a half-width): it reaches about its size each
+// way, with its strokes' widths past that
+export const DOODLE_BOX = 2.4;
+
+// Whether a user may move, turn, size, lock, or take off a piece: the GM and
+// a players' board's owners any; a player their own and public ones (as a
+// loose piece of the board's)
+export const mayPiece = (p, user) => Boolean(p && user) && (user.isGM || user.owner || mineOrOpen(p, user));
+
+// The patch laying a doodle on the sheet as one piece: { id, patch }. `a`:
+// what was laid ({ kind, seed, at, rot (radians), flip, saved }); `brush`:
+// { size, c, w, b, o, n }; `me`: who laid it.
+export function doodlePiecePatch(raw, a, brush, look, me) {
+    const size = clamp(num(brush?.size, DOODLE_SIZE), 5, 2000);
+    const params = { kind: String(a.kind), size, flip: Boolean(a.flip), c: brush?.c ?? 0, w: Math.min(num(brush?.w, 8), markMax(look, brush?.n)), b: brush?.b ?? 1, o: brush?.o ?? 0.85, n: brush?.n ?? null };
+    if (a.saved) params.saved = cleanSavedDoodle(a.saved);
+    const id = customKey('doodle', raw?.pieces ?? {});
+    const box = Math.round(size * DOODLE_BOX * 10) / 10;
+    const piece = { kind: 'doodle', x: Math.round(Number(a.at.x) * 10) / 10, y: Math.round(Number(a.at.y) * 10) / 10, w: box, h: box, r: Math.round(((Number(a.rot) || 0) * 180) / Math.PI), z: 0, layer: 'low', gen: { name: 'doodle', params, seed: String(a.seed ?? `${a.kind}:${Date.now()}`).slice(0, 120) } };
+    if (me) piece.author = me;
+    return { id, patch: { pieces: { [id]: piece } } };
+}
+
+// A piece's strokes on the board (board px), for those made from their
+// settings (a doodle): placed, turned, and sized as the piece is. Kept for
+// the same piece as it was (a board laid out again makes none afresh).
+const pieceStrokeMemo = new Map();
+export function pieceStrokes(p) {
+    const g = p?.gen;
+    if (g?.name !== 'doodle' || !g.params) return [];
+    const P = g.params;
+    const key = JSON.stringify([g.seed, P, p.x, p.y, p.w, p.r ?? 0]);
+    const had = pieceStrokeMemo.get(key);
+    if (had) return had;
+    const base = clamp(num(P.size, DOODLE_SIZE), 5, 2000);
+    const size = base * (num(p.w, base * DOODLE_BOX) / (base * DOODLE_BOX));
+    const saved = P.saved ? cleanSavedDoodle(P.saved) : null;
+    // (a kind the bank doesn't have, and no drawing of its own: nothing)
+    if (!saved && !DOODLE_KINDS.includes(String(P.kind))) return [];
+    const out = doodleBoard(String(P.kind), g.seed, { x: p.x, y: p.y, size, rot: ((p.r ?? 0) * Math.PI) / 180, flip: Boolean(P.flip), c: P.c, w: P.w, b: P.b, o: P.o, n: P.n, saved });
+    // (the newest few hundred kept)
+    pieceStrokeMemo.set(key, out);
+    if (pieceStrokeMemo.size > 600) pieceStrokeMemo.delete(pieceStrokeMemo.keys().next().value);
+    return out;
 }
 
 // The brush's stroke through `pts` (board px), in its paint, width (never

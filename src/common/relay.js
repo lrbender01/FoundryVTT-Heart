@@ -51,6 +51,18 @@ export function onLive(fn) {
 export function sendLive(data) {
     game.socket?.emit(RELAY_CHANNEL, { ...data, kind: 'live', from: game.user.id });
 }
+
+// View pulls (Luke, 2026-10-27, Session scripting): the GM's view sent to every
+// other client in the same broadcast, never queued or answered. Only a GM's
+// message is heard (by the sender id the server passes), so a player cannot
+// move anyone's view.
+let viewHandler = null;
+export function onView(fn) {
+    viewHandler = fn;
+}
+export function sendView(data) {
+    game.socket?.emit(RELAY_CHANNEL, { ...data, kind: 'view', from: game.user.id });
+}
 let queue = Promise.resolve();
 
 export class RelayTimeout extends Error {
@@ -161,6 +173,16 @@ export async function onRelayMessage(message, senderId) {
             liveHandler?.(message, senderId ?? message.from);
         } catch (err) {
             console.warn('heart | a live message could not be shown', err);
+        }
+        return;
+    }
+    // (a view pull: from a GM only, to everyone else)
+    if (message?.kind === 'view') {
+        if (!senderId || senderId !== message.from || !game.users?.get(senderId)?.isGM || game.user.id === senderId) return;
+        try {
+            viewHandler?.(message);
+        } catch (err) {
+            console.warn('heart | a view pull could not be followed', err);
         }
         return;
     }

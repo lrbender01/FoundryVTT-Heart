@@ -11,6 +11,7 @@
 // control and, in the player view, can try the picker without claiming a
 // hand. Players' writes go through the GM's relay (one queue on the GM's
 // client; each request checked against who asked).
+import { mayPiece, doodlePiecePatch } from './model.js';
 import { LINK_KINDS, nibOf, cutPatch, freshStrokeIds, doodlePatch, DOODLE_KINDS, isSavedKind, cleanSavedDoodle,absorbPatch, mayShareStroke, HAND_SCALE, pinChoices, pickFrom, ALIGNS, TEXT_STYLES, textStyleOf, markMax, cleanStroke, keysTaken, safePath, TYPEWRITER, newStringPatch, mergeRecords, recordTarget, recordUpdate, binList, removalOf, brushColor, PAINT_NAMES, PAINT_ORDER, noteFields, mineOrOpen, mayShare, mayBit, sharePatch, breakAwayPatch, normalizeBoard, scrapLayout, boardView, WEB_TEX, TEXT_SIZE_MIN, NOTE_AR_MIN, MAX_INKS, sheetLook, pickNotePaper, notePreview, uvOn, fmtOf, gmNoteFields } from './model.js';
 import { listBackups, readBackup } from './backups.js';
 import { askGM, registerRelayHandler, runLocal } from '../../common/relay.js';
@@ -26,6 +27,7 @@ import {
 import { loadBoardLook, textureUrl } from './look.js';
 import { richHtml, readRich, wireRich } from './richtext.js';
 import { pinThumb } from './paint.js';
+import { canvasIsUltra } from './quality.js';
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 const esc = (s) => Handlebars.escapeExpression(String(s ?? ''));
@@ -120,9 +122,17 @@ export function registerBoardSettings() {
         scope: 'client',
         config: true,
         type: String,
-        choices: { auto: 'heart.board.detail-auto', high: 'heart.board.detail-high', standard: 'heart.board.detail-standard', light: 'heart.board.detail-light' },
+        // (Ultra: the GM's strong graphics card, experimental for players;
+        // quality.js. Luke 2026-10-26)
+        choices: { auto: 'heart.board.detail-auto', ultra: 'heart.board.detail-ultra', high: 'heart.board.detail-high', standard: 'heart.board.detail-standard', light: 'heart.board.detail-light' },
         default: 'auto',
-        onChange: () => canvas?.heartBoard?.reset?.(),
+        onChange: (d) => {
+            canvas?.heartBoard?.reset?.();
+            // (a player who picks it here is told it is experimental)
+            if (d === 'ultra' && !game.user?.isGM) ui.notifications?.warn(game.i18n.localize('heart.board.detail-ultra-player'));
+            // (the canvas's own resolution is set when it is made: a reload)
+            if ((d === 'ultra') !== canvasIsUltra()) SettingsConfig.reloadConfirm?.({ world: false });
+        },
     });
 }
 
@@ -663,6 +673,8 @@ const REQUEST_MAX = 200;
 const NOTES_MAX = 300;
 const LAYER_MAX = 2000;
 const CARD_MARKS_MAX = 500;
+// (the most pieces a board takes from a player's doodle: pieces.md)
+const PIECES_MAX = 5000;
 // (how far off the sheet a point may lie, in the sheet's own widths and
 // heights, and a card's stroke from its card, in card widths)
 const SHEET_REACH = 1;
@@ -705,6 +717,8 @@ function requestNames(req) {
         ids(p.newScraps).forEach(name);
         for (const [k, pin] of Object.entries(p.pins ?? {})) { name(k); ref(pin?.on); }
         ids(p.bits).forEach(name);
+        // (the scene's pieces: pieces.md)
+        ids(p.pieces).forEach(name);
         for (const [k, l] of [...Object.entries(p.links ?? {}), ...Object.entries(p.newLinks ?? {})]) { name(k); ends(l); }
         if (p.link !== undefined && p.link !== null) {
             if (!Array.isArray(p.link)) bad = true;
@@ -942,9 +956,33 @@ const finite = (v) => Number.isFinite(Number(v));
 const uvOk = (p) => p && finite(p.u) && finite(p.v) && Math.abs(p.u) <= 2 && Math.abs(p.v) <= 2;
 export function playerPatchOf(board, patch, who, look, { layoutOf = null, textures = {} } = {}) {
     if (!patch || !who) return null;
-    const allowed = new Set(['scraps', 'newScraps', 'pins', 'bits', 'link', 'links', 'newLinks']);
+    const allowed = new Set(['scraps', 'newScraps', 'pins', 'bits', 'link', 'links', 'newLinks', 'pieces']);
     if (Object.keys(patch).some((k) => !allowed.has(k) && patch[k] !== undefined && patch[k] !== null)) return null;
-    const out = { scraps: {}, newScraps: {}, pins: {}, bits: {} };
+    const out = { scraps: {}, newScraps: {}, pins: {}, bits: {}, pieces: {} };
+    // the scene's pieces (pieces.md; Luke 2026-10-26): one this user may
+    // change (theirs, or public), moved, sized, turned, locked or let go, or
+    // taken off; never a new one this way (a doodle comes by its own request),
+    // and a locked one only let go
+    for (const [id, p] of Object.entries(patch.pieces ?? {})) {
+        const had = board.pieces?.[id];
+        if (!had || !mayPiece(had, who)) return null;
+        if (p === null) {
+            if (had.locked) return null;
+            out.pieces[id] = null;
+            continue;
+        }
+        if (!p || typeof p !== 'object') return null;
+        const c = {};
+        for (const [f, v] of Object.entries(p)) {
+            if (f === 'locked') c.locked = v ? true : null;
+            else if (had.locked) return null;
+            else if (['x', 'y', 'w', 'h', 'r'].includes(f) && finite(v)) c[f] = Math.round(Number(v) * 10) / 10;
+            else return null;
+        }
+        if (('x' in c || 'y' in c) && !inReach(sheetLook(look, board), c.x ?? had.x, c.y ?? had.y)) return null;
+        for (const f of ['w', 'h']) if (f in c) c[f] = Math.max(4, Math.min(20000, c[f]));
+        out.pieces[id] = c;
+    }
     // (the board's sheet: a point from the asker on it or near it, Luke
     // 2026-10-25, the health audit)
     const L = sheetLook(look, board);
@@ -1125,6 +1163,10 @@ export function mayHistory(board, rec, side, who) {
             // (the board's loose pieces: a players' board's owners move them;
             // a player one of theirs or a public one, Luke 2026-10-24)
             if (!versions((x) => x?.bits?.[id]).every((b) => !b || mayBit(b, who))) return false;
+        } else if (coll === 'pieces') {
+            // (the scene's pieces, a doodle laid: theirs or public, as a
+            // loose piece; Luke 2026-10-26)
+            if (!versions((x) => x?.pieces?.[id]).every((p) => !p || mayPiece(p, who))) return false;
         } else if (coll === 'scraps') {
             if (!versions((x) => x?.scraps?.[id]).every((sc) => !sc || ((sc.type === 'note' || sc.type === 'scrawl') && (who.owner || mine(sc))))) return false;
         } else if (coll === 'links') {
@@ -1372,6 +1414,14 @@ async function boardEditFor(scene, board, req, who, sink, tools) {
             o: Math.max(0.05, Math.min(1, Number(b.o) || 0.85)),
         };
         const at = { x: Number(a.at.x), y: Number(a.at.y) };
+        // (on the sheet: one piece, theirs, never its strokes; Luke
+        // 2026-10-26. Its id picked when the write's turn comes)
+        if (!card) {
+            if (Object.keys(board.pieces ?? {}).length >= PIECES_MAX) return { status: 'not-allowed' };
+            const a2 = { kind: a.kind, seed: String(a.seed ?? '').slice(0, 120) || `${a.kind}:${Date.now()}`, at, rot: finite(a.rot) ? Number(a.rot) : 0, flip: Boolean(a.flip), saved };
+            await applyBoardPatch(scene, (b) => doodlePiecePatch(b, a2, brush, look, userId).patch, { sink });
+            return { status: 'done' };
+        }
         // (the board laid out only for a card's frame)
         const view = card ? boardView(look, normalizeBoard(board), 'gm', size, measure) : null;
         const patch = doodlePatch(board, view, { kind: a.kind, seed: String(a.seed ?? '').slice(0, 120) || `${a.kind}:${Date.now()}`, at, on: card ? a.on : null, rot: finite(a.rot) ? Number(a.rot) : 0, flip: Boolean(a.flip), saved }, brush, look, userId);

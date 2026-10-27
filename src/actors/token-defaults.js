@@ -26,8 +26,10 @@ export function pcTokenFix(token, img, modes) {
     return out;
 }
 
-// whether an actor is a player's delver: a character a player owns
-const isPc = (actor) => actor?.type === 'character' && Boolean(actor.hasPlayerOwner);
+// whether an actor is a player's delver: a character a player owns (a
+// familiar a player owns too, Luke, 2026-10-27: its token follows the
+// portrait, which a rolled species sets)
+const isPc = (actor) => (actor?.type === 'character' || actor?.type === 'familiar') && Boolean(actor.hasPlayerOwner);
 const pcModes = () => ({ friendly: CONST.TOKEN_DISPOSITIONS.FRIENDLY, hover: CONST.TOKEN_DISPLAY_MODES.HOVER });
 
 // A player's delver's prototype token and every token of theirs on a scene

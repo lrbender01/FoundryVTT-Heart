@@ -2,7 +2,7 @@
 // Heart Map Board mock runs (its pins, junctions, tags, scraps, and strings),
 // on a board view (model.js boardView) and the painter (paint.js: a tag's
 // place). Points are board px; `tol` is board px (the pointer's reach).
-import { hitTest, uvOn } from './model.js';
+import { hitTest, uvOn, pointInPoly, pieceHull } from './model.js';
 
 const near = (pt, p, tol) => p && Math.hypot(pt.x - p.x, pt.y - p.y) < Math.max(tol, (p.w ?? 30) * 0.55);
 
@@ -43,8 +43,17 @@ export function hitAt(view, painter, size, pt, tol = 10) {
         if (T && painter.onTag(T, pt)) return { kind: 'tag', link: l };
     }
     const h = hitTest(view, pt, size, { tol });
-    return h ? { kind: h.kind, item: h.item } : null;
+    if (h) return { kind: h.kind, item: h.item };
+    // (the scene's pieces, under everything else: a doodle laid, a building;
+    // never the ground's, which lies under all of it, nor people, who are
+    // tokens. Luke 2026-10-26, pieces.md)
+    for (const p of [...(view.pieces ?? [])].reverse()) if (takeable(p) && pointInPoly(pt, pieceHull(p))) return { kind: 'piece', item: p };
+    return null;
 }
+
+// (a piece the tools take: drawn by itself, its picture, its strokes, or a
+// doodle's settings; on the board above its ground)
+export const takeable = (p) => Boolean(p && (p.img || p.marks || p.gen) && p.layer !== 'ground' && p.layer !== 'people');
 
 // (a point on a loose piece: within its turned box)
 function onBit(b, pt) {

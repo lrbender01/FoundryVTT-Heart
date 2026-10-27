@@ -22,6 +22,13 @@ import {
   targetOf,
   familiarOutcome,
   clampFamiliarData,
+  SPECIES_IDS,
+  speciesIdOf,
+  speciesArtPath,
+  speciesLocked,
+  spellLocked,
+  portraitOpen,
+  speciesPortraitUpdate,
 } from "../src/actors/familiar/rules.js";
 
 describe("the tables", () => {
@@ -112,6 +119,7 @@ describe("rolling a species", () => {
   it("sets the species and all four traits", () => {
     expect(speciesUpdate(speciesFor(5), "Owl")).toEqual({
       "system.species": "Owl",
+      "system.speciesLocked": true,
       "system.traits.clever": 3,
       "system.traits.fierce": 1,
       "system.traits.sly": 1,
@@ -185,5 +193,62 @@ describe("a familiar's spell, for its sigil", () => {
     expect(spellIdOf("speak-human")).toBe("speak-human");
     expect(spellIdOf("Fireball", label)).toBeNull();
     expect(spellIdOf("", label)).toBeNull();
+  });
+});
+
+describe("the species pictures", () => {
+  it("names the ten species ids, in the table's order, kebab-case", () => {
+    expect(SPECIES_IDS).toEqual(["fox", "cat", "toad", "spider", "owl", "hare", "magpie", "crow", "dog", "rat"]);
+    for (const id of SPECIES_IDS) expect(id).toMatch(/^[a-z]+(-[a-z]+)*$/);
+  });
+
+  it("puts each picture in the content module's species folder", () => {
+    expect(speciesArtPath("owl")).toBe("modules/fvtt-heart-content/assets/art/familiar/species/owl.webp");
+    expect(speciesArtPath("dragon")).toBeNull();
+  });
+
+  it("finds a species from its written name, by label or id", () => {
+    const label = (id) => ({ fox: "Zorro" })[id] ?? id;
+    expect(speciesIdOf("Zorro", label)).toBe("fox");
+    expect(speciesIdOf("  OWL ", label)).toBe("owl");
+    expect(speciesIdOf("a small dragon", label)).toBeNull();
+    expect(speciesIdOf("")).toBeNull();
+  });
+});
+
+describe("roll once: the lock", () => {
+  it("locks on the flag, unlocks when the GM clears it", () => {
+    expect(speciesLocked({ speciesLocked: true, species: "" })).toBe(true);
+    expect(speciesLocked({ speciesLocked: false, species: "Owl" })).toBe(false);
+    expect(spellLocked({ spellLocked: true })).toBe(true);
+    expect(spellLocked({ spellLocked: false, spell: "Make Flame" })).toBe(false);
+  });
+
+  it("counts a species or spell already written in as locked, when no flag is set", () => {
+    expect(speciesLocked({ species: "Owl" })).toBe(true);
+    expect(speciesLocked({ species: "  " })).toBe(false);
+    expect(speciesLocked({})).toBe(false);
+    expect(spellLocked({ spell: "Make Flame" })).toBe(true);
+    expect(spellLocked(undefined)).toBe(false);
+  });
+});
+
+describe("the portrait follows the species", () => {
+  const stand = (src) => src === "icons/svg/mystery-man.svg";
+  it("is open when none was chosen, or when it is a species picture", () => {
+    expect(portraitOpen("", stand)).toBe(true);
+    expect(portraitOpen("icons/svg/mystery-man.svg", stand)).toBe(true);
+    expect(portraitOpen(speciesArtPath("fox"), stand)).toBe(true);
+  });
+
+  it("is never replaced when the player chose it", () => {
+    expect(portraitOpen("worlds/mine/my-cat.webp", stand)).toBe(false);
+    expect(speciesPortraitUpdate("owl", "worlds/mine/my-cat.webp", stand)).toEqual({});
+  });
+
+  it("sets the portrait and the prototype token's art", () => {
+    const art = speciesArtPath("owl");
+    expect(speciesPortraitUpdate("owl", "icons/svg/mystery-man.svg", stand)).toEqual({ img: art, "prototypeToken.texture.src": art });
+    expect(speciesPortraitUpdate("nope", "", stand)).toEqual({});
   });
 });

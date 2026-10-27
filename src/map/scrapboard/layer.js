@@ -30,10 +30,11 @@
 // interface group) takes the pointer and draws the tools' marks.
 import { ScrapboardRenderer } from './render.js';
 import { Backdrop } from './backdrop.js';
+import { PieceSprites } from './pieces-draw.js';
 import { refreshFogAll } from './fog.js';
 import { pinThumb } from './paint.js';
 import { loadBoardLook, textureUrl } from './look.js';
-import { NIBS, NIB_DEFAULTS, nibStyleOf, LINK_KINDS, cardWord, cutPatch, freshStrokeIds, absorbPatch, markMax, brushStroke, doodleBoard, doodlePatch, brushColor, DOODLE_TABS, doodleTabsFor, noteFields, customKey, keysTaken, sharePatch, mayShare, savedDoodleOf, cleanSavedDoodles, isSavedKind, SAVED_MAX, pinChoices, pickFrom, pinPreview, pinTint, pinScale, gmNoteFields } from './model.js';
+import { NIBS, NIB_DEFAULTS, nibStyleOf, LINK_KINDS, cardWord, cutPatch, freshStrokeIds, absorbPatch, markMax, brushStroke, doodleBoard, doodlePatch, doodlePiecePatch, brushColor, DOODLE_TABS, doodleTabsFor, noteFields, customKey, keysTaken, sharePatch, mayShare, savedDoodleOf, cleanSavedDoodles, isSavedKind, SAVED_MAX, pinChoices, pickFrom, pinPreview, pinTint, pinScale, gmNoteFields } from './model.js';
 import { BoardControls, applyPatch, LOCK_MS, strokeEdges, DOODLE_MIN, DOODLE_MAX, dockAt, snapSide } from './controls.js';
 import {
     isBoardScene, boardOf, ownsBoard, addPin, addScrap, removeMarks, clearAllBrushes,
@@ -134,6 +135,9 @@ export class ScrapboardLayer extends InteractionLayer {
     renderer = new ScrapboardRenderer();
     // a baked map under the board (backdrop.js; Luke 2026-10-25)
     backdrop = new Backdrop(this.renderer);
+    // the scene's pieces, its elements each one picture (pieces-draw.js;
+    // Luke 2026-10-26: monorepo docs/board-editor/pieces.md)
+    pieces = new PieceSprites(this.renderer);
     // the GM sees the map as players do, with their tools (Player view)
     preview = false;
     // the brush's paint (an index into the look's marker paints) and width
@@ -361,6 +365,7 @@ export class ScrapboardLayer extends InteractionLayer {
     async _tearDown(options) {
         this.renderer.clear();
         this.backdrop.clear();
+        this.pieces.clear();
         // (every picture this user's marks were showing let go with the
         // scene, the reticle's timer, and a place waiting for its click
         // forgotten: Luke, 2026-10-21)
@@ -759,6 +764,11 @@ export class ScrapboardLayer extends InteractionLayer {
         const patch = doodlePatch(boardOf(canvas.scene), r.view, { ...a, saved }, brush, r.look, game.user.id);
         // (shown where it was laid until the board shows it: Luke 2026-10-25)
         this.#landGhost(a.at, patch);
+        // (on the sheet, one piece, never its strokes: Luke 2026-10-26,
+        // "doodles always land as one single image, selectable as a unit";
+        // its id picked when the write's turn comes. On a card, its strokes,
+        // which move with the card)
+        if (game.user.isGM && !this.preview && !a.on) return applyBoardPatch(canvas.scene, (board) => doodlePiecePatch(board, { ...a, saved }, brush, r.look, game.user.id).patch);
         // (its ids picked when the write's turn comes: two quick doodles, both kept)
         if (game.user.isGM && !this.preview) return applyBoardPatch(canvas.scene, (board) => freshStrokeIds(board, patch));
         // (what was laid, the GM working out its strokes and ids on the board
@@ -780,6 +790,7 @@ export class ScrapboardLayer extends InteractionLayer {
         if (!canvas.ready || !canvas.scene) return;
         if (!this.isBoard) {
             this.backdrop.clear();
+            this.pieces.clear();
             return this.renderer.clear();
         }
         // (its baked background, when it has one: the map under the board;
@@ -793,6 +804,9 @@ export class ScrapboardLayer extends InteractionLayer {
         const board = boardOf(canvas.scene);
         const peers = this.#withPeers(board);
         const view = await this.renderer.draw(canvas.scene, this.viewer, peers === board ? undefined : peers);
+        // (its pieces, once the renderer knows the board's size: a board
+        // with none draws none)
+        this.pieces.sync(canvas.scene, board).catch((err) => console.warn('heart | the pieces could not be drawn', err));
         // (what this user just laid, held until a board painted shows it)
         if (view) this.#landed(board);
         this.#liveDraw();
@@ -808,6 +822,7 @@ export class ScrapboardLayer extends InteractionLayer {
         this.renderer.reset();
         // (a baked map's memory follows the detail: made again)
         this.backdrop.clear();
+        this.pieces.clear();
         return this.refresh();
     }
 

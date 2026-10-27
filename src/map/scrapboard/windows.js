@@ -144,6 +144,13 @@ export function respotToolWindows(all = true) {
 // the tool windows, and where each is kept once moved by hand
 const TOOL_WINDOWS = [['heart-board-palette', PALETTE_AT], ['heart-board-string', STRING_AT], ['heart-board-pinwin', PINWIN_AT], ['heart-board-erasewin', ERASEWIN_AT]];
 
+// A window of another module's (the Story group's, 2026-10-27) joined to them:
+// put back by the toolbar when it turns, and carried across a scene change.
+// `at` is the localStorage key the window keeps its place under (floating's).
+export function registerToolWindow(id, at) {
+    if (!TOOL_WINDOWS.some(([i]) => i === id)) TOOL_WINDOWS.push([id, at]);
+}
+
 // Windows moved by hand, put away as their scene was left ({ id: { scene,
 // at, t } }): one opened again on the next board, its tool still in hand,
 // opens where it was (Luke 2026-10-25: they jumped back by the toolbar)

@@ -7,6 +7,8 @@
 import { boardTools } from './tools.js';
 import { respotToolWindows } from './windows.js';
 import { isBoardScene } from './api.js';
+import { SESSION_TOOLS } from '../../common/session-tools.js';
+import { railGroups } from './rail-groups.js';
 import { ACTOR_TOOLS, BOARD_CONTROL, TOKEN_CONTROL, railControl, makeToolMemory, flip, keepTool } from './actor-tools.js';
 
 // the board tool last held, for the flip back from the token tools
@@ -52,8 +54,22 @@ export function flipActorTools() {
     if (!canvas?.ready || !isBoardScene(canvas.scene) || !railControl(ui.controls?.activeControl)) return false;
     const control = ui.controls.activeControl;
     if (control === BOARD_CONTROL) memory.hold(game.activeTool);
-    ui.controls.initialize(flip({ control, memory, tools: boardTools().list.map((t) => t.name) }));
+    const to = flip({ control, memory, tools: boardTools().list.map((t) => t.name) });
+    takeControl(to.control, to.tool);
     return true;
+}
+
+// A control and its tool taken as a click on Foundry's own button takes
+// them: its canvas layer activated (which lights the controls too), never
+// the buttons lit alone. (Luke, 2026-10-26: after Q or the rail's Select,
+// tokens could not be hovered, named, previewed, or selected: Foundry's
+// SceneControls.initialize lights a control without handing its layer the
+// pointer, so the board's layer kept every event.)
+export function takeControl(control, tool) {
+    const set = ui.controls?.controls?.find((c) => c.name === control);
+    const layer = set?.layer && canvas?.ready ? canvas[set.layer] : null;
+    if (layer?.activate) return layer.activate({ tool });
+    return ui.controls?.initialize({ control, tool });
 }
 
 export function railOn() {
@@ -65,6 +81,52 @@ export function railOn() {
 }
 
 let menuOpen = false;
+// the folded group whose sub-rail is open (its id), if any: a module's group
+// (rail-groups.js), opened as File is, one menu at a time
+let openGroup = null;
+
+// Groups other modules added are drawn again when one comes, goes, or
+// changes which tool is lit
+railGroups.onChange(() => syncRail());
+
+// A group's buttons for the rail (Luke, 2026-10-27: the Story group). Not
+// folded: a button each, as Session scripting. Folded: one button and, open,
+// its tools as tiles beside it.
+function groupHtml(g, button, icon) {
+    const lit = (t) => {
+        try {
+            return Boolean(t.on?.());
+        } catch {
+            return false;
+        }
+    };
+    if (!g.fold) return g.tools.map((t) => button(`data-group-tool="${esc(g.id)}:${esc(t.name)}"`, t.icon, loc(t.title), lit(t))).join('');
+    const open = openGroup === g.id;
+    const tiles = g.tools
+        .map((t) => `<button type="button" data-group-tool="${esc(g.id)}:${esc(t.name)}" class="tile ${lit(t) ? 'on' : ''}" data-tooltip="${esc(loc(t.title))}" aria-label="${esc(loc(t.title))}">${icon(t.icon)}<span>${esc(loc(t.label))}</span></button>`)
+        .join('');
+    return `<span class="group">${button(`data-group="${esc(g.id)}"`, g.icon, loc(g.title), open)}${open ? `<span class="menu" style="grid-template-columns: repeat(${Math.min(g.tools.length, 4)}, 78px)">${tiles}</span>` : ''}</span>`;
+}
+
+// Foundry's own column's version of the groups, for when the board's toolbar
+// is switched off (the rail has them otherwise): one control a group, a board's
+// only unless its maker said otherwise
+export function railGroupControls(controls) {
+    if (railOn()) return;
+    const gm = Boolean(game.user?.isGM);
+    for (const g of railGroups.list({ gm })) {
+        if (g.boardOnly && !isBoardScene(canvas?.scene)) continue;
+        controls.push({
+            name: `heartGroup-${g.id}`,
+            title: loc(g.title),
+            icon: g.icon,
+            layer: 'tokens',
+            visible: true,
+            activeTool: '',
+            tools: g.tools.map((t) => ({ name: t.name, title: loc(t.title), icon: t.icon, button: true, onClick: () => t.run() })),
+        });
+    }
+}
 
 // Whether a click on `tool` puts it down for Look (Luke, 2026-10-25: the tool
 // in hand clicked again; Look, the board's resting state, stays)
@@ -91,6 +153,7 @@ export function syncRail() {
         // (a new rail, its File menu shut: Luke 2026-10-25, it reopened
         // already open on the next board)
         menuOpen = false;
+        openGroup = null;
         el = document.createElement('nav');
         el.id = 'heart-board-rail';
         el.addEventListener('click', onClick);
@@ -139,6 +202,12 @@ export function syncRail() {
         }
         html += t.button || t.toggle ? button(`data-button="${t.name}"`, t.icon, t.title, t.toggle && t.active) : button(`data-tool="${t.name}"`, t.icon, t.title, t.name === lit);
     }
+    // (the Session scripting group, the GM's: its buttons, then the turn)
+    if (game.user.isGM) html += SESSION_TOOLS.map((s) => button(`data-session="${s.name}"`, s.icon, loc(s.title))).join('');
+    // (the groups other modules added, the GM's and everyone's: Story, 2026-10-27)
+    const groups = railGroups.list({ gm: game.user.isGM });
+    if (openGroup && !groups.some((g) => g.id === openGroup)) openGroup = null;
+    for (const g of groups) html += groupHtml(g, button, icon);
     html += button('data-turn', FA.turn, loc('heart.board.toolbar-turn'));
     el.innerHTML = html;
     fitMenu(el);
@@ -171,17 +240,51 @@ async function onClick(event) {
     if (!b) return;
     if (b.dataset.actorTool) {
         menuOpen = false;
+        openGroup = null;
         if (ui.controls?.activeControl === BOARD_CONTROL) memory.hold(game.activeTool);
-        ui.controls?.initialize({ control: TOKEN_CONTROL, tool: b.dataset.actorTool });
+        takeControl(TOKEN_CONTROL, b.dataset.actorTool);
+        return syncRail();
+    }
+    if (b.dataset.session) {
+        menuOpen = false;
+        openGroup = null;
+        await SESSION_TOOLS.find((s) => s.name === b.dataset.session)?.run();
+        return syncRail();
+    }
+    // a module's group (rail-groups.js): its one button opens or shuts its
+    // sub-rail; a tool of it runs (the sub-rail stays, as File's does). The
+    // registry never hands a player a GM group's tool.
+    if (b.dataset.group !== undefined) {
+        menuOpen = false;
+        openGroup = openGroup === b.dataset.group ? null : b.dataset.group;
+        return syncRail();
+    }
+    if (b.dataset.groupTool) {
+        const at = b.dataset.groupTool.indexOf(':');
+        const group = b.dataset.groupTool.slice(0, at);
+        const t = railGroups.tool(group, b.dataset.groupTool.slice(at + 1), { gm: game.user.isGM });
+        if (!t) return syncRail();
+        if (!railGroups.get(group)?.fold) {
+            menuOpen = false;
+            openGroup = null;
+        }
+        try {
+            await t.run();
+        } catch (err) {
+            console.error('heart | a rail group tool failed', group, t.name, err);
+            ui.notifications?.error(String(err?.message ?? err));
+        }
         return syncRail();
     }
     if (b.dataset.tool) {
         menuOpen = false;
-        ui.controls?.initialize({ control: BOARD_CONTROL, tool: againToLook(b.dataset.tool) ? 'inspect' : b.dataset.tool });
+        openGroup = null;
+        takeControl(BOARD_CONTROL, againToLook(b.dataset.tool) ? 'inspect' : b.dataset.tool);
         return syncRail();
     }
     if (b.dataset.file !== undefined) {
         menuOpen = !menuOpen;
+        openGroup = null;
         return syncRail();
     }
     if (b.dataset.turn !== undefined) {
@@ -194,6 +297,7 @@ async function onClick(event) {
     if (b.dataset.button) {
         // (File's items keep it open: File again, or a tool, shuts it; Luke 2026-10-25)
         if (!FILE.includes(b.dataset.button)) menuOpen = false;
+        openGroup = null;
         const t = boardTools().buttons.find((x) => x.name === b.dataset.button);
         if (!t) return syncRail();
         await t.onClick?.(t.toggle ? !t.active : undefined);

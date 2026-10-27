@@ -11,6 +11,8 @@
     "build-template": "node ./dev-utils/build-template.js",
     "build-all": "npm run empty-dist && npm run build-prod && npm run build-manifest -- 0.11.0 && npm run build-template && npm run copy-static",
     "build-local": "npm run build-all",
+    "build-fast": "node ./dev-utils/build-fast.js",
+    "watch": "node ./dev-utils/build-fast.js --watch",
     "build-prod": "webpack --mode production",
     "test": "vitest run",
     "test:watch": "vitest",
