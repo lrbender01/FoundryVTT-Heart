@@ -260,6 +260,29 @@ $red-wash: rgba(util.$familiar-red-rgb, 0.08)
         justify-content: flex-start
         gap: 2px
 
+        // the spell's sigil beside its name; a click sends it to chat
+        // (Luke, 2026-10-26)
+        .familiar-spell-line
+            display: flex
+            align-items: center
+            gap: 6px
+
+        .familiar-sigil
+            flex: 0 0 auto
+            display: block
+            cursor: pointer
+
+            img
+                display: block
+                width: 56px
+                height: 56px
+                border: none
+                border-radius: 3px
+                box-shadow: 1px 2px 0 rgba(util.$familiar-ink-rgb, 0.35)
+
+            &:hover img
+                box-shadow: 0 0 0 2px $red
+
     // the rules in one line
     .familiar-rules
         @include hand(util.$fs-familiar-hint)
@@ -429,6 +452,32 @@ $red-wash: rgba(util.$familiar-red-rgb, 0.08)
         @include head
         color: $red
         margin-right: auto
+
+    // a spell's sigil: beside a rolled spell, over a magic roll's sum, and
+    // large on a spell sent to chat (Luke, 2026-10-26)
+    .familiar-card-sigil
+        display: block
+        width: 48px
+        height: 48px
+        flex: 0 0 auto
+        border: none
+        border-radius: 3px
+
+        &.big
+            width: 128px
+            height: 128px
+            margin: 2px auto
+
+    .familiar-card-spell
+        display: flex
+        align-items: center
+        justify-content: center
+        gap: 8px
+        @include head
+        color: $ink
+
+    &.familiar-spell-card .familiar-card-result
+        text-align: center
 
     .familiar-card-tag
         @include hand(util.$fs-familiar-card-label)

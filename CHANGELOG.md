@@ -10,6 +10,11 @@ See [CLAUDE.md](CLAUDE.md) for fork rationale, build pipeline, and known issues.
 
 Becomes 0.11.1.
 
+### Added
+
+- **Actor tools on the board's rail (Plenty finish item 1a, 2026-10-26).** The rail shows on a board scene while either the board's control or Foundry's token control is in hand, and carries an Actors group first: Select (click, box-select, drag, turn with the wheel), Measure, and Target, Foundry's own token tools. A board tool pressed from there goes back to the board. **Q** (a keybinding, everyone's, never while typing) flips between the board tool last held and token Select, for players moving their familiars too. Rail buttons (Undo, toggles, File) no longer pull you off the token tools, and keep the board tool in hand when they rebuild the board's control. Foundry's token tools panel is hidden on board scenes while the rail is on. The rail now runs along the top by default (a client that turned it keeps theirs). Pure parts in `scrapboard/actor-tools.js`, tested. Known: a scene redraw (a Sheet size change, an Undo that resizes) puts the board's control back in hand.
+- **GM notes (Plenty finish item 2, 2026-10-26).** A card, pin, or string can be the GM's for good: `state: 'hidden'` plus `gm: true`, so any client or tool that doesn't know `gm` still sees a hidden ghost. The GM sees GM notes in full, not as ghosts (look `'gm'`); players never get them; Reveal leaves them alone (`revealPatch`, `controls.js`). The note window has a **GM note** switch for the GM. The rail's **GM notes** button (and a line in File, Map layers) shows or hides them on this client only (`boardGmNotes`, render-only: `model.js` `withoutGmNotes`). Like hidden notes, they live in the scene's flags, so a player at the console could read them. Tested in `test/scrapboard-gm-notes.test.mjs`.
+
 ### Fixed
 
 - **A dark rectangle flashing as a bare board zoomed out (Luke, 2026-10-26, the witch's hut).** The board's own tiles came back under the sharp ones before those were replaced, for a moment both see-through layers showed. Now on a bare board only one shows: the sharp ones while they cover the whole view, else the board's own alone.

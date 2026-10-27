@@ -55,7 +55,10 @@
       <span class="familiar-head">{{localize "heart.familiar.spell-label"}}
         {{#if editable}}<a class="familiar-roll-button" data-action="familiar-roll-spell" data-tooltip="{{localize 'heart.familiar.roll-spell-tip'}}"><i class="fas fa-dice-d10"></i>{{localize "heart.familiar.roll-spell"}}</a>{{/if}}
       </span>
-      <input class="familiar-field" type="text" name="system.spell" value="{{system.spell}}" />
+      <div class="familiar-spell-line">
+        {{#if spellSigil}}<a class="familiar-sigil" data-action="familiar-show-spell" data-tooltip="{{localize 'heart.familiar.show-spell-tip'}}"><img src="{{spellSigil}}" alt="{{system.spell}}" /></a>{{/if}}
+        <input class="familiar-field" type="text" name="system.spell" value="{{system.spell}}" />
+      </div>
       <span class="familiar-hint">{{localize "heart.familiar.spell-hint"}}</span>
     </div>
   </div>

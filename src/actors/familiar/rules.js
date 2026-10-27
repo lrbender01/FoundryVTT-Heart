@@ -99,6 +99,16 @@ export function speciesFor(face) {
     return n >= 1 && n <= SPECIES.length ? SPECIES[n - 1] : null;
 }
 
+// The spell a familiar's written spell names (the sheet keeps the spell's
+// name as typed or rolled, in the table's language): its id when the text is
+// one of the ten (its label as `labelOf` gives it, or its id), else null.
+// For its sigil (Luke, 2026-10-26).
+export function spellIdOf(text, labelOf = (id) => id) {
+    const key = String(text ?? '').trim().toLowerCase();
+    if (!key) return null;
+    return SPELLS.find(id => id === key || String(labelOf(id) ?? '').trim().toLowerCase() === key) ?? null;
+}
+
 export function spellFor(face) {
     const n = whole(face);
     return n >= 1 && n <= SPELLS.length ? SPELLS[n - 1] : null;

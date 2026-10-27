@@ -1,4 +1,4 @@
-import { TRAITS, TARGETS, DEFAULT_TARGET, familiarOutcome, traitsOf, dangerOf, dangerStep, hasTraits, speciesFor, spellFor, speciesUpdate, targetOf } from './rules';
+import { TRAITS, TARGETS, DEFAULT_TARGET, familiarOutcome, traitsOf, dangerOf, dangerStep, hasTraits, speciesFor, spellFor, spellIdOf, speciesUpdate, targetOf } from './rules';
 import { oneAtATime } from '../../common/busy';
 
 // The familiar's rolls (The Witch is Dead, Luke, 2026-10-24): a trait roll
@@ -15,6 +15,19 @@ const esc = (text) => Handlebars.escapeExpression(String(text ?? ''));
 export const traitLabel = (key) => loc(`heart.familiar.trait.${key}`);
 const speciesLabel = (id) => loc(`heart.familiar.species.${id}`);
 const spellLabel = (id) => loc(`heart.familiar.spell.${id}`);
+
+// A spell's sigil (Luke, 2026-10-26: on the sheet and in chat): the content
+// module's art (the system ships none), or null without it or for a spell
+// that isn't one of the ten
+export const familiarSpellId = (actor) => spellIdOf(actor?.system?.spell, spellLabel);
+export function sigilSrc(id) {
+    if (!id || !game.modules?.get('fvtt-heart-content')?.active) return null;
+    return `modules/fvtt-heart-content/assets/art/familiar/sigils/${id}.webp`;
+}
+const sigilImg = (id, cls = 'familiar-card-sigil') => {
+    const src = sigilSrc(id);
+    return src ? `<img class="${cls}" src="${esc(src)}" alt="${esc(spellLabel(id))}"/>` : '';
+};
 
 // The familiar's windows keep the paper look in both colour schemes and with
 // glass on: no heart-window class (see sheet.js defaultOptions)
@@ -111,8 +124,12 @@ function traitCard(actor, name, out, mayMark) {
     const trouble = out.trouble
         ? line('familiar-card-trouble', loc('heart.familiar.card.trouble'), loc('heart.familiar.card.trouble-why', { die: out.die, danger: out.dangerBefore }))
         : '';
+    // (magic: the familiar's spell and its sigil over the sum)
+    const spellId = out.magic ? familiarSpellId(actor) : null;
+    const spell = spellId ? `<div class="familiar-card-spell">${sigilImg(spellId)}<span>${esc(spellLabel(spellId))}</span></div>` : '';
     return `<div class="familiar-card">`
         + `<div class="familiar-card-head"><span class="familiar-card-title">${esc(name)}</span>${tags}</div>`
+        + spell
         + `<div class="familiar-card-sum">${num(out.die, loc('heart.familiar.card.die'), 'die')}${op('+')}${num(out.trait, name)}${op('=')}`
         + `${num(out.total, loc('heart.familiar.card.total'), 'total')}${op(loc('heart.familiar.card.vs'))}${num(out.target, rating, 'target')}</div>`
         + `<div class="familiar-card-outcome ${out.success ? 'success' : 'failure'}">${esc(loc(out.success ? 'heart.familiar.card.success' : 'heart.familiar.card.failure'))}</div>`
@@ -120,12 +137,26 @@ function traitCard(actor, name, out, mayMark) {
         + `</div>`;
 }
 
-function resultCard(title, face, result, detail = '') {
+function resultCard(title, face, result, detail = '', sigil = '') {
     return `<div class="familiar-card">`
         + `<div class="familiar-card-head"><span class="familiar-card-title">${esc(title)}</span></div>`
-        + `<div class="familiar-card-sum">${num(face, 'd10', 'die')}<span class="familiar-card-result">${esc(result)}</span></div>`
+        + `<div class="familiar-card-sum">${num(face, 'd10', 'die')}${sigil}<span class="familiar-card-result">${esc(result)}</span></div>`
         + (detail ? `<div class="familiar-card-line">${esc(detail)}</div>` : '')
         + `</div>`;
+}
+
+// The spell sent to chat from the sheet's sigil: the sigil large, its name,
+// and who knows it (anyone who can see the sheet; no write)
+export async function showSpell(actor) {
+    const id = familiarSpellId(actor);
+    if (!actor || !id) return null;
+    const content = `<div class="familiar-card familiar-spell-card">`
+        + `<div class="familiar-card-head"><span class="familiar-card-title">${esc(loc('heart.familiar.spell-label'))}</span></div>`
+        + `${sigilImg(id, 'familiar-card-sigil big')}`
+        + `<div class="familiar-card-result">${esc(spellLabel(id))}</div>`
+        + `<div class="familiar-card-line">${esc(loc('heart.familiar.card.spell-known', { name: actor.name }))}</div>`
+        + `</div>`;
+    return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content });
 }
 
 // ------------------------------------------------------------- the rolls
@@ -211,7 +242,7 @@ export async function rollSpell(actor) {
     const name = spellLabel(id);
     const message = await roll.toMessage({
         speaker: ChatMessage.getSpeaker({ actor }),
-        content: resultCard(loc('heart.familiar.spell-label'), face, name),
+        content: resultCard(loc('heart.familiar.spell-label'), face, name, '', sigilImg(id)),
     });
     await diceLanded(message);
     await actor.update({ 'system.spell': name });

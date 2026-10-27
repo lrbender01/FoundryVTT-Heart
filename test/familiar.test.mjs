@@ -174,3 +174,16 @@ describe("a roll's outcome", () => {
     expect(familiarOutcome({ die: 4, trait: 9, target: 7 })).toMatchObject({ trait: 3, total: 7, success: true });
   });
 });
+
+describe("a familiar's spell, for its sigil", () => {
+  it("names one of the ten by its label or id, any case; else null", async () => {
+    const { spellIdOf } = await import("../src/actors/familiar/rules.js");
+    const label = (id) => ({ "make-flame": "Make Flame", "lock-unlock": "Lock/Unlock, Open/Close" })[id] ?? id;
+    expect(spellIdOf("Make Flame", label)).toBe("make-flame");
+    expect(spellIdOf("  make flame ", label)).toBe("make-flame");
+    expect(spellIdOf("lock/unlock, open/close", label)).toBe("lock-unlock");
+    expect(spellIdOf("speak-human")).toBe("speak-human");
+    expect(spellIdOf("Fireball", label)).toBeNull();
+    expect(spellIdOf("", label)).toBeNull();
+  });
+});

@@ -3,7 +3,7 @@ import './familiar.sass';
 import HeartActorSheet from '../base/sheet';
 import template from './template.json';
 import { TRAITS, TRAIT_MAX, traitsOf, dangerOf, dangerStep, clampFamiliarData } from './rules';
-import { rollTrait, rollSpecies, rollSpell, traitLabel } from './roll';
+import { rollTrait, rollSpecies, rollSpell, traitLabel, familiarSpellId, sigilSrc, showSpell } from './roll';
 import { DEFAULT_IMGS } from '../../common/icons';
 import { oneAtATime } from '../../common/busy';
 
@@ -52,6 +52,9 @@ export default class FamiliarSheet extends HeartActorSheet {
         // Foundry's mystery man (or a fork default) is no portrait: drawn
         // faint, with the box's label over it
         data.blankPortrait = !this.actor.img || DEFAULT_IMGS.has(this.actor.img);
+        // the spell's sigil (Luke, 2026-10-26), when the spell is one of the
+        // ten and the content module gives the art
+        data.spellSigil = sigilSrc(familiarSpellId(this.actor));
         return data;
     }
 
@@ -68,6 +71,13 @@ export default class FamiliarSheet extends HeartActorSheet {
         html.find('[data-action=familiar-roll]').on('click', ev => {
             ev.preventDefault();
             rollTrait(this.actor, ev.currentTarget.dataset.trait);
+        });
+
+        // the spell's sigil sends the spell to chat (anyone who can see the
+        // sheet: it writes nothing)
+        html.find('[data-action=familiar-show-spell]').on('click', ev => {
+            ev.preventDefault();
+            oneAtATime(`familiar-show-spell-${this.actor.id}`, ev.currentTarget, () => showSpell(this.actor));
         });
 
         if (!this.isEditable) return;
