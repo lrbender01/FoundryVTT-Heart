@@ -44,6 +44,72 @@ const MASK_PX = 96;
 
 export const bakedFlags = (scene) => cleanBakedFlags(scene?.flags?.heart?.baked);
 
+// Which tiles are drawn, which let go (Luke, 2026-10-27: detail follows the
+// zoom; near detail when zoomed in, nothing heavy for what covers a few px
+// zoomed out). Pure, so the node tests reach it. A piece here is { key, group,
+// lvl, rect, pin }: `group` names a stack of levels ('base', or 'o:<overlay
+// id>'; null: not in a stack, the overview and the roofs), `lvl` the level's
+// index in it (0: the coarsest). `current`: a Map of group to the level the
+// zoom needs now.
+
+// whether tiles' rects, which never overlap, cover all of `rect` (to a hair)
+export function covers(rect, tiles) {
+    const area = (rect.x1 - rect.x0) * (rect.y1 - rect.y0);
+    if (area <= 0) return true;
+    let got = 0;
+    for (const t of tiles) {
+        const w = Math.min(rect.x1, t.x1) - Math.max(rect.x0, t.x0);
+        const h = Math.min(rect.y1, t.y1) - Math.max(rect.y0, t.y0);
+        if (w > 0 && h > 0) got += w * h;
+    }
+    return got >= area * (1 - 1e-6);
+}
+
+// The keys the level rule lets be drawn: the current level's tiles; a
+// coarser tile only while a finer one over its (in view) area has not all
+// arrived (no hole, no overdraw once it has); a finer tile never. `near`:
+// the view and its margin, map units.
+export function tilesToShow(pieces, current, near) {
+    const out = new Set();
+    const byLevel = new Map();
+    for (const p of pieces) {
+        if (p.group === null || !current.has(p.group)) continue;
+        const k = `${p.group}|${p.lvl}`;
+        if (!byLevel.has(k)) byLevel.set(k, []);
+        byLevel.get(k).push(p.rect);
+    }
+    for (const p of pieces) {
+        const cur = current.get(p.group);
+        if (p.group === null || cur === undefined || p.lvl === cur) {
+            out.add(p.key);
+            continue;
+        }
+        if (p.lvl > cur) continue;
+        const r = { x0: Math.max(p.rect.x0, near.x0), y0: Math.max(p.rect.y0, near.y0), x1: Math.min(p.rect.x1, near.x1), y1: Math.min(p.rect.y1, near.y1) };
+        let done = false;
+        for (let l = p.lvl + 1; l <= cur && !done; l++) done = covers(r, byLevel.get(`${p.group}|${l}`) ?? []);
+        if (!done) out.add(p.key);
+    }
+    return out;
+}
+
+// The keys to let go for a zoom: a tile finer than the zoom needs always (it
+// is never drawn); with `coarse`, as the level has just changed, a tile that
+// is neither the current level nor the next coarser one and is out of view
+// at its own level (`inView(rect)`). A pinned piece, and a stack the zoom
+// names no level for (an overlay switched off), stays.
+export function tilesToRelease(pieces, current, inView, coarse) {
+    const out = [];
+    for (const p of pieces) {
+        if (p.pin || p.group === null) continue;
+        const cur = current.get(p.group);
+        if (cur === undefined) continue;
+        if (p.lvl > cur) out.push(p.key);
+        else if (coarse && p.lvl < cur - 1 && !inView(p.rect)) out.push(p.key);
+    }
+    return out;
+}
+
 // manifests by path, each fetched once a page (a failed one asked again)
 const manifests = new Map();
 export function manifestAt(path) {
@@ -93,6 +159,8 @@ export class Backdrop {
         this.queue = [];
         this.ticket = 0;
         this.level = null;
+        this.current = null;
+        this.levelKey = null;
         this.warned = false;
         this.frame = 0;
     }
@@ -148,7 +216,7 @@ export class Backdrop {
         const all = { x0: 0, y0: 0, x1: this.m.size.w, y1: this.m.size.h };
         // (the whole map at once, kept: the overview, else level 0's tiles)
         if (this.m.overview) this.#want({ key: 'overview', url: this.m.overview, rect: all, layer: 'base', z: -1, pin: true });
-        else for (const t of tilesIn(this.m.levels[0], this.m.tilePx, all, this.m.size)) this.#want({ key: `b:0:${t.x}_${t.y}`, url: tileUrl(this.m.levels[0], t.x, t.y), rect: t.rect, layer: 'base', z: 0, pin: true });
+        else for (const t of tilesIn(this.m.levels[0], this.m.tilePx, all, this.m.size)) this.#want({ key: `b:0:${t.x}_${t.y}`, url: tileUrl(this.m.levels[0], t.x, t.y), rect: t.rect, layer: 'base', z: 0, pin: true, group: 'base', lvl: 0 });
         // (every roof at once: small, and the fog needs what each covers)
         for (const roof of this.m.roofs) for (const part of roof.parts) this.#want({ key: `r:${roof.id}/${part.id}`, url: part.image, rect: part.rect, layer: 'roofs', z: 0, pin: true, roof: roof.id, part: part.id, mask: true });
         this.#pump();
@@ -188,23 +256,47 @@ export class Backdrop {
         for (const t of tilesIn(L, tilePx, view, this.m.size, { margin })) {
             const key = `b:${li}:${t.x}_${t.y}`;
             wanted.add(key);
-            this.#want({ key, url: tileUrl(L, t.x, t.y), rect: t.rect, layer: 'base', z: li });
+            this.#want({ key, url: tileUrl(L, t.x, t.y), rect: t.rect, layer: 'base', z: li, group: 'base', lvl: li });
         }
+        const current = new Map([['base', li]]);
         const gm = game.user.isGM;
         this.m.overlays.forEach((o, oi) => {
             if (!overlayShown(o, this.flags, gm)) return;
             const ol = levelFor(o.levels, need);
             const oli = o.levels.indexOf(ol);
+            current.set(`o:${o.id}`, oli);
             const origin = { x: o.rect.x0, y: o.rect.y0 };
             const size = { w: o.rect.x1 - o.rect.x0, h: o.rect.y1 - o.rect.y0 };
             for (const t of tilesIn(ol, tilePx, view, size, { margin, origin })) {
                 const key = `o:${o.id}:${oli}:${t.x}_${t.y}`;
                 wanted.add(key);
-                this.#want({ key, url: tileUrl(ol, t.x, t.y), rect: t.rect, layer: 'overlays', z: oi * 32 + oli, overlay: o.id });
+                this.#want({ key, url: tileUrl(ol, t.x, t.y), rect: t.rect, layer: 'overlays', z: oi * 32 + oli, overlay: o.id, group: `o:${o.id}`, lvl: oli });
             }
         });
         // (only what is wanted now waits to load: a view left behind is not fetched)
         this.queue = this.queue.filter((it) => it.pin || wanted.has(it.key));
+        // (Luke, 2026-10-27: detail follows the zoom. A finer tile than the
+        // zoom needs is let go at once, a far coarser one out of view when the
+        // level changed; the budget below is the ceiling on top. A tile's
+        // ImageBitmap is closed only with its texture, not before: it may be
+        // wanted again if the GPU context is lost.)
+        const levelKey = JSON.stringify([...current]);
+        const changed = levelKey !== this.levelKey;
+        this.levelKey = levelKey;
+        const near = { x0: view.x0 - margin, y0: view.y0 - margin, x1: view.x1 + margin, y1: view.y1 + margin };
+        const inView = (r) => r.x1 >= near.x0 && r.x0 <= near.x1 && r.y1 >= near.y0 && r.y0 <= near.y1;
+        const pieces = [...this.items.values()].map((e) => ({ key: e.key, group: e.group ?? null, lvl: e.lvl ?? 0, rect: e.rect, pin: Boolean(e.pin) }));
+        for (const key of tilesToRelease(pieces, current, inView, changed)) {
+            const e = this.items.get(key);
+            if (!e) continue;
+            const c = this.cache.items.get(key);
+            if (c) {
+                this.cache.bytes -= c.bytes;
+                this.cache.items.delete(key);
+            }
+            this.#drop(e);
+        }
+        this.current = current;
         this.#show(view, margin);
         for (const e of this.cache.prune(new Set([...wanted, ...[...this.items.keys()].filter((k) => this.items.get(k).shownNow)]))) this.#drop(e);
         this.#pump();
@@ -218,8 +310,12 @@ export class Backdrop {
         const meets = (r) => r.x1 >= near.x0 && r.x0 <= near.x1 && r.y1 >= near.y0 && r.y0 <= near.y1;
         const roofsOn = new Set(shownParts(this.m, this.flags).map(({ roof, part }) => `r:${roof.id}/${part.id}`));
         const overlaysOn = new Set(this.m.overlays.filter((o) => overlayShown(o, this.flags, gm)).map((o) => o.id));
+        // (the level rule: the zoom's level, a coarser tile only until the
+        // finer one over it has come, never a finer one)
+        const pieces = [...this.items.values()].map((e) => ({ key: e.key, group: e.group ?? null, lvl: e.lvl ?? 0, rect: e.rect }));
+        const drawn = tilesToShow(pieces, this.current ?? new Map(), { x0: near.x0, y0: near.y0, x1: near.x1, y1: near.y1 });
         for (const [key, e] of this.items) {
-            let on = e.key === 'overview' || meets(e.rect);
+            let on = e.key === 'overview' || (meets(e.rect) && drawn.has(key));
             if (e.overlay) on &&= overlaysOn.has(e.overlay);
             if (e.roof) on &&= roofsOn.has(key);
             e.shownNow = on;
@@ -433,5 +529,7 @@ export class Backdrop {
         this.m = null;
         this.flags = null;
         this.level = null;
+        this.current = null;
+        this.levelKey = null;
     }
 }

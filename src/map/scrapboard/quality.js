@@ -52,6 +52,8 @@ export function registerUltra() {
     });
     // (after Foundry's own performance mode is set for the scene)
     Hooks.on('canvasInit', (cv) => {
+        // (the frame cap on a board scene under Auto or Light: Luke, 2026-10-27)
+        applyFrameCap(cv);
         if (!madeUltra) return;
         try {
             PIXI.BaseTexture.defaultOptions.mipmap = PIXI.MIPMAP_MODES.ON;
@@ -69,4 +71,52 @@ export function registerUltra() {
             console.warn('Heart | Ultra quality could not set the canvas up', err);
         }
     });
+    // (a change of the quality picked: the cap set again, no reload. The
+    // setting's own onChange is notes.js's; this one is added to it)
+    Hooks.once('ready', () => {
+        // (the settings map is keyed "<namespace>.<key>")
+        const s = game.settings.settings.get(['heart', 'boardDetail'].join('.'));
+        if (!s) return;
+        const was = s.onChange;
+        s.onChange = (...args) => {
+            was?.(...args);
+            applyFrameCap(canvas);
+        };
+    });
+}
+
+// The frame cap (Luke, 2026-10-27): on the Plenty board Foundry redrew its
+// whole scene 60 times a second at idle (15,900 objects, 965 draw calls). The
+// board caps the canvas ticker at 30 fps when the board quality is Auto or
+// Light; Ultra, High, and Standard are left as Foundry set them (Ultra: the
+// screen's own rate). Luke's world setting core.maxFPS is never changed: the
+// ticker alone is set, at runtime.
+export const FRAME_CAP = 30;
+
+// The cap for a quality picked (the boardDetail value), or null for none. Pure.
+export const frameCapFor = (picked) => (picked === 'auto' || picked === 'light' ? FRAME_CAP : null);
+
+// The fps the ticker should run at: the cap when the scene is a board and the
+// quality asks for one (never above what Foundry allows), else Foundry's own
+// (`foundryFps`, its performance setting; 0 is the screen's own). Pure.
+export function tickerFps({ board, picked, foundryFps }) {
+    const cap = board ? frameCapFor(picked) : null;
+    if (cap === null) return foundryFps;
+    return foundryFps > 0 ? Math.min(cap, foundryFps) : cap;
+}
+
+// Set the canvas ticker for the scene now showing
+export function applyFrameCap(cv) {
+    try {
+        const ticker = cv?.app?.ticker;
+        if (!ticker) return;
+        const board = Boolean(cv.scene?.flags?.heart?.board);
+        const picked = game.settings.get('heart', 'boardDetail');
+        // (Foundry's own fps, from its performance mode, else its setting)
+        const foundryFps = Number(cv.performance?.fps ?? game.settings.get('core', 'maxFPS') ?? 60) || 0;
+        const fps = tickerFps({ board, picked, foundryFps });
+        ticker.maxFPS = PIXI.Ticker.shared.maxFPS = PIXI.Ticker.system.maxFPS = fps;
+    } catch (err) {
+        console.warn('Heart | the frame cap could not be set', err);
+    }
 }

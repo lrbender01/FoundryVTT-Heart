@@ -16,6 +16,7 @@
 import { fogHides, fogDistance, unitPx, metrePx } from './baked.js';
 import { pointInPoly } from './model.js';
 import { registerPlayRules } from './play-rules.js';
+import { registerCrowd } from './crowd.js';
 
 // (a point in a flat [x, y, ...] polygon)
 const inPoly = (pt, poly) => pointInPoly(pt, poly);
@@ -100,8 +101,15 @@ export function refreshFogAll() {
 export function registerBoardFog() {
     const Base = CONFIG.Token.objectClass;
     class HeartBoardToken extends Base {
-        get isVisible() {
+        // whether this client could see the token if it were drawn (crowd.js
+        // asks this for the mark that stands in for it)
+        get heartSeen() {
             return super.isVisible && !hiddenByFog(this);
+        }
+        // (a token small enough on screen to be its mark is not drawn at all:
+        // crowd.js sets _heartSymbol; Luke, 2026-10-27)
+        get isVisible() {
+            return this.heartSeen && !this._heartSymbol;
         }
     }
     CONFIG.Token.objectClass = HeartBoardToken;
@@ -133,6 +141,8 @@ export function registerBoardFog() {
     });
     // (roofs open from inside only, doors need a token nearby: Luke 2026-10-27)
     registerPlayRules();
+    // (the crowd from afar: small tokens become marks above the roofs)
+    registerCrowd();
     // (the GM's switch on an NPC's HUD: always seen by players, or the fog's)
     Hooks.on('renderTokenHUD', (hud, html) => {
         const token = hud.object;
