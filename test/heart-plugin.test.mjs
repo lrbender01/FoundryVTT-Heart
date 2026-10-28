@@ -79,8 +79,21 @@ describe("Heart's board plug-in", () => {
     game.modules = new Map();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     for (const fn of hooks.callbacks("ready")) fn();
-    expect(ui.notifications.warn).toHaveBeenCalledWith("heart.board.module-missing", { permanent: true });
+    expect(ui.notifications.warn).toHaveBeenCalledWith("heart.plugin.module-missing", { permanent: true });
     warn.mockRestore();
+  });
+
+  // (2026-10-28: the board's strings are the module's; the plug-in's own three
+  // are heart.plugin.*, which outlive the fork's old heart.board.* keys)
+  it("names only its own strings, every one in the system's language file", () => {
+    const src = readFileSync(SOURCE, "utf8");
+    const lang = JSON.parse(readFileSync(fileURLToPath(new URL("../static/lang/en.json", import.meta.url)), "utf8"));
+    const named = [...src.matchAll(/loc\(\s*['"`]([^'"`]+)['"`]/g)].map((m) => m[1]);
+    expect(named.sort()).toEqual(["heart.plugin.converted", "heart.plugin.module-missing", "heart.plugin.placed"]);
+    for (const k of named) expect(typeof lang[k], k).toBe("string");
+    expect(src).not.toMatch(/heart\.board\./);
+    expect("heart.board.module-missing" in lang).toBe(false);
+    expect("heart.plugin" in lang).toBe(false);
   });
 
   it("says nothing at ready when the module is there and on", () => {

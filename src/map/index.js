@@ -20,6 +20,9 @@
 //     drawn again;
 //   - a word to the GM at ready when the module is missing or switched off.
 //
+// Its strings are its own, heart.plugin.* in the system's static/lang/en.json
+// (the board's are the module's, fvtt-dream-board.*, since 2026-10-28).
+//
 // Picked up by the './**/index.js' module glob in src/index.js, which calls
 // initialise() at the system's init (before the module's: Foundry runs a
 // system's scripts first). The old board code under ./scrapboard/ stays in
@@ -69,7 +72,7 @@ function onDrop(_canvas, data) {
         const placed = key ? (scraps[key] ? key : null) : Object.keys(scraps).find((k) => scraps[k]?.uuid === doc.uuid);
         if (placed) return board.setScrap(scene, placed, { x: Math.round(at.x), y: Math.round(at.y) });
         await board.addScrap(scene, key ? { type: 'landmark', lib: key, x: at.x, y: at.y, state: 'hidden' } : { type: 'landmark', uuid: doc.uuid, name: doc.name, x: at.x, y: at.y, state: 'hidden' });
-        ui.notifications.info(loc('heart.board.placed', { name: doc.name }));
+        ui.notifications.info(loc('heart.plugin.placed', { name: doc.name }));
     })().catch((err) => console.error('heart | the landmark could not be placed', err));
     return false;
 }
@@ -97,7 +100,7 @@ async function convertOldMap(scene) {
         links[id] = { a: l.a, b: l.b, kind: l.kind ?? 'delve', state: l.state ?? 'known', ...(l.delve ? { delve: l.delve } : {}) };
     }
     await scene.update({ width: look.w, height: look.h, [board.flags.path(scene, 'board')]: { scraps, links, decor: [] }, 'flags.heart.-=map': null });
-    ui.notifications.info(loc('heart.board.converted', { name: scene.name }));
+    ui.notifications.info(loc('heart.plugin.converted', { name: scene.name }));
     // (the module's own canvasReady ran before the scene was a board: the
     // board drawn and its tools put in hand now, as they were before the move)
     if (scene.id === globalThis.canvas?.scene?.id) {
@@ -110,7 +113,7 @@ async function convertOldMap(scene) {
 function warnMissing() {
     if (game.modules?.get?.(BOARD_MODULE)?.active) return;
     console.warn(`heart | the board lives in the ${BOARD_MODULE} module now, which is missing or not enabled: board scenes will not draw`);
-    if (game.user?.isGM) ui.notifications?.warn(loc('heart.board.module-missing'), { permanent: true });
+    if (game.user?.isGM) ui.notifications?.warn(loc('heart.plugin.module-missing'), { permanent: true });
 }
 
 function registerHooks() {
