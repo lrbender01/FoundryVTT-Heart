@@ -2,6 +2,16 @@
     "templateVersion": 2,
     "packs": [],
     "relationships": {
+        "requires": [
+            {
+                "id": "fvtt-dream-board",
+                "type": "module",
+                "compatibility": {
+                    "minimum": "0.1.0"
+                },
+                "reason": "The board (the scrapboard map scenes) lives in the Dream Board module since 2026-10-28; the system carries Heart's plug-in for it, not the board."
+            }
+        ],
         "recommends": [
             {
                 "id": "fvtt-heart-content",

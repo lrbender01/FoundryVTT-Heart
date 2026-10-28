@@ -4,14 +4,13 @@
 //
 //   game.heart.board.railGroups.register({
 //       id: 'story', icon: 'fa-solid fa-book-open', title: 'Story: all the windows',
-//       label: 'Story' (the few words under it on the rail), help: 'a lang key
+//       label: 'Story' (the group's name for screen readers), help: 'a lang key
 //       whose text the Help window shows for the group', gmOnly: true, fold: true,
 //       tools: [{ name: 'setup', icon: 'fa-solid fa-sliders', title: 'Setup: ...', label: 'Setup', run, on }],
 //   });
 //
 // The rail (rail.js) draws every group it may show on a board scene, after the
-// Session scripting buttons and before the turn button, in the rail's glass and
-// in both layouts. `fold` puts the tools under one button that opens a sub-rail
+// Session scripting buttons and before the App group, along the top. `fold` puts the tools under one button that opens a sub-rail
 // beside it (as File does); otherwise each tool is a button of its own.
 // `on()` says whether a tool is lit (a window of it open); call `refresh()`
 // when that changes by other means. This file is plain (no Foundry globals) so
@@ -59,7 +58,7 @@ export function normaliseGroup(def) {
         id,
         icon: text(def.icon, `the group "${id}" icon`),
         title: text(def.title, `the group "${id}" title`),
-        // the few words under the group on the rail (the title if none)
+        // the group's short name, for screen readers (the title if none)
         label: typeof def.label === 'string' && def.label.trim() ? def.label : def.title,
         // a lang key (or text) for the board's Help window: what the group's
         // tools do, in the Help's own style (bullets, **bold**); none, none shown

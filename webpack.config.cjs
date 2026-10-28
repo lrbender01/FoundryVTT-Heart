@@ -24,6 +24,59 @@ function globVersion() {
     return require('crypto').createHash('sha1').update(files.join('\n')).digest('hex').slice(0, 12);
 }
 
+// The board lives in the Dream Board module (fvtt-dream-board) since
+// 2026-10-28; heart.js no longer carries it. The old board code stays in
+// src/ (Map Dreamer and the content tools import it by path), so two
+// plugins keep it out of the bundle:
+//   - the glob in src/index.js still finds src/map/scrapboard/index.js, so
+//     that one file is swapped for src/map/board-elsewhere.js, which exports
+//     nothing;
+//   - any other board file that still reaches the bundle (a new import of a
+//     scrapboard file, map.sass, or the session tools) fails the build with
+//     a plain message, instead of quietly bringing a second board back.
+const SRC = path.resolve(__dirname, 'src');
+const BOARD_INDEX = path.join(SRC, 'map', 'scrapboard', 'index.js');
+const BOARD_STUB = path.join(SRC, 'map', 'board-elsewhere.js');
+const BOARD_DIR = path.join(SRC, 'map', 'scrapboard') + path.sep;
+const BOARD_FILES = new Set([
+    path.join(SRC, 'map', 'map.sass'),
+    path.join(SRC, 'common', 'session-tools.js'),
+    path.join(SRC, 'common', 'pull-view.js'),
+]);
+const same = (a, b) => path.normalize(a).toLowerCase() === path.normalize(b).toLowerCase();
+const isBoardFile = (file) => {
+    const f = path.normalize(file).toLowerCase();
+    return f.startsWith(BOARD_DIR.toLowerCase()) || [...BOARD_FILES].some((b) => same(b, f));
+};
+
+function swapBoardIndex(webpack) {
+    return new webpack.NormalModuleReplacementPlugin(/[\\/]src[\\/]map[\\/]scrapboard[\\/]index\.js$/, (data) => {
+        if (!data.createData?.resource || !same(data.createData.resource, BOARD_INDEX)) return;
+        data.createData.resource = BOARD_STUB;
+        // (the stub's own folder, for anything it might import)
+        data.createData.context = path.dirname(BOARD_STUB);
+    });
+}
+
+class NoBoardInBundle {
+    apply(compiler) {
+        const name = 'NoBoardInBundle';
+        compiler.hooks.thisCompilation.tap(name, (compilation, { normalModuleFactory }) => {
+            const told = new Set();
+            normalModuleFactory.hooks.afterResolve.tap(name, (data) => {
+                const file = data.createData?.resource?.split('?')[0];
+                if (!file || !isBoardFile(file) || told.has(file)) return;
+                told.add(file);
+                const who = data.contextInfo?.issuer ? path.relative(__dirname, data.contextInfo.issuer) : 'something';
+                compilation.errors.push(new compiler.webpack.WebpackError(
+                    `The board is in the fvtt-dream-board module now, but ${who} still brings ${path.relative(__dirname, file)} into heart.js. `
+                    + 'Use the module\'s api (game.modules.get(\'fvtt-dream-board\').api) instead of importing the old board code.',
+                ));
+            });
+        });
+    }
+}
+
 module.exports = (env, argv) => {
     // `--env incremental` (npm run build-fast / watch): keep dist/ and its
     // hash-named assets in place instead of wiping it. A release or a clean
@@ -102,6 +155,9 @@ module.exports = (env, argv) => {
                   },
             ],
         },
+        // (the board kept out of the bundle: see the top of this file; the
+        // swap first, so the check sees the stub, not the real index.js)
+        plugins: [swapBoardIndex(require('webpack')), new NoBoardInBundle()],
         // (upstream's devServer block, in webpack-dev-server 3 options the
         // installed v4 rejects, was removed 2026-10-21: nothing ran it)
     }

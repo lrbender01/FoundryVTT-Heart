@@ -715,7 +715,7 @@ $picked: #e0574b
                     margin: 0 auto
 
 // The Heart Map's own toolbar (scrapboard/rail.js; Luke, 2026-10-03): the
-// map editor's rail, up the left or along the top, in Foundry's own scene-
+// map editor's rail, always along the top, in Foundry's own scene-
 // control style (Luke 2026-10-28: uniform Foundry, no glass; every window it
 // opens stays glass). No panel behind it: each button is its own box, as in
 // Foundry's column. Foundry's own column of the Heart Map's buttons is hidden
@@ -735,15 +735,9 @@ body.heart-board-rail-on #tools-panel-heartBoard, body.heart-board-rail-on #tool
     pointer-events: none
     color: util.$ctl-text
 
-    // (--rail-left is where the old panel's edge fell: its 7px of padding and
+    // (under the scene navigation; its icons level with Foundry's top icon.
+    // --rail-left is where the old panel's edge fell: its 7px of padding and
     // border stay as an offset so the icons sit where they always did)
-    &.vertical
-        flex-direction: column
-        left: calc(var(--rail-left, 64px) + 7px)
-        top: var(--rail-top, 72px)
-
-    // (under the scene navigation; its icons level with Foundry's top icon,
-    // as up the side)
     &.horizontal
         flex-direction: row
         left: calc(var(--rail-left, 64px) + 7px)
@@ -819,9 +813,8 @@ body.heart-board-rail-on #tools-panel-heartBoard, body.heart-board-rail-on #tool
                 white-space: normal
 
     // the buttons grouped by purpose (Luke, 2026-10-28; Map Dreamer's rail
-    // has the same): a thin rule between groups and a tiny label under each,
-    // out of flow below the rail, so the rail's height is the button's alone.
-    // Turned vertical: a rule across, no labels.
+    // has the same): Actors, Map, Users, the modules' groups, App, with a thin
+    // vertical rule between groups and no label under any icon
     .grp
         display: flex
         align-items: center
@@ -830,48 +823,8 @@ body.heart-board-rail-on #tools-panel-heartBoard, body.heart-board-rail-on #tool
 
     .grp ~ .grp
         border-left: 1px solid util.$ctl-border
-        padding-left: 6px
+        padding-left: 8px
         margin-left: 2px
-
-    .glab
-        position: absolute
-        left: 0
-        right: 0
-        top: 100%
-        margin-top: 3px
-        text-align: center
-        font: normal 9px/7px util.$font-label
-        letter-spacing: 0.1em
-        // (the label is its group's width, clipped, never over a neighbour's)
-        overflow: hidden
-        text-overflow: ellipsis
-        text-transform: uppercase
-        color: util.$ctl-text
-        text-shadow: 0 0 3px #000, 0 0 3px #000
-        opacity: 0.85
-        pointer-events: none
-        white-space: nowrap
-
-    .grp ~ .grp .glab
-        left: 6px
-
-    &.vertical .grp
-        flex-direction: column
-
-    &.vertical .grp ~ .grp
-        border-left: 0
-        padding-left: 0
-        margin-left: 0
-        border-top: 1px solid util.$ctl-border
-        padding-top: 6px
-        margin-top: 2px
-
-    &.vertical .glab
-        display: none
-
-    &.vertical .menu
-        left: calc(var(--rail-btn, 36px) + 8px)
-        top: 0
 
     &.horizontal .menu
         top: calc(var(--rail-btn, 36px) + 8px)

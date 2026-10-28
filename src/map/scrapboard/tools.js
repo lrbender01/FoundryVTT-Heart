@@ -11,6 +11,7 @@ import { layersDialog } from './layers.js';
 import { drawnRoofPieces } from './pieces-draw.js';
 import { railGroups } from './rail-groups.js';
 import { gmNotesShown } from './render.js';
+import { symbols } from './crowd.js';
 import { heartDialogOptions } from '../../common/dialog.js';
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
@@ -71,12 +72,6 @@ function helpDialog(user, tools, buttons) {
     // buttons share it: Luke, 2026-10-23)
     const row = (icons, title, body) => `<div class="heart-board-help-row"><span class="icons">${[].concat(icons).map((i) => `<i class="${i}"></i>`).join('')}</span><div><b class="topic">${esc(title)}</b>${helpHtml(body)}</div></div>`;
     const brush = tools.some((t) => t.name === 'mark');
-    let rail = true;
-    try {
-        rail = game.settings.get('heart', 'boardToolbar') !== 'foundry';
-    } catch {
-        rail = true;
-    }
     const topics = [
         // (in the toolbar's order, Luke 2026-10-24)
         ['undo', ['fa-solid fa-rotate-left', 'fa-solid fa-rotate-right'], 'heart.board.help.undo-title', has.has('undo')],
@@ -90,7 +85,6 @@ function helpDialog(user, tools, buttons) {
         ['delete', 'fa-solid fa-delete-left', 'heart.board.help.delete-title', true],
         ['alone', 'fa-solid fa-toggle-on', 'heart.board.mark-alone', brush],
         ['doodles', 'fa-solid fa-toggle-on', 'heart.board.doodles', brush],
-        ['turn', 'fa-solid fa-arrows-rotate', 'heart.board.toolbar-turn', rail],
         ['keys', 'fa-solid fa-keyboard', 'heart.board.help.keys-title', true],
     ].filter((t) => t[3]);
     const intro = editor ? '' : `<div class="intro">${helpHtml(loc('heart.board.help.intro-player'))}</div>`;
@@ -143,8 +137,7 @@ export function boardTools() {
     // (Luke, 2026-10-24: one order for everyone, the GM's own where they
     // fall: Look, Move, Brush, Note, Write, String, Pin, Erase, Undo, Redo,
     // Player view, Reveal, Public, File (the picture and the GM's own),
-    // Help; the toolbar's turn last; the players' strings alone gone, Luke
-    // 2026-10-25)
+    // Help; the players' strings alone gone, Luke 2026-10-25)
     const fileGM = gm && !layer?.preview ? [
         // (Luke, 2026-10-21: a place invented at the table; the selected
         // cards put together afresh, Shift+R)
@@ -193,8 +186,7 @@ export function boardTools() {
     // (symbol detail, the GM's way of finding people through the roofs: on the
     // bar beside the GM notes as well as Shift+Y and Setup, Luke 2026-10-28,
     // "leave nothing built but not in the app"; the state is the client's)
-    const sym = game.heart?.board?.symbols;
-    const symbolsB = gm && !layer?.preview && typeof sym?.set === 'function' ? [{ name: 'symbols', icon: 'fa-solid fa-location-dot', title: loc('heart.board.tool.symbols'), toggle: true, active: Boolean(sym.get?.()), onClick: async (on) => sym.set(Boolean(on)) }] : [];
+    const symbolsB = gm && !layer?.preview ? [{ name: 'symbols', icon: 'fa-solid fa-location-dot', title: loc('heart.board.tool.symbols'), toggle: true, active: Boolean(symbols.get()), onClick: async (on) => symbols.set(Boolean(on)) }] : [];
     const buttons = [...(undoing ? [undoB, redoB] : []), ...(gm ? [preview] : []), ...gmNotesB, ...symbolsB, shareB, snapshot, statsB, qualityB, ...fileGM, help];
     const reveal = tools.filter((t) => t.name === 'reveal');
     const before = tools.filter((t) => t.name !== 'reveal');
