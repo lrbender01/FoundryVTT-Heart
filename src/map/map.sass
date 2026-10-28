@@ -1427,12 +1427,16 @@ body.heart-board-rail-on #tools-panel-heartBoard, body.heart-board-rail-on #tool
         border-color: util.$ctl-border-hi-alt
 
     .txt
+        flex: 0 1 auto
         min-width: 0
         overflow: hidden
         text-overflow: ellipsis
 
+    // (Foundry's own button rule is width 100%, which took the whole strip and left the words no
+    // room: seen in a private Foundry, 2026-10-27)
     button
         flex: 0 0 auto
+        width: auto
         height: 22px
         margin: 0
         padding: 0 8px

@@ -424,7 +424,7 @@ The audits are archived in monorepo `docs/history/heart-code-audit/`; these are 
 
 ### Open from the 2026-10-27 ecosystem audit
 
-Report: monorepo `docs/plans/ecosystem-audit-2026-10-27/areas/02-fork-board.md` (finding numbers below are its own). Done the same day: `BOARD_PARTS` in `model.js` as the one description of the board's parts (finding 1) and `src/map/scrapboard/index.js` as the pure entry point (finding 4); see the CHANGELOG. Still open:
+Report: monorepo `docs/history/plans-2026-10-27/ecosystem-audit-2026-10-27/areas/02-fork-board.md` (finding numbers below are its own). Done the same day: `BOARD_PARTS` in `model.js` as the one description of the board's parts (finding 1) and `src/map/scrapboard/index.js` as the pure entry point (finding 4); see the CHANGELOG. Still open:
 
 - **`model.js` is nine modules in one file** (finding 3): split along its section banners (seeded random, look and library, board schema, pieces and stages, ownership, depth and hand, scrap layout and text fitting, strings, `boardView`, hit tests, stroke cutting, the `DOODLES` data), keeping the pure-file rule.
 - **`createPainter` is one 1,923-line function in `paint.js`** (finding 6): every cache and helper sits in its closure, so none is testable alone; `scrapboard-paint.test.mjs` has one case.
