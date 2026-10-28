@@ -31,6 +31,7 @@ import { registerBoardFog } from './scrapboard/fog.js';
 import { symbols } from './scrapboard/crowd.js';
 import { bringInFromEditor, checkEditorLink, editorState, setAutoBringIn, watchOnce } from './scrapboard/editor-link.js';
 import { sessionControls, registerSessionTools } from '../common/session-tools.js';
+import { tableLayerName, tableLayerDoc } from './scrapboard/boardfile.js';
 
 // (the scenes whose board was copied as this session found it)
 const kept = new Set();
@@ -321,6 +322,25 @@ function registerHooks() {
     });
 }
 
+// The table layer's file (Luke, 2026-10-27: the GM's moves at the table come out of Foundry): the
+// JSON of tableLayerDoc, uploaded beside the board's daily copy, worlds/<world>/heart-boards/ (as
+// keepWorldCopy does), named for the doc's day. The GM's alone; true once written, false when not
+// the GM's, not a board scene, or not a table layer. The toolkit builds the edges; the fork never
+// reads its flags.
+async function writeTableLayer(scene, doc) {
+    if (!game.user?.isGM || !scene || !isBoardScene(scene) || doc?.format !== 'heart-table-layer') return false;
+    const [y, m, d] = String(doc.day).split('-').map(Number);
+    const day = y && m && d ? new Date(y, m - 1, d) : new Date();
+    const dir = `worlds/${game.world.id}/heart-boards`;
+    try {
+        await FilePicker.createDirectory('data', dir);
+    } catch {
+        // (there already)
+    }
+    const file = new File([JSON.stringify(doc, null, 2)], tableLayerName(scene.name, scene.id, day), { type: 'application/json' });
+    return Boolean(await FilePicker.upload('data', dir, file, {}, { notify: false }));
+}
+
 // A players' board: a scrapboard scene its owners (every player, or some)
 // edit freely, but for what's hidden and the book's places
 async function createPlayersBoard() {
@@ -420,6 +440,9 @@ export function initialise() {
         // Map Dreamer's map in a scene (editor-link.js; 2026-10-28): bringIn(scene) takes the published
         // board in one step, state(scene) says where the scene stands, check(scene) asks when it is behind
         editor: { bringIn: bringInFromEditor, state: editorState, check: checkEditorLink, auto: setAutoBringIn, watch: watchOnce },
+        // The table layer out of Foundry (boardfile.js; 2026-10-27): name(sceneName, sceneId, date),
+        // doc({ world, scene, board, day, written, edges }), and write(scene, doc), the GM's
+        tableLayer: { name: tableLayerName, doc: tableLayerDoc, write: writeTableLayer },
         newPlace,
         restoreBackup,
         undo,

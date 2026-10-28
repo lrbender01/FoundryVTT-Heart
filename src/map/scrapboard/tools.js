@@ -5,6 +5,7 @@ import { toolsFor } from './controls.js';
 import { isBoardScene, exportBoard, importBoard, restoreBackup, hasBackup, downloadBoard } from './api.js';
 import { exportDialog, importDialog, binDialog, backupsDialog, askBoard, sheetDialog } from './notes.js';
 import { reloadBoardLook } from './look.js';
+import { bringInFromEditor, hasPublished } from './editor-link.js';
 import { statsDialog, qualityDialog } from './stats.js';
 import { layersDialog } from './layers.js';
 import { drawnRoofPieces } from './pieces-draw.js';
@@ -173,6 +174,9 @@ export function boardTools() {
             const ok = await askBoard({ title: loc('heart.board.tool.restore'), content: loc('heart.board.restore-confirm'), yes: loc('heart.board.ask.swap-in'), no: loc('heart.board.ask.keep-this') });
             if (ok) await restoreBackup(scene);
         }),
+        // (Map Dreamer's map, on a board whose map it has published: one step, asked first
+        // only when this scene has no record of what Map Dreamer drew; editor-link.js, 2026-10-28)
+        ...(hasPublished(scene) ? [{ name: 'editor', icon: 'fa-solid fa-cloud-arrow-down', title: loc('heart.board.editor-tool'), button: true, onClick: () => bringInFromEditor(scene) }] : []),
         // (the GM's doing shown to the table as it happens, or not: Luke 2026-10-25)
         { name: 'live', icon: 'fa-solid fa-tower-broadcast', title: loc('heart.board.tool.live'), toggle: true, active: liveShareOn(), onClick: async (on) => game.settings.set('heart', 'boardLiveShare', Boolean(on)) },
         button('reload', 'fa-solid fa-rotate', async () => {

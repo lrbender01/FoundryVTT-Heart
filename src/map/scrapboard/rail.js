@@ -23,7 +23,7 @@ const esc = (s) => Handlebars.escapeExpression(String(s ?? ''));
 // (and the GM's switch for showing their doing live: Luke 2026-10-25)
 // (and everyone's statistics and quality: Luke 2026-10-25)
 // (and a baked map's layers, the GM's: Luke 2026-10-25)
-const FILE = ['snapshot', 'stats', 'quality', 'place', 'reshuffle', 'sheet', 'layers', 'live', 'bin', 'history', 'download', 'export', 'import', 'restore', 'reload'];
+const FILE = ['snapshot', 'stats', 'quality', 'place', 'reshuffle', 'sheet', 'layers', 'live', 'bin', 'history', 'download', 'export', 'import', 'restore', 'editor', 'reload'];
 // Foundry's own icons (Luke, 2026-10-03: Foundry's icons and spacing, the
 // glass kept): a tool's or button's own, and the rail's few
 const FA = { file: 'fa-solid fa-folder-open', turn: 'fa-solid fa-arrows-rotate' };
@@ -51,6 +51,8 @@ export function registerRailSettings() {
     // (the symbol detail switch lit or not, whoever changed it: Shift+Y, Setup,
     // or the rail's own button)
     Hooks.on('heartSymbolsChanged', () => syncRail());
+    // (File's Map Dreamer entry appears once the map is known to be published: editor-link.js)
+    Hooks.on('heartEditorPublished', () => syncRail());
     // (horizontal unless a client set otherwise: the Actors group sits first
     // and a long column runs into the macro bar; Plenty finish, 2026-10-26)
     game.settings.register('heart', 'boardToolbarDir', { scope: 'client', config: false, type: String, default: 'horizontal' });

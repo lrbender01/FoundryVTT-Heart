@@ -1396,3 +1396,58 @@ body.heart-board-rail-on #tools-panel-heartBoard, body.heart-board-rail-on #tool
 
     i
         margin: 0
+
+// The banner on a board scene with a published Map Dreamer map (scrapboard/editor-banner.js;
+// 2026-10-28): one small strip at the top of the screen, the GM's only. Out of the way: clicks pass
+// through it except on its button, and a line that is too long is cut with an ellipsis.
+.heart-board-editor-banner
+    position: fixed
+    top: 6px
+    left: 50%
+    transform: translateX(-50%)
+    z-index: 59
+    display: flex
+    align-items: center
+    gap: 8px
+    box-sizing: border-box
+    max-width: min(90vw, 560px)
+    padding: 2px 10px
+    font-size: 12px
+    line-height: 20px
+    white-space: nowrap
+    color: util.$ctl-text
+    background: util.$ctl-bg
+    border: 1px solid util.$ctl-border
+    border-radius: 5px
+    box-shadow: 0 0 10px util.$ctl-shadow
+    pointer-events: none
+
+    // (behind or brought in by hand: the orange border Foundry gives a lit control)
+    &[data-kind="behind"], &[data-kind="unlinked"]
+        border-color: util.$ctl-border-hi-alt
+
+    .txt
+        min-width: 0
+        overflow: hidden
+        text-overflow: ellipsis
+
+    button
+        flex: 0 0 auto
+        height: 22px
+        margin: 0
+        padding: 0 8px
+        font-size: 12px
+        line-height: 20px
+        color: util.$ctl-text-hi
+        background: transparent
+        border: 1px solid util.$ctl-border-hi-alt
+        border-radius: 4px
+        cursor: pointer
+        pointer-events: all
+
+        &:hover:not(:disabled)
+            box-shadow: 0 0 10px util.$ctl-glow
+
+        &:disabled
+            opacity: 0.5
+            cursor: default
