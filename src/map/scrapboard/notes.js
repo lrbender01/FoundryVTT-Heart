@@ -114,6 +114,12 @@ export function registerBoardSettings() {
             ui.controls?.render?.();
         },
     });
+    // the GM's symbol detail mode (crowd.js; Luke, 2026-10-28): every NPC's
+    // mark over the board, through roofs. Off by default, remembered per client.
+    game.settings.register('heart', 'boardSymbols', {
+        scope: 'client', config: false, type: Boolean, default: false,
+        onChange: (on) => Hooks.callAll('heartSymbolsChanged', Boolean(on)),
+    });
     // how finely this client paints the map (render.js DETAIL): auto is high
     // for the GM, standard for players, light on a device short of memory
     game.settings.register('heart', 'boardDetail', {
@@ -128,7 +134,7 @@ export function registerBoardSettings() {
         default: 'auto',
         onChange: (d) => {
             canvas?.heartBoard?.reset?.();
-            // (a player who picks it here is told it is experimental)
+            // (a player who picks it here is told what it costs)
             if (d === 'ultra' && !game.user?.isGM) ui.notifications?.warn(game.i18n.localize('heart.board.detail-ultra-player'));
             // (the canvas's own resolution is set when it is made: a reload)
             if ((d === 'ultra') !== canvasIsUltra()) SettingsConfig.reloadConfirm?.({ world: false });

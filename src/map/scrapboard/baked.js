@@ -54,7 +54,7 @@ export function cleanManifest(j, base = '') {
         const rect = rectOf(o?.rect);
         const ol = levelsOf(o?.levels);
         if (!idOk(o?.id) || !rect || !ol.length || overlays.some((x) => x.id === o.id)) continue;
-        overlays.push({ id: o.id, name: String(o.name ?? o.id).slice(0, 120), audience: o.audience === 'gm' ? 'gm' : 'all', shown: o.shown !== false, rect, levels: withUrls(ol) });
+        overlays.push({ id: o.id, name: String(o.name ?? o.id).slice(0, 120), audience: o.audience === 'gm' ? 'gm' : 'all', shown: o.shown !== false, under: o.under === 'pieces' ? 'pieces' : null, rect, levels: withUrls(ol) });
     }
     const roofs = [];
     for (const r of Array.isArray(j.roofs) ? j.roofs : []) {
@@ -219,6 +219,13 @@ export function cleanBakedFlags(f) {
         roofs: Object.fromEntries(Object.entries(bools(f.roofs, roofKey)).filter(([, v]) => v)),
     };
 }
+
+// Where an overlay sorts in the primary group: `"under": "pieces"` puts it
+// between the base (40) and the ground pieces (41), as ground beneath the
+// pieces (Luke, 2026-10-28); any other overlay stays at 50
+export const OVERLAY_SORT = 50;
+export const OVERLAY_UNDER_SORT = 40.5;
+export const overlaySort = (o) => (o?.under === 'pieces' ? OVERLAY_UNDER_SORT : OVERLAY_SORT);
 
 // Whether an overlay is drawn for this viewer: never a GM's one for a
 // player; else the GM's switch, else how the bake started it

@@ -7,6 +7,8 @@ import { exportDialog, importDialog, binDialog, backupsDialog, askBoard, sheetDi
 import { reloadBoardLook } from './look.js';
 import { statsDialog, qualityDialog } from './stats.js';
 import { layersDialog } from './layers.js';
+import { drawnRoofPieces } from './pieces-draw.js';
+import { railGroups } from './rail-groups.js';
 import { gmNotesShown } from './render.js';
 import { heartDialogOptions } from '../../common/dialog.js';
 
@@ -79,6 +81,10 @@ function helpDialog(user, tools, buttons) {
         ['undo', ['fa-solid fa-rotate-left', 'fa-solid fa-rotate-right'], 'heart.board.help.undo-title', has.has('undo')],
         ['preview', 'fa-solid fa-user-secret', 'heart.board.tool.preview', has.has('preview')],
         ['share', 'fa-solid fa-users', 'heart.board.help.share-title', has.has('share')],
+        // (the GM's two switches, 2026-10-28: both were on the bar with a
+        // tooltip and nothing in the Help)
+        ['gmnotes', 'fa-solid fa-user-lock', 'heart.board.help.gmnotes-title', has.has('gmnotes')],
+        ['symbols', 'fa-solid fa-location-dot', 'heart.board.help.symbols-title', has.has('symbols')],
         ['file', 'fa-solid fa-folder-open', 'heart.board.tool.file', true],
         ['delete', 'fa-solid fa-delete-left', 'heart.board.help.delete-title', true],
         ['alone', 'fa-solid fa-toggle-on', 'heart.board.mark-alone', brush],
@@ -87,8 +93,11 @@ function helpDialog(user, tools, buttons) {
         ['keys', 'fa-solid fa-keyboard', 'heart.board.help.keys-title', true],
     ].filter((t) => t[3]);
     const intro = editor ? '' : `<div class="intro">${helpHtml(loc('heart.board.help.intro-player'))}</div>`;
+    // (the groups other modules put on the rail, each with the help it brought:
+    // the toolkit's Story group; only those this person may use)
+    const modules = railGroups.list({ gm: user.isGM }).filter((g) => g.help && game.i18n.has(g.help)).map((g) => row(g.icon, loc(g.label), loc(g.help))).join('');
     const content = `<div class="heart-board-help">${intro}<h3>${esc(loc('heart.board.help.tools-head'))}</h3>${tools.map((t) => row(t.icon, t.title, text(t.name))).join('')}
-        <h3>${esc(loc('heart.board.help.more-head'))}</h3>${topics.map(([name, icon, title]) => row(icon, loc(title), text(name))).join('')}</div>`;
+        <h3>${esc(loc('heart.board.help.more-head'))}</h3>${topics.map(([name, icon, title]) => row(icon, loc(title), text(name))).join('')}${modules}</div>`;
     new Dialog({ title: loc('heart.board.help.title'), content, buttons: { close: { label: loc('Close') } }, default: 'close' }, heartDialogOptions({ classes: ['heart-board-dialog'], width: 600 })).render(true);
 }
 
@@ -143,7 +152,9 @@ export function boardTools() {
         // (Luke, 2026-10-24: pages added or taken away on any side)
         button('sheet', 'fa-solid fa-expand', () => sheetDialog(scene)),
         // (a baked map's overlays, roofs, and NPC fog: Luke 2026-10-25)
-        ...(layer?.backdrop?.on ? [button('layers', 'fa-solid fa-layer-group', () => layersDialog(scene, layer.backdrop))] : []),
+        // (and a board of drawn roof pieces with no baked map under it: its
+        // roofs lift here too, as the window itself already allowed)
+        ...(layer?.backdrop?.on || drawnRoofPieces().length ? [button('layers', 'fa-solid fa-layer-group', () => layersDialog(scene, layer?.backdrop))] : []),
         button('bin', 'fa-solid fa-box-archive', () => binDialog(scene)),
         button('history', 'fa-solid fa-clock-rotate-left', () => backupsDialog(scene)),
         // (Luke, 2026-10-21: the board saved as a file, Import loads it back)
@@ -175,10 +186,15 @@ export function boardTools() {
     // (the GM's own notes shown or hidden on this client: Plenty finish item 2;
     // never in Player view, which hides them anyway)
     const gmNotesB = gm && !layer?.preview ? [{ name: 'gmnotes', icon: 'fa-solid fa-user-lock', title: loc('heart.board.tool.gmnotes'), toggle: true, active: gmNotesShown(), onClick: async (on) => game.settings.set('heart', 'boardGmNotes', Boolean(on)) }] : [];
-    const buttons = [...(undoing ? [undoB, redoB] : []), ...(gm ? [preview] : []), ...gmNotesB, shareB, snapshot, statsB, qualityB, ...fileGM, help];
+    // (symbol detail, the GM's way of finding people through the roofs: on the
+    // bar beside the GM notes as well as Shift+Y and Setup, Luke 2026-10-28,
+    // "leave nothing built but not in the app"; the state is the client's)
+    const sym = game.heart?.board?.symbols;
+    const symbolsB = gm && !layer?.preview && typeof sym?.set === 'function' ? [{ name: 'symbols', icon: 'fa-solid fa-location-dot', title: loc('heart.board.tool.symbols'), toggle: true, active: Boolean(sym.get?.()), onClick: async (on) => sym.set(Boolean(on)) }] : [];
+    const buttons = [...(undoing ? [undoB, redoB] : []), ...(gm ? [preview] : []), ...gmNotesB, ...symbolsB, shareB, snapshot, statsB, qualityB, ...fileGM, help];
     const reveal = tools.filter((t) => t.name === 'reveal');
     const before = tools.filter((t) => t.name !== 'reveal');
-    const list = [...before, ...(undoing ? [undoB, redoB] : []), ...(gm ? [preview] : []), ...reveal, ...gmNotesB, shareB, snapshot, statsB, qualityB, ...fileGM, help];
+    const list = [...before, ...(undoing ? [undoB, redoB] : []), ...(gm ? [preview] : []), ...reveal, ...gmNotesB, ...symbolsB, shareB, snapshot, statsB, qualityB, ...fileGM, help];
     return { tools, buttons, list };
 }
 

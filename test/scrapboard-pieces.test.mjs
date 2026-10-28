@@ -136,3 +136,27 @@ describe("hitting a piece", () => {
     expect(pieceAtPoint(pieces, { x: 1000, y: 800 }, { skip: (p) => p.id === "ordinary" })?.id).toBe("field");
   });
 });
+
+describe("the stage a view shows (2026-10-28)", async () => {
+  const { stageOrFirst } = await import("../src/map/scrapboard/model.js");
+  const stages = [{ id: "afternoon" }, { id: "dusk" }];
+  // a lantern's twins: the unlit one hidden from dusk, the lit one hidden until dusk
+  const unlit = normalizePiece({ kind: "prop", x: 1, y: 1, layer: "standing", times: { dusk: { hidden: true } } });
+  const lit = normalizePiece({ kind: "prop", x: 1, y: 1, layer: "standing", times: { afternoon: { hidden: true }, dusk: { hidden: false } } });
+
+  it("is the one named, else the board's first, else none", () => {
+    expect(stageOrFirst("dusk", stages)).toBe("dusk");
+    expect(stageOrFirst(null, stages)).toBe("afternoon");
+    expect(stageOrFirst(undefined, ["noon"])).toBe("noon");
+    expect(stageOrFirst(null, [])).toBeNull();
+  });
+
+  it("shows one lantern of a pair at any stage, never both stacked", () => {
+    for (const stage of [stageOrFirst(null, stages), "afternoon", "dusk"]) {
+      const hiddenNow = [unlit, lit].filter((p) => pieceAt(p, stage, stages).hidden).length;
+      expect(hiddenNow, stage).toBe(1);
+    }
+    // (with no stage at all the pair is stacked, which is why a view takes the first)
+    expect([unlit, lit].filter((p) => pieceAt(p, null, stages).hidden).length).toBe(0);
+  });
+});

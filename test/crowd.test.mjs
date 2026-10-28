@@ -4,23 +4,20 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { SYMBOL_BELOW_PX, MARK_PX, screenPx, underSwitch, kindOf, isSymbol, markShown, atlasLayout, glyphUrl, markScale } from "../src/map/scrapboard/crowd.js";
+import { CROWD_Z, markEventMode, MARK_PX, kindOf, markShown, aboveRoofs, nameShown, hoverNames, asGM, atlasLayout, glyphUrl, markScale } from "../src/map/scrapboard/crowd.js";
 import { frameCapFor, tickerFps, FRAME_CAP } from "../src/map/scrapboard/quality.js";
 
-describe("the size switch", () => {
-  it("a token is its symbol under about 16 screen pixels, its picture from there up", () => {
-    expect(SYMBOL_BELOW_PX).toBe(16);
-    expect(underSwitch(15.9)).toBe(true);
-    expect(underSwitch(16)).toBe(false);
+describe("the mark sizes", () => {
+  it("one table: named sigils 36 px, crowd marks 12 px", () => {
+    expect(MARK_PX).toEqual({ anon: 12, named: 36 });
   });
-  it("follows the zoom and the token's larger side", () => {
-    // (a 1-square token, 50 px grid: 25 px at half zoom, 10 px at a fifth)
-    expect(screenPx({ width: 1, height: 1 }, 50, 0.5)).toBe(25);
-    expect(underSwitch(screenPx({ width: 1, height: 1 }, 50, 0.2))).toBe(true);
-    expect(screenPx({ width: 0.5, height: 2 }, 50, 0.1)).toBe(10);
-    // (a half-square hen turns before a person does)
-    expect(underSwitch(screenPx({ width: 0.5, height: 0.5 }, 50, 0.5))).toBe(true);
-    expect(underSwitch(screenPx({ width: 1, height: 1 }, 50, 0.5))).toBe(false);
+});
+
+describe("which marks take the pointer", () => {
+  it("only a named sigil does, and the crowd container sits above the board layer (z 260)", () => {
+    expect(markEventMode("named")).toBe("static");
+    expect(markEventMode("anon")).toBe("none");
+    expect(CROWD_Z).toBeGreaterThan(260);
   });
 });
 
@@ -41,44 +38,50 @@ describe("named versus anonymous", () => {
     expect(MARK_PX.named).toBeGreaterThan(MARK_PX.anon);
     expect(markScale(MARK_PX.named, 0.1)).toBeGreaterThan(markScale(MARK_PX.anon, 0.1));
     // (a mark keeps its size on screen: twice the zoom, half the scene scale)
-    expect(markScale(22, 0.2)).toBe(markScale(22, 0.1) / 2);
-  });
-});
-
-describe("which tokens become symbols", () => {
-  const base = { kind: "anon", px: 8 };
-  it("a small NPC does, a big one does not", () => {
-    expect(isSymbol(base)).toBe(true);
-    expect(isSymbol({ ...base, px: 40 })).toBe(false);
-  });
-  it("a player's own token, a selected one, a dragged one, and a non-NPC never do", () => {
-    expect(isSymbol({ ...base, own: true })).toBe(false);
-    expect(isSymbol({ ...base, controlled: true })).toBe(false);
-    expect(isSymbol({ ...base, preview: true })).toBe(false);
-    expect(isSymbol({ kind: null, px: 4 })).toBe(false);
+    expect(markScale(36, 0.2)).toBe(markScale(36, 0.1) / 2);
   });
 });
 
 describe("who is shown a mark", () => {
-  it("the GM sees every named sigil, seen or not (through roofs)", () => {
-    expect(markShown({ gm: true, kind: "named", seen: false })).toBe(true);
+  it("the GM, with the mode on, sees every NPC's mark, named or not, through roofs", () => {
+    expect(markShown({ gm: true, kind: "named", on: true })).toBe(true);
+    expect(markShown({ gm: true, kind: "anon", on: true })).toBe(true);
   });
-  it("the GM sees an anonymous mark only for a token they could see", () => {
-    expect(markShown({ gm: true, kind: "anon", seen: true })).toBe(true);
-    expect(markShown({ gm: true, kind: "anon", seen: false })).toBe(false);
+  it("with the mode off, nobody sees a mark", () => {
+    expect(markShown({ gm: true, kind: "named", on: false })).toBe(false);
+    expect(markShown({ gm: true, kind: "anon" })).toBe(false);
   });
-  it("a player sees any mark only for a token they could see anyway; nobody learns where a named villager hides", () => {
-    expect(markShown({ kind: "named", seen: false })).toBe(false);
-    expect(markShown({ kind: "named", seen: true })).toBe(true);
-    expect(markShown({ kind: "anon", seen: false })).toBe(false);
-    expect(markShown({ kind: "anon", seen: true })).toBe(true);
+  it("a player never sees a mark, mode or no mode", () => {
+    expect(markShown({ kind: "named", on: true })).toBe(false);
+    expect(markShown({ gm: false, kind: "anon", on: true })).toBe(false);
   });
   it("the GM in Player view is a player", () => {
-    expect(markShown({ gm: true, preview: true, kind: "named", seen: false })).toBe(false);
-    expect(markShown({ gm: true, preview: true, kind: "named", seen: true })).toBe(true);
+    expect(asGM({ gm: true, preview: true })).toBe(false);
+    expect(markShown({ gm: true, preview: true, kind: "named", on: true })).toBe(false);
   });
-  it("a token that is no crowd member shows nothing", () => {
-    expect(markShown({ gm: true, kind: null, seen: true })).toBe(false);
+  it("a token that is no NPC shows nothing", () => {
+    expect(markShown({ gm: true, kind: null, on: true })).toBe(false);
+  });
+});
+
+describe("the named above the roofs and their names", () => {
+  it("the GM sees the named above roofs at every zoom; the crowd and players do not", () => {
+    expect(aboveRoofs({ gm: true, kind: "named" })).toBe(true);
+    expect(aboveRoofs({ gm: true, kind: "anon" })).toBe(false);
+    expect(aboveRoofs({ gm: false, kind: "named" })).toBe(false);
+    expect(aboveRoofs({ gm: true, preview: true, kind: "named" })).toBe(false);
+    expect(aboveRoofs({ gm: true, kind: null })).toBe(false);
+  });
+  it("a named name is always shown to the GM, on hover to a player, never for the crowd", () => {
+    expect(nameShown({ gm: true, kind: "named" })).toBe(true);
+    expect(nameShown({ gm: false, kind: "named" })).toBe(false);
+    expect(nameShown({ gm: false, kind: "named", hovered: true })).toBe(true);
+    expect(nameShown({ gm: true, preview: true, kind: "named" })).toBe(false);
+    expect(nameShown({ gm: true, kind: "anon", hovered: true })).toBe(false);
+  });
+  it("hovering a mark names a named sigil and shows nothing for a crowd mark", () => {
+    expect(hoverNames("named")).toBe(true);
+    expect(hoverNames("anon")).toBe(false);
   });
 });
 
@@ -115,5 +118,22 @@ describe("the frame cap", () => {
     expect(tickerFps({ board: true, picked: "auto", foundryFps: 20 })).toBe(20);
     expect(tickerFps({ board: false, picked: "auto", foundryFps: 60 })).toBe(60);
     expect(tickerFps({ board: true, picked: "ultra", foundryFps: 0 })).toBe(0);
+  });
+});
+
+describe("the named's names decluttered (2026-10-28, as Map Dreamer's page does)", async () => {
+  const { namePx, keepNames, NAME_PX, FAR_NAME_PX } = await import("../src/map/scrapboard/crowd.js");
+  it("sets the type 14 px far out and 18 px near", () => {
+    expect(namePx(10)).toBe(FAR_NAME_PX);
+    expect(namePx(33)).toBe(FAR_NAME_PX);
+    expect(namePx(34)).toBe(NAME_PX);
+    expect(namePx(200)).toBe(NAME_PX);
+  });
+  it("lays the names nearest the centre first and leaves out one that would overlap", () => {
+    const box = (id, d, x) => ({ id, d, x0: x, x1: x + 60, y0: 0, y1: 16 });
+    const keep = keepNames([box("far", 90, 40), box("near", 5, 0), box("clear", 50, 200), box("touch", 20, 60)]);
+    // ("far" overlaps "near"; "touch" only meets it at an edge)
+    expect([...keep].sort()).toEqual(["clear", "near", "touch"]);
+    expect(keepNames([]).size).toBe(0);
   });
 });

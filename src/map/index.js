@@ -28,6 +28,8 @@ import { railGroups } from './scrapboard/rail-groups.js';
 import { floating, kept as keptWindows, writeWindow, shutButton, registerToolWindow, carryWindows } from './scrapboard/windows.js';
 import { keepBackup } from './scrapboard/backups.js';
 import { registerBoardFog } from './scrapboard/fog.js';
+import { symbols } from './scrapboard/crowd.js';
+import { bringInFromEditor, checkEditorLink, editorState, setAutoBringIn, watchOnce } from './scrapboard/editor-link.js';
 import { sessionControls, registerSessionTools } from '../common/session-tools.js';
 
 // (the scenes whose board was copied as this session found it)
@@ -142,6 +144,9 @@ function registerHooks() {
         } catch (err) {
             console.warn('heart | the board could not be copied or tidied', err);
         }
+        // (Map Dreamer's map: when it has moved on since this scene took it, or this scene's board was
+        // brought in by hand, the GM is asked once; a baked map rebuilt on disk is loaded again; 2026-10-28)
+        if (game.user.isGM && isBoardScene(scene)) checkEditorLink(scene).catch((err) => console.warn('heart | Map Dreamer\'s map could not be compared', err));
     });
     Hooks.on('canvasTearDown', () => document.getElementById('heart-board-rail')?.remove());
 
@@ -151,6 +156,11 @@ function registerHooks() {
         if (foundry.utils.hasProperty(changes, 'flags.heart.board')) syncBoardScene(scene).catch((err) => console.warn('heart | the scene could not follow its sheet', err));
         // (a board on its scene's own background the scene's size: Luke 2026-10-25)
         if (('width' in changes || 'height' in changes) && !options?.heartBoard) followSceneSize(scene).catch((err) => console.warn('heart | the board could not follow its scene', err));
+        // (the clock moved, by the toolkit's timeline: the pieces are placed again at its stage, a
+        // lantern's lit twin shown and its unlit twin hidden; 2026-10-28)
+        if (scene.id === canvas?.scene?.id && (foundry.utils.hasProperty(changes, 'flags.fvtt-heart-toolkit.timeline.stage') || foundry.utils.hasProperty(changes, 'flags.fvtt-heart-toolkit.stage'))) {
+            layer()?.pieces.sync(scene, boardOf(scene)).catch((err) => console.warn('heart | the pieces could not follow the clock', err));
+        }
         if (scene.id !== canvas?.scene?.id || !foundry.utils.hasProperty(changes, 'flags.heart')) return;
         // (a new style: drawn again in it at once, never twice)
         if (foundry.utils.hasProperty(changes, 'flags.heart.boardStyle')) {
@@ -407,6 +417,9 @@ export function initialise() {
         export: exportBoard,
         download: downloadBoard,
         import: importBoard,
+        // Map Dreamer's map in a scene (editor-link.js; 2026-10-28): bringIn(scene) takes the published
+        // board in one step, state(scene) says where the scene stands, check(scene) asks when it is behind
+        editor: { bringIn: bringInFromEditor, state: editorState, check: checkEditorLink, auto: setAutoBringIn, watch: watchOnce },
         newPlace,
         restoreBackup,
         undo,
@@ -419,6 +432,9 @@ export function initialise() {
         // gmOnly, fold, tools: [{ name, icon, title, label, run, on }] }),
         // unregister(id), refresh() when a tool's lit state changed
         railGroups,
+        // The GM's symbol detail mode (crowd.js; Luke, 2026-10-28): get(),
+        // set(on), toggle(); the Hooks event heartSymbolsChanged(on)
+        symbols,
         // The board's own floating windows for a module's: drag by a head
         // marked data-grip, a corner to size, a place kept per client. Make one
         // with windows.floating(id, 'heart-board-palette ...', { at, view,

@@ -17,6 +17,8 @@ import { fogHides, fogDistance, unitPx, metrePx } from './baked.js';
 import { pointInPoly } from './model.js';
 import { registerPlayRules } from './play-rules.js';
 import { registerCrowd } from './crowd.js';
+import { TOP, splitPath, levelFile, chainFor, pickLevel, readManifest, sizedScale, acquireLevel, releaseLevel } from './token-mips.js';
+import { ultraPicked } from './quality.js';
 
 // (a point in a flat [x, y, ...] polygon)
 const inPoly = (pt, poly) => pointInPoly(pt, poly);
@@ -101,18 +103,97 @@ export function refreshFogAll() {
 export function registerBoardFog() {
     const Base = CONFIG.Token.objectClass;
     class HeartBoardToken extends Base {
-        // whether this client could see the token if it were drawn (crowd.js
-        // asks this for the mark that stands in for it)
+        // whether this client could see the token if it were drawn
         get heartSeen() {
             return super.isVisible && !hiddenByFog(this);
         }
-        // (a token small enough on screen to be its mark is not drawn at all:
-        // crowd.js sets _heartSymbol; Luke, 2026-10-27)
+        // (a token is drawn at every zoom, Luke 2026-10-28: the marks of
+        // crowd.js are the GM's finding tool, not a stand-in)
         get isVisible() {
-            return this.heartSeen && !this._heartSymbol;
+            return this.heartSeen;
+        }
+        // (token mip chains, Luke 2026-10-28: the picture swapped, on this
+        // client only, for the level the token's size on screen needs; the
+        // token document is never changed. A fresh mesh starts at the top.)
+        async _draw(options) {
+            await super._draw(options);
+            this.heartMipDrop();
+            this.heartFitMip();
+        }
+        _destroy(options) {
+            this.heartMipDrop();
+            return super._destroy(options);
+        }
+        // let go of the level file this token holds
+        heartMipDrop() {
+            if (this._heartMipUrl) releaseLevel(this._heartMipUrl, ultraPicked());
+            this._heartMipUrl = null;
+            this._heartMipLevel = TOP;
+            this._heartMipWant = TOP;
+        }
+        // the mesh's texture swapped with its size on the board kept exactly
+        // (read before, set after: see token-mips.js sizedScale)
+        heartSetTexture(tex) {
+            const mesh = this.mesh;
+            const old = mesh.texture;
+            const before = { scale: { x: mesh.scale.x, y: mesh.scale.y }, w: old?.orig?.width || tex.orig.width, h: old?.orig?.height || tex.orig.height };
+            mesh.texture = tex;
+            const s = sizedScale(before, { w: tex.orig.width, h: tex.orig.height });
+            mesh.scale.set(s.x, s.y);
+        }
+        // show the level this token's size on screen needs
+        async heartFitMip() {
+            try {
+                const split = splitPath(this.document?.texture?.src);
+                if (!split || !this.mesh || this.destroyed) return;
+                const chain = chainFor(await readManifest(split.dir), split.name);
+                if (!chain || this.destroyed || !this.mesh) return;
+                const res = canvas.app?.renderer?.resolution || window.devicePixelRatio || 1;
+                const sizePx = Math.max(this.w, this.h) * (canvas.stage?.scale?.x || 1);
+                const level = pickLevel({ sizePx, dpr: res, quality: ultraPicked() ? 'ultra' : 'auto', levels: chain });
+                if (level === (this._heartMipWant ?? TOP)) return;
+                this._heartMipWant = level;
+                const url = level < TOP ? `${split.dir}/${levelFile(split.name, level)}` : null;
+                const tex = url ? await acquireLevel(url) : this.texture;
+                const mesh = this.mesh;
+                // (a newer zoom wanted another level meanwhile, or the token went)
+                if (this.destroyed || !mesh || this._heartMipWant !== level || !tex?.valid) {
+                    if (url) releaseLevel(url, ultraPicked());
+                    if (this._heartMipWant === level) this._heartMipWant = this._heartMipLevel ?? TOP;
+                    return;
+                }
+                // (the same size on the board: the scale follows the new
+                // texture's pixels; the anchor does not change with a texture)
+                this.heartSetTexture(tex);
+                if (this._heartMipUrl) releaseLevel(this._heartMipUrl, ultraPicked());
+                this._heartMipUrl = url;
+                this._heartMipLevel = level;
+            } catch (err) {
+                // (any error: back to the document's own picture)
+                console.warn('Heart | a token mip level could not be shown', err);
+                try {
+                    if (this.mesh && !this.destroyed && this.texture && this.mesh.texture !== this.texture) this.heartSetTexture(this.texture);
+                } catch {
+                    // (nothing more to do)
+                }
+                this.heartMipDrop();
+            }
         }
     }
     CONFIG.Token.objectClass = HeartBoardToken;
+    // (the zoom changed: every token looked at again once the zoom settles,
+    // never per frame)
+    let lastScale = 0;
+    let settle = 0;
+    Hooks.on('canvasPan', (cv, pos) => {
+        const s = Number(pos?.scale ?? cv?.stage?.scale?.x) || 0;
+        if (!s || Math.abs(s - lastScale) < 1e-4) return;
+        lastScale = s;
+        clearTimeout(settle);
+        settle = setTimeout(() => {
+            for (const t of canvas.tokens?.placeables ?? []) t.heartFitMip?.();
+        }, 150);
+    });
     const again = () => {
         if (canvas.heartBoard?.backdrop?.on) refreshFog();
     };
@@ -141,7 +222,7 @@ export function registerBoardFog() {
     });
     // (roofs open from inside only, doors need a token nearby: Luke 2026-10-27)
     registerPlayRules();
-    // (the crowd from afar: small tokens become marks above the roofs)
+    // (the GM's symbol detail: marks above the roofs, the named's names and faces)
     registerCrowd();
     // (the GM's switch on an NPC's HUD: always seen by players, or the fog's)
     Hooks.on('renderTokenHUD', (hud, html) => {

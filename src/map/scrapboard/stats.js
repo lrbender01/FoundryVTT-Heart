@@ -187,8 +187,8 @@ export function qualityDialog() {
         label: d === 'auto' ? `${qualityName('auto')} (${qualityName(autoKey())})` : qualityName(d),
         callback: () => (Q.picked === d ? null : d === 'ultra' ? askUltra() : game.settings.set('heart', 'boardDetail', d)),
     });
-    // (Ultra asked first: experimental, made for the GM's strong graphics
-    // card; the setting's own change offers the reload)
+    // (Ultra asked first: no compromise, with its measured costs; the player
+    // paragraph is added for non-GMs; the setting's own change offers the reload)
     const askUltra = () =>
         Dialog.confirm({
             title: qualityName('ultra'),

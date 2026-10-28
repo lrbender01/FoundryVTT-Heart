@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { normaliseGroup, normaliseTool, createRailGroups } from '../src/map/scrapboard/rail-groups.js';
+import { normaliseGroup, normaliseTool, createRailGroups, railBuckets } from '../src/map/scrapboard/rail-groups.js';
 
 const tool = (name, extra = {}) => ({ name, icon: 'fa-solid fa-star', title: `${name} does a thing`, run: () => name, ...extra });
 const group = (id, extra = {}) => ({ id, icon: 'fa-solid fa-book', title: 'Story', tools: [tool('setup'), tool('notes')], ...extra });
@@ -31,6 +31,16 @@ describe('rail groups: a group', () => {
         expect(g.boardOnly).toBe(true);
         expect(g.fold).toBe(false);
         expect(normaliseGroup(group('story', { gmOnly: false, boardOnly: false, fold: true }))).toMatchObject({ gmOnly: false, boardOnly: false, fold: true });
+    });
+
+    it('keeps a short label for under the rail, the title when it has none', () => {
+        expect(normaliseGroup(group('story')).label).toBe('Story');
+        expect(normaliseGroup(group('story', { title: 'Story: every window', label: 'Story' })).label).toBe('Story');
+    });
+
+    it('carries its help text for the Help window, or none', () => {
+        expect(normaliseGroup(group('story')).help).toBe('');
+        expect(normaliseGroup(group('story', { help: 'X.help' })).help).toBe('X.help');
     });
 
     it('refuses a group with no way in or two tools of one name', () => {
@@ -99,5 +109,21 @@ describe('rail groups: the registry', () => {
         expect(() => r.register({ id: 'x' })).toThrow();
         expect(r.list({ gm: true })).toEqual([]);
         expect(fn).not.toHaveBeenCalled();
+    });
+});
+
+describe('rail buckets: the buttons sorted by purpose', () => {
+    const names = (l) => l.map((t) => t.name);
+    const GM = ['inspect', 'move', 'reveal', 'undo', 'redo', 'preview', 'symbols', 'gmnotes', 'share', 'snapshot', 'stats', 'bin', 'help'].map((name) => ({ name }));
+    it('puts Users in Map Dreamer\'s order, Help under App, File\'s few aside, the rest under Map', () => {
+        const b = railBuckets(GM, ['snapshot', 'stats', 'bin']);
+        expect(names(b.users)).toEqual(['preview', 'reveal', 'share', 'gmnotes', 'symbols']);
+        expect(names(b.app)).toEqual(['help']);
+        expect(names(b.map)).toEqual(['inspect', 'move', 'undo', 'redo']);
+    });
+    it('leaves a player only what they have, so empty groups can be skipped', () => {
+        const b = railBuckets([{ name: 'inspect' }, { name: 'share' }, { name: 'help' }], []);
+        expect(names(b.users)).toEqual(['share']);
+        expect(railBuckets([], []).users).toEqual([]);
     });
 });

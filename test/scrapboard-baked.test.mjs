@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { cleanManifest, tileUrl, levelFor, tileGrid, tilesIn, TileCache, cleanBakedFlags, overlayShown, partShown, shownParts, fogHides, fogDistance, unitPx, metrePx, metresPer, squareIn, SQUARES } from "../src/map/scrapboard/baked.js";
+import { cleanManifest, tileUrl, levelFor, tileGrid, tilesIn, TileCache, cleanBakedFlags, overlayShown, overlaySort, partShown, shownParts, fogHides, fogDistance, unitPx, metrePx, metresPer, squareIn, SQUARES } from "../src/map/scrapboard/baked.js";
 
 const MANIFEST = () => ({
   format: "heart-board-tiles",
@@ -101,6 +101,20 @@ describe("the level and the tiles a view needs", () => {
     const o = m.overlays[0];
     const T = tilesIn(o.levels[1], 512, { x0: 180, y0: 185, x1: 181, y1: 186 }, { w: 150, h: 125 }, { origin: { x: 175, y: 180 } });
     expect(T).toEqual([{ x: 0, y: 0, rect: { x0: 175, y0: 180, x1: 191, y1: 196 } }]);
+  });
+});
+
+describe("an overlay under the pieces (Luke, 2026-10-28)", () => {
+  it("takes an optional under: pieces, and sorts between the base and the ground pieces", () => {
+    const j = MANIFEST();
+    j.overlays[0].under = "pieces";
+    j.overlays[1].under = "nonsense";
+    const m = cleanManifest(j, BASE);
+    expect(m.overlays.map((o) => o.under)).toEqual(["pieces", null]);
+    expect(overlaySort(m.overlays[0])).toBe(40.5);
+    expect(overlaySort(m.overlays[1])).toBe(50);
+    // (an old manifest, with no field, is as it was)
+    expect(cleanManifest(MANIFEST(), BASE).overlays.every((o) => o.under === null && overlaySort(o) === 50)).toBe(true);
   });
 });
 

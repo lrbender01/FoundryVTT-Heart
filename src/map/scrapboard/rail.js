@@ -8,7 +8,7 @@ import { boardTools } from './tools.js';
 import { respotToolWindows } from './windows.js';
 import { isBoardScene } from './api.js';
 import { SESSION_TOOLS } from '../../common/session-tools.js';
-import { railGroups } from './rail-groups.js';
+import { railGroups, railBuckets } from './rail-groups.js';
 import { ACTOR_TOOLS, BOARD_CONTROL, TOKEN_CONTROL, railControl, makeToolMemory, flip, keepTool } from './actor-tools.js';
 
 // the board tool last held, for the flip back from the token tools
@@ -38,11 +38,19 @@ export function registerRailSettings() {
         choices: { heart: 'heart.board.toolbar-heart', foundry: 'heart.board.toolbar-foundry' },
         default: 'heart',
         onChange: () => {
-            ui.controls?.render(true);
+            // (initialize, not render: the controls' own list is built by the
+            // getSceneControlButtons hooks, and the rail's groups (Story,
+            // Session scripting) go into Foundry's column only when the
+            // toolbar is off, so a render alone left them out until the next
+            // scene; Luke 2026-10-28)
+            ui.controls?.initialize();
             syncRail();
             setTimeout(respotToolWindows, 50);
         },
     });
+    // (the symbol detail switch lit or not, whoever changed it: Shift+Y, Setup,
+    // or the rail's own button)
+    Hooks.on('heartSymbolsChanged', () => syncRail());
     // (horizontal unless a client set otherwise: the Actors group sits first
     // and a long column runs into the macro bar; Plenty finish, 2026-10-26)
     game.settings.register('heart', 'boardToolbarDir', { scope: 'client', config: false, type: String, default: 'horizontal' });
@@ -106,6 +114,13 @@ function groupHtml(g, button, icon) {
         .map((t) => `<button type="button" data-group-tool="${esc(g.id)}:${esc(t.name)}" class="tile ${lit(t) ? 'on' : ''}" data-tooltip="${esc(loc(t.title))}" aria-label="${esc(loc(t.title))}">${icon(t.icon)}<span>${esc(loc(t.label))}</span></button>`)
         .join('');
     return `<span class="group">${button(`data-group="${esc(g.id)}"`, g.icon, loc(g.title), open)}${open ? `<span class="menu" style="grid-template-columns: repeat(${Math.min(g.tools.length, 4)}, 78px)">${tiles}</span>` : ''}</span>`;
+}
+
+// One group of the rail (Luke, 2026-10-28): its buttons and a tiny label under
+// them. Nothing is drawn when the group has no buttons for this person.
+function grp(id, label, inner) {
+    if (!inner) return '';
+    return `<span class="grp grp-${esc(id)}" role="group" aria-label="${esc(label)}">${inner}<i class="glab" aria-hidden="true">${esc(label)}</i></span>`;
 }
 
 // Foundry's own column's version of the groups, for when the board's toolbar
@@ -183,32 +198,32 @@ export function syncRail() {
     const litActor = control === TOKEN_CONTROL ? game.activeTool : null;
     const icon = (cls) => `<i class="${cls}" aria-hidden="true"></i>`;
     const button = (attr, cls, title, on = false) => `<button type="button" ${attr} class="${on ? 'on' : ''}" data-tooltip="${esc(title)}" aria-label="${esc(title)}">${icon(cls)}</button>`;
-    // (in the one order boardTools gives, Luke 2026-10-24: File where its
-    // first item falls; no lines between the groups, every button the same
-    // step apart, as Foundry's column is)
+    // (grouped by purpose as Map Dreamer's rail is, Luke 2026-10-28: Map,
+    // Users, the modules' groups, App; a thin rule between groups and a tiny
+    // label under each, in the space below the rail so its height holds; a
+    // group with no buttons for this person is not drawn, so no label either)
     const file = T.list.filter((b) => FILE.includes(b.name));
-    // (the Actors group first: Foundry's own token tools, for everyone)
-    let html = ACTOR_TOOLS.map((a) => button(`data-actor-tool="${a.name}"`, a.icon, loc(a.title), a.name === litActor)).join('');
-    let filed = false;
-    for (const t of T.list) {
-        if (FILE.includes(t.name)) {
-            if (filed) continue;
-            filed = true;
-            // (Luke, 2026-10-25: tiles, an icon and a word or two, the whole
-            // title its tooltip; kept on screen, above the macro bar)
-            const short = (b) => (game.i18n.has(`heart.board.fileshort.${b.name}`) ? loc(`heart.board.fileshort.${b.name}`) : b.title);
-            html += `<span class="file">${button('data-file', FA.file, loc('heart.board.tool.file'), menuOpen)}${menuOpen ? `<span class="menu">${file.map((b) => `<button type="button" data-button="${b.name}" class="tile ${b.toggle && b.active ? 'on' : ''}" data-tooltip="${esc(b.title)}" aria-label="${esc(b.title)}">${icon(b.icon)}<span>${esc(short(b))}</span></button>`).join('')}</span>` : ''}</span>`;
-            continue;
-        }
-        html += t.button || t.toggle ? button(`data-button="${t.name}"`, t.icon, t.title, t.toggle && t.active) : button(`data-tool="${t.name}"`, t.icon, t.title, t.name === lit);
-    }
-    // (the Session scripting group, the GM's: its buttons, then the turn)
-    if (game.user.isGM) html += SESSION_TOOLS.map((s) => button(`data-session="${s.name}"`, s.icon, loc(s.title))).join('');
-    // (the groups other modules added, the GM's and everyone's: Story, 2026-10-27)
+    const { map, users, app } = railBuckets(T.list, FILE);
+    const one = (t) => (t.button || t.toggle ? button(`data-button="${t.name}"`, t.icon, t.title, t.toggle && t.active) : button(`data-tool="${t.name}"`, t.icon, t.title, t.name === lit));
+    // (the Actors' Foundry token tools lead the Map group, for everyone)
+    const actors = ACTOR_TOOLS.map((a) => button(`data-actor-tool="${a.name}"`, a.icon, loc(a.title), a.name === litActor)).join('');
+    let html = grp('map', loc('heart.board.rail-group.map'), actors + map.map(one).join(''));
+    html += grp('users', loc('heart.board.rail-group.users'), users.map(one).join(''));
+    // (the Session scripting group, the GM's)
+    if (game.user.isGM) html += grp('session', loc('heart.board.rail-group.session'), SESSION_TOOLS.map((s) => button(`data-session="${s.name}"`, s.icon, loc(s.title))).join(''));
+    // (the groups other modules added, the GM's and everyone's: Story, 2026-10-27;
+    // each labelled with its own title)
     const groups = railGroups.list({ gm: game.user.isGM });
     if (openGroup && !groups.some((g) => g.id === openGroup)) openGroup = null;
-    for (const g of groups) html += groupHtml(g, button, icon);
-    html += button('data-turn', FA.turn, loc('heart.board.toolbar-turn'));
+    // (a group's tiny label is its short `label`, its title the tooltip: the
+    // whole sentence under the group ran past the rail, 2026-10-28)
+    for (const g of groups) html += grp(`mod-${g.id}`, loc(g.label), groupHtml(g, button, icon));
+    // (App: File's few as tiles, Help, then the turn; Luke, 2026-10-25: tiles,
+    // an icon and a word or two, the whole title its tooltip; kept on screen,
+    // above the macro bar)
+    const short = (b) => (game.i18n.has(`heart.board.fileshort.${b.name}`) ? loc(`heart.board.fileshort.${b.name}`) : b.title);
+    const fileHtml = file.length ? `<span class="file">${button('data-file', FA.file, loc('heart.board.tool.file'), menuOpen)}${menuOpen ? `<span class="menu">${file.map((b) => `<button type="button" data-button="${b.name}" class="tile ${b.toggle && b.active ? 'on' : ''}" data-tooltip="${esc(b.title)}" aria-label="${esc(b.title)}">${icon(b.icon)}<span>${esc(short(b))}</span></button>`).join('')}</span>` : ''}</span>` : '';
+    html += grp('app', loc('heart.board.rail-group.app'), fileHtml + app.map(one).join('') + button('data-turn', FA.turn, loc('heart.board.toolbar-turn')));
     el.innerHTML = html;
     fitMenu(el);
     // (the tool windows never moved by hand by it, now it is there)

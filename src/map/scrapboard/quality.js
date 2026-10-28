@@ -83,6 +83,8 @@ export function registerUltra() {
             applyFrameCap(canvas);
         };
     });
+    // (the idle throttle, Luke, 2026-10-28)
+    registerIdleThrottle();
 }
 
 // The frame cap (Luke, 2026-10-27): on the Plenty board Foundry redrew its
@@ -105,18 +107,205 @@ export function tickerFps({ board, picked, foundryFps }) {
     return foundryFps > 0 ? Math.min(cap, foundryFps) : cap;
 }
 
-// Set the canvas ticker for the scene now showing
+// The idle throttle (Luke, 2026-10-28 night): with nothing moving, Foundry's
+// tab on the Plenty map still burned 15 to 25 percent of a core at the 30 fps
+// cap (454 token containers and 1,103 name texts walked every frame; held to
+// 15 fps it fell to about 9 percent). So on Auto and Light only, after
+// IDLE.afterMs with no input, no movement, and no animation, the ticker drops
+// to IDLE.fps; any ping (pointer, wheel, or key on the canvas, a pan or zoom,
+// a token or piece or tile created, updated, or deleted, a board change) or
+// any running animation puts the normal cap back at once. Ultra ("unlimited is
+// meant to be unlimited"), High, and Standard are never throttled: they keep
+// what frameCapFor gives them (nothing: Foundry's own rate, 60 by default).
+// Animated lights in view (torch or lantern flicker) hold a gentler floor,
+// IDLE.lightFps, so a lit night village still flickers smoothly (the flicker
+// is clocked by time, not by frame count, so a lower rate only costs steps).
+export const IDLE = Object.freeze({ afterMs: 1000, fps: 10, lightFps: 20, pollMs: 250 });
+
+// The fps for a board that has been quiet for `idleMs`, given the fps it runs
+// at when active (`base`, from tickerFps). Pure.
+export function idleFps({ base, picked, board, idleMs, busy = false, lights = false }) {
+    if (!board || frameCapFor(picked) === null) return base;
+    if (busy || idleMs < IDLE.afterMs) return base;
+    const floor = lights ? IDLE.lightFps : IDLE.fps;
+    return base > 0 ? Math.min(base, floor) : floor;
+}
+
+// The throttle's state machine. `read()` gives { board, picked, foundryFps,
+// busy, lights } (busy and lights may be functions, asked only once the board
+// has been quiet long enough to matter); `apply(fps)` sets the ticker; `now()`
+// is the clock. Pure of Foundry: the wiring below hands it the real ones.
+export function createIdleGovernor({ read, apply, now = () => Date.now() }) {
+    let lastActive = now();
+    let current = null;
+    let slowed = false;
+    const ask = (v) => (typeof v === 'function' ? Boolean(v()) : Boolean(v));
+
+    function evaluate() {
+        const t = now();
+        const r = read();
+        const base = tickerFps(r);
+        let fps = base;
+        let idleMs = t - lastActive;
+        if (r.board && frameCapFor(r.picked) !== null && idleMs >= IDLE.afterMs) {
+            // (an animation running counts as activity: the clock starts over when it ends)
+            if (ask(r.busy)) {
+                lastActive = t;
+                idleMs = 0;
+            }
+        }
+        if (idleMs >= IDLE.afterMs) {
+            fps = idleFps({ base, picked: r.picked, board: r.board, idleMs, busy: false, lights: ask(r.lights) });
+        }
+        slowed = fps !== base;
+        if (fps !== current) {
+            current = fps;
+            apply(fps);
+        }
+        return fps;
+    }
+
+    return {
+        // something happened: back to the normal cap now if it was slowed
+        ping() {
+            lastActive = now();
+            if (slowed) evaluate();
+        },
+        // the poll: slows the board once it has been quiet
+        tick: evaluate,
+        // a new scene, a new quality, or teardown: active, nothing remembered
+        reset() {
+            lastActive = now();
+            current = null;
+            slowed = false;
+        },
+        get slowed() {
+            return slowed;
+        },
+    };
+}
+
+const setTicker = (cv, fps) => {
+    const ticker = cv?.app?.ticker;
+    if (!ticker) return;
+    ticker.maxFPS = PIXI.Ticker.shared.maxFPS = PIXI.Ticker.system.maxFPS = fps;
+};
+
+// What the throttle reads off the live canvas
+function frameInputs(cv) {
+    // (Foundry's own fps, from its performance mode, else its setting)
+    return {
+        board: Boolean(cv?.scene?.flags?.heart?.board),
+        picked: game.settings.get('heart', 'boardDetail'),
+        foundryFps: Number(cv?.performance?.fps ?? game.settings.get('core', 'maxFPS') ?? 60) || 0,
+    };
+}
+
+// Any Foundry animation running: token moves, camera pans, door and light
+// fades, and every other CanvasAnimation (the timeline's token moves are
+// these too, and its scene and token updates also ping)
+function animationRunning() {
+    try {
+        const a = globalThis.CanvasAnimation?.animations;
+        return Boolean(a) && Object.keys(a).length > 0;
+    } catch {
+        return false;
+    }
+}
+
+// An animated light (torch, lantern flicker) lit inside the view, with its
+// radius counted. Unsure counts as yes: smooth over cheap.
+function animatedLightInView(cv) {
+    try {
+        if (cv.performance && cv.performance.lightAnimation === false) return false;
+        const sources = cv.effects?.lightSources;
+        if (!sources) return false;
+        const stage = cv.stage;
+        const screen = cv.app?.screen;
+        let view = null;
+        if (stage && screen) {
+            const k = stage.scale?.x || 1;
+            const hw = screen.width / 2 / k;
+            const hh = screen.height / 2 / k;
+            view = { l: stage.pivot.x - hw, r: stage.pivot.x + hw, t: stage.pivot.y - hh, b: stage.pivot.y + hh };
+        }
+        for (const s of sources.values?.() ?? sources) {
+            const animated = s.isAnimated ?? (s.active && s.data?.animation?.type);
+            if (!animated || s.active === false) continue;
+            if (!view) return true;
+            const x = s.x ?? s.data?.x;
+            const y = s.y ?? s.data?.y;
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return true;
+            const rad = Number(s.radius ?? s.data?.radius ?? 0) || 0;
+            if (x + rad >= view.l && x - rad <= view.r && y + rad >= view.t && y - rad <= view.b) return true;
+        }
+        return false;
+    } catch {
+        return true;
+    }
+}
+
+const governor = createIdleGovernor({
+    read: () => ({
+        ...frameInputs(canvas),
+        busy: animationRunning,
+        lights: () => animatedLightInView(canvas),
+    }),
+    apply: (fps) => {
+        try {
+            setTicker(canvas, fps);
+        } catch (err) {
+            console.warn('Heart | the idle throttle could not set the frame rate', err);
+        }
+    },
+});
+
+// Set the canvas ticker for the scene now showing: the normal cap, with the
+// idle clock started over (a new scene, a new quality, or teardown)
 export function applyFrameCap(cv) {
     try {
-        const ticker = cv?.app?.ticker;
-        if (!ticker) return;
-        const board = Boolean(cv.scene?.flags?.heart?.board);
-        const picked = game.settings.get('heart', 'boardDetail');
-        // (Foundry's own fps, from its performance mode, else its setting)
-        const foundryFps = Number(cv.performance?.fps ?? game.settings.get('core', 'maxFPS') ?? 60) || 0;
-        const fps = tickerFps({ board, picked, foundryFps });
-        ticker.maxFPS = PIXI.Ticker.shared.maxFPS = PIXI.Ticker.system.maxFPS = fps;
+        if (!cv?.app?.ticker) return;
+        governor.reset();
+        setTicker(cv, tickerFps(frameInputs(cv)));
     } catch (err) {
         console.warn('Heart | the frame cap could not be set', err);
     }
+}
+
+// The wiring: pings from the canvas, the hooks that mean the board changed,
+// and the poll that slows it. Registered once at init; the canvas listeners
+// and the poll live from canvasReady to canvasTearDown.
+const PING_DOCS = ['Token', 'Tile', 'Drawing', 'Scene', 'AmbientLight', 'AmbientSound', 'Note', 'Wall', 'Region'];
+const PING_HOOKS = ['canvasPan', 'refreshToken', 'controlToken', 'hoverToken', 'targetToken', 'heartSymbolsChanged'];
+
+function registerIdleThrottle() {
+    let timer = null;
+    let abort = null;
+    const ping = () => governor.ping();
+
+    const stop = () => {
+        if (timer) clearInterval(timer);
+        timer = null;
+        abort?.abort();
+        abort = null;
+    };
+
+    for (const name of PING_HOOKS) Hooks.on(name, ping);
+    for (const doc of PING_DOCS) for (const verb of ['create', 'update', 'delete']) Hooks.on(`${verb}${doc}`, ping);
+
+    Hooks.on('canvasReady', (cv) => {
+        stop();
+        applyFrameCap(cv);
+        abort = new AbortController();
+        const opts = { passive: true, signal: abort.signal };
+        const view = cv.app?.view;
+        for (const type of ['pointerdown', 'pointermove', 'wheel', 'touchstart']) view?.addEventListener(type, ping, opts);
+        window.addEventListener('keydown', ping, { ...opts, capture: true });
+        timer = setInterval(() => governor.tick(), IDLE.pollMs);
+    });
+    Hooks.on('canvasTearDown', (cv) => {
+        stop();
+        // (the normal cap back; the next scene's canvasInit sets its own)
+        applyFrameCap(cv);
+    });
 }

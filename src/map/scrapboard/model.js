@@ -959,7 +959,9 @@ export function normalizeBoard(json) {
 // prop, a person. Each has its id, kind, place, box, turn, layer, an
 // optional shape (what a click hits), and its picture (frozen) or its own
 // strokes (thawed), in its own frame (centre 0, 0, unturned).
-export const PIECE_LAYERS = ['ground', 'low', 'standing', 'roof', 'label', 'people'];
+// ('overhead' is what hangs above the people and under the roofs: the bunting,
+// Luke 2026-10-28; a board without it is as it was, an unknown layer is 'standing')
+export const PIECE_LAYERS = ['ground', 'low', 'standing', 'overhead', 'roof', 'label', 'people'];
 export const PIECE_ID = /^[a-z0-9][a-z0-9_-]{0,59}$/;
 const STAGE_ID = /^[a-z0-9][a-z0-9_-]{0,39}$/;
 // the most numbers a piece's shape keeps, and the most strokes a thawed piece holds
@@ -1058,6 +1060,12 @@ export function normalizeStages(list) {
     }
     return out;
 }
+
+// The stage a view shows: the one named, else the scene's first (2026-10-28: with no
+// stage chosen, a lantern's lit twin and its unlit twin were both drawn, one over the
+// other; the board starts at its first stage, as the story's clock does). null when
+// the board has no stages.
+export const stageOrFirst = (stage, stages = []) => stage || (stages[0]?.id ?? stages[0]) || null;
 
 // Where a piece is at a stage: its place there, else at the stage before
 // that has one, else its own (`stages`: the scene's, in order). { x, y, r,

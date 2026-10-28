@@ -3,8 +3,9 @@
 // Story). A module registers a group at ready:
 //
 //   game.heart.board.railGroups.register({
-//       id: 'story', icon: 'fa-solid fa-book-open', title: 'Story',
-//       gmOnly: true, fold: true,
+//       id: 'story', icon: 'fa-solid fa-book-open', title: 'Story: all the windows',
+//       label: 'Story' (the few words under it on the rail), help: 'a lang key
+//       whose text the Help window shows for the group', gmOnly: true, fold: true,
 //       tools: [{ name: 'setup', icon: 'fa-solid fa-sliders', title: 'Setup: ...', label: 'Setup', run, on }],
 //   });
 //
@@ -58,6 +59,11 @@ export function normaliseGroup(def) {
         id,
         icon: text(def.icon, `the group "${id}" icon`),
         title: text(def.title, `the group "${id}" title`),
+        // the few words under the group on the rail (the title if none)
+        label: typeof def.label === 'string' && def.label.trim() ? def.label : def.title,
+        // a lang key (or text) for the board's Help window: what the group's
+        // tools do, in the Help's own style (bullets, **bold**); none, none shown
+        help: typeof def.help === 'string' ? def.help : '',
         gmOnly: def.gmOnly !== false,
         fold: Boolean(def.fold),
         boardOnly: def.boardOnly !== false,
@@ -110,6 +116,18 @@ export function createRailGroups() {
             return () => listeners.delete(fn);
         },
     };
+}
+
+// The board's own buttons sorted into the rail's purposes (Luke, 2026-10-28,
+// as Map Dreamer's rail is): Users (Player view, Reveal, Public, GM notes,
+// Symbol detail, in that order), App (Help; File's few, `fileNames`, are drawn
+// apart), and Map (everything else, in the order given). Plain, so it is tested.
+const USERS = ['preview', 'reveal', 'share', 'gmnotes', 'symbols'];
+export function railBuckets(list, fileNames = []) {
+    const users = USERS.map((n) => list.find((t) => t.name === n)).filter(Boolean);
+    const app = list.filter((t) => t.name === 'help');
+    const map = list.filter((t) => !USERS.includes(t.name) && t.name !== 'help' && !fileNames.includes(t.name));
+    return { map, users, app };
 }
 
 // the one registry the board uses

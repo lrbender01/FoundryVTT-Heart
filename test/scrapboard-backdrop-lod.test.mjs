@@ -94,6 +94,16 @@ describe("tilesToRelease", () => {
     expect(gone).toEqual([]);
   });
 
+  it("under Ultra's grace, keeps one finer level than the zoom needs and lets go the rest", () => {
+    const pieces = [...level(1), ...level(2), ...level(3)];
+    const cur = new Map([["base", 1]]);
+    const strict = tilesToRelease(pieces, cur, () => true, false);
+    const graced = tilesToRelease(pieces, cur, () => true, false, true);
+    expect(strict.length).toBe(16 + 64);
+    expect(graced.length).toBe(64);
+    expect(graced.every((k) => k.startsWith("b:3:"))).toBe(true);
+  });
+
   it("never lets go a pinned piece or a stack with no level named", () => {
     const pinned = tile(0, 0, 0, { pin: true });
     const off = { key: "o:z:3:0_0", group: "o:z", lvl: 3, rect: ALL, pin: false };

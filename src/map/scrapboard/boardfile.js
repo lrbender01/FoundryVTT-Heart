@@ -90,6 +90,70 @@ export function boardParts(b) {
     return boardPartsOf(b);
 }
 
+// ---------------------------------------------------------------- Map Dreamer's map, published for Foundry
+// (2026-10-28, Luke: "what's drawn in the MapDreamer is actually what's drawn in
+// Foundry"). Map Dreamer's map file is the one source of truth. Its server
+// writes the map's board, in this Download format, beside a small meta file into
+// the content module (assets/boards/<map id>/board.json and board.meta.json),
+// which Foundry serves like any other module file; a Foundry scene brings it in
+// in one step (editor-link.js) and compares the meta's rev with the rev it
+// brought in, to say when it is behind. The shapes and the pure rules are here
+// (tested in test/scrapboard-file.test.mjs); the files, the dialog, and the
+// import are the two hosts'. Contract: docs/board-editor/contract.md, Changes.
+export const PUBLISH_FORMAT = 'heart-board-published';
+export const PUBLISH_VERSION = 1;
+// where Foundry reads the published files (the content module's assets)
+export const PUBLISHED_ROOT = 'modules/fvtt-heart-content/assets/boards';
+export const MAP_ID = /^[a-z0-9][a-z0-9-]{0,40}$/;
+export const publishedUrls = (map) => ({ board: `${PUBLISHED_ROOT}/${map}/board.json`, meta: `${PUBLISHED_ROOT}/${map}/board.meta.json` });
+
+// What the meta file says about a published board: which map, the map's rev
+// (an integer that only grows), when, how many bytes board.json is (so a half
+// read file is told from a whole one), how many pieces, and the baked map it
+// sits on ({ id, rev } of its manifest at the time). Pure.
+export function publishedMeta({ map, name = '', rev, at, bytes, pieces = 0, baked = null }) {
+    return { format: PUBLISH_FORMAT, version: PUBLISH_VERSION, map, name: String(name ?? ''), rev: Math.round(Number(rev) || 0), at, bytes: Math.round(Number(bytes) || 0), pieces: Math.round(Number(pieces) || 0), baked: baked && baked.id ? { id: String(baked.id), rev: String(baked.rev ?? '') } : null };
+}
+
+// A meta file read back, or null when it is not one (wrong format, no map, no rev)
+export function cleanPublished(j) {
+    if (!j || typeof j !== 'object' || j.format !== PUBLISH_FORMAT || Number(j.version) !== PUBLISH_VERSION) return null;
+    if (!MAP_ID.test(String(j.map ?? '')) || !Number.isFinite(Number(j.rev)) || Number(j.rev) < 0) return null;
+    return {
+        map: j.map,
+        name: String(j.name ?? '').slice(0, 120),
+        rev: Math.round(Number(j.rev)),
+        at: typeof j.at === 'string' ? j.at.slice(0, 40) : '',
+        bytes: Math.max(0, Math.round(Number(j.bytes) || 0)),
+        pieces: Math.max(0, Math.round(Number(j.pieces) || 0)),
+        baked: j.baked && typeof j.baked === 'object' && j.baked.id ? { id: String(j.baked.id).slice(0, 60), rev: String(j.baked.rev ?? '').slice(0, 64) } : null,
+    };
+}
+
+// What a scene keeps of the last bring-in (flags.heart.editorLink): the map, the
+// rev brought in, when it was published and when it was brought in. null when
+// there is none or it is not one.
+export function cleanLink(l) {
+    if (!l || typeof l !== 'object' || !MAP_ID.test(String(l.map ?? '')) || !Number.isFinite(Number(l.rev))) return null;
+    // (`auto`: the GM asked this scene to take each new revision by itself, with no question)
+    return { map: l.map, rev: Math.round(Number(l.rev)), at: typeof l.at === 'string' ? l.at.slice(0, 40) : '', broughtIn: typeof l.broughtIn === 'string' ? l.broughtIn.slice(0, 40) : '', auto: l.auto === true };
+}
+
+// Where a scene stands against the published map. `link`: the scene's cleaned
+// link (or null); `meta`: the published meta (or null); `bakedNow`: the baked
+// manifest's rev the scene has loaded, `bakedDisk`: the rev on disk now (either
+// may be null). One of:
+//   { state: "none" }       nothing is published for this map (Map Dreamer has not run since)
+//   { state: "unlinked" }   the scene's board was brought in by hand: how old it is cannot be told
+//   { state: "current" }    the scene has the published rev
+//   { state: "behind" }     the published rev is another: Map Dreamer has moved on
+// plus `bakeStale: true` when the manifest on disk is another bake than the one loaded.
+export function linkState({ link, meta, bakedNow = null, bakedDisk = null }) {
+    const bakeStale = Boolean(bakedNow && bakedDisk && bakedNow !== bakedDisk);
+    const out = !meta ? { state: 'none' } : !link ? { state: 'unlinked' } : link.map !== meta.map || link.rev !== meta.rev ? { state: 'behind' } : { state: 'current' };
+    return bakeStale ? { ...out, bakeStale } : out;
+}
+
 // The cards of a place of the GM's own (its actor's uuid) whose stored name
 // isn't its actor's name now: { key: { name } } (Luke, 2026-10-21: a card
 // follows its actor's renames), empty when none

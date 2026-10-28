@@ -818,6 +818,57 @@ body.heart-board-rail-on #tools-panel-heartBoard, body.heart-board-rail-on #tool
             span
                 white-space: normal
 
+    // the buttons grouped by purpose (Luke, 2026-10-28; Map Dreamer's rail
+    // has the same): a thin rule between groups and a tiny label under each,
+    // out of flow below the rail, so the rail's height is the button's alone.
+    // Turned vertical: a rule across, no labels.
+    .grp
+        display: flex
+        align-items: center
+        gap: var(--rail-gap, 10px)
+        position: relative
+
+    .grp ~ .grp
+        border-left: 1px solid util.$ctl-border
+        padding-left: 6px
+        margin-left: 2px
+
+    .glab
+        position: absolute
+        left: 0
+        right: 0
+        top: 100%
+        margin-top: 3px
+        text-align: center
+        font: normal 9px/7px util.$font-label
+        letter-spacing: 0.1em
+        // (the label is its group's width, clipped, never over a neighbour's)
+        overflow: hidden
+        text-overflow: ellipsis
+        text-transform: uppercase
+        color: util.$ctl-text
+        text-shadow: 0 0 3px #000, 0 0 3px #000
+        opacity: 0.85
+        pointer-events: none
+        white-space: nowrap
+
+    .grp ~ .grp .glab
+        left: 6px
+
+    &.vertical .grp
+        flex-direction: column
+
+    &.vertical .grp ~ .grp
+        border-left: 0
+        padding-left: 0
+        margin-left: 0
+        border-top: 1px solid util.$ctl-border
+        padding-top: 6px
+        margin-top: 2px
+
+    &.vertical .glab
+        display: none
+
     &.vertical .menu
         left: calc(var(--rail-btn, 36px) + 8px)
         top: 0

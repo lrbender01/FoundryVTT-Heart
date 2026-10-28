@@ -79,7 +79,7 @@ export function gmNotesShown() {
 // board's tiles allowed four times the memory, and the sheet's scans used as
 // fine as they go: quality.js for the rest)
 export const DETAIL = {
-    ultra: { scale: 2, cap: 4096, live: true, bakedMB: 1024, boardPx: 192e6, sheetFinest: 4, bakedNeed: 1.5, bakedMargin: 0.5 },
+    ultra: { scale: 2, cap: 4096, live: true, bakedMB: 1024, boardPx: 192e6, sheetFinest: 4, bakedNeed: 1.5, bakedMargin: 0.5, bakedGrace: true },
     high: { scale: 1.25, cap: 1600, live: true, bakedMB: 192 },
     standard: { scale: 1, cap: 1100, live: true, bakedMB: 128 },
     light: { scale: 0.7, cap: 700, live: false, bakedMB: 64 },

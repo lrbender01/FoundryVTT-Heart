@@ -1,43 +1,67 @@
-// The crowd from afar (Luke, 2026-10-27: "the crowd could be hidden and
-// instead represented with super inexpensive UI element symbols from afar; a
-// different symbol for important or unimportant NPCs; unnamed all become the
-// same anonymous thing, but named NPCs get a special icon each and always have
-// their sigil appear through roofs, and larger than the anonymous ones when
-// zoomed out"). Measured basis: the Plenty board's 454 tokens were about half
-// the renderer's CPU and 80 percent of the GPU's at the zoomed-out view.
+// Symbol detail: the GM's tool for finding people (Luke, 2026-10-28; first
+// built 2026-10-27 as "the crowd from afar", a performance switch, which it no
+// longer is: tokens are drawn at every zoom).
 //
-// WHAT HAPPENS: a token whose picture would be under SYMBOL_BELOW_PX screen
-// pixels across is not drawn at all (HeartBoardToken.isVisible, fog.js, is
-// false while the token is a symbol, so PIXI skips it in updateTransform and
-// render); a sprite from one tiny atlas stands where it is, in a container
-// above the roofs. An anonymous villager is the one neutral dot; a named one
-// (flags.fvtt-heart-toolkit.npc.named, written by Place NPCs from the same rule
-// that gives it a hover name) is its own sigil, glyph id in the same flag's
-// `sigil`, drawn
-// larger. Hovering a named sigil shows its name; an anonymous dot shows
-// nothing.
+// THE MODE: a GM toggle, off or on, independent of zoom (game.heart.board.symbols
+// .get() / .set(on) / .toggle(), the client setting heart.boardSymbols, the
+// keybinding Shift+Y, the Hooks event heartSymbolsChanged). While it is on,
+// every NPC token (flags.fvtt-heart-toolkit.npc, written by the toolkit's Bring
+// in) gets its mark drawn over the board, above the roofs: one neutral dot for
+// the crowd, its own sigil (glyph id in the same flag's `sigil`) for each
+// named character. Off: nothing but the tokens.
 //
-// WHO SEES: nobody learns where a named villager hides. A player sees a mark
-// only for a token that player could see anyway (HeartBoardToken.heartSeen:
-// not hidden, not under fog, not under a closed roof). The GM sees every named
-// sigil through roofs, and every anonymous mark of a token they could see; the
-// GM in Player view is a player here. A player's own tokens are never turned
-// into symbols, nor is a selected or dragged one.
+// WHO SEES: the GM, and only the GM outside Player view. A player never sees a
+// mark, and nobody learns more than the tokens show them.
 //
-// CHEAP: no per-frame walk. The switch is recomputed on canvasPan only when the
-// zoom changed; a mark moves on the token's own refresh (refreshToken: moves,
-// resizes, timeline playback, and visibility all come through it). Everything
-// above the "pure" divider is plain functions, tested in node.
+// SIZES: constant in screen px at every zoom, one table (MARK_PX) for Luke to
+// tune. Hovering a crowd mark shows nothing; hovering a named sigil shows its
+// name; clicking a named sigil selects its token and pans to it. A crowd mark
+// takes no pointer at all (the board's tools work through it).
+//
+// THE NAMED, whatever the mode (Luke, 2026-10-28): their names are always
+// shown to the GM (to a player, on hover: Foundry's own hover name, which the
+// toolkit gives the named), and the GM sees the named drawn above the roofs at
+// every zoom (a copy of the token's face; a player still has roofs hide them).
+//
+// CHEAP: no per-frame walk. Everything is recomputed on canvasPan only when
+// the zoom changed; a mark moves on the token's own refresh (refreshToken:
+// moves, resizes, timeline playback, and visibility all come through it).
+// Everything above the "runtime" divider is plain functions, tested in node.
+
+import { metrePx } from './baked.js';
 
 // ---- pure --------------------------------------------------------------
 
-// A token becomes its symbol once its picture would be under this many screen
-// pixels across. LUKE'S TO TUNE (2026-10-27: "about 16").
-export const SYMBOL_BELOW_PX = 16;
+// The marks' size on screen, px across, and the names' text size. The named
+// are drawn larger than the crowd at every zoom. LUKE'S TO TUNE (2026-10-28:
+// sigils 36, the crowd 12).
+export const MARK_PX = Object.freeze({ anon: 12, named: 36 });
+export const NAME_PX = 18;
+// Names of the named, decluttered as Map Dreamer's page does (2026-10-28, board-parity): far out
+// (under about 33 screen px a metre, Map Dreamer's "1.5 board px a screen px") the type is 14 px; the
+// names nearest the centre of the view are laid first, and one that would sit on a name already laid
+// is left out, so a whole-village view shows a readable set and zooming in brings the rest.
+export const FAR_NAME_PX = 14;
+export const FAR_PX_PER_M = 50 / 1.5;
+export const namePx = (pxPerMetre) => (pxPerMetre < FAR_PX_PER_M ? FAR_NAME_PX : NAME_PX);
+// `boxes`: [{ id, d (distance from the centre), x0, y0, x1, y1 }] in any order -> the Set of ids kept
+export function keepNames(boxes) {
+    const laid = [];
+    const keep = new Set();
+    for (const b of [...boxes].sort((p, q) => p.d - q.d)) {
+        if (laid.some((o) => b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0)) continue;
+        laid.push(b);
+        keep.add(b.id);
+    }
+    return keep;
+}
 
-// The marks' size on screen, px across. The named are drawn larger than the
-// anonymous at every zoom (Luke, 2026-10-27). Also Luke's to tune.
-export const MARK_PX = Object.freeze({ anon: 7, named: 22 });
+// The crowd container's z in the interface group: above the board layer (260,
+// see layer.js), so a named sigil is hit before the board's catch-all. Only a
+// named sigil takes the pointer; the container, the crowd marks, and the names
+// take none, so everywhere else the pointer falls through to the board's tools.
+export const CROWD_Z = 270;
+export const markEventMode = (kind) => (kind === 'named' ? 'static' : 'none');
 
 // The atlas: square cells, `cols` to a row. Cell 0 is the anonymous dot, cell
 // 1 the soft halo under a sigil, the sigils follow.
@@ -49,18 +73,8 @@ export const GLYPH_ROOT = 'systems/heart/assets/icons';
 const SIGIL = /^[a-z0-9_-]+\/[a-z0-9_-]+$/;
 export const glyphUrl = (sigil) => (SIGIL.test(String(sigil ?? '')) ? `${GLYPH_ROOT}/${sigil}.svg` : null);
 
-// A token's width on screen (px): its larger side in grid squares, the grid's
-// size in scene px, and the stage's scale
-export function screenPx(token, gridSize, zoom) {
-    const sq = Math.max(Number(token?.width) || 1, Number(token?.height) || 1);
-    return sq * (Number(gridSize) || 100) * (Number(zoom) || 1);
-}
-
-// Whether a picture this small (screen px) is shown as its symbol instead
-export const underSwitch = (px, limit = SYMBOL_BELOW_PX) => Number(px) < limit;
-
 // 'named' or 'anon' for an NPC token's flags.heart.npc (null: not a Plenty
-// NPC, never a symbol). `named` is written by Place NPCs from the toolkit's
+// NPC, never marked). `named` is written by Place NPCs from the toolkit's
 // nameModeOf (board-place.mjs); a token placed before that carries only the
 // hover name, which that same rule gave only the named, so it counts too.
 export function kindOf(npcFlag, displayNameIsHover = false) {
@@ -68,21 +82,30 @@ export function kindOf(npcFlag, displayNameIsHover = false) {
     return npcFlag.named === true || (npcFlag.named === undefined && displayNameIsHover) ? 'named' : 'anon';
 }
 
-// Whether a token is turned into a symbol at this size: a Plenty NPC under the
-// switch that is not the viewer's own, selected, or being dragged
-export function isSymbol({ kind, px, own = false, controlled = false, preview = false, limit = SYMBOL_BELOW_PX }) {
-    if (!kind || own || controlled || preview) return false;
-    return underSwitch(px, limit);
+// Whether this client is the GM looking as the GM (a GM in Player view is a
+// player)
+export const asGM = ({ gm = false, preview = false } = {}) => Boolean(gm) && !preview;
+
+// Whether this client is shown the mark of an NPC token: the GM, with the
+// mode on, for every NPC, named or not, seen or not (through roofs)
+export function markShown({ gm = false, preview = false, kind, on = false }) {
+    return Boolean(kind) && Boolean(on) && asGM({ gm, preview });
 }
 
-// Whether this client is shown the mark of a symbol token. `seen`: the token
-// would be visible to this client anyway (fog, roof, hidden all weighed).
-export function markShown({ gm = false, preview = false, kind, seen }) {
-    if (!kind) return false;
-    // (the GM sees every named sigil, through roofs; Player view is a player's)
-    if (gm && !preview) return kind === 'named' ? true : Boolean(seen);
-    return Boolean(seen);
+// Whether the GM sees this token drawn above the roofs: the named, at every
+// zoom, mode or no mode. A player is not shown them there.
+export const aboveRoofs = ({ gm = false, preview = false, kind }) => kind === 'named' && asGM({ gm, preview });
+
+// Whether a name is shown now: the named only; the GM always, anyone else
+// while hovering
+export function nameShown({ gm = false, preview = false, kind, hovered = false }) {
+    if (kind !== 'named') return false;
+    return asGM({ gm, preview }) ? true : Boolean(hovered);
 }
+
+// Whether hovering a mark shows anything: a named sigil's name; a crowd mark
+// nothing
+export const hoverNames = (kind) => kind === 'named';
 
 // The atlas cells: the dot, the halo, then each sigil (a map of sigil to cell
 // index, unique, in order given). Pure, so the layout is testable.
@@ -106,12 +129,33 @@ export const NPC_FLAG = 'fvtt-heart-toolkit';
 const npcOf = (token) => token.document?.flags?.[NPC_FLAG]?.npc ?? token.document?.flags?.heart?.npc;
 const isBoard = (scene) => Boolean(scene?.flags?.heart?.board);
 
-let layer = null; // { box, label, marks: Map<tokenId, {halo, glyph, kind}>, atlas, zoom }
+// the client setting that remembers the mode (registered in notes.js)
+export const SYMBOLS_SETTING = 'boardSymbols';
+export const SYMBOLS_EVENT = 'heartSymbolsChanged';
 
-function ownToken(t) {
-    if (t.actor?.hasPlayerOwner) return true;
-    return !game.user.isGM && Boolean(t.isOwner);
+let mode = false;
+function readMode() {
+    try {
+        mode = Boolean(game.settings.get('heart', SYMBOLS_SETTING));
+    } catch {
+        mode = false;
+    }
+    return mode;
 }
+
+// game.heart.board.symbols: the GM's symbol detail mode
+export const symbols = {
+    get: () => readMode(),
+    // (only the GM's; a player's call changes nothing)
+    set: async (on = true) => {
+        if (!game.user?.isGM) return false;
+        await game.settings.set('heart', SYMBOLS_SETTING, Boolean(on));
+        return readMode();
+    },
+    toggle: () => symbols.set(!readMode()),
+};
+
+let layer = null; // { box, faceBox, markBox, nameBox, label, marks: Map<tokenId, mark>, extras: Map<tokenId, {face, name}>, atlas, zoom, sigils }
 
 function makeAtlas(sigils) {
     const L = atlasLayout(sigils);
@@ -156,29 +200,46 @@ function makeAtlas(sigils) {
     return out;
 }
 
+function nameText() {
+    const style = CONFIG.canvasTextStyle.clone();
+    style.fontSize = NAME_PX;
+    const t = new PIXI.Text('', style);
+    t.anchor.set(0.5, 1);
+    t.eventMode = 'none';
+    return t;
+}
+
 function ensureLayer() {
     if (layer) return layer;
     const box = new PIXI.Container();
     box.eventMode = 'passive';
     box.sortableChildren = false;
+    // (above the board layer, whose catch-all hit area would take the pointer
+    // before a sigil; the box has no hit area of its own, so only a sigil hits)
+    box.zIndex = CROWD_Z;
     // (named, so the Foundry check can find the container and read its state
     // through `box.heartCrowd`)
     box.name = 'heartCrowd';
     // (above the roofs and the weather: the interface group)
     canvas.interface.addChild(box);
-    const label = new PIXI.Text('', CONFIG.canvasTextStyle.clone());
-    label.anchor.set(0.5, 1);
+    // (from the bottom: the named faces, the marks, the names, the hover name)
+    const faceBox = new PIXI.Container();
+    const markBox = new PIXI.Container();
+    const nameBox = new PIXI.Container();
+    faceBox.eventMode = 'none';
+    nameBox.eventMode = 'none';
+    markBox.eventMode = 'passive';
+    const label = nameText();
     label.visible = false;
-    label.eventMode = 'none';
+    box.addChild(faceBox, markBox, nameBox, label);
     // (every sigil the scene's tokens carry, found once: one atlas)
     const sigils = new Set();
     for (const t of canvas.tokens?.placeables ?? []) {
         const s = npcOf(t)?.sigil;
         if (glyphUrl(s)) sigils.add(s);
     }
-    layer = { box, label, marks: new Map(), atlas: null, zoom: null, sigils };
+    layer = { box, faceBox, markBox, nameBox, label, marks: new Map(), extras: new Map(), atlas: null, zoom: null, sigils };
     box.heartCrowd = layer;
-    box.addChild(label);
     return layer;
 }
 
@@ -188,12 +249,28 @@ function dropLayer() {
         layer.box.destroy({ children: true });
         layer.atlas?.base.destroy();
     } catch (err) {
-        console.warn('Heart | the crowd marks could not be let go', err);
+        console.warn('Heart | the symbol marks could not be let go', err);
     }
     layer = null;
 }
 
-// the mark for a token made, or fetched; null while its atlas is not ready
+// a token's centre in scene px (from its document, so a token being moved by
+// the timeline is where it is going to be drawn)
+const centreOf = (token) => {
+    const d = token.document;
+    return d ? { x: d.x + (d.width * canvas.grid.size) / 2, y: d.y + (d.height * canvas.grid.size) / 2 } : token.center;
+};
+
+// click: the token selected and the view brought to it (useful under roofs)
+function findToken(id) {
+    const t = canvas.tokens?.get(id);
+    if (!t) return;
+    t.control({ releaseOthers: true });
+    const c = centreOf(t);
+    canvas.animatePan({ x: c.x, y: c.y, duration: 400 });
+}
+
+// the mark for a token made, or fetched
 function markFor(token, kind) {
     const L = ensureLayer();
     const sigil = npcOf(token)?.sigil;
@@ -216,29 +293,40 @@ function markFor(token, kind) {
         m.halo?.destroy();
     }
     m = { kind, sigil: want };
+    const id = token.id;
     if (kind === 'named') {
         m.halo = new PIXI.Sprite(L.atlas.halo);
         m.glyph = new PIXI.Sprite(want ? L.atlas.glyphs.get(want) : L.atlas.dot);
         for (const s of [m.halo, m.glyph]) s.anchor.set(0.5);
-        // (the name on hover, as the named people's tokens show it)
-        m.glyph.eventMode = 'static';
-        m.glyph.on('pointerover', () => showName(token.id));
+        m.halo.eventMode = 'none';
+        // (the name on hover; a name already shown is not shown twice)
+        m.glyph.on('pointerover', () => showName(id));
         m.glyph.on('pointerout', () => hideName());
-        L.box.addChild(m.halo, m.glyph);
+        L.markBox.addChild(m.halo, m.glyph);
     } else {
+        // (a crowd mark: drawn only, it takes no pointer)
         m.glyph = new PIXI.Sprite(L.atlas.dot);
         m.glyph.anchor.set(0.5);
-        m.glyph.eventMode = 'none';
-        L.box.addChild(m.glyph);
+        L.markBox.addChild(m.glyph);
+    }
+    // (a named sigil takes the pointer and finds its person on a click; a crowd
+    // mark takes none, so the board's tools work right through it)
+    m.glyph.eventMode = markEventMode(kind);
+    if (kind === 'named') {
+        m.glyph.cursor = 'pointer';
+        m.glyph.on('pointerdown', (ev) => {
+            if (ev.button !== 0) return;
+            ev.stopPropagation();
+            findToken(id);
+        });
     }
     L.marks.set(token.id, m);
-    placeMark(token, m);
     return m;
 }
 
 function placeMark(token, m) {
     const z = layer.zoom ?? canvas.stage.scale.x;
-    const c = token.document ? { x: token.document.x + (token.document.width * canvas.grid.size) / 2, y: token.document.y + (token.document.height * canvas.grid.size) / 2 } : token.center;
+    const c = centreOf(token);
     const px = MARK_PX[m.kind];
     m.glyph.position.set(c.x, c.y);
     m.glyph.scale.set(markScale(px, z));
@@ -248,10 +336,72 @@ function placeMark(token, m) {
     }
 }
 
+// the GM's named character above the roofs: a copy of its face and its name
+function extrasFor(token) {
+    const L = ensureLayer();
+    let e = L.extras.get(token.id);
+    if (e) return e;
+    e = { face: new PIXI.Sprite(), name: nameText() };
+    e.face.anchor.set(0.5);
+    e.face.eventMode = 'none';
+    L.faceBox.addChild(e.face);
+    L.nameBox.addChild(e.name);
+    L.extras.set(token.id, e);
+    return e;
+}
+
+function placeExtras(token, e, markOn) {
+    const z = layer.zoom ?? canvas.stage.scale.x;
+    const d = token.document;
+    const gs = canvas.grid.size;
+    const c = centreOf(token);
+    const w = d.width * gs * Math.abs(d.texture?.scaleX ?? 1);
+    const h = d.height * gs * Math.abs(d.texture?.scaleY ?? 1);
+    const tex = token.texture ?? token.mesh?.texture ?? null;
+    if (tex && e.face.texture !== tex) e.face.texture = tex;
+    e.face.visible = Boolean(tex?.valid) && !d.hidden;
+    if (e.face.visible) {
+        e.face.position.set(c.x, c.y);
+        e.face.scale.set(w / tex.width, h / tex.height);
+    }
+    if (e.name.text !== d.name) e.name.text = d.name;
+    e.name.scale.set(namePx(z * metrePx(canvas.scene)) / NAME_PX / z);
+    // (above the face, or above the sigil when that is the larger)
+    const up = Math.max(h / 2, markOn ? MARK_PX.named / 2 / z : 0) + 4 / z;
+    e.name.position.set(c.x, c.y - up);
+}
+
+// The names shown: those that miss every name nearer the centre of the view (screen px boxes)
+let declutterTimer = 0;
+export function queueDeclutter() {
+    if (declutterTimer) return;
+    declutterTimer = setTimeout(() => {
+        declutterTimer = 0;
+        declutterNames();
+    }, 0);
+}
+function declutterNames() {
+    if (!layer || !canvas?.ready) return;
+    const z = layer.zoom ?? canvas.stage.scale.x;
+    const pivot = canvas.stage.pivot;
+    const boxes = [];
+    for (const [id, e] of layer.extras) {
+        const t = canvas.tokens?.get(id);
+        if (!t || e.name.destroyed) continue;
+        const w = e.name.width * z;
+        const h = e.name.height * z;
+        const sx = e.name.position.x * z;
+        const sy = e.name.position.y * z;
+        boxes.push({ id, d: Math.hypot(e.name.position.x - pivot.x, e.name.position.y - pivot.y), x0: sx - w / 2, x1: sx + w / 2, y0: sy - h, y1: sy });
+    }
+    const keep = keepNames(boxes);
+    for (const [id, e] of layer.extras) if (!e.name.destroyed) e.name.visible = keep.has(id) || !boxes.some((b) => b.id === id);
+}
+
 function showName(id) {
     const t = canvas.tokens?.get(id);
     const m = layer?.marks.get(id);
-    if (!t || !m) return;
+    if (!t || !m || layer.extras.has(id)) return;
     layer.label.text = t.document.name;
     const z = layer.zoom ?? canvas.stage.scale.x;
     layer.label.scale.set(1 / z);
@@ -270,24 +420,27 @@ function letGoMark(id) {
     m.halo?.destroy();
     layer.marks.delete(id);
 }
+function letGoExtras(id) {
+    const e = layer?.extras.get(id);
+    if (!e) return;
+    e.face.destroy();
+    e.name.destroy();
+    layer.extras.delete(id);
+}
 
-// One token looked at again: symbol or not at this zoom, and its mark shown or
-// not. Idempotent; a change of symbol sets the token's visibility to be redone.
+// One token looked at again: its mark shown or not, and the GM's named copy
+// above the roofs. Idempotent.
 export function syncToken(token) {
     if (!token?.document || token.isPreview || !isBoard(canvas.scene)) return;
     const kind = kindOf(npcOf(token), token.document.displayName === CONST.TOKEN_DISPLAY_MODES.HOVER);
-    const zoom = canvas.stage.scale.x;
-    const px = screenPx(token.document, canvas.grid.size, zoom);
-    const sym = isSymbol({ kind, px, own: ownToken(token), controlled: Boolean(token.controlled) });
-    if (Boolean(token._heartSymbol) !== sym) {
-        token._heartSymbol = sym;
-        token.renderFlags?.set({ refreshVisibility: true });
-    }
-    if (!sym) return letGoMark(token.id);
-    const shown = markShown({ gm: game.user.isGM, preview: Boolean(canvas.heartBoard?.preview), kind, seen: Boolean(token.heartSeen) });
-    if (!shown) return letGoMark(token.id);
-    const m = markFor(token, kind);
-    placeMark(token, m);
+    const who = { gm: game.user.isGM, preview: Boolean(canvas.heartBoard?.preview), kind };
+    const marked = markShown({ ...who, on: mode });
+    if (marked) placeMark(token, markFor(token, kind));
+    else letGoMark(token.id);
+    if (aboveRoofs(who) && nameShown(who)) placeExtras(token, extrasFor(token), marked);
+    else letGoExtras(token.id);
+    // (a name added, moved, or let go: the names laid again once, after the others)
+    queueDeclutter();
 }
 
 // Every token again, but only when the zoom changed since last time
@@ -297,22 +450,26 @@ function zoomed() {
     if (layer && layer.zoom === z) return;
     ensureLayer().zoom = z;
     for (const t of canvas.tokens.placeables) syncToken(t);
-    for (const [id, m] of layer.marks) {
-        const t = canvas.tokens.get(id);
-        if (t) placeMark(t, m);
-    }
 }
 
-// init: the hooks
+// init: the hooks and the key
 export function registerCrowd() {
     Hooks.on('canvasReady', () => {
         dropLayer();
+        readMode();
         if (!isBoard(canvas.scene)) return;
         ensureLayer().zoom = null;
         zoomed();
     });
     Hooks.on('canvasTearDown', dropLayer);
     Hooks.on('canvasPan', zoomed);
+    // (the mode turned on or off, here or by the toolkit's checkbox)
+    Hooks.on(SYMBOLS_EVENT, (on) => {
+        mode = Boolean(on);
+        if (!layer) return;
+        layer.zoom = null;
+        zoomed();
+    });
     // (a move, a resize, timeline playback, a fog or roof change: all come
     // through the token's own refresh)
     Hooks.on('refreshToken', (token, flags) => {
@@ -321,10 +478,25 @@ export function registerCrowd() {
     });
     // (a new token's first draw sets every refresh flag: it comes through
     // refreshToken too)
-    Hooks.on('deleteToken', (doc) => letGoMark(doc.id));
-    Hooks.on('updateToken', (doc, changes) => {
-        if (foundry.utils.hasProperty(changes, `flags.${NPC_FLAG}.npc`) || foundry.utils.hasProperty(changes, 'flags.heart.npc') || 'displayName' in changes) syncToken(canvas.tokens?.get(doc.id));
+    Hooks.on('deleteToken', (doc) => {
+        letGoMark(doc.id);
+        letGoExtras(doc.id);
     });
-    // (a token let go of or picked: its symbol undone or redone)
-    Hooks.on('controlToken', (token) => syncToken(token));
+    Hooks.on('updateToken', (doc, changes) => {
+        if (foundry.utils.hasProperty(changes, `flags.${NPC_FLAG}.npc`) || foundry.utils.hasProperty(changes, 'flags.heart.npc') || 'displayName' in changes || 'name' in changes) syncToken(canvas.tokens?.get(doc.id));
+    });
+    // Shift+Y: the GM's symbol detail, on or off (Luke, 2026-10-28)
+    const { SHIFT } = KeyboardManager.MODIFIER_KEYS;
+    game.keybindings.register('heart', 'boardSymbols', {
+        name: 'heart.board.key-symbols',
+        hint: 'heart.board.key-symbols-hint',
+        editable: [{ key: 'KeyY', modifiers: [SHIFT] }],
+        restricted: true,
+        precedence: CONST.KEYBINDING_PRECEDENCE.PRIORITY,
+        onDown: (ctx) => {
+            if (ctx?.event?.target?.closest?.('input, textarea, select, [contenteditable]')) return false;
+            symbols.toggle().then((on) => ui.notifications?.info(game.i18n.localize(on ? 'heart.board.symbols-on' : 'heart.board.symbols-off')));
+            return true;
+        },
+    });
 }

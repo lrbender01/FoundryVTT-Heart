@@ -6,8 +6,9 @@
 // quality setting's memory; its overlays and its roofs as the GM switched
 // them. The rules are baked.js's; this is the drawing. Design: monorepo
 // docs/plans/board-baked-backgrounds.md.
-import { cleanManifest, cleanBakedFlags, levelFor, tilesIn, tileUrl, TileCache, overlayShown, shownParts, metrePx, metresPer } from './baked.js';
+import { cleanManifest, cleanBakedFlags, levelFor, tilesIn, tileUrl, TileCache, overlayShown, overlaySort, shownParts, metrePx, metresPer } from './baked.js';
 import { refreshFog } from './fog.js';
+import { roofPiecesAt } from './pieces-draw.js';
 import { roofAlpha, roofsOpened } from './roof-rule.js';
 
 // (in Foundry's primary group, under the board's own tiles at 100; tokens
@@ -98,13 +99,17 @@ export function tilesToShow(pieces, current, near) {
 // is neither the current level nor the next coarser one and is out of view
 // at its own level (`inView(rect)`). A pinned piece, and a stack the zoom
 // names no level for (an overlay switched off), stays.
-export function tilesToRelease(pieces, current, inView, coarse) {
+// `grace` (Ultra, no compromise; Luke 2026-10-28): one finer level than the
+// zoom needs is kept too (never drawn, only not let go), so zooming back in
+// is instant; the budget still bounds it.
+export function tilesToRelease(pieces, current, inView, coarse, grace = false) {
     const out = [];
+    const keepFiner = grace ? 1 : 0;
     for (const p of pieces) {
         if (p.pin || p.group === null) continue;
         const cur = current.get(p.group);
         if (cur === undefined) continue;
-        if (p.lvl > cur) out.push(p.key);
+        if (p.lvl > cur + keepFiner) out.push(p.key);
         else if (coarse && p.lvl < cur - 1 && !inView(p.rect)) out.push(p.key);
     }
     return out;
@@ -127,6 +132,10 @@ export function manifestAt(path) {
     }
     return manifests.get(path);
 }
+
+// A manifest read again next time (2026-10-28: a bake rebuilt it on disk since this page
+// loaded it; editor-link.js finds that out and loads the baked map again)
+export const forgetManifest = (path) => manifests.delete(path);
 
 // a roof's alpha, small: { w, h, a } (a: 0..255 a px)
 function alphaMask(bmp) {
@@ -208,7 +217,8 @@ export class Backdrop {
             canvas.primary.addChild(c);
             return c;
         };
-        this.layers = { base: make(SORT.base), overlays: make(SORT.overlays), roofs: make(SORT.roofs) };
+        // (overlaysUnder: an overlay that says "under": "pieces", ground beneath the pieces)
+        this.layers = { base: make(SORT.base), overlaysUnder: make(overlaySort({ under: 'pieces' })), overlays: make(overlaySort({})), roofs: make(SORT.roofs) };
         canvas.primary.sortDirty = true;
         // (the roof under the pointer fades: this board's)
         showing = this;
@@ -270,7 +280,7 @@ export class Backdrop {
             for (const t of tilesIn(ol, tilePx, view, size, { margin, origin })) {
                 const key = `o:${o.id}:${oli}:${t.x}_${t.y}`;
                 wanted.add(key);
-                this.#want({ key, url: tileUrl(ol, t.x, t.y), rect: t.rect, layer: 'overlays', z: oi * 32 + oli, overlay: o.id, group: `o:${o.id}`, lvl: oli });
+                this.#want({ key, url: tileUrl(ol, t.x, t.y), rect: t.rect, layer: o.under === 'pieces' ? 'overlaysUnder' : 'overlays', z: oi * 32 + oli, overlay: o.id, group: `o:${o.id}`, lvl: oli });
             }
         });
         // (only what is wanted now waits to load: a view left behind is not fetched)
@@ -286,7 +296,9 @@ export class Backdrop {
         const near = { x0: view.x0 - margin, y0: view.y0 - margin, x1: view.x1 + margin, y1: view.y1 + margin };
         const inView = (r) => r.x1 >= near.x0 && r.x0 <= near.x1 && r.y1 >= near.y0 && r.y0 <= near.y1;
         const pieces = [...this.items.values()].map((e) => ({ key: e.key, group: e.group ?? null, lvl: e.lvl ?? 0, rect: e.rect, pin: Boolean(e.pin) }));
-        for (const key of tilesToRelease(pieces, current, inView, changed)) {
+        const d = this.r.detail;
+        const grace = Boolean(d?.bakedGrace ?? (d?.bakedMB ?? 0) >= 1024);
+        for (const key of tilesToRelease(pieces, current, inView, changed, grace)) {
             const e = this.items.get(key);
             if (!e) continue;
             const c = this.cache.items.get(key);
@@ -343,7 +355,11 @@ export class Backdrop {
         try {
             const res = await fetch(it.url);
             if (!res.ok) throw new Error(`${res.status}`);
-            const bmp = await createImageBitmap(await res.blob());
+            // (premultiplied: PIXI takes a bitmap's pixels as they are and blends them as premultiplied, so a
+            // tile's see-through pixels, which a bake leaves with colour in them, must come with that colour
+            // multiplied by their alpha. Without it the painted centre's see-through parts drew as an opaque
+            // tan block with a hard edge, and its shadows as dark blocks; 2026-10-28, the parity check)
+            const bmp = await createImageBitmap(await res.blob(), { premultiplyAlpha: 'premultiply' });
             if (ticket !== this.ticket) {
                 bmp.close();
                 return;
@@ -423,7 +439,8 @@ export class Backdrop {
             const j = Math.min(A.h - 1, Math.floor(((my - R.y0) / (R.y1 - R.y0)) * A.h));
             if (A.a[j * A.w + i] > 40) return true;
         }
-        return false;
+        // (the scene's roof pieces too, by their hulls; Luke 2026-10-28)
+        return roofPiecesAt(x, y).some((id) => !open.has(id));
     }
 
     // what it holds (File's Statistics)
@@ -464,7 +481,7 @@ export class Backdrop {
         const d = canvas.dimensions;
         const tokens = (canvas.tokens?.placeables ?? []).filter((t) => t.isOwner).map((t) => ({ id: t.id, x: (t.center.x - d.sceneX) / u, y: (t.center.y - d.sceneY) / u }));
         const ctl = new Set((canvas.tokens?.controlled ?? []).map((t) => t.id));
-        return (this.opened = roofsOpened(tokens, ctl, (x, y) => this.#roofsAt(x, y).map((h) => h.id)));
+        return (this.opened = roofsOpened(tokens, ctl, (x, y) => [...this.#roofsAt(x, y).map((h) => h.id), ...roofPiecesAt(x * u, y * u)]));
     }
 
     #fade() {

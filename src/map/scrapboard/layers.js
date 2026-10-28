@@ -5,6 +5,7 @@
 // from the scene's flags (backdrop.js) and its fog follows (fog.js).
 import { cleanBakedFlags, metresPer, squareIn } from './baked.js';
 import { gmNotesShown } from './render.js';
+import { drawnRoofPieces, groupRoofPieces } from './pieces-draw.js';
 import { heartDialogOptions } from '../../common/dialog.js';
 
 const loc = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
@@ -36,11 +37,16 @@ function bodyOf(m, f, units = 'm') {
     const overlays = m.overlays.length
         ? m.overlays.map((o) => box(`data-ov="${esc(o.id)}"`, typeof f.overlays?.[o.id] === 'boolean' ? f.overlays[o.id] : o.shown, o.name, o.audience === 'gm' ? ` <small>${esc(loc('heart.board.layers.gm-only'))}</small>` : '')).join('')
         : `<p class="none">${esc(loc('heart.board.layers.none'))}</p>`;
-    const roofs = m.roofs.length
+    const pieceRoofs = groupRoofPieces(drawnRoofPieces());
+    const pieceBox = (p, building) => box(`data-roof="${esc(p.id)}"`, !(f.roofs?.[p.id] || (building && f.roofs?.[building])), p.name);
+    const roofs = m.roofs.length || pieceRoofs.groups.length || pieceRoofs.loose.length
         ? m.roofs.map((r) => {
             const parts = r.parts.length > 1 ? `<div class="parts">${r.parts.map((p) => box(`data-part="${esc(`${r.id}/${p.id}`)}"`, !f.roofs?.[`${r.id}/${p.id}`], p.id)).join('')}</div>` : '';
             return box(`data-roof="${esc(r.id)}"`, !f.roofs?.[r.id], r.name) + parts;
         }).join('')
+        // (the scene's roof pieces: a building's together, each piece under it)
+        + pieceRoofs.groups.map((g) => box(`data-roof="${esc(g.id)}"`, !f.roofs?.[g.id], g.id) + `<div class="parts">${g.pieces.map((p) => pieceBox(p, g.id)).join('')}</div>`).join('')
+        + pieceRoofs.loose.map((p) => pieceBox(p, null)).join('')
         : `<p class="none">${esc(loc('heart.board.layers.none'))}</p>`;
     const ft = units === 'ft';
     return `<div class="heart-board-layers">
@@ -63,10 +69,11 @@ function bodyOf(m, f, units = 'm') {
 // One window at a time (File again brings it to the front)
 let open = null;
 export function layersDialog(scene, backdrop) {
-    const m = backdrop?.m;
+    // (a board of pieces with no baked map has roof pieces to switch too)
+    const m = backdrop?.m ?? (drawnRoofPieces().length ? { id: '', name: scene?.name ?? '', overlays: [], roofs: [] } : null);
     if (!game.user.isGM || !m || !scene) return;
     if (open?.rendered) return open.bringToTop();
-    const flags = () => cleanBakedFlags(scene.flags?.heart?.baked) ?? {};
+    const flags = () => cleanBakedFlags(scene.flags?.heart?.baked) ?? { roofs: scene.flags?.heart?.baked?.roofs ?? {} };
     const set = (data) => scene.update(data);
     const body = () => bodyOf(m, flags(), scene.grid.units);
     const again = () => {
@@ -111,6 +118,12 @@ export function layersDialog(scene, backdrop) {
                 for (const r of m.roofs) {
                     roofs[r.id] = !on;
                     for (const p of r.parts) if (r.parts.length > 1) roofs[`${r.id}/${p.id}`] = false;
+                }
+                const pr = groupRoofPieces(drawnRoofPieces());
+                for (const p of pr.loose) roofs[p.id] = !on;
+                for (const g of pr.groups) {
+                    roofs[g.id] = !on;
+                    for (const p of g.pieces) roofs[p.id] = false;
                 }
                 await set({ 'flags.heart.baked.roofs': roofs });
                 again();

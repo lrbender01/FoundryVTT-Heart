@@ -113,3 +113,51 @@ describe("the map safety fixes (Luke, 2026-10-25)", () => {
     expect(binLetGo(binPatch({ ...raw, bin: {} }, ["n1"]))).toBe(0);
   });
 });
+
+describe("Map Dreamer's map published for Foundry (2026-10-28)", async () => {
+  const { publishedMeta, cleanPublished, cleanLink, linkState, publishedUrls, PUBLISH_FORMAT } = await import("../src/map/scrapboard/boardfile.js");
+  const META = publishedMeta({ map: "plenty-pieces", name: "Plenty (pieces)", rev: 166, at: "2026-10-28T20:00:00.000Z", bytes: 1466928, pieces: 1504, baked: { id: "plenty-pieces", rev: "r1" } });
+
+  it("writes a meta file that reads back the same, and names where Foundry fetches the files", () => {
+    expect(META).toMatchObject({ format: PUBLISH_FORMAT, version: 1, map: "plenty-pieces", rev: 166, bytes: 1466928, pieces: 1504, baked: { id: "plenty-pieces", rev: "r1" } });
+    expect(cleanPublished(JSON.parse(JSON.stringify(META)))).toEqual({ map: "plenty-pieces", name: "Plenty (pieces)", rev: 166, at: "2026-10-28T20:00:00.000Z", bytes: 1466928, pieces: 1504, baked: { id: "plenty-pieces", rev: "r1" } });
+    expect(publishedUrls("plenty-pieces")).toEqual({ board: "modules/fvtt-heart-content/assets/boards/plenty-pieces/board.json", meta: "modules/fvtt-heart-content/assets/boards/plenty-pieces/board.meta.json" });
+  });
+
+  it("refuses a meta that is not one (the wrong format, a map id that is not one, no rev)", () => {
+    expect(cleanPublished(null)).toBeNull();
+    expect(cleanPublished({ ...META, format: "other" })).toBeNull();
+    expect(cleanPublished({ ...META, map: "../x" })).toBeNull();
+    expect(cleanPublished({ ...META, rev: -1 })).toBeNull();
+    expect(cleanPublished({ ...META, rev: "x" })).toBeNull();
+  });
+
+  it("keeps what a scene remembers of its last bring-in, and drops what is not one", () => {
+    expect(cleanLink({ map: "plenty-pieces", rev: 12, at: "t", broughtIn: "u", extra: 1 })).toEqual({ map: "plenty-pieces", rev: 12, at: "t", broughtIn: "u", auto: false });
+    expect(cleanLink({ map: "plenty-pieces", rev: 12, auto: true }).auto).toBe(true);
+    expect(cleanLink({ map: "plenty-pieces", rev: 12, auto: "yes" }).auto).toBe(false);
+    expect(cleanLink({ map: "Bad Map", rev: 1 })).toBeNull();
+    expect(cleanLink({ map: "ok" })).toBeNull();
+    expect(cleanLink(undefined)).toBeNull();
+  });
+
+  it("says where a scene stands: none published, unlinked, current, or behind", () => {
+    const meta = cleanPublished(META);
+    const link = (rev, map = "plenty-pieces") => cleanLink({ map, rev });
+    expect(linkState({ link: link(166), meta: null })).toEqual({ state: "none" });
+    expect(linkState({ link: null, meta })).toEqual({ state: "unlinked" });
+    expect(linkState({ link: link(166), meta })).toEqual({ state: "current" });
+    expect(linkState({ link: link(150), meta })).toEqual({ state: "behind" });
+    // (Map Dreamer went back to an earlier rev: still not the one the scene took)
+    expect(linkState({ link: link(170), meta })).toEqual({ state: "behind" });
+    expect(linkState({ link: link(166, "other"), meta })).toEqual({ state: "behind" });
+  });
+
+  it("notes a baked map rebuilt on disk since the scene loaded it, beside the board's state", () => {
+    const meta = cleanPublished(META);
+    const link = cleanLink({ map: "plenty-pieces", rev: 166 });
+    expect(linkState({ link, meta, bakedNow: "r1", bakedDisk: "r1" })).toEqual({ state: "current" });
+    expect(linkState({ link, meta, bakedNow: "r1", bakedDisk: "r2" })).toEqual({ state: "current", bakeStale: true });
+    expect(linkState({ link, meta, bakedNow: null, bakedDisk: "r2" })).toEqual({ state: "current" });
+  });
+});
